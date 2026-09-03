@@ -1,13 +1,15 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 1.1.0
-- Modified principles: I. Flutter Product Parity Across Targets; III. Local-First, Durable, and
-  Synchronizable Data; IV. Account Data Integrity and Safe Cloud Synchronization.
-- Added principles: IX. Protected Local Account Data.
+- Version change: 1.1.0 -> 2.0.0
+- Modified principles: III. Local-First, Durable, and Synchronizable Data; IV. Account Data
+  Integrity and Safe Cloud Synchronization; IX. Protected Local Account Data.
+- Added principles: none.
 - Added sections: none.
 - Removed sections: none.
-- Follow-up TODOs: none. The selected packages and Firebase support remain subject to required
-  target verification before production lock-in.
+- Follow-up TODOs: Verify the required Supabase Flutter capabilities on Linux before production
+  lock-in. Supabase's Flutter quickstart explicitly lists Android, iOS, macOS, and Windows;
+  package metadata lists Linux, so the required Auth, Data API, session, and sync transport
+  capabilities require an end-to-end proof rather than an assumption.
 -->
 # Namaa Constitution
 
@@ -37,8 +39,8 @@ offline after the initial authenticated synchronization. Local persistence is th
 runtime path while offline; cloud synchronization reconciles account data across devices and
 MUST be retry-safe. Persisted-schema changes MUST automatically migrate existing local data; on
 failure, the prior data MUST be preserved with a recoverable failure path. The selected local
-database and cloud services MUST be validated on Android, iOS, Windows, macOS, and Linux before
-being treated as production-locked.
+database and Supabase cloud integration MUST be validated on Android, iOS, Windows, macOS, and
+Linux before being treated as production-locked.
 
 ### IV. Account Data Integrity and Safe Cloud Synchronization
 
@@ -48,7 +50,9 @@ be idempotent for all side effects, including XP and financial changes. Synchron
 silently discard a conflicting local or remote change. When versions of the same synchronized
 record conflict, the newest timestamp MUST select the active version and the non-winning version
 MUST remain a visible conflict record. Logout MUST only sign out, not delete local or cloud data;
-account deletion and its recovery period MUST follow the approved product flow.
+account deletion and its recovery period MUST follow the approved product flow. Supabase-exposed
+account data MUST enforce account separation through least-privilege grants and Row Level Security
+policies; each exposed operation MUST permit only the rows and actions approved for that account.
 
 ### V. Sacred and Financial Records Are Invariant-Protected
 
@@ -94,18 +98,22 @@ for product-owner approval when a required behavior is unresolved.
 All account-scoped data persisted locally MUST be encrypted at rest. Credentials that access
 protected data or cloud services MUST use operating-system protected storage and MUST NOT be
 stored in general application preferences. This protects the local-first experience when a device
-is lost or accessed by another person.
+is lost or accessed by another person. Supabase client applications MAY use only a publishable
+client key; Supabase secret or service-role keys MUST remain in developer-controlled server-side
+components and MUST NOT be shipped in a mobile or desktop client.
 
 ## Engineering Constraints
 
 The current technology direction is Flutter/Dart, feature-first Clean Architecture, BLoC/Cubit,
-Drift/SQLite, Firebase Auth, Cloud Firestore, custom local-first synchronization, get_it /
+Drift/SQLite, Supabase Flutter, Supabase Auth, Supabase Postgres/Data API, and Supabase Realtime
+only where an approved feature requires it, custom local-first synchronization, get_it /
 injectable, Freezed, json_serializable, go_router, Dio for required external APIs,
 flutter_local_notifications with platform support, just_audio, ARB/gen_l10n, flutter_test,
 bloc_test, and integration_test. These are the approved direction, not an unconditional
 production lock: capability and compatibility on Android, iOS, Windows, macOS, and Linux MUST be
-verified before adoption is finalized. Automated Firebase tests MUST use emulators; device
-integration before production release MUST use an isolated non-production Firebase project.
+verified before adoption is finalized. Automated Supabase integration tests MUST use the local
+Supabase stack; device integration before production release MUST use an isolated non-production
+Supabase project.
 
 Local data, sync metadata, and user-facing state MUST have clear ownership. Notifications MUST
 respect per-device enablement and preferences and MUST NOT imply that an unconfirmed religious
@@ -141,4 +149,4 @@ MUST assess compliance with the principles and Definition of Done. A conflict be
 Constitution and an unapproved feature requirement MUST be raised for resolution rather than
 implemented by assumption.
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-03 | **Last Amended**: 2026-09-03
+**Version**: 2.0.0 | **Ratified**: 2026-09-03 | **Last Amended**: 2026-09-04

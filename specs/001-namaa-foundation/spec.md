@@ -6,7 +6,8 @@
 
 **Status**: Draft
 
-**Input**: Establish the technical foundation for Namaa without implementing any product domain.
+**Input**: Establish the technical foundation for Namaa with Supabase cloud boundaries and without
+implementing any product domain.
 
 ## Clarifications
 
@@ -19,12 +20,18 @@
   → A: Automatically migrate existing data and provide a recovery path if migration fails.
 - Q: Which mobile and desktop operating systems must the first Foundation release verify as
   supported? → A: Android, iOS, Windows, macOS, and Linux.
-- Q: Which Firebase environment must the Foundation use before any production release? → A: Use
-  emulators for automated tests and an isolated non-production Firebase project for device
-  integration.
+- Q: Which cloud environment must the Foundation use before any production release? → A: Use the
+  local Supabase stack for automated tests and an isolated non-production Supabase project for
+  device integration.
 - Q: How must locally persisted account data be protected when a device is lost or accessed by
   another person? → A: Encrypt all account data at rest and protect credentials with
   operating-system storage.
+
+### Session 2026-09-04
+
+- Decision: Supabase replaces Firebase for cloud integration. Automated cloud tests use the local
+  Supabase stack, device integration uses an isolated non-production Supabase project, and
+  Supabase account data uses Row Level Security with least-privilege access.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -111,7 +118,7 @@ localized root presentation work on both.
 
 - **FR-001**: The foundation MUST establish feature-first Clean Architecture boundaries with
   separate presentation, application/use-case, domain, and data concerns.
-- **FR-002**: Domain logic MUST NOT directly depend on Flutter UI, Firebase, local database, route,
+- **FR-002**: Domain logic MUST NOT directly depend on Flutter UI, Supabase, local database, route,
   notification, or other platform/infrastructure implementations.
 - **FR-003**: Each future domain MUST own its canonical data and invariants; aggregating
   capabilities MUST consume domain-owned data and MUST NOT become a second source of truth.
@@ -132,8 +139,8 @@ localized root presentation work on both.
 - **FR-010**: When local and remote versions of the same synchronized record conflict, the
   foundation MUST use the newest timestamp as the active value and retain the non-winning version
   as a visible conflict record.
-- **FR-011**: Firebase authentication and cloud infrastructure MUST be reachable only through
-  infrastructure boundaries; Domain code MUST NOT depend directly on Firebase types or services.
+- **FR-011**: Supabase authentication and cloud infrastructure MUST be reachable only through
+  infrastructure boundaries; Domain code MUST NOT depend directly on Supabase types or services.
 - **FR-012**: The foundation MUST provide a registered application navigation root and an
   extensible route organization in which future features own their route entries without requiring
   product feature screens in this scope.
@@ -148,7 +155,7 @@ localized root presentation work on both.
 - **FR-017**: The foundation MUST make unit, widget, and integration testing operational and MUST
   include enforceable coverage for architecture boundaries, persistence, offline/reconnect
   behavior, localization/RTL, routing, theme selection, and affected platform behavior.
-- **FR-018**: Production adoption of the selected persistence, Firebase, synchronization,
+- **FR-018**: Production adoption of the selected persistence, Supabase, synchronization,
   localization, and platform-support packages MUST wait for verification on Android, iOS, Windows,
   macOS, and Linux.
 - **FR-019**: A persisted-schema change MUST automatically migrate existing local data. If
@@ -156,24 +163,28 @@ localized root presentation work on both.
   failure path.
 - **FR-020**: This foundation MUST NOT implement Tasks, authentication user flows, Finance, Quran,
   Prayer, or any other product-domain behavior.
-- **FR-021**: Automated Firebase tests MUST use emulators, and device integration before production
-  release MUST use an isolated non-production Firebase project.
+- **FR-021**: Automated Supabase tests MUST use the local Supabase stack, and device integration
+  before production release MUST use an isolated non-production Supabase project.
 - **FR-022**: All account-scoped data persisted locally MUST be encrypted at rest, and credentials
   used to access protected data or cloud services MUST use operating-system protected storage.
+- **FR-023**: The client MUST use only a Supabase publishable key; Supabase secret or service-role
+  keys MUST NOT be embedded in a mobile or desktop application.
+- **FR-024**: Every Supabase-exposed account-data operation MUST enforce account separation through
+  Row Level Security and least-privilege grants.
 
 ### Foundation Acceptance Criteria
 
 - **AC-001**: The application launches to its registered root route on Android, iOS, Windows,
   macOS, and Linux.
 - **AC-002**: Automated boundary tests demonstrate that domain code has no direct dependency on
-  Flutter UI, Firebase, or local persistence implementations.
+  Flutter UI, Supabase, or local persistence implementations.
 - **AC-003**: An integration test can persist a foundation-owned record, restart the application,
   and retrieve the same record while offline.
 - **AC-004**: An integration test can create a pending local change offline and observes one
   synchronization attempt after connectivity returns; a retry does not duplicate the change. A
   conflicting local and remote version selects the newest timestamp as active and retains the
   other version as a visible conflict record.
-- **AC-005**: A boundary test demonstrates that Firebase access is replaceable by a test double
+- **AC-005**: A boundary test demonstrates that Supabase access is replaceable by a test double
   without changing Domain code.
 - **AC-006**: Automated tests verify dependency resolution for the application root and for a
   representative contract with a test implementation.
@@ -184,12 +195,16 @@ localized root presentation work on both.
   and passes its defined checks without any product-domain implementation.
 - **AC-010**: A migration test upgrades a persisted foundation record without data loss; an
   injected migration failure retains the prior record and exposes a recoverable failure state.
-- **AC-011**: Automated Firebase tests run without a production Firebase project, and a device
-  integration test can use the isolated non-production Firebase project through the established
-  infrastructure boundary.
+- **AC-011**: Automated Supabase tests run against the local Supabase stack rather than a
+  production project, and a device integration test can use the isolated non-production Supabase
+  project through the established infrastructure boundary.
 - **AC-012**: A persistence-security test verifies that account-scoped local data is not readable
   from its persisted form without the application’s authorized protection context and that
   credentials are not stored in general application preferences.
+- **AC-013**: A configuration-security test verifies that only a Supabase publishable key is
+  present in the client configuration and that no secret or service-role key is embedded.
+- **AC-014**: Local Supabase integration tests verify that an authenticated account cannot read or
+  write another account's Foundation-owned rows through exposed data operations.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -223,17 +238,22 @@ localized root presentation work on both.
   product-domain specification proceeds to implementation planning.
 - **SC-007**: 100% of defined migration test cases either preserve the migrated local data or
   retain the prior data through the recovery path after an injected migration failure.
-- **SC-008**: 100% of automated Firebase integration tests use emulators rather than a production
-  Firebase project.
+- **SC-008**: 100% of automated Supabase integration tests use the local Supabase stack rather
+  than a production Supabase project.
 - **SC-009**: 100% of defined account-data persistence tests confirm encrypted storage at rest and
   protected credential storage.
+- **SC-010**: 100% of client configuration checks confirm that no Supabase secret or service-role
+  key is shipped in mobile or desktop application artifacts.
+- **SC-011**: 100% of defined account-isolation tests deny cross-account access through Supabase
+  exposed data operations.
 
 ## Assumptions
 
 - Foundation operations exist only to verify the platform, persistence, synchronization, routing,
   localization, theme, and error-handling capabilities; they do not create a product feature.
-- The current project plan's technology direction is approved for evaluation, but none of its
-  packages is production-locked until target verification is complete.
+- The explicit Supabase decision and Constitution v2.0.0 supersede older Firebase references in
+  the project plan. No selected package is production-locked until target verification is complete,
+  including end-to-end Supabase verification on Linux.
 - The set of product domains and their detailed behavior remain out of scope for this
   specification and require their own approved specifications.
 - Device-specific notification behavior is not implemented in this foundation; the foundation
