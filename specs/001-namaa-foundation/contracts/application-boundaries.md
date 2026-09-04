@@ -1,6 +1,6 @@
 # Application Boundary Contracts
 
-Concrete Firebase, Drift, secure-storage, and platform implementations remain outside Domain code.
+Concrete Supabase, Drift, secure-storage, and platform implementations remain outside Domain code.
 
 ## Local Store Port
 
@@ -21,7 +21,7 @@ Commit is atomic: a visible local state change cannot exist without its required
 | Operation | Outcome |
 |---|---|
 | initialize cloud environment | ready, recoverable failure, or configuration failure |
-| observe session state | session snapshot without Firebase SDK types |
+| observe session state | session snapshot without Supabase SDK types |
 | obtain authorized sync context | non-secret context or recoverable failure |
 
 This contract defines no authentication UI or account workflow.
@@ -33,7 +33,7 @@ This contract defines no authentication UI or account workflow.
 | dispatch change | stable operation ID and account-scoped change | acknowledgement, recoverable failure, or remote version |
 | obtain remote version | entity identity | absent, version, or recoverable failure |
 
-Repeated dispatch of the same operation ID is one logical effect. Firebase SDK types do not cross
+Repeated dispatch of the same operation ID is one logical effect. Supabase SDK types do not cross
 this boundary.
 
 ## Credential Vault Port
@@ -55,4 +55,4 @@ Only keys and credentials use this port. They are never logged or serialized int
 | recoverable failure | localized message key and retry availability |
 | blocking failure | safe diagnostic outcome with no secret |
 
-Cubits call application use cases; they do not access Drift, Firebase, or secure storage directly.
+Cubits call application use cases; they do not access Drift, Supabase, or secure storage directly.

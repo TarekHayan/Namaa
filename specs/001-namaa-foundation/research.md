@@ -28,9 +28,9 @@ retries recoverable failures, and never replays an acknowledged operation.
 idempotent effects across every target.
 
 **Alternatives considered**: Direct cloud writes from Cubits block offline use and couple UI to
-infrastructure. Firestore cache cannot be the synchronization engine because official offline
-persistence is documented for Android and Apple only. Background synchronization is deferred
-because lifecycle policy is not approved.
+infrastructure. Treating a Supabase remote response or Realtime event as the local source of truth
+breaks the approved offline-first model. Background synchronization is deferred because lifecycle
+policy is not approved.
 
 **Verification**: Simulate offline commit, restart, reconnect, retry, and acknowledgement on each
 target; prove one logical remote effect per operation ID.
@@ -49,30 +49,34 @@ remote-wins, and a conflict UI are not approved for Foundation.
 **Verification**: Test both ordering cases, duplicate receipt, equal timestamp, and restart before
 acknowledgement.
 
-### 4. Firebase is behind application ports
+### 4. Supabase is behind application ports
 
-**Decision**: Cloud Session and Cloud Sync ports have Firebase Auth/Cloud Firestore implementations
-only in the data/cloud boundary. Tests use Auth and Firestore emulators with one demo project ID;
-device integration uses an isolated non-production Firebase project.
+**Decision**: Cloud Session and Cloud Sync ports have Supabase Auth and Postgres/Data API
+implementations only in the data/cloud boundary. Automated tests run against the local Supabase
+stack; device integration uses an isolated non-production Supabase project. Every exposed
+account-data table has Row Level Security, explicit least-privilege grants, and account-isolation
+policies before the client can access it.
 
-**Rationale**: This prevents Domain Firebase coupling and permits deterministic test doubles.
-Firebase recommends demo projects where possible to avoid accidental live-resource use.
+**Rationale**: This prevents Domain Supabase coupling, permits deterministic test doubles, and
+enforces account separation at the remote data boundary. The local Supabase stack is isolated from
+production resources.
 
-**Alternatives considered**: Firebase imports in Domain and production Firebase in automated tests
-violate the specification. Firebase cache cannot replace encrypted local persistence.
+**Alternatives considered**: Supabase imports in Domain and production Supabase in automated tests
+violate the specification. Supabase remote data cannot replace encrypted local persistence.
 
-**Verification**: Run adapter tests against emulators, reset emulator state between tests, then run
-separately credentialed device integration against non-production.
+**Verification**: Run adapter tests against the local stack, reset local data between tests, test
+RLS cross-account denial and grant policy behavior, then run separately credentialed device
+integration against non-production.
 
 ### 5. Target capability is verified before production lock-in
 
-**Decision**: Do not assume that FlutterFire or secure storage supports every target. Composition
-depends only on ports. Prove initialization, credential protection, Auth, Firestore transport, and
-emulator/non-production connectivity on Android, iOS, Windows, macOS, and Linux.
+**Decision**: Do not assume that Supabase Flutter or secure storage supports every target. Composition
+depends only on ports. Prove initialization, credential protection, Auth, Data API transport, and
+local-stack/non-production connectivity on Android, iOS, Windows, macOS, and Linux.
 
-**Rationale**: Flutter and Drift support the required platforms. Current Firebase setup
-documentation emphasizes Android, Apple, and web while release notes reference Windows; Linux
-must be empirically proven rather than inferred.
+**Rationale**: Flutter and Drift support the required platforms. Supabase's Flutter quickstart
+explicitly lists Android, iOS, macOS, and Windows, while package metadata lists Linux. The required
+Linux Auth, Data API, session, and sync-transport path must be empirically proven.
 
 **Alternatives considered**: Reducing platform scope contradicts the approved matrix. Selecting an
 unapproved fallback cloud backend now is premature.
@@ -114,10 +118,10 @@ global catch-all Cubit breaks feature ownership.
 - [Flutter internationalization](https://docs.flutter.dev/ui/internationalization).
 - [Drift](https://pub.dev/packages/drift), [drift_flutter](https://pub.dev/packages/drift_flutter),
   and [encryption guidance](https://drift.simonbinder.eu/platforms/encryption/).
-- [Firestore offline behavior](https://firebase.google.com/docs/firestore/manage-data/enable-offline),
-  [Firestore Emulator Suite](https://firebase.google.com/docs/emulator-suite/connect_firestore),
-  and [Authentication Emulator](https://firebase.google.com/docs/emulator-suite/connect_auth).
-- [Firebase Flutter setup](https://firebase.google.com/docs/flutter/setup) and
-  [FlutterFire release notes](https://firebase.google.com/support/release-notes/flutter).
+- [Supabase Flutter quickstart](https://supabase.com/docs/guides/getting-started/quickstarts/flutter),
+  [local development](https://supabase.com/docs/guides/local-development), and
+  [Supabase Flutter package metadata](https://pub.dev/packages/supabase_flutter).
+- [Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
+  and [Supabase API keys](https://supabase.com/docs/guides/getting-started/api-keys).
 - Namaa [Constitution](../../.specify/memory/constitution.md) and
   [Foundation specification](spec.md).
