@@ -1,189 +1,187 @@
+---
+
+description: "Implementation tasks for the Namaa Foundation"
+---
+
 # Tasks: Namaa Foundation
 
-**Input**: Design documents in specs/001-namaa-foundation/
+**Input**: Design documents from `/specs/001-namaa-foundation/`
 
 **Prerequisites**: [plan.md](plan.md), [spec.md](spec.md), [research.md](research.md),
-[data-model.md](data-model.md), [contracts/](contracts/), and
-[quickstart.md](quickstart.md).
+[data-model.md](data-model.md), [contracts/](contracts/), and [quickstart.md](quickstart.md)
 
-**Branch discipline**: Work only on feature/001-namaa-foundation. Do not checkout, merge, commit
-to, or push main. Commit only completed logical groups on this feature branch after their specified
-checks pass. Stop and report a failed Constitution gate, unsupported platform capability, or
-unapproved product behavior instead of improvising a workaround.
+**Tests**: Tests are required by FR-017 and the Constitution. Implementer MUST write the listed
+tests before their corresponding implementation task and confirm they fail for the expected
+reason before changing production code.
 
-**Tests**: Tests are mandatory because FR-017 and the acceptance criteria explicitly require unit,
-widget, integration, architecture-boundary, migration, synchronization, and platform verification.
-Create the named test first where a task says so; it must fail for the intended missing behavior
-before the corresponding implementation is added.
+**Scope boundary**: These tasks create only the technical foundation. Do not add a Tasks,
+authentication UI/flow, Finance, Quran, Prayer, notification, gamification, or other product-domain
+feature. Do not add a Supabase secret or service-role key to any client artifact.
 
-## Format
+## Format: `[ID] [P?] [Story] Description`
 
-Each task uses: checkbox, sequential ID, optional parallel marker, optional user-story label, and
-an exact target path.
+- **[P]**: The task can be done in parallel because it changes a different file and has no
+  uncompleted prerequisite in this phase.
+- **[Story]**: The user story served by the task. Setup, foundational, and polish tasks have no
+  story label.
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 1: Setup and Provider Migration
 
-**Purpose**: Replace starter-app assumptions with safe Foundation scaffolding. No product-domain
-screen, authentication flow, or domain behavior may be introduced in this phase.
+**Purpose**: Prepare an intentionally small Flutter foundation workspace and remove the obsolete
+Firebase direction before implementation begins.
 
-- [x] T001 Update approved Foundation dependencies and development generators in pubspec.yaml; do not select a package version until its target compatibility is recorded.
-- [x] T002 [P] Configure stricter analysis rules and generated-file exclusions in analysis_options.yaml.
-- [x] T003 [P] Add Flutter localization generation configuration in l10n.yaml.
-- [x] T004 [P] Create Arabic and English resource directories at lib/app/l10n/ and preserve generated output outside manually edited resources.
-- [x] T005 Create the feature-first directory skeleton in lib/app/, lib/core/, lib/features/foundation/, test/unit/, test/widget/, test/architecture/, test/support/, and integration_test/.
-- [x] T006 [P] Create test environment constants and non-production Firebase environment selection in test/support/test_environment.dart.
-- [x] T007 [P] Create a target-capability validation record template in specs/001-namaa-foundation/platform-validation.md for Android, iOS, Windows, macOS, and Linux.
-- [x] T008 Run dependency resolution and static analysis from pubspec.yaml and analysis_options.yaml; record any unsupported package/platform result in specs/001-namaa-foundation/platform-validation.md.
+- [ ] T001 Replace `cloud_firestore`, `firebase_auth`, and `firebase_core` with `supabase_flutter` in `pubspec.yaml`; retain only Foundation-approved dependencies and run `flutter pub get`.
+- [ ] T002 [P] Add ARB generation configuration with Arabic and English support in `l10n.yaml`.
+- [ ] T003 [P] Create the initial Foundation domain entry files and types in `lib/core/domain/results/app_result.dart` and `lib/features/foundation/domain/foundation_entities.dart` without adding any product-domain behavior.
+- [ ] T004 [P] Create local Supabase configuration in `supabase/config.toml` for Docker-backed automated tests; do not place non-local credentials or production URLs in it.
+- [ ] T005 [P] Add test-only environment allow-list helpers in `test/support/test_environment.dart` that distinguish the local Supabase stack and isolated non-production device configuration and reject production hosts.
+- [ ] T006 [P] Add deterministic test helpers for clock, connectivity, and temporary encrypted database paths in `test/support/foundation_test_support.dart`.
+- [ ] T007 [P] Add the Foundation platform-validation record template in `specs/001-namaa-foundation/platform-validation.md` for Android, iOS, Windows, macOS, and Linux evidence.
+- [ ] T008 Run `dart format .`, `flutter analyze`, and the existing test entry points; record only pre-existing failures in `specs/001-namaa-foundation/implementation-baseline.md` without changing unrelated code.
 
-**Checkpoint**: The starter application remains buildable, the directory structure exists, and no
-production Firebase environment or product feature has been added.
-
----
-
-## Phase 2: Foundational (Blocking Prerequisites)
-
-**Purpose**: Build the minimum shared contracts and app composition required before any user-story
-increment. All Domain code must remain independent of Flutter, Drift, Firebase, routing, and
-platform implementations.
-
-### Tests for Foundational Boundaries
-
-- [ ] T009 [P] Write forbidden-import architecture tests in test/architecture/domain_dependency_test.dart covering lib/core/domain/ and lib/features/foundation/domain/.
-- [ ] T010 [P] Write composition smoke tests with test doubles in test/unit/app/composition_test.dart before creating the production composition root.
-- [ ] T011 [P] Write app-shell unknown-route failure widget test in test/widget/app/root_route_failure_test.dart before adding the route shell.
-
-### Implementation for Foundational Boundaries
-
-- [ ] T012 Create shared domain failure/result value types with no Flutter or SDK imports in lib/core/domain/failures/app_failure.dart and lib/core/domain/results/result.dart.
-- [ ] T013 Create infrastructure-neutral cloud-session, cloud-sync, local-store, and credential-vault port contracts in lib/core/application/ports/.
-- [ ] T014 Create Foundation presentation state contracts for startup, ready, recoverable failure, and blocking failure in lib/features/foundation/presentation/state/foundation_state.dart.
-- [ ] T015 Create the application dependency-registration entry point in lib/app/composition/configure_dependencies.dart and register test-double seams without resolving concrete Firebase or Drift objects in Domain.
-- [ ] T016 Create the root route registry and handled unknown-route boundary in lib/app/routing/app_router.dart.
-- [ ] T017 Replace the starter bootstrap with a thin composition-root entry point in lib/main.dart and an app shell boundary in lib/app/app.dart.
-- [ ] T018 Make T009-T011 pass using only the contracts and app shell in lib/core/, lib/app/, lib/features/foundation/, and test/.
-
-**Checkpoint**: Architecture tests prevent forbidden Domain dependencies; the composition root
-resolves test doubles; an unknown route produces a handled failure state.
+**Checkpoint**: The dependency manifest contains no Firebase package, and the project is ready for
+Foundation-only source files and a local Supabase test configuration.
 
 ---
 
-## Phase 3: User Story 1 - Use Namaa Through Connectivity Changes (Priority: P1) MVP
+## Phase 2: Foundational Boundaries and Bootstrap (Blocking Prerequisites)
 
-**Goal**: A Foundation-supported local operation persists immediately without network, survives a
-restart, queues a durable synchronization operation, and safely handles acknowledgement, retry,
-conflict, migration, Firebase isolation, and encrypted account data.
+**Purpose**: Establish the shared contracts, composition root, and guardrails that every user
+story requires. No user-story implementation starts until this phase is complete.
 
-**Independent Test**: With network disabled, commit a Foundation probe record, restart the
-application, read the same record, reconnect to a test cloud adapter, and verify one logical
-remote effect. Inject conflicts and migration failures to verify retained evidence and recovery.
+- [ ] T009 [P] Create public, infrastructure-free result and failure types in `lib/core/domain/results/app_result.dart` and `lib/core/domain/failures/app_failure.dart` for recoverable and blocking outcomes with no Flutter, Drift, or Supabase imports.
+- [ ] T010 [P] Create the Local Store, Cloud Session, Cloud Sync, Credential Vault, connectivity, and platform-capability ports in `lib/core/application/ports/foundation_ports.dart` according to `contracts/application-boundaries.md`.
+- [ ] T011 [P] Create Foundation value types for application preference, local record, pending change, conflict record, migration journal, and failure state in `lib/features/foundation/domain/foundation_entities.dart` with invariants from `data-model.md`.
+- [ ] T012 [P] Add architecture import-boundary tests in `test/architecture/domain_dependency_test.dart` that fail on Domain imports of Flutter, Supabase, Drift, routing, notification, or platform adapters.
+- [ ] T013 [P] Add unit tests for Foundation value-type validation, pending-change terminal acknowledgement, and equal-timestamp recoverable conflict behavior in `test/unit/features/foundation/domain/foundation_value_types_test.dart`.
+- [ ] T014 Create application use cases for bootstrap, preference restoration, local record commit, pending synchronization, retry, conflict recording, and migration recovery in `lib/features/foundation/application/foundation_use_cases.dart`; depend only on the ports from T010.
+- [ ] T018 Add dependency-resolution and Cubit-boundary tests in `test/unit/app/composition/configure_dependencies_test.dart` and `test/unit/features/foundation/presentation/foundation_cubits_test.dart` using only fakes for all ports; confirm they fail before implementing T015–T017.
+- [ ] T015 Create the application composition entry point in `lib/app/composition/configure_dependencies.dart` and test-double registration surface in `lib/app/composition/unconfigured_adapters.dart`; do not register SDK instances in Domain.
+- [ ] T016 Create root bootstrap, failure, locale, theme, and synchronization status Cubit state contracts in `lib/features/foundation/presentation/state/foundation_state.dart` with localized message keys rather than infrastructure error text.
+- [ ] T017 Create the minimal app shell and composition bootstrap in `lib/app/app.dart` and `lib/main.dart` so boot errors are represented as safe startup state rather than uncaught exceptions.
+
+**Checkpoint**: Domain imports are clean, the composition root resolves fakes, and a startup failure
+is represented by a Cubit state without a product screen.
+
+---
+
+## Phase 3: User Story 1 - Use Namaa Through Connectivity Changes (Priority: P1) 🎯 MVP
+
+**Goal**: A Foundation-owned verification record can change locally while offline, survive restart,
+and synchronize safely through isolated Supabase infrastructure after connectivity returns.
+
+**Independent Test**: Run the offline/restart, retry/idempotency, migration, security, and local
+Supabase account-isolation suites. They must complete without any product-domain screen or a
+production cloud endpoint.
 
 ### Tests for User Story 1
 
-- [ ] T019 [P] [US1] Write unit tests for Foundation entities, operation-ID immutability, and timestamp conflict selection in test/unit/foundation/domain/foundation_entities_test.dart.
-- [ ] T020 [P] [US1] Write encrypted-local-store contract tests, including absent credential and no-unencrypted-fallback cases, in test/unit/core/data/local/encrypted_local_store_test.dart.
-- [ ] T021 [P] [US1] Write outbox acknowledgement, retry, and duplicate-dispatch tests in test/unit/core/data/sync/outbox_sync_coordinator_test.dart.
-- [ ] T022 [P] [US1] Write migration success and injected-failure recovery tests in test/unit/core/data/local/migration_recovery_test.dart.
-- [ ] T023 [P] [US1] Write Firebase-port substitution and emulator-environment tests in test/unit/core/data/cloud/firebase_boundary_test.dart.
-- [ ] T024 [P] [US1] Write offline-restart and reconnect integration scenarios in integration_test/foundation_offline_test.dart and integration_test/foundation_sync_test.dart.
-- [ ] T025 [P] [US1] Write encrypted-persistence and migration integration scenarios in integration_test/foundation_security_test.dart and integration_test/foundation_migration_test.dart.
+- [ ] T019 [P] [US1] Write encrypted Local Store transaction and preference-restoration tests in `test/unit/core/data/local/encrypted_local_store_test.dart`, including the rule that local change and pending operation commit atomically.
+- [ ] T020 [P] [US1] Write Credential Vault tests in `test/unit/core/platform/credential_vault_test.dart` proving secrets are not written to preference, failure, or log test doubles.
+- [ ] T021 [P] [US1] Write synchronization coordinator unit tests in `test/unit/core/data/sync/synchronization_coordinator_test.dart` for retry with unchanged operation ID, acknowledgement terminality, newest-timestamp selection, retained conflict, and equal-timestamp recovery.
+- [ ] T022 [P] [US1] Write migration success and injected-failure preservation tests in `test/unit/core/data/local/foundation_migration_test.dart`.
+- [ ] T023 [P] [US1] Write a Supabase-port substitution and publishable-key-only configuration test in `test/unit/core/data/cloud/supabase_boundary_test.dart`; it must fail for secret/service-role key material or a Domain Supabase import.
+- [ ] T024 [P] [US1] Write local-stack database authorization tests in `supabase/tests/foundation_account_isolation_test.sql` before T034; the test may initially fail while the Supabase schema and RLS policies are absent, then rerun it after T034 to verify owner account allowed and different account denied for read/write operations.
+- [ ] T025 [P] [US1] Write an offline persistence/restart integration test with ten consecutive restarts in `integration_test/foundation_offline_test.dart`.
+- [ ] T026 [P] [US1] Write reconnect/retry and conflict-retention integration tests in `integration_test/foundation_sync_test.dart`.
+- [ ] T027 [P] [US1] Write encrypted migration/recovery integration coverage in `integration_test/foundation_migration_test.dart`.
+- [ ] T028 [P] [US1] Write local Supabase stack and isolated non-production device boundary coverage in `integration_test/foundation_supabase_test.dart`; production configuration must be rejected before a connection is attempted.
 
 ### Implementation for User Story 1
 
-- [ ] T026 [P] [US1] Create typed Foundation local-record, pending-change, conflict-record, migration-journal, and preference entities in lib/features/foundation/domain/entities/.
-- [ ] T027 [P] [US1] Create Foundation synchronization and persistence use-case contracts in lib/features/foundation/application/use_cases/.
-- [ ] T028 [US1] Create the OS-protected credential-vault adapter boundary in lib/core/platform/secure_storage/credential_vault.dart and return controlled failures without exposing secrets.
-- [ ] T029 [US1] Configure the encrypted Drift database executor and database-key acquisition in lib/core/data/local/encrypted_app_database.dart; refuse unencrypted fallback.
-- [ ] T030 [US1] Define Drift tables and typed data-access objects for preferences, local records, outbox operations, conflict records, and migration journal in lib/core/data/local/schema/ and lib/core/data/local/daos/.
-- [ ] T031 [US1] Implement automatic migration execution, migration journaling, prior-state retention, and recoverable migration failure in lib/core/data/local/migrations/.
-- [ ] T032 [US1] Implement atomic local-record plus pending-change commits and preference fallback behavior in lib/core/data/local/drift_local_store.dart.
-- [ ] T033 [US1] Implement operation-ID-preserving outbox state transitions and acknowledgement persistence in lib/core/data/sync/durable_outbox.dart.
-- [ ] T034 [US1] Implement the synchronization coordinator with recoverable retry, acknowledged terminal state, and no duplicate logical dispatch in lib/core/data/sync/sync_coordinator.dart.
-- [ ] T035 [US1] Implement timestamp conflict selection, non-winning-version retention, and equal-timestamp recoverable conflict in lib/core/data/sync/conflict_resolver.dart.
-- [ ] T036 [US1] Implement Firebase Auth and Cloud Firestore adapters only behind ports in lib/core/data/cloud/firebase/; do not import Firebase from Domain or Cubits.
-- [ ] T037 [US1] Add Firebase emulator selection, one demo project ID configuration, emulator reset support, and production-environment rejection to lib/core/data/cloud/firebase/firebase_environment.dart.
-- [ ] T038 [US1] Register encrypted storage, local store, sync coordinator, Firebase adapters, emulator/test adapters, and test doubles in lib/app/composition/configure_dependencies.dart.
-- [ ] T039 [US1] Implement a Foundation sync-status Cubit that invokes use cases only in lib/features/foundation/presentation/cubit/sync_status_cubit.dart.
-- [ ] T040 [US1] Make T019-T025 pass, then run the P1 scenarios in quickstart.md; record all target and Firebase results in specs/001-namaa-foundation/platform-validation.md.
+- [ ] T029 [US1] Implement the OS-protected Credential Vault adapter in `lib/core/platform/secure_credential_vault.dart` and wire it only through the Credential Vault port.
+- [ ] T030 [US1] Implement encrypted Drift database opening, Foundation tables, automatic migration journal, and recoverable migration failure path in `lib/core/data/local/foundation_database.dart`.
+- [ ] T031 [US1] Implement the encrypted Local Store adapter, including atomic local-record/outbox commit and durable preference storage, in `lib/core/data/local/drift_local_store.dart`.
+- [ ] T032 [US1] Implement environment validation and a publishable-key-only Supabase client factory in `lib/core/data/cloud/supabase/supabase_environment.dart` and `lib/core/data/cloud/supabase/supabase_client_factory.dart`.
+- [ ] T033 [US1] Implement Supabase Auth session and cloud-sync adapters behind the ports in `lib/core/data/cloud/supabase/supabase_session_adapter.dart` and `lib/core/data/cloud/supabase/supabase_sync_adapter.dart`; do not implement authentication UI or a product account workflow.
+- [ ] T034 [US1] Create the Foundation-only remote probe schema, least-privilege grants, and RLS owner policies in `supabase/migrations/0001_foundation_probe.sql`; enforce remote ownership from the authenticated session rather than a caller-supplied account ID.
+- [ ] T035 [US1] Implement the durable outbox, retry coordinator, idempotent acknowledgement, and conflict-record persistence in `lib/core/data/sync/synchronization_coordinator.dart`.
+- [ ] T036 [US1] Implement connectivity-triggered retry orchestration and recoverable failure mapping in `lib/core/data/sync/synchronization_runner.dart` without making the UI or Domain depend on network SDK types.
+- [ ] T037 [US1] Connect the local store, credential vault, Supabase adapters, and synchronization coordinator only in `lib/app/composition/configure_dependencies.dart` for local, test, and non-production environments.
+- [ ] T038 [US1] Implement the Foundation synchronization status and retry Cubit behavior in `lib/features/foundation/presentation/state/synchronization_cubit.dart` using the use cases from T014.
+- [ ] T039 [US1] Make T019–T028 pass against the local Supabase stack, then run the User Story 1 validation commands in `quickstart.md` without contacting production.
 
-**Checkpoint**: P1 is independently usable and testable offline. It stores account-scoped data
-encrypted, survives restart, retries safely, retains conflicts, migrates safely, and does not
-couple Domain code to Firebase/Drift.
+**Checkpoint**: A Foundation verification record is durable and usable offline; reconnect retries are
+idempotent; conflicts retain evidence; local account data is encrypted; and RLS denies another
+account access.
 
 ---
 
 ## Phase 4: User Story 2 - Use Namaa in Arabic or English (Priority: P2)
 
-**Goal**: The Foundation app shell switches between Arabic RTL and English LTR, restores a supported
-preference safely, and displays localized recoverable failures without adding a product screen.
+**Goal**: The app root displays Arabic and English resources, restores a valid saved locale, and
+applies Arabic RTL correctly.
 
-**Independent Test**: Launch with each locale, change locale, restart, and verify Arabic RTL,
-English LTR, localized Foundation text, and fallback for unavailable preferences.
+**Independent Test**: Launch the app root in Arabic and English, switch locale, restart, and verify
+Arabic RTL, English LTR, localized root text, and invalid-preference fallback.
 
 ### Tests for User Story 2
 
-- [ ] T041 [P] [US2] Write Arabic RTL, English LTR, locale-switch, and unsupported-locale fallback widget tests in test/widget/app/localization_test.dart.
-- [ ] T042 [P] [US2] Write locale-preference persistence and localized-failure Cubit tests in test/unit/foundation/presentation/locale_cubit_test.dart.
+- [ ] T040 [P] [US2] Write locale preference use-case and unsupported-value fallback tests in `test/unit/features/foundation/application/locale_preference_test.dart`.
+- [ ] T041 [P] [US2] Write locale Cubit state-transition tests in `test/unit/features/foundation/presentation/locale_cubit_test.dart`.
+- [ ] T042 [P] [US2] Write app-root Arabic RTL, English LTR, localized-resource, locale-switch, and restart-restoration widget tests in `test/widget/app/localization_and_directionality_test.dart`.
 
 ### Implementation for User Story 2
 
-- [ ] T043 [P] [US2] Define complete English Foundation resource keys in lib/app/l10n/app_en.arb.
-- [ ] T044 [P] [US2] Define equivalent Arabic Foundation resource keys in lib/app/l10n/app_ar.arb.
-- [ ] T045 [US2] Configure generated localization delegates and supported Arabic/English locales in l10n.yaml and lib/app/app.dart.
-- [ ] T046 [US2] Implement locale preference use cases and locale Cubit in lib/features/foundation/application/use_cases/locale_use_cases.dart and lib/features/foundation/presentation/cubit/locale_cubit.dart.
-- [ ] T047 [US2] Bind localized text, recovered locale preference, and Flutter directionality at the app root in lib/app/app.dart.
-- [ ] T048 [US2] Make T041-T042 pass and record Arabic RTL/English LTR results in specs/001-namaa-foundation/platform-validation.md.
+- [ ] T043 [US2] Add Foundation-only Arabic resources in `lib/app/l10n/app_ar.arb` and matching English resources in `lib/app/l10n/app_en.arb`; do not add domain-specific copy.
+- [ ] T044 [US2] Configure generated Flutter localization delegates and supported locales in `lib/app/app.dart` using the generated output from `lib/app/l10n/`.
+- [ ] T045 [US2] Implement locale preference restoration, validation, persistence, and fallback use cases in `lib/features/foundation/application/locale_preferences.dart`.
+- [ ] T046 [US2] Implement `LocaleCubit` and its state in `lib/features/foundation/presentation/state/locale_cubit.dart` without direct database access.
+- [ ] T047 [US2] Bind the root locale and Flutter directionality to `LocaleCubit` in `lib/app/app.dart`; do not introduce per-widget manual direction overrides.
+- [ ] T048 [US2] Make T040–T042 pass on one mobile and one desktop target and record the evidence in `specs/001-namaa-foundation/platform-validation.md`.
 
-**Checkpoint**: P2 is independently testable: the app root presents Arabic RTL and English LTR,
-restores preferences safely, and emits no hard-coded Foundation text.
+**Checkpoint**: Arabic and English work at the root, Arabic is RTL, and a safe locale fallback
+keeps the app launchable.
 
 ---
 
 ## Phase 5: User Story 3 - Receive a Consistent Foundation on Any Supported Target (Priority: P3)
 
-**Goal**: The root route starts consistently on all approved platforms while supporting light,
-dark, and system themes and retaining shared business semantics behind platform adapters.
+**Goal**: The app reaches a registered root route and supports light, dark, and system appearance
+with shared Foundation contracts across mobile and desktop.
 
-**Independent Test**: On a supported target, launch the root route, choose every appearance mode,
-restart, and confirm route/navigation and preference restoration. Execute the same suite on all
-five targets and report adapter capability results.
+**Independent Test**: On one mobile and one desktop target, launch the registered root route,
+exercise all appearance modes, verify unknown-route handling, and confirm no platform-specific
+business-rule implementation exists.
 
 ### Tests for User Story 3
 
-- [ ] T049 [P] [US3] Write root-route, unknown-route, and theme-mode widget tests in test/widget/app/routing_and_theme_test.dart.
-- [ ] T050 [P] [US3] Write theme-preference persistence Cubit tests in test/unit/foundation/presentation/theme_cubit_test.dart.
-- [ ] T051 [P] [US3] Write target startup and adapter-capability integration harness in integration_test/foundation_platform_test.dart.
-- [ ] T052 [P] [US3] Write isolated non-production Firebase device-integration harness in integration_test/foundation_firebase_test.dart.
+- [ ] T049 [P] [US3] Write appearance preference restoration and fallback unit tests in `test/unit/features/foundation/application/theme_preference_test.dart`.
+- [ ] T050 [P] [US3] Write Theme Cubit transition tests for light, dark, and system modes in `test/unit/features/foundation/presentation/theme_cubit_test.dart`.
+- [ ] T051 [P] [US3] Write registered-root-route and handled unknown-route tests in `test/widget/app/app_router_test.dart`.
+- [ ] T052 [P] [US3] Write root theme-mode widget tests in `test/widget/app/theme_selection_test.dart`.
+- [ ] T053 [P] [US3] Write startup, encrypted-store, credential-vault, Supabase initialization, and offline/reconnect platform-capability integration coverage in `integration_test/foundation_platform_test.dart`.
 
 ### Implementation for User Story 3
 
-- [ ] T053 [P] [US3] Define light and dark ThemeData plus system-mode selection in lib/app/theme/app_theme.dart.
-- [ ] T054 [US3] Implement appearance preference use cases and theme Cubit in lib/features/foundation/application/use_cases/theme_use_cases.dart and lib/features/foundation/presentation/cubit/theme_cubit.dart.
-- [ ] T055 [US3] Bind theme state and system appearance to the root app shell in lib/app/app.dart.
-- [ ] T056 [US3] Add Foundation root route, navigation shell, and route-error state without a product feature screen in lib/app/routing/app_router.dart.
-- [ ] T057 [US3] Add platform-capability reporting for encrypted database, credential vault, Firebase initialization, emulator connectivity, and non-production device integration in lib/core/platform/platform_capability_reporter.dart.
-- [ ] T058 [US3] Make T049-T052 pass across Android, iOS, Windows, macOS, and Linux; complete specs/001-namaa-foundation/platform-validation.md with pass/fail evidence and block production lock-in on any failure.
+- [ ] T054 [US3] Define the root route registry and handled unknown-route boundary in `lib/app/routing/app_router.dart` without adding feature routes or product screens.
+- [ ] T055 [US3] Implement Foundation theme definitions and system appearance support in `lib/app/theme/app_theme.dart`.
+- [ ] T056 [US3] Implement theme preference use cases and `ThemeCubit` in `lib/features/foundation/application/theme_preferences.dart` and `lib/features/foundation/presentation/state/theme_cubit.dart`.
+- [ ] T057 [US3] Bind routing, light, dark, and system theme state at the application root in `lib/app/app.dart`.
+- [ ] T058 [US3] Implement target-capability reporting at the infrastructure boundary in `lib/core/platform/platform_capability_reporter.dart`; report capability failures without branching Domain business rules.
+- [ ] T059 [US3] Make T049–T053 pass on one mobile and one desktop target and record the evidence in `specs/001-namaa-foundation/platform-validation.md`.
 
-**Checkpoint**: P3 is independently testable: all appearance modes work at the root, route failures
-are handled, and the five-platform evidence record is complete.
+**Checkpoint**: The shared root route, routing failure handling, and all appearance modes work on
+both form factors without product features or divergent business semantics.
 
 ---
 
-## Phase 6: Polish and Cross-Cutting Verification
+## Phase 6: Polish, Security, and Release-Gate Verification
 
-**Purpose**: Verify the complete Foundation against its specification, contracts, Constitution, and
-the lower-experience-agent handoff rules. Do not refactor merely for aesthetics.
+**Purpose**: Complete required cross-cutting validation and preserve explicit evidence before any
+later product-domain work is planned.
 
-- [ ] T059 [P] Run and fix all static-analysis findings from analysis_options.yaml and lib/.
-- [ ] T060 [P] Run all unit, widget, architecture, and integration tests from test/ and integration_test/ with Firebase emulators; confirm no test reaches production Firebase.
-- [ ] T061 [P] Verify all Local Store, Cloud Session, Cloud Sync, Credential Vault, and presentation-state contracts against specs/001-namaa-foundation/contracts/.
-- [ ] T062 Review lib/ against FR-001 through FR-022 and document requirement-to-evidence mapping in specs/001-namaa-foundation/verification-report.md.
-- [ ] T063 Review the completed platform evidence and quickstart scenarios in specs/001-namaa-foundation/platform-validation.md and specs/001-namaa-foundation/quickstart.md; block release if any target lacks a verified safe adapter.
-- [ ] T064 Confirm scope containment by checking lib/ and integration_test/ for Tasks, authentication UI, Finance, Quran, Prayer, notification, and other product-domain behavior; record the result in specs/001-namaa-foundation/verification-report.md.
-- [ ] T065 Perform final Constitution compliance review against .specify/memory/constitution.md and record remaining blockers, if any, in specs/001-namaa-foundation/verification-report.md.
+- [ ] T060 [P] Re-run and extend `test/architecture/domain_dependency_test.dart` to verify that Presentation Cubits also do not import Drift, Supabase, or secure-storage adapters directly.
+- [ ] T061 [P] Review `supabase/migrations/0001_foundation_probe.sql` and `supabase/tests/foundation_account_isolation_test.sql` for least-privilege grants, enabled RLS, owner-allowed access, and cross-account denial.
+- [ ] T062 [P] Add a client-artifact and configuration scan test in `test/architecture/client_secret_scan_test.dart` that fails for Supabase secret/service-role key patterns in tracked Flutter client files.
+- [ ] T063 Run `dart format .`, `flutter analyze`, all unit/widget/architecture tests, `flutter test integration_test`, and `supabase test db` using the local Supabase stack; resolve only Foundation failures.
+- [ ] T064 Run the complete quickstart validation matrix on Android, iOS, Windows, macOS, and Linux and record launch, encryption, vault, Supabase Auth/Data API/session/sync, offline/reconnect, locale/RTL, and theme evidence in `specs/001-namaa-foundation/platform-validation.md`.
+- [ ] T065 Update `specs/001-namaa-foundation/quickstart.md` only if the implemented commands differ from the documented, verified commands; preserve the local-stack and non-production-only restrictions.
+- [ ] T066 Conduct a final Constitution and specification traceability review in `specs/001-namaa-foundation/implementation-review.md`, confirming FR-001–FR-024, AC-001–AC-014, and SC-001–SC-011 or recording a blocking unsupported target capability.
 
-**Checkpoint**: Foundation is ready for review only when every required test passes, all five target
-results are recorded, Firebase production isolation is proven, and the verification report contains
-no unapproved scope expansion.
+**Checkpoint**: Foundation is complete only when every required target has evidence, all automated
+checks pass, no client secret is present, production is never contacted by automated tests, and no
+product feature has been introduced.
 
 ---
 
@@ -191,81 +189,88 @@ no unapproved scope expansion.
 
 ### Phase Dependencies
 
-~~~text
-Phase 1 Setup
-    ↓
-Phase 2 Foundational
-    ↓
-Phase 3 US1: offline persistence and synchronization MVP
-    ↓
-Phase 4 US2: localization and RTL
-    ↓
-Phase 5 US3: theme, routing, and platform matrix
-    ↓
-Phase 6 verification
-~~~
-
-US2 and US3 use the completed app composition from Phase 2 and the persistence boundary from US1
-to restore preferences. They may be parallelized only after a lead confirms no two tasks edit the
-same file; this plan’s safe default for a less-experienced implementation agent is the sequential
-order above.
+- **Phase 1 — Setup**: Starts immediately. T001 must finish before Flutter dependency-dependent
+  work; T004 and T005 must finish before local Supabase testing.
+- **Phase 2 — Foundational**: Starts after Phase 1. It blocks every user story.
+- **Phase 3 — US1 (P1)**: Starts after Phase 2. It is the MVP and establishes verifiable
+  persistence and synchronization.
+- **Phase 4 — US2 (P2)**: Starts after US1 completes because it uses the shared LocalStore/Drift
+  foundation established by US1.
+- **Phase 5 — US3 (P3)**: Starts after US2 to preserve the required implementation order and uses
+  the same shared LocalStore/Drift foundation established by US1.
+- **Phase 6 — Polish**: Starts after the selected user-story work is complete; T064 is a hard
+  production-lock-in gate, not a reason to weaken target support.
 
 ### User Story Dependencies
 
-- **US1 (P1)** depends on Setup and Foundational phases; it is the MVP.
-- **US2 (P2)** depends on the shared app shell and local preference store; it does not depend on
-  product-domain behavior.
-- **US3 (P3)** depends on the shared app shell and local preference store; it does not depend on
-  product-domain behavior.
+- **US1**: Depends on Phase 2; no dependency on US2 or US3.
+- **US2**: Depends on Phase 2, the app shell from T017, and the shared LocalStore/Drift foundation
+  established by US1.
+- **US3**: Is implemented after US2 and depends on Phase 2, the app shell from T017, and the same
+  shared LocalStore/Drift foundation established by US1; it has no product-behavior dependency on US2.
 
-### Parallel Opportunities
+### Within User Story 1
 
-- In Setup: T002, T003, T004, T006, and T007 are separate-file tasks after T001 establishes
-  dependencies.
-- In Foundational tests: T009, T010, and T011 can be written in parallel.
-- In US1: T019 through T025 can be written in parallel; T026 and T027 can start together.
-- In US2: T041/T042 and T043/T044 can each run in parallel.
-- In US3: T049 through T052 can be written in parallel; T053 can proceed independently of T054.
-- In final verification: T059, T060, and T061 can run in parallel after US3 completes.
+1. Complete T019–T028 before T029–T038.
+2. Complete T029–T034 before the coordinator in T035.
+3. Complete T035–T038 before the verification task T039.
+
+### Within User Story 2
+
+1. Complete T040–T042 before T043–T047.
+2. Complete resource and delegate work T043–T044 before binding the Cubit at T047.
+3. Run T048 only after all prior US2 tasks pass.
+
+### Within User Story 3
+
+1. Complete T049–T053 before T054–T058.
+2. Complete routing/theme implementations T054–T057 before capability evidence T059.
+
+## Parallel Opportunities
+
+- Phase 1: T002–T007 can run in parallel after T001's dependency direction is understood.
+- Phase 2: T009–T013 can run in parallel because they use separate contracts, domain files, and
+  tests.
+- US1: T019–T028 are independent test files and may be assigned in parallel. T029 and T030 may
+  begin together only after their tests exist; T032 and T034 may run in parallel with them.
+- US2: T040–T042 are parallel test tasks; T043 and T045 may proceed independently after tests.
+- US3: T049–T053 are parallel test tasks; T054, T055, and T058 are independent implementation
+  files once their tests are in place.
+- Polish: T060–T062 are independent reviews/tests and can run in parallel.
 
 ## Parallel Example: User Story 1
 
-~~~text
-Parallel test work:
-- T019 Foundation entity/conflict unit tests
-- T020 encrypted-store contract tests
-- T021 outbox retry tests
-- T022 migration recovery tests
-- T023 Firebase boundary tests
-- T024 offline and reconnect integration tests
-- T025 persistence-security and migration integration tests
-
-Then sequentially:
-T028 → T029 → T030 → T031 → T032 → T033 → T034 → T035 → T036 → T037 → T038 → T039 → T040
-~~~
+```text
+Task: "T019 encrypted Local Store tests in test/unit/core/data/local/encrypted_local_store_test.dart"
+Task: "T021 synchronization tests in test/unit/core/data/sync/synchronization_coordinator_test.dart"
+Task: "T024 RLS SQL tests in supabase/tests/foundation_account_isolation_test.sql"
+Task: "T025 offline restart tests in integration_test/foundation_offline_test.dart"
+```
 
 ## Implementation Strategy
 
 ### MVP First
 
-1. Complete T001 through T018.
-2. Complete all US1 test tasks before their implementation tasks.
-3. Complete T026 through T040.
-4. Stop. Validate the P1 offline/restart/reconnect path with emulators and a test-double cloud
-   adapter before proceeding.
+1. Finish Phases 1 and 2.
+2. Finish all User Story 1 tests before implementation.
+3. Complete T029–T038 and validate with T039.
+4. Stop and verify the offline/local-first Foundation before starting locale or theme work.
 
 ### Incremental Delivery
 
-1. US1 delivers encrypted local-first persistence and safe synchronization.
-2. US2 adds localized Arabic/English root behavior and RTL.
-3. US3 adds themes, routing, and the five-target evidence gate.
-4. Phase 6 verifies containment and Constitution compliance before review.
+1. **MVP**: US1 supplies encrypted local-first persistence, safe synchronization boundaries, and
+   Supabase account isolation.
+2. **Increment 2**: US2 adds app-root Arabic/English localization and RTL.
+3. **Increment 3**: US3 adds route and theme consistency across mobile and desktop.
+4. **Release gate**: Phase 6 provides the five-target evidence; a failed capability blocks
+   production lock-in rather than prompting a new unapproved backend or business-rule variant.
 
-### Lower-Experience Agent Guardrails
+## Task Validation
 
-- Complete one unchecked task at a time and run its named test/check before the next dependent task.
-- Do not change any file outside a task’s stated scope unless a task explicitly requires it.
-- Do not replace a failing test with a weaker assertion.
-- Do not select an unverified package/platform fallback; record the failure in platform-validation.md
-  and stop for review.
-- Do not add a product feature to make a Foundation test convenient.
+- **Total tasks**: 66 (T001–T066).
+- **User Story 1**: 21 tasks (T019–T039).
+- **User Story 2**: 9 tasks (T040–T048).
+- **User Story 3**: 11 tasks (T049–T059).
+- **Setup/foundational/polish**: 25 tasks (T001–T018, T060–T066).
+- Every task uses the required checkbox, sequential ID, applicable `[P]` and `[US#]` labels, and
+  at least one exact repository path.
