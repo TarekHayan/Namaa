@@ -10,16 +10,9 @@ environment:
 # Sorted alphabetically (sort_pub_dependencies). Approved Foundation direction
 # only; every entry has a present use case (Constitution VIII).
 dependencies:
-  # Remote infrastructure only; used exclusively by core/data/cloud adapters.
-  cloud_firestore: ^6.9.0
-
   # Local-first encrypted persistence (Constitution III/IX: Drift over SQLite).
   drift: ^2.34.4
   drift_flutter: ^0.3.1
-
-  # Remote infrastructure only; used exclusively by core/data/cloud adapters.
-  firebase_auth: ^6.6.1
-  firebase_core: ^4.14.0
 
   flutter:
     sdk: flutter
@@ -44,6 +37,10 @@ dependencies:
   injectable: ^3.0.0
   intl: ^0.20.2
   json_annotation: ^4.12.0
+
+  # Remote infrastructure only; used exclusively by core/data/cloud adapters
+  # behind the Cloud Session and Cloud Sync ports (Constitution: Supabase).
+  supabase_flutter: ^2.17.2
 
 dev_dependencies:
   bloc_test: ^10.0.0
@@ -71,4 +68,7 @@ hooks:
       source: sqlite3mc
 
 flutter:
+  # Enables ARB/gen_l10n generation configured in l10n.yaml (Constitution:
+  # Arabic/English and RTL).
+  generate: true
   uses-material-design: true

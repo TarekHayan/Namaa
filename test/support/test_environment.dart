@@ -1,75 +1,100 @@
-/// Test-environment constants and non-production Firebase environment
+/// Test-environment constants and non-production Supabase environment
 /// selection shared by unit, widget, and integration tests.
 ///
-/// Automated tests MUST never reach a production Firebase project
-/// (specs/001-namaa-foundation/contracts/synchronization.md, Environment Rule).
+/// Automated tests MUST never reach a production Supabase project
+/// (specs/001-namaa-foundation/contracts/supabase-security.md, Environment
+/// Rule). Only the local Docker-backed stack (or, for device integration, an
+/// isolated non-production project) is selectable.
 library;
 
-/// Demo project ID for the Firebase Local Emulator Suite.
-///
-/// Firebase demo projects (IDs prefixed with `demo-`) cannot access live
-/// resources, which is the safest default for automated tests.
-const String kFirebaseDemoProjectId = 'demo-namaa-foundation';
+/// Base URL of the local Supabase stack defined in `supabase/config.toml`.
+const String kSupabaseLocalUrl = 'http://127.0.0.1:54321';
 
-/// Default Auth emulator endpoint used by automated tests.
-const String kAuthEmulatorHost = 'localhost';
-const int kAuthEmulatorPort = 9099;
+/// Hosts that are always production-safe to reject in automated tests.
+const Set<String> kForbiddenProductionHostPatterns = <String>{
+  'supabase.co',
+  'supabase.in',
+};
 
-/// Default Firestore emulator endpoint used by automated tests.
-const String kFirestoreEmulatorHost = 'localhost';
-const int kFirestoreEmulatorPort = 8080;
+/// The kinds of Supabase environment the test suite may select.
+enum SupabaseEnvironmentKind {
+  /// Local Docker-backed stack from `supabase/config.toml` (default).
+  localStack,
 
-/// The kinds of Firebase environment the test suite may select.
-enum FirebaseEnvironmentKind {
-  /// Local Emulator Suite under [kFirebaseDemoProjectId].
-  emulator,
-
-  /// Isolated non-production project for device integration only.
+  /// Isolated non-production project for device integration only; its URL
+  /// and publishable key are injected by the operator, never committed.
   isolatedNonProduction,
 
   /// Never selectable by automated tests; exists so selection can reject it.
   production,
 }
 
-/// Thrown when a test would select a production Firebase environment.
+/// Thrown when a test would select or connect to a production environment.
 class ProductionEnvironmentRefusedError extends StateError {
-  ProductionEnvironmentRefusedError()
-      : super(
-          'Automated tests must never use production Firebase. '
-          'Use the emulator environment (default) or the isolated '
-          'non-production project for device integration.',
-        );
+  ProductionEnvironmentRefusedError([String? detail])
+    : super(
+        'Automated tests must never use production Supabase. '
+        'Use the local stack environment (default) or the isolated '
+        'non-production project for device integration.'
+        '${detail == null ? '' : ' $detail'}',
+      );
 }
 
-/// Resolves the Firebase environment for automated tests.
+/// Resolves the Supabase environment for automated tests.
 ///
-/// [explicit] overrides the `NAMAA_FIREBASE_ENV` compile-time constant for
+/// [explicit] overrides the `NAMAA_SUPABASE_ENV` compile-time constant for
 /// tests that inject an environment directly. Selecting
-/// [FirebaseEnvironmentKind.production] always throws
-/// [ProductionEnvironmentRefusedError]; the default is the emulator
-/// environment.
-FirebaseEnvironmentKind resolveTestFirebaseEnvironment({
-  String? explicit,
-}) {
-  const defaultKind = FirebaseEnvironmentKind.emulator;
+/// [SupabaseEnvironmentKind.production] always throws
+/// [ProductionEnvironmentRefusedError]; the default is the local stack.
+SupabaseEnvironmentKind resolveTestSupabaseEnvironment({String? explicit}) {
+  const defaultKind = SupabaseEnvironmentKind.localStack;
   final raw =
-      explicit ?? const String.fromEnvironment('NAMAA_FIREBASE_ENV', defaultValue: 'emulator');
+      explicit ??
+      const String.fromEnvironment('NAMAA_SUPABASE_ENV', defaultValue: 'local');
   final kind = switch (raw) {
-    'emulator' => FirebaseEnvironmentKind.emulator,
-    'non-production' => FirebaseEnvironmentKind.isolatedNonProduction,
-    'production' => FirebaseEnvironmentKind.production,
+    'local' => SupabaseEnvironmentKind.localStack,
+    'non-production' => SupabaseEnvironmentKind.isolatedNonProduction,
+    'production' => SupabaseEnvironmentKind.production,
     _ => defaultKind,
   };
   return requireNonProduction(kind);
 }
 
-/// Guard used by every Firebase-touching test entry point.
+/// Guard used by every Supabase-touching test entry point.
 ///
 /// Returns [kind] when it is safe for automated use, otherwise throws
 /// [ProductionEnvironmentRefusedError].
-FirebaseEnvironmentKind requireNonProduction(FirebaseEnvironmentKind kind) {
-  if (kind == FirebaseEnvironmentKind.production) {
+SupabaseEnvironmentKind requireNonProduction(SupabaseEnvironmentKind kind) {
+  if (kind == SupabaseEnvironmentKind.production) {
     throw ProductionEnvironmentRefusedError();
   }
   return kind;
+}
+
+/// Validates that [url] is a local-stack endpoint allowed for automated
+/// tests.
+///
+/// Only loopback hosts are accepted; any hosted Supabase domain or unknown
+/// remote host throws [ProductionEnvironmentRefusedError].
+Uri requireLocalStackUrl(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+    throw ProductionEnvironmentRefusedError('Not a valid URL: $url');
+  }
+  final host = uri.host.toLowerCase();
+  final isLoopback =
+      host == 'localhost' || host == '127.0.0.1' || host == '::1';
+  if (!isLoopback) {
+    throw ProductionEnvironmentRefusedError(
+      'Automated tests may only connect to the local stack, got host "$host".',
+    );
+  }
+  for (final pattern in kForbiddenProductionHostPatterns) {
+    if (host.endsWith(pattern)) {
+      throw ProductionEnvironmentRefusedError(
+        'Hosted Supabase domain rejected: $host',
+      );
+    }
+  }
+  return uri;
 }
