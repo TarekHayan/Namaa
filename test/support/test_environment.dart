@@ -10,12 +10,6 @@ library;
 /// Base URL of the local Supabase stack defined in `supabase/config.toml`.
 const String kSupabaseLocalUrl = 'http://127.0.0.1:54321';
 
-/// Hosts that are always production-safe to reject in automated tests.
-const Set<String> kForbiddenProductionHostPatterns = <String>{
-  'supabase.co',
-  'supabase.in',
-};
-
 /// The kinds of Supabase environment the test suite may select.
 enum SupabaseEnvironmentKind {
   /// Local Docker-backed stack from `supabase/config.toml` (default).
@@ -88,13 +82,6 @@ Uri requireLocalStackUrl(String url) {
     throw ProductionEnvironmentRefusedError(
       'Automated tests may only connect to the local stack, got host "$host".',
     );
-  }
-  for (final pattern in kForbiddenProductionHostPatterns) {
-    if (host.endsWith(pattern)) {
-      throw ProductionEnvironmentRefusedError(
-        'Hosted Supabase domain rejected: $host',
-      );
-    }
   }
   return uri;
 }

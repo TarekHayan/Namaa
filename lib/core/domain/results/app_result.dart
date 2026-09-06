@@ -6,13 +6,18 @@
 /// libraries (specs/001-namaa-foundation/contracts/application-boundaries.md).
 library;
 
+import 'package:namma_project/core/domain/failures/app_failure.dart';
+
 /// The outcome of a Foundation application operation.
 ///
-/// Either [AppSuccess] with a value, or [AppAppFailure] carrying a
-/// user-facing failure description. Infrastructure error text never crosses
-/// this boundary un-wrapped.
+/// Either a success carrying [T], or a failure carrying an [AppFailure].
+/// Infrastructure error text never crosses this boundary un-wrapped.
 sealed class AppResult<T> {
   const AppResult();
+
+  const factory AppResult.success(T value) = _AppSuccess<T>;
+
+  const factory AppResult.failure(AppFailure failure) = _AppFailure<T>;
 
   /// Pattern-matches the outcome.
   R when<R>({
@@ -20,68 +25,36 @@ sealed class AppResult<T> {
     required R Function(AppFailure failure) failure,
   }) {
     final self = this;
-    if (self is AppSuccess<T>) {
+    if (self is _AppSuccess<T>) {
       return success(self.value);
     }
-    if (self is AppAppFailure<T>) {
+    if (self is _AppFailure<T>) {
       return failure(self.failure);
     }
     throw StateError('Unknown AppResult subtype: $runtimeType');
   }
+
+  /// The success value, or null when the outcome is a failure.
+  T? get valueOrNull => switch (this) {
+    _AppSuccess<T>(:final value) => value,
+    _ => null,
+  };
+
+  /// The failure description, or null when the outcome is a success.
+  AppFailure? get failureOrNull => switch (this) {
+    _AppFailure<T>(:final failure) => failure,
+    _ => null,
+  };
 }
 
-/// A completed operation carrying its value.
-final class AppSuccess<T> extends AppResult<T> {
-  const AppSuccess(this.value);
+final class _AppSuccess<T> extends AppResult<T> {
+  const _AppSuccess(this.value);
 
   final T value;
 }
 
-/// A failed operation carrying a Domain-level failure description.
-final class AppAppFailure<T> extends AppResult<T> {
-  const AppAppFailure(this.failure);
+final class _AppFailure<T> extends AppResult<T> {
+  const _AppFailure(this.failure);
 
   final AppFailure failure;
-}
-
-/// A Domain-level failure: a public category, a localized message key, and a
-/// secret-free diagnostic cause.
-///
-/// [messageKey] references an Arabic and English localization resource;
-/// [technicalCause] is diagnostic only and must never contain credentials,
-/// tokens, or database key material.
-class AppFailure {
-  const AppFailure({
-    required this.category,
-    required this.recoverable,
-    required this.messageKey,
-    this.technicalCause,
-  });
-
-  /// Public failure category only; never infrastructure exception text.
-  final AppFailureCategory category;
-
-  /// Whether the operation may be retried.
-  final bool recoverable;
-
-  /// Localized message reference (Arabic and English resources exist).
-  final String messageKey;
-
-  /// Secret-free diagnostic detail, if any.
-  final String? technicalCause;
-
-  @override
-  String toString() =>
-      'AppFailure(category: $category, recoverable: $recoverable, '
-      'messageKey: $messageKey)';
-}
-
-/// Public categories of Foundation failures.
-enum AppFailureCategory {
-  persistence,
-  migration,
-  network,
-  cloud,
-  routing,
-  configuration,
 }

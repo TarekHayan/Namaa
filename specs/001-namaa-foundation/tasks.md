@@ -49,16 +49,16 @@ Foundation-only source files and a local Supabase test configuration.
 **Purpose**: Establish the shared contracts, composition root, and guardrails that every user
 story requires. No user-story implementation starts until this phase is complete.
 
-- [ ] T009 [P] Create public, infrastructure-free result and failure types in `lib/core/domain/results/app_result.dart` and `lib/core/domain/failures/app_failure.dart` for recoverable and blocking outcomes with no Flutter, Drift, or Supabase imports.
-- [ ] T010 [P] Create the Local Store, Cloud Session, Cloud Sync, Credential Vault, connectivity, and platform-capability ports in `lib/core/application/ports/foundation_ports.dart` according to `contracts/application-boundaries.md`.
-- [ ] T011 [P] Create Foundation value types for application preference, local record, pending change, conflict record, migration journal, and failure state in `lib/features/foundation/domain/foundation_entities.dart` with invariants from `data-model.md`.
-- [ ] T012 [P] Add architecture import-boundary tests in `test/architecture/domain_dependency_test.dart` that fail on Domain imports of Flutter, Supabase, Drift, routing, notification, or platform adapters.
-- [ ] T013 [P] Add unit tests for Foundation value-type validation, pending-change terminal acknowledgement, and equal-timestamp recoverable conflict behavior in `test/unit/features/foundation/domain/foundation_value_types_test.dart`.
-- [ ] T014 Create application use cases for bootstrap, preference restoration, local record commit, pending synchronization, retry, conflict recording, and migration recovery in `lib/features/foundation/application/foundation_use_cases.dart`; depend only on the ports from T010.
-- [ ] T018 Add dependency-resolution and Cubit-boundary tests in `test/unit/app/composition/configure_dependencies_test.dart` and `test/unit/features/foundation/presentation/foundation_cubits_test.dart` using only fakes for all ports; confirm they fail before implementing T015–T017.
-- [ ] T015 Create the application composition entry point in `lib/app/composition/configure_dependencies.dart` and test-double registration surface in `lib/app/composition/unconfigured_adapters.dart`; do not register SDK instances in Domain.
-- [ ] T016 Create root bootstrap, failure, locale, theme, and synchronization status Cubit state contracts in `lib/features/foundation/presentation/state/foundation_state.dart` with localized message keys rather than infrastructure error text.
-- [ ] T017 Create the minimal app shell and composition bootstrap in `lib/app/app.dart` and `lib/main.dart` so boot errors are represented as safe startup state rather than uncaught exceptions.
+- [x] T009 [P] Create public, infrastructure-free result and failure types in `lib/core/domain/results/app_result.dart` and `lib/core/domain/failures/app_failure.dart` for recoverable and blocking outcomes with no Flutter, Drift, or Supabase imports.
+- [x] T010 [P] Create the Local Store, Cloud Session, Cloud Sync, Credential Vault, connectivity, and platform-capability ports in `lib/core/application/ports/foundation_ports.dart` according to `contracts/application-boundaries.md`.
+- [x] T011 [P] Create Foundation value types for application preference, local record, pending change, conflict record, migration journal, and failure state in `lib/features/foundation/domain/foundation_entities.dart` with invariants from `data-model.md`.
+- [x] T012 [P] Add architecture import-boundary tests in `test/architecture/domain_dependency_test.dart` that fail on Domain imports of Flutter, Supabase, Drift, routing, notification, or platform adapters.
+- [x] T013 [P] Add unit tests for Foundation value-type validation, pending-change terminal acknowledgement, and equal-timestamp recoverable conflict behavior in `test/unit/features/foundation/domain/foundation_value_types_test.dart`.
+- [x] T014 Create application use cases for bootstrap, preference restoration, local record commit, pending synchronization, retry, conflict recording, and migration recovery in `lib/features/foundation/application/foundation_use_cases.dart`; depend only on the ports from T010.
+- [x] T018 Add dependency-resolution and Cubit-boundary tests in `test/unit/app/composition/configure_dependencies_test.dart` and `test/unit/features/foundation/presentation/foundation_cubits_test.dart` using only fakes for all ports; confirm they fail before implementing T015–T017.
+- [x] T015 Create the application composition entry point in `lib/app/composition/configure_dependencies.dart` and test-double registration surface in `lib/app/composition/unconfigured_adapters.dart`; do not register SDK instances in Domain.
+- [x] T016 Create root bootstrap, failure, locale, theme, and synchronization status Cubit state contracts in `lib/features/foundation/presentation/state/foundation_state.dart` with localized message keys rather than infrastructure error text.
+- [x] T017 Create the minimal app shell and composition bootstrap in `lib/app/app.dart` and `lib/main.dart` so boot errors are represented as safe startup state rather than uncaught exceptions.
 
 **Checkpoint**: Domain imports are clean, the composition root resolves fakes, and a startup failure
 is represented by a Cubit state without a product screen.
