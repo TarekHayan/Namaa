@@ -37,10 +37,10 @@ AppFailure _recoverableFailure() => AppFailure.recoverable(
 );
 
 AppFailure _blockingFailure() => AppFailure.blocking(
-      category: AppFailureCategory.configuration,
-      messageKey: 'foundation.bootstrap.blocking',
-      occurredAt: DateTime.utc(2026, 9, 5),
-    );
+  category: AppFailureCategory.configuration,
+  messageKey: 'foundation.bootstrap.blocking',
+  occurredAt: DateTime.utc(2026, 9, 5),
+);
 
 /// Cloud Session port whose initialize resolves only when the caller
 /// completes the injected future; used to race bootstrap against close.
@@ -57,7 +57,9 @@ class _ControlledCloudSessionPort implements CloudSessionPort {
 
   @override
   Future<AppResult<CloudSyncContext>> obtainSyncContext() async =>
-      AppResult<CloudSyncContext>.success(const CloudSyncContext(accountId: 'account-1'));
+      AppResult<CloudSyncContext>.success(
+        const CloudSyncContext(accountId: 'account-1'),
+      );
 }
 
 void main() {

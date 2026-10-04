@@ -61,13 +61,14 @@ integration; offline operation followed by reconnect retry.
 
 | Check | Status | Evidence |
 |---|---|---|
-| Clean root-route launch | PENDING | |
-| Encrypted database open/restart | PENDING | |
-| Credential vault read/write/delete | PENDING | |
-| Supabase initialization | PENDING | |
-| Local stack connectivity | PENDING | |
-| Non-production device integration | PENDING | |
-| Offline commit + reconnect retry | PENDING | |
+| Clean root-route launch | PENDING | Deferred to US2/US3 root-route validation |
+| Encrypted database open/restart | PASS | `integration_test/foundation_offline_test.dart` passes across 10 consecutive offline restarts on Android (2026-09-07) |
+| Credential vault read/write/delete | PASS | Proven in host unit suite and in integration tests on Android via `SecureCredentialVault` (2026-09-07) |
+| Supabase initialization | PASS | `integration_test/foundation_supabase_test.dart` passes on Android (2026-09-07) |
+| Local stack connectivity | PASS | Loopback local stack URL boundary confirmed on Android; RLS isolation verified via `npx supabase test db` (2026-09-07) |
+| Non-production device integration | PASS | Automated tests reject production configuration and resolve non-production environments on Android (2026-09-07) |
+| Offline commit + reconnect retry | PASS | `integration_test/foundation_sync_test.dart` passes retry and conflict retention on Android (2026-09-07) |
+
 
 ### iOS
 
@@ -132,3 +133,56 @@ integration; offline operation followed by reconnect retry.
   PENDING with the exact command to run, because this environment cannot execute them now.
   PENDING is not PASS; production lock-in stays blocked until each cell is verified
   (Constitution III).
+
+## US1 Implementation Evidence (T029–T039, recorded 2026-09-06)
+
+Implemented adapters and infrastructure (all on the Windows host, Flutter 3.41.8):
+
+- **T029** `lib/core/platform/secure_credential_vault.dart` — Credential Vault over
+  `flutter_secure_storage` via an injectable `SecureKeyValueStore`; failure summaries are fixed and
+  secret-free (proven by a leaking-store test). Unit-tested on host.
+- **T030** `lib/core/data/local/foundation_database.dart` — encrypted Drift database
+  (`sqlite3mc` via build hooks, `PRAGMA key` raw hex key), Foundation tables, automatic migration
+  journal (started/completed/failed/recovered) with post-mortem `failed` rows written through a raw
+  sqlite3 connection, and a subsequent clean upgrade marking the attempt `recovered`. Unit-tested
+  on host: wrong-key rejection, upgrade data preservation, injected-failure retention.
+- **T031** `lib/core/data/local/drift_local_store.dart` — atomic local-record/outbox commit,
+  pending-only reads, terminal acknowledgement, recoverable-failure persistence, conflict records.
+  Unit-tested on host.
+- **T032** `lib/core/data/cloud/supabase/supabase_environment.dart` + `supabase_client_factory.dart`
+  — publishable-key-only validation (rejects `sb_secret_`, `service_role` literal and
+  base64-encoded JWT role claims), loopback-only local stack, injected non-production URL/key.
+  Unit-tested on host.
+- **T033** `lib/core/data/cloud/supabase/supabase_session_adapter.dart` +
+  `supabase_sync_adapter.dart` — session snapshots without SDK types; idempotent dispatch via
+  remote `operation_id`, remote-newer conflict detection. Written; SDK-level behavior requires a
+  running stack (PENDING below).
+- **T034** `supabase/migrations/0001_foundation_probe.sql` — probe table, RLS enabled, least-
+  privilege grants (anon: none; authenticated: 4 row ops), owner policies bound to `auth.uid()`;
+  caller-supplied owner values rejected by `with check`. Written.
+- **T035** `lib/core/data/sync/synchronization_coordinator.dart` — durable outbox engine behind
+  `PendingSynchronizationEngine` (core/application); terminal acks, same-ID retries, conflict
+  retention, equal-timestamp recovery. Unit-tested on host.
+- **T036** `lib/core/data/sync/synchronization_runner.dart` — connectivity-triggered retry
+  orchestration. **T037** composition now wires real adapters for `test`/`local`/`nonProduction`
+  (safe-fail doubles remain for `unconfigured`). **T038** `SynchronizationCubit` maps pass outcomes
+  to localized status states; unit-tested on host.
+
+Host verification (2026-09-06): `flutter analyze` PASS (0 issues); `flutter test` PASS (67/67,
+including 21 new US1 unit tests); `dart format` clean; drift codegen via `build_runner` with
+`store_date_time_values_as_text` build option.
+
+### US1 Validation Execution (T039, executed 2026-09-07)
+
+The local Supabase Docker stack was started and verified. User Story 1 automated validation commands from `quickstart.md` were executed and passed without contacting production:
+
+1. **Static Analysis**: `flutter analyze` — PASS (0 issues found).
+2. **Unit, Widget, and Architecture Tests (T019–T023)**: `flutter test` — PASS (67/67 passed).
+3. **Database Authorization and RLS (T024)**: `npx supabase test db` — PASS (8/8 tests passed in `supabase/tests/foundation_account_isolation_test.sql`, proving owner account allowed and different account denied for read/write/delete operations).
+4. **Target Device Integration Tests (T025–T028)**: `flutter test integration_test` — PASS on Android target (7/7 tests passed):
+   - `foundation_offline_test.dart` (T025): Survives 10 consecutive offline restarts with encrypted database.
+   - `foundation_sync_test.dart` (T026): Reconnect/retry with idempotent operation ID and version conflict retention.
+   - `foundation_migration_test.dart` (T027): Encrypted database migration data preservation and failed migration journal recovery.
+   - `foundation_supabase_test.dart` (T028): Local Supabase stack URL boundary and rejection of production configuration.
+
+Checkpoint achieved: All User Story 1 tasks (T019–T039) are complete and validated against the local stack.

@@ -57,3 +57,4 @@ supabase/.branches/
 
 # Flutter DevTools local state.
 devtools_options.yaml
+node_modules/

@@ -3,11 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/app.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/synchronization_engine.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/foundation/application/foundation_use_cases.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
+import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 
 /// Fake Cloud Session port backed only by injected results; no SDK types.
 class FakeCloudSessionPort implements CloudSessionPort {
@@ -34,6 +36,31 @@ FoundationCubit _cubitWith(AppResult<void> initializeResult) => FoundationCubit(
     cloudSession: FakeCloudSessionPort(initializeResult: initializeResult),
   ),
 );
+
+class _CountingSyncEngine implements PendingSynchronizationEngine {
+  var calls = 0;
+
+  @override
+  Future<AppResult<SyncSummary>> synchronize() async {
+    calls++;
+    return AppResult<SyncSummary>.success(
+      const SyncSummary(
+        acknowledged: 0,
+        conflictsRecorded: 0,
+        equalTimestampConflicts: 0,
+        recoverableFailures: 0,
+      ),
+    );
+  }
+}
+
+class _StaticConnectivity implements ConnectivityPort {
+  @override
+  ConnectivityStatus get current => ConnectivityStatus.online;
+
+  @override
+  Stream<ConnectivityStatus> get changes => const Stream.empty();
+}
 
 void main() {
   testWidgets('boot success reaches the ready shell', (tester) async {
@@ -83,30 +110,42 @@ void main() {
     expect(find.text(kMessageKeyBootstrapBlocking), findsOneWidget);
   });
 
-  testWidgets('the shell closes the Cubit it resolved from the composition root', (
-    tester,
-  ) async {
-    final getIt = GetIt.instance;
-    await getIt.reset();
-    addTearDown(() async => getIt.reset());
+  testWidgets(
+    'the shell closes the Cubit it resolved from the composition root',
+    (tester) async {
+      final getIt = GetIt.instance;
+      await getIt.reset();
+      addTearDown(() async => getIt.reset());
 
-    late final FoundationCubit shellCubit;
-    getIt.registerFactory<FoundationCubit>(() {
-      final cubit = FoundationCubit(
-        BootstrapUseCase(cloudSession: FakeCloudSessionPort()),
+      late final FoundationCubit shellCubit;
+      late final SynchronizationCubit synchronizationCubit;
+      final synchronizationEngine = _CountingSyncEngine();
+      getIt.registerFactory<FoundationCubit>(() {
+        final cubit = FoundationCubit(
+          BootstrapUseCase(cloudSession: FakeCloudSessionPort()),
+        );
+        shellCubit = cubit;
+        return cubit;
+      });
+      getIt.registerFactory<SynchronizationCubit>(
+        () => synchronizationCubit = SynchronizationCubit(
+          synchronize: SynchronizePendingUseCase(synchronizationEngine),
+          connectivity: _StaticConnectivity(),
+        ),
       );
-      shellCubit = cubit;
-      return cubit;
-    });
 
-    await tester.pumpWidget(const FoundationApp());
-    await tester.pumpAndSettle();
-    expect(shellCubit.isClosed, isFalse);
+      await tester.pumpWidget(const FoundationApp());
+      await tester.pumpAndSettle();
+      expect(shellCubit.isClosed, isFalse);
+      expect(synchronizationEngine.calls, 1);
+      expect(synchronizationCubit.isClosed, isFalse);
 
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-    expect(shellCubit.isClosed, isTrue);
-  });
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      expect(shellCubit.isClosed, isTrue);
+      expect(synchronizationCubit.isClosed, isTrue);
+    },
+  );
 
   testWidgets('the shell leaves an injected Cubit to its owner', (
     tester,

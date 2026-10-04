@@ -7,15 +7,10 @@
 library;
 
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/synchronization_engine.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
-import 'package:namma_project/core/domain/values/version_source.dart';
 import 'package:namma_project/features/foundation/domain/foundation_entities.dart';
-
-/// Message key for an equal-timestamp conflict that awaits an approved
-/// tie-breaker (research decision 3).
-const String kEqualTimestampConflictMessageKey =
-    'foundation.sync.equalTimestampConflict';
 
 DateTime _defaultNow() => DateTime.now().toUtc();
 
@@ -33,12 +28,20 @@ final class BootstrapOutcome {
 
 /// Initializes the cloud session so startup can proceed to a safe state.
 class BootstrapUseCase {
-  BootstrapUseCase({required CloudSessionPort cloudSession})
-    : _cloudSession = cloudSession;
+  BootstrapUseCase({
+    required CloudSessionPort cloudSession,
+    AppFailure? initializationFailure,
+  }) : _cloudSession = cloudSession,
+       _initializationFailure = initializationFailure;
 
   final CloudSessionPort _cloudSession;
+  final AppFailure? _initializationFailure;
 
   Future<AppResult<BootstrapOutcome>> call() async {
+    final failure = _initializationFailure;
+    if (failure != null) {
+      return AppResult<BootstrapOutcome>.failure(failure);
+    }
     final ready = await _cloudSession.initialize();
     return ready.when(
       success: (_) => AppResult<BootstrapOutcome>.success(
@@ -191,170 +194,20 @@ ChangeKind _toChangeKind(PendingOperationKind kind) => switch (kind) {
 // Pending synchronization and retry
 // ---------------------------------------------------------------------------
 
-/// Counters for one synchronization pass.
-final class SyncSummary {
-  const SyncSummary({
-    required this.acknowledged,
-    required this.conflictsRecorded,
-    required this.equalTimestampConflicts,
-    required this.recoverableFailures,
-  });
-
-  /// Operations durably acknowledged in this pass.
-  final int acknowledged;
-
-  /// Conflict records written in this pass.
-  final int conflictsRecorded;
-
-  /// Conflicts left open because both timestamps are equal.
-  final int equalTimestampConflicts;
-
-  /// Operations that stay pending after a recoverable failure.
-  final int recoverableFailures;
-}
-
-/// Dispatches durable pending operations through the Cloud Sync port.
+/// Dispatches durable pending operations through the synchronization engine.
 ///
-/// One pass reads the outbox, dispatches each pending operation with its
-/// stable operation ID, acknowledges successes durably, records conflicts
-/// with retained evidence, and leaves recoverable failures pending for a
-/// later retry. Re-running this use case is the retry: operation IDs never
-/// change, so remote effects stay idempotent.
+/// The durable outbox logic lives behind [PendingSynchronizationEngine]
+/// (implemented in core/data); this use case is the application-layer
+/// surface Cubits and other use cases call. One pass acknowledges successes
+/// durably, records conflicts with retained evidence, and leaves
+/// recoverable failures pending: re-running it is the retry, and operation
+/// IDs never change, so remote effects stay idempotent.
 class SynchronizePendingUseCase {
-  SynchronizePendingUseCase({
-    required LocalStorePort localStore,
-    required CloudSessionPort cloudSession,
-    required CloudSyncPort cloudSync,
-    DateTime Function()? now,
-  }) : _localStore = localStore,
-       _cloudSession = cloudSession,
-       _cloudSync = cloudSync,
-       _now = now ?? _defaultNow;
+  SynchronizePendingUseCase(this._engine);
 
-  final LocalStorePort _localStore;
-  final CloudSessionPort _cloudSession;
-  final CloudSyncPort _cloudSync;
-  final DateTime Function() _now;
+  final PendingSynchronizationEngine _engine;
 
-  Future<AppResult<SyncSummary>> call({required String accountId}) async {
-    final context = await _cloudSession.obtainSyncContext();
-    final contextFailure = context.failureOrNull;
-    if (contextFailure != null) {
-      return AppResult<SyncSummary>.failure(contextFailure);
-    }
-
-    final pendingResult = await _localStore.readPendingChanges(accountId);
-    final pendingFailure = pendingResult.failureOrNull;
-    if (pendingFailure != null) {
-      return AppResult<SyncSummary>.failure(pendingFailure);
-    }
-
-    var acknowledged = 0;
-    var conflictsRecorded = 0;
-    var equalTimestampConflicts = 0;
-    var recoverableFailures = 0;
-
-    for (final record in pendingResult.valueOrNull!) {
-      if (record.state != PendingChangeState.pending) {
-        continue;
-      }
-      final dispatch = await _cloudSync.dispatchChange(
-        OutboundChange(
-          operationId: record.operationId,
-          accountId: record.accountId,
-          entityType: record.entityType,
-          entityId: record.entityId,
-          kind: record.kind,
-          payload: record.serializedChange,
-          versionTimestamp: record.versionTimestamp,
-        ),
-      );
-      final dispatchFailure = dispatch.failureOrNull;
-      if (dispatchFailure != null) {
-        if (dispatchFailure.recoverable) {
-          recoverableFailures++;
-          continue;
-        }
-        return AppResult<SyncSummary>.failure(dispatchFailure);
-      }
-
-      final outcome = dispatch.valueOrNull!;
-      switch (outcome) {
-        case DispatchAcknowledged(:final acknowledgementId):
-          final ack = await _localStore.acknowledgeChange(
-            record.operationId,
-            acknowledgementId,
-          );
-          final ackFailure = ack.failureOrNull;
-          if (ackFailure != null) {
-            if (ackFailure.recoverable) {
-              recoverableFailures++;
-              continue;
-            }
-            return AppResult<SyncSummary>.failure(ackFailure);
-          }
-          acknowledged++;
-
-        case DispatchVersionConflict(
-          :final remoteVersionTimestamp,
-          :final remotePayload,
-        ):
-          final resolution = resolveVersionConflict(
-            local: RecordVersion(
-              source: VersionSource.local,
-              versionTimestamp: record.versionTimestamp,
-              payload: record.serializedChange,
-            ),
-            remote: RecordVersion(
-              source: VersionSource.remote,
-              versionTimestamp: remoteVersionTimestamp,
-              payload: remotePayload ?? '',
-            ),
-          );
-          if (resolution is! NewerVersionSelected) {
-            // Equal timestamps stay an open, recoverable conflict until a
-            // tie-breaker is separately approved; nothing is overwritten.
-            equalTimestampConflicts++;
-            continue;
-          }
-          final recorded = await _localStore.recordConflict(
-            ConflictRecordInput(
-              conflictId: 'conflict-${record.operationId}',
-              accountId: record.accountId,
-              entityType: record.entityType,
-              entityId: record.entityId,
-              activeVersion: _versionInput(resolution.active),
-              retainedVersion: _versionInput(resolution.retained),
-              detectedAt: _now(),
-            ),
-          );
-          final recordFailure = recorded.failureOrNull;
-          if (recordFailure != null) {
-            if (recordFailure.recoverable) {
-              recoverableFailures++;
-              continue;
-            }
-            return AppResult<SyncSummary>.failure(recordFailure);
-          }
-          conflictsRecorded++;
-      }
-    }
-
-    return AppResult<SyncSummary>.success(
-      SyncSummary(
-        acknowledged: acknowledged,
-        conflictsRecorded: conflictsRecorded,
-        equalTimestampConflicts: equalTimestampConflicts,
-        recoverableFailures: recoverableFailures,
-      ),
-    );
-  }
-
-  RecordVersionInput _versionInput(RecordVersion version) => RecordVersionInput(
-    source: version.source,
-    versionTimestamp: version.versionTimestamp,
-    payload: version.payload,
-  );
+  Future<AppResult<SyncSummary>> call() => _engine.synchronize();
 }
 
 /// Retries pending operations after a recoverable failure.
@@ -367,8 +220,7 @@ class RetryPendingUseCase {
 
   final SynchronizePendingUseCase _synchronize;
 
-  Future<AppResult<SyncSummary>> call({required String accountId}) =>
-      _synchronize(accountId: accountId);
+  Future<AppResult<SyncSummary>> call() => _synchronize();
 }
 
 // ---------------------------------------------------------------------------

@@ -8,26 +8,15 @@
 library;
 
 import 'package:namma_project/core/domain/failures/app_failure.dart';
+import 'package:namma_project/core/domain/values/foundation_sync_state.dart';
 import 'package:namma_project/core/domain/values/version_source.dart';
+
+export 'package:namma_project/core/domain/values/foundation_sync_state.dart'
+    show FoundationSyncState;
 
 // ---------------------------------------------------------------------------
 // Shared domain enums
 // ---------------------------------------------------------------------------
-
-/// Synchronization states of a Foundation local record.
-enum FoundationSyncState {
-  /// Present locally only; never dispatched.
-  localOnly,
-
-  /// Queued in the durable outbox, awaiting dispatch or acknowledgement.
-  pending,
-
-  /// Remotely acknowledged; never dispatched again.
-  acknowledged,
-
-  /// A version conflict retained as visible evidence.
-  conflict,
-}
 
 /// Foundation-owned preference keys.
 enum FoundationPreferenceKey {

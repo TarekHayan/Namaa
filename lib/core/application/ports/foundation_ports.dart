@@ -212,8 +212,28 @@ abstract interface class LocalStorePort {
     String acknowledgementId,
   );
 
+  /// Persists a recoverable dispatch failure: the operation returns to
+  /// `pending` with an incremented attempt count and a secret-free summary.
+  /// A retry retains the same operation ID.
+  Future<AppResult<void>> recordRecoverableFailure(
+    String operationId,
+    String summary,
+  );
+
+  /// Marks the operation `conflict` after its conflict record is durably
+  /// persisted, so it is never re-dispatched.
+  Future<AppResult<void>> markChangeConflicted(String operationId);
+
   /// Persists a visible conflict record.
   Future<AppResult<void>> recordConflict(ConflictRecordInput conflict);
+
+  /// Atomically persists a visible conflict record and marks the corresponding
+  /// pending change as `conflict` in one database transaction, ensuring the
+  /// operation is never re-dispatched and no partial conflict state can exist.
+  Future<AppResult<void>> recordConflictAndFinalize({
+    required ConflictRecordInput conflict,
+    required String operationId,
+  });
 
   /// Runs the automatic schema migration to [targetSchemaVersion]; failure
   /// retains prior database state and is recoverable.

@@ -76,30 +76,30 @@ production cloud endpoint.
 
 ### Tests for User Story 1
 
-- [ ] T019 [P] [US1] Write encrypted Local Store transaction and preference-restoration tests in `test/unit/core/data/local/encrypted_local_store_test.dart`, including the rule that local change and pending operation commit atomically.
-- [ ] T020 [P] [US1] Write Credential Vault tests in `test/unit/core/platform/credential_vault_test.dart` proving secrets are not written to preference, failure, or log test doubles.
-- [ ] T021 [P] [US1] Write synchronization coordinator unit tests in `test/unit/core/data/sync/synchronization_coordinator_test.dart` for retry with unchanged operation ID, acknowledgement terminality, newest-timestamp selection, retained conflict, and equal-timestamp recovery.
-- [ ] T022 [P] [US1] Write migration success and injected-failure preservation tests in `test/unit/core/data/local/foundation_migration_test.dart`.
-- [ ] T023 [P] [US1] Write a Supabase-port substitution and publishable-key-only configuration test in `test/unit/core/data/cloud/supabase_boundary_test.dart`; it must fail for secret/service-role key material or a Domain Supabase import.
-- [ ] T024 [P] [US1] Write local-stack database authorization tests in `supabase/tests/foundation_account_isolation_test.sql` before T034; the test may initially fail while the Supabase schema and RLS policies are absent, then rerun it after T034 to verify owner account allowed and different account denied for read/write operations.
-- [ ] T025 [P] [US1] Write an offline persistence/restart integration test with ten consecutive restarts in `integration_test/foundation_offline_test.dart`.
-- [ ] T026 [P] [US1] Write reconnect/retry and conflict-retention integration tests in `integration_test/foundation_sync_test.dart`.
-- [ ] T027 [P] [US1] Write encrypted migration/recovery integration coverage in `integration_test/foundation_migration_test.dart`.
-- [ ] T028 [P] [US1] Write local Supabase stack and isolated non-production device boundary coverage in `integration_test/foundation_supabase_test.dart`; production configuration must be rejected before a connection is attempted.
+- [x] T019 [P] [US1] Write encrypted Local Store transaction and preference-restoration tests in `test/unit/core/data/local/encrypted_local_store_test.dart`, including the rule that local change and pending operation commit atomically.
+- [x] T020 [P] [US1] Write Credential Vault tests in `test/unit/core/platform/credential_vault_test.dart` proving secrets are not written to preference, failure, or log test doubles.
+- [x] T021 [P] [US1] Write synchronization coordinator unit tests in `test/unit/core/data/sync/synchronization_coordinator_test.dart` for retry with unchanged operation ID, acknowledgement terminality, newest-timestamp selection, retained conflict, and equal-timestamp recovery.
+- [x] T022 [P] [US1] Write migration success and injected-failure preservation tests in `test/unit/core/data/local/foundation_migration_test.dart`.
+- [x] T023 [P] [US1] Write a Supabase-port substitution and publishable-key-only configuration test in `test/unit/core/data/cloud/supabase_boundary_test.dart`; it must fail for secret/service-role key material or a Domain Supabase import.
+- [x] T024 [P] [US1] Write local-stack database authorization tests in `supabase/tests/foundation_account_isolation_test.sql` before T034; the test may initially fail while the Supabase schema and RLS policies are absent, then rerun it after T034 to verify owner account allowed and different account denied for read/write operations.
+- [x] T025 [P] [US1] Write an offline persistence/restart integration test with ten consecutive restarts in `integration_test/foundation_offline_test.dart`.
+- [x] T026 [P] [US1] Write reconnect/retry and conflict-retention integration tests in `integration_test/foundation_sync_test.dart`.
+- [x] T027 [P] [US1] Write encrypted migration/recovery integration coverage in `integration_test/foundation_migration_test.dart`.
+- [x] T028 [P] [US1] Write local Supabase stack and isolated non-production device boundary coverage in `integration_test/foundation_supabase_test.dart`; production configuration must be rejected before a connection is attempted.
 
 ### Implementation for User Story 1
 
-- [ ] T029 [US1] Implement the OS-protected Credential Vault adapter in `lib/core/platform/secure_credential_vault.dart` and wire it only through the Credential Vault port.
-- [ ] T030 [US1] Implement encrypted Drift database opening, Foundation tables, automatic migration journal, and recoverable migration failure path in `lib/core/data/local/foundation_database.dart`.
-- [ ] T031 [US1] Implement the encrypted Local Store adapter, including atomic local-record/outbox commit and durable preference storage, in `lib/core/data/local/drift_local_store.dart`.
-- [ ] T032 [US1] Implement environment validation and a publishable-key-only Supabase client factory in `lib/core/data/cloud/supabase/supabase_environment.dart` and `lib/core/data/cloud/supabase/supabase_client_factory.dart`.
-- [ ] T033 [US1] Implement Supabase Auth session and cloud-sync adapters behind the ports in `lib/core/data/cloud/supabase/supabase_session_adapter.dart` and `lib/core/data/cloud/supabase/supabase_sync_adapter.dart`; do not implement authentication UI or a product account workflow.
-- [ ] T034 [US1] Create the Foundation-only remote probe schema, least-privilege grants, and RLS owner policies in `supabase/migrations/0001_foundation_probe.sql`; enforce remote ownership from the authenticated session rather than a caller-supplied account ID.
-- [ ] T035 [US1] Implement the durable outbox, retry coordinator, idempotent acknowledgement, and conflict-record persistence in `lib/core/data/sync/synchronization_coordinator.dart`.
-- [ ] T036 [US1] Implement connectivity-triggered retry orchestration and recoverable failure mapping in `lib/core/data/sync/synchronization_runner.dart` without making the UI or Domain depend on network SDK types.
-- [ ] T037 [US1] Connect the local store, credential vault, Supabase adapters, and synchronization coordinator only in `lib/app/composition/configure_dependencies.dart` for local, test, and non-production environments.
-- [ ] T038 [US1] Implement the Foundation synchronization status and retry Cubit behavior in `lib/features/foundation/presentation/state/synchronization_cubit.dart` using the use cases from T014.
-- [ ] T039 [US1] Make T019–T028 pass against the local Supabase stack, then run the User Story 1 validation commands in `quickstart.md` without contacting production.
+- [x] T029 [US1] Implement the OS-protected Credential Vault adapter in `lib/core/platform/secure_credential_vault.dart` and wire it only through the Credential Vault port.
+- [x] T030 [US1] Implement encrypted Drift database opening, Foundation tables, automatic migration journal, and recoverable migration failure path in `lib/core/data/local/foundation_database.dart`.
+- [x] T031 [US1] Implement the encrypted Local Store adapter, including atomic local-record/outbox commit and durable preference storage, in `lib/core/data/local/drift_local_store.dart`.
+- [x] T032 [US1] Implement environment validation and a publishable-key-only Supabase client factory in `lib/core/data/cloud/supabase/supabase_environment.dart` and `lib/core/data/cloud/supabase/supabase_client_factory.dart`.
+- [x] T033 [US1] Implement Supabase Auth session and cloud-sync adapters behind the ports in `lib/core/data/cloud/supabase/supabase_session_adapter.dart` and `lib/core/data/cloud/supabase/supabase_sync_adapter.dart`; do not implement authentication UI or a product account workflow.
+- [x] T034 [US1] Create the Foundation-only remote probe schema, least-privilege grants, and RLS owner policies in `supabase/migrations/0001_foundation_probe.sql`; enforce remote ownership from the authenticated session rather than a caller-supplied account ID.
+- [x] T035 [US1] Implement the durable outbox, retry coordinator, idempotent acknowledgement, and conflict-record persistence in `lib/core/data/sync/synchronization_coordinator.dart`.
+- [x] T036 [US1] Implement connectivity-triggered retry orchestration and recoverable failure mapping in `lib/core/data/sync/synchronization_runner.dart` without making the UI or Domain depend on network SDK types.
+- [x] T037 [US1] Connect the local store, credential vault, Supabase adapters, and synchronization coordinator only in `lib/app/composition/configure_dependencies.dart` for local, test, and non-production environments.
+- [x] T038 [US1] Implement the Foundation synchronization status and retry Cubit behavior in `lib/features/foundation/presentation/state/synchronization_cubit.dart` using the use cases from T014.
+- [x] T039 [US1] Make T019–T028 pass against the local Supabase stack, then run the User Story 1 validation commands in `quickstart.md` without contacting production.
 
 **Checkpoint**: A Foundation verification record is durable and usable offline; reconnect retries are
 idempotent; conflicts retain evidence; local account data is encrypted; and RLS denies another

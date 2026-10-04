@@ -8,6 +8,7 @@
 library;
 
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/synchronization_engine.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
@@ -50,8 +51,24 @@ class UnconfiguredLocalStore implements LocalStorePort {
   ) async => AppResult<void>.failure(_unconfiguredFailure());
 
   @override
+  Future<AppResult<void>> recordRecoverableFailure(
+    String operationId,
+    String summary,
+  ) async => AppResult<void>.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<void>> markChangeConflicted(String operationId) async =>
+      AppResult<void>.failure(_unconfiguredFailure());
+
+  @override
   Future<AppResult<void>> recordConflict(ConflictRecordInput conflict) async =>
       AppResult<void>.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<void>> recordConflictAndFinalize({
+    required ConflictRecordInput conflict,
+    required String operationId,
+  }) async => AppResult<void>.failure(_unconfiguredFailure());
 
   @override
   Future<AppResult<MigrationOutcome>> runMigration(
@@ -111,4 +128,11 @@ class UnconfiguredPlatformCapability implements PlatformCapabilityPort {
   @override
   Future<AppResult<List<PlatformCapability>>> report() async =>
       AppResult<List<PlatformCapability>>.failure(_unconfiguredFailure());
+}
+
+/// Safe-fail synchronization engine for the unconfigured environment.
+class UnconfiguredEngine implements PendingSynchronizationEngine {
+  @override
+  Future<AppResult<SyncSummary>> synchronize() async =>
+      AppResult<SyncSummary>.failure(_unconfiguredFailure());
 }

@@ -77,9 +77,10 @@ final class SyncIdle extends SyncStatusState {
 
 /// A synchronization pass is dispatching pending operations.
 final class SyncInProgress extends SyncStatusState {
-  const SyncInProgress({required this.pendingCount});
+  const SyncInProgress({this.pendingCount});
 
-  final int pendingCount;
+  /// Pending count when known before the pass starts.
+  final int? pendingCount;
 }
 
 /// Waiting for connectivity to retry pending operations.

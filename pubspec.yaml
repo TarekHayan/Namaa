@@ -11,6 +11,7 @@ environment:
 # only; every entry has a present use case (Constitution VIII).
 dependencies:
   # Local-first encrypted persistence (Constitution III/IX: Drift over SQLite).
+  connectivity_plus: ^7.3.1
   drift: ^2.34.4
   drift_flutter: ^0.3.1
 
@@ -37,6 +38,13 @@ dependencies:
   injectable: ^3.0.0
   intl: ^0.20.2
   json_annotation: ^4.12.0
+
+  # Encrypted-database file location on device targets (Constitution III:
+  # local-first persistence needs a per-target app-support directory).
+  path_provider: ^2.1.5
+
+  # Raw connection for post-mortem migration-journal writes (T030).
+  sqlite3: ^3.5.2
 
   # Remote infrastructure only; used exclusively by core/data/cloud adapters
   # behind the Cloud Session and Cloud Sync ports (Constitution: Supabase).

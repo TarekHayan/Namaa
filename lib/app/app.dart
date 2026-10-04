@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
+import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 
 /// Keys used by tests to locate the shell states.
 const Key kFoundationRootStartupKey = Key('foundation_root_startup');
@@ -20,11 +21,19 @@ const Key kFoundationRootReadyKey = Key('foundation_root_ready');
 const Key kFoundationRootFailureKey = Key('foundation_root_failure');
 
 class FoundationApp extends StatefulWidget {
-  const FoundationApp({super.key, this.cubitOverride});
+  const FoundationApp({
+    super.key,
+    this.cubitOverride,
+    this.synchronizationCubitOverride,
+  });
 
   /// Optional direct injection for widget tests; when null, the Cubit is
   /// resolved from the composition root.
   final FoundationCubit? cubitOverride;
+
+  /// Optional synchronization binding for widget tests. Production resolves it
+  /// from the composition root and starts it after a successful bootstrap.
+  final SynchronizationCubit? synchronizationCubitOverride;
 
   @override
   State<FoundationApp> createState() => _FoundationAppState();
@@ -32,12 +41,14 @@ class FoundationApp extends StatefulWidget {
 
 class _FoundationAppState extends State<FoundationApp> {
   FoundationCubit? _cubit;
+  SynchronizationCubit? _synchronizationCubit;
 
   /// True only when this shell resolved the Cubit from the composition root.
   ///
   /// An injected `cubitOverride` stays owned by its caller (BlocProvider.value
   /// semantics); only a shell-resolved Cubit is closed here.
   bool _ownsCubit = false;
+  bool _ownsSynchronizationCubit = false;
 
   /// Set when the composition root itself cannot provide a Cubit; the shell
   /// then renders a safe blocking failure instead of crashing.
@@ -54,6 +65,10 @@ class _FoundationAppState extends State<FoundationApp> {
     if (_ownsCubit) {
       unawaited(_cubit?.close());
       _cubit = null;
+    }
+    if (_ownsSynchronizationCubit) {
+      unawaited(_synchronizationCubit?.close());
+      _synchronizationCubit = null;
     }
     super.dispose();
   }
@@ -80,6 +95,36 @@ class _FoundationAppState extends State<FoundationApp> {
     setState(() => _cubit = cubit);
     // Bootstrap failures are mapped to failure states inside the Cubit.
     await cubit.bootstrap();
+    if (!mounted || cubit.state is! FoundationReady) {
+      return;
+    }
+
+    // A caller that injects only the bootstrap Cubit is exercising the shell
+    // in isolation. The production path never takes this branch: it resolves
+    // both Cubits from the composition root.
+    if (widget.cubitOverride != null &&
+        widget.synchronizationCubitOverride == null) {
+      return;
+    }
+
+    try {
+      final synchronizationCubit =
+          widget.synchronizationCubitOverride ??
+          GetIt.instance<SynchronizationCubit>();
+      _ownsSynchronizationCubit = !identical(
+        synchronizationCubit,
+        widget.synchronizationCubitOverride,
+      );
+      _synchronizationCubit = synchronizationCubit;
+      synchronizationCubit.start();
+    } catch (_) {
+      // A configured Foundation must start its retry orchestration. Treat a
+      // missing binding as a safe startup failure instead of silently running
+      // a local-only shell that never synchronizes.
+      if (mounted) {
+        setState(() => _bootFailed = true);
+      }
+    }
   }
 
   @override
