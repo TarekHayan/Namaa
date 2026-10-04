@@ -1,4 +1,10 @@
 {
   "@@locale": "ar",
-  "appTitle": "نماء"
+  "appTitle": "نماء",
+  "foundationReady": "نماء جاهز",
+  "foundationBootstrapRecoverable": "تعذر إكمال بدء نماء. حاول مرة أخرى.",
+  "foundationBootstrapBlocking": "تعذر بدء نماء بأمان.",
+  "foundationLocaleRecoverable": "تعذر حفظ تفضيل اللغة.",
+  "foundationGenericFailure": "يحتاج نماء إلى معالجة قبل المتابعة.",
+  "retry": "إعادة المحاولة"
 }

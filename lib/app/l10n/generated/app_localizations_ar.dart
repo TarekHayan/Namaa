@@ -10,4 +10,23 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get appTitle => 'نماء';
+
+  @override
+  String get foundationReady => 'نماء جاهز';
+
+  @override
+  String get foundationBootstrapRecoverable =>
+      'تعذر إكمال بدء نماء. حاول مرة أخرى.';
+
+  @override
+  String get foundationBootstrapBlocking => 'تعذر بدء نماء بأمان.';
+
+  @override
+  String get foundationLocaleRecoverable => 'تعذر حفظ تفضيل اللغة.';
+
+  @override
+  String get foundationGenericFailure => 'يحتاج نماء إلى معالجة قبل المتابعة.';
+
+  @override
+  String get retry => 'إعادة المحاولة';
 }

@@ -8,7 +8,6 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/foundation/application/foundation_use_cases.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
-import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 
 /// Fake Cloud Session port backed only by injected results; no SDK types.
@@ -93,7 +92,10 @@ void main() {
 
     expect(find.byKey(kFoundationRootFailureKey), findsOneWidget);
     expect(find.byKey(kFoundationRootReadyKey), findsNothing);
-    expect(find.text(kMessageKeyBootstrapRecoverable), findsOneWidget);
+    expect(
+      find.text('Namaa could not finish starting. Please try again.'),
+      findsOneWidget,
+    );
     expect(find.text('Retry'), findsOneWidget);
   });
 
@@ -107,7 +109,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byKey(kFoundationRootFailureKey), findsOneWidget);
-    expect(find.text(kMessageKeyBootstrapBlocking), findsOneWidget);
+    expect(find.text('Namaa could not start safely.'), findsOneWidget);
   });
 
   testWidgets(

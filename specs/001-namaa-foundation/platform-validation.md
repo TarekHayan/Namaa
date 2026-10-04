@@ -186,3 +186,20 @@ The local Supabase Docker stack was started and verified. User Story 1 automated
    - `foundation_supabase_test.dart` (T028): Local Supabase stack URL boundary and rejection of production configuration.
 
 Checkpoint achieved: All User Story 1 tasks (T019–T039) are complete and validated against the local stack.
+
+## US2 Localization Validation (T040–T048, executed 2026-10-04)
+
+- `flutter gen-l10n` generated the Foundation Arabic and English localization output from the
+  version-controlled ARB resources.
+- `flutter analyze` passed with zero issues.
+- `flutter test` passed with 107 tests, including the locale preference, LocaleCubit, and root
+  directionality suites.
+- `flutter test -d windows test/widget/app/localization_and_directionality_test.dart` passed all
+  five cases: Arabic RTL text, English LTR text, the Thmanyah Sans root font, live locale switching,
+  and restoration after an application restart.
+- `flutter test -d emulator-5554 test/widget/app/localization_and_directionality_test.dart` passed
+  the same five cases on an Android 17 (API 37) emulator.
+
+### T048 Platform Evidence — PASS
+
+T040–T042 pass on both a mobile target (Android) and a desktop target (Windows). T048 is complete.

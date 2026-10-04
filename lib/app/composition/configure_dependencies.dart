@@ -35,8 +35,10 @@ import 'package:namma_project/core/platform/connectivity_adapter.dart';
 import 'package:namma_project/core/platform/default_connectivity_port.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
 import 'package:namma_project/features/foundation/application/foundation_use_cases.dart';
+import 'package:namma_project/features/foundation/application/locale_preferences.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
+import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
@@ -171,8 +173,20 @@ void _registerUseCasesAndCubits(
   getIt.registerLazySingleton<SynchronizePendingUseCase>(
     () => SynchronizePendingUseCase(getIt<PendingSynchronizationEngine>()),
   );
+  getIt.registerLazySingleton<RestoreLocalePreferenceUseCase>(
+    () => RestoreLocalePreferenceUseCase(localStore: getIt<LocalStorePort>()),
+  );
+  getIt.registerLazySingleton<SaveLocalePreferenceUseCase>(
+    () => SaveLocalePreferenceUseCase(localStore: getIt<LocalStorePort>()),
+  );
   getIt.registerFactory<FoundationCubit>(
     () => FoundationCubit(getIt<BootstrapUseCase>()),
+  );
+  getIt.registerFactory<LocaleCubit>(
+    () => LocaleCubit(
+      restore: getIt<RestoreLocalePreferenceUseCase>(),
+      save: getIt<SaveLocalePreferenceUseCase>(),
+    ),
   );
   getIt.registerFactory<SynchronizationCubit>(
     () => SynchronizationCubit(

@@ -10,4 +10,25 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get appTitle => 'Namaa';
+
+  @override
+  String get foundationReady => 'Namaa is ready';
+
+  @override
+  String get foundationBootstrapRecoverable =>
+      'Namaa could not finish starting. Please try again.';
+
+  @override
+  String get foundationBootstrapBlocking => 'Namaa could not start safely.';
+
+  @override
+  String get foundationLocaleRecoverable =>
+      'Your language preference could not be saved.';
+
+  @override
+  String get foundationGenericFailure =>
+      'Namaa needs attention before it can continue.';
+
+  @override
+  String get retry => 'Retry';
 }

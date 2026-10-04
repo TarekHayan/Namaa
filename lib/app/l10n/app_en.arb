@@ -1,4 +1,10 @@
 {
   "@@locale": "en",
-  "appTitle": "Namaa"
+  "appTitle": "Namaa",
+  "foundationReady": "Namaa is ready",
+  "foundationBootstrapRecoverable": "Namaa could not finish starting. Please try again.",
+  "foundationBootstrapBlocking": "Namaa could not start safely.",
+  "foundationLocaleRecoverable": "Your language preference could not be saved.",
+  "foundationGenericFailure": "Namaa needs attention before it can continue.",
+  "retry": "Retry"
 }

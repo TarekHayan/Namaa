@@ -106,6 +106,42 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Namaa'**
   String get appTitle;
+
+  /// No description provided for @foundationReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Namaa is ready'**
+  String get foundationReady;
+
+  /// No description provided for @foundationBootstrapRecoverable.
+  ///
+  /// In en, this message translates to:
+  /// **'Namaa could not finish starting. Please try again.'**
+  String get foundationBootstrapRecoverable;
+
+  /// No description provided for @foundationBootstrapBlocking.
+  ///
+  /// In en, this message translates to:
+  /// **'Namaa could not start safely.'**
+  String get foundationBootstrapBlocking;
+
+  /// No description provided for @foundationLocaleRecoverable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your language preference could not be saved.'**
+  String get foundationLocaleRecoverable;
+
+  /// No description provided for @foundationGenericFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Namaa needs attention before it can continue.'**
+  String get foundationGenericFailure;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
 }
 
 class _FoundationLocalizationsDelegate

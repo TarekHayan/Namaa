@@ -80,3 +80,17 @@ flutter:
   # Arabic/English and RTL).
   generate: true
   uses-material-design: true
+
+  fonts:
+    - family: ThmanyahSans
+      fonts:
+        - asset: assets/fonts/thmanyah_sans/thmanyahsans-Light.otf
+          weight: 300
+        - asset: assets/fonts/thmanyah_sans/thmanyahsans-Regular.otf
+          weight: 400
+        - asset: assets/fonts/thmanyah_sans/thmanyahsans-Medium.otf
+          weight: 500
+        - asset: assets/fonts/thmanyah_sans/thmanyahsans-Bold.otf
+          weight: 700
+        - asset: assets/fonts/thmanyah_sans/thmanyahsans-Black.otf
+          weight: 900

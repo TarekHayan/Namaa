@@ -117,18 +117,18 @@ Arabic RTL, English LTR, localized root text, and invalid-preference fallback.
 
 ### Tests for User Story 2
 
-- [ ] T040 [P] [US2] Write locale preference use-case and unsupported-value fallback tests in `test/unit/features/foundation/application/locale_preference_test.dart`.
-- [ ] T041 [P] [US2] Write locale Cubit state-transition tests in `test/unit/features/foundation/presentation/locale_cubit_test.dart`.
-- [ ] T042 [P] [US2] Write app-root Arabic RTL, English LTR, localized-resource, locale-switch, and restart-restoration widget tests in `test/widget/app/localization_and_directionality_test.dart`.
+- [x] T040 [P] [US2] Write locale preference use-case and unsupported-value fallback tests in `test/unit/features/foundation/application/locale_preference_test.dart`.
+- [x] T041 [P] [US2] Write locale Cubit state-transition tests in `test/unit/features/foundation/presentation/locale_cubit_test.dart`.
+- [x] T042 [P] [US2] Write app-root Arabic RTL, English LTR, localized-resource, locale-switch, and restart-restoration widget tests in `test/widget/app/localization_and_directionality_test.dart`.
 
 ### Implementation for User Story 2
 
-- [ ] T043 [US2] Add Foundation-only Arabic resources in `lib/app/l10n/app_ar.arb` and matching English resources in `lib/app/l10n/app_en.arb`; do not add domain-specific copy.
-- [ ] T044 [US2] Configure generated Flutter localization delegates and supported locales in `lib/app/app.dart` using the generated output from `lib/app/l10n/`.
-- [ ] T045 [US2] Implement locale preference restoration, validation, persistence, and fallback use cases in `lib/features/foundation/application/locale_preferences.dart`.
-- [ ] T046 [US2] Implement `LocaleCubit` and its state in `lib/features/foundation/presentation/state/locale_cubit.dart` without direct database access.
-- [ ] T047 [US2] Bind the root locale and Flutter directionality to `LocaleCubit` in `lib/app/app.dart`; do not introduce per-widget manual direction overrides.
-- [ ] T048 [US2] Make T040–T042 pass on one mobile and one desktop target and record the evidence in `specs/001-namaa-foundation/platform-validation.md`.
+- [x] T043 [US2] Add Foundation-only Arabic resources in `lib/app/l10n/app_ar.arb` and matching English resources in `lib/app/l10n/app_en.arb`; do not add domain-specific copy.
+- [x] T044 [US2] Configure generated Flutter localization delegates and supported locales in `lib/app/app.dart` using the generated output from `lib/app/l10n/`.
+- [x] T045 [US2] Implement locale preference restoration, validation, persistence, and fallback use cases in `lib/features/foundation/application/locale_preferences.dart`.
+- [x] T046 [US2] Implement `LocaleCubit` and its state in `lib/features/foundation/presentation/state/locale_cubit.dart` without direct database access.
+- [x] T047 [US2] Bind the root locale and Flutter directionality to `LocaleCubit` in `lib/app/app.dart`; do not introduce per-widget manual direction overrides.
+- [x] T048 [US2] Make T040–T042 pass on one mobile and one desktop target and record the evidence in `specs/001-namaa-foundation/platform-validation.md`.
 
 **Checkpoint**: Arabic and English work at the root, Arabic is RTL, and a safe locale fallback
 keeps the app launchable.

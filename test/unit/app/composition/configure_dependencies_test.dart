@@ -12,6 +12,7 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
+import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 
 class _FailingSecureStore implements SecureKeyValueStore {
   @override
@@ -51,13 +52,15 @@ void main() {
       );
     });
 
-    test('resolves the bootstrap use case and the Foundation Cubit', () async {
+    test('resolves the bootstrap and locale Cubits', () async {
       await configureDependencies(
         environment: FoundationEnvironment.unconfigured,
       );
 
       expect(getIt<FoundationCubit>(), isA<FoundationCubit>());
       expect(getIt<FoundationCubit>(), isNot(same(getIt<FoundationCubit>())));
+      expect(getIt<LocaleCubit>(), isA<LocaleCubit>());
+      expect(getIt<LocaleCubit>(), isNot(same(getIt<LocaleCubit>())));
     });
 
     test('port operations report a blocking configuration failure', () async {
@@ -106,6 +109,7 @@ void main() {
       expect(getIt<CloudSyncPort>(), isA<SupabaseSyncAdapter>());
       expect(getIt<CredentialVaultPort>(), isA<SecureCredentialVault>());
       expect(getIt<FoundationCubit>(), isA<FoundationCubit>());
+      expect(getIt<LocaleCubit>(), isA<LocaleCubit>());
 
       // Close the opened database
       final store = getIt<LocalStorePort>() as DriftLocalStore;
