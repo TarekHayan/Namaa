@@ -33,13 +33,17 @@ import 'package:namma_project/core/data/sync/synchronization_coordinator.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/platform/connectivity_adapter.dart';
 import 'package:namma_project/core/platform/default_connectivity_port.dart';
+import 'package:namma_project/core/platform/platform_capability_reporter.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
 import 'package:namma_project/features/foundation/application/foundation_use_cases.dart';
 import 'package:namma_project/features/foundation/application/locale_preferences.dart';
+import 'package:namma_project/features/foundation/application/theme_preferences.dart';
+import 'package:namma_project/features/foundation/domain/foundation_entities.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
+import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
@@ -98,7 +102,26 @@ Future<void> configureDependencies({
           : ConnectivityAdapter(Connectivity()),
     );
     getIt.registerLazySingleton<PlatformCapabilityPort>(
-      () => UnconfiguredPlatformCapability(),
+      () => PlatformCapabilityReporter(
+        encryptedLocalStoreProbe: () async =>
+            (await localStore.readPreference(
+              FoundationPreferenceKey.appearance.name,
+            )).failureOrNull ==
+            null,
+        credentialVaultProbe: () async =>
+            (await vault.readSecret(
+              'namaa.foundation.capability_probe',
+            )).failureOrNull ==
+            null,
+        supabaseInitializationProbe: () async =>
+            (await session.adapter.initialize()).failureOrNull == null,
+        offlineReconnectProbe: () async {
+          final connectivity = getIt<ConnectivityPort>();
+          connectivity.current;
+          connectivity.changes;
+          return true;
+        },
+      ),
     );
 
     getIt.registerLazySingleton<PendingSynchronizationEngine>(
@@ -179,6 +202,12 @@ void _registerUseCasesAndCubits(
   getIt.registerLazySingleton<SaveLocalePreferenceUseCase>(
     () => SaveLocalePreferenceUseCase(localStore: getIt<LocalStorePort>()),
   );
+  getIt.registerLazySingleton<RestoreThemePreferenceUseCase>(
+    () => RestoreThemePreferenceUseCase(localStore: getIt<LocalStorePort>()),
+  );
+  getIt.registerLazySingleton<SaveThemePreferenceUseCase>(
+    () => SaveThemePreferenceUseCase(localStore: getIt<LocalStorePort>()),
+  );
   getIt.registerFactory<FoundationCubit>(
     () => FoundationCubit(getIt<BootstrapUseCase>()),
   );
@@ -186,6 +215,12 @@ void _registerUseCasesAndCubits(
     () => LocaleCubit(
       restore: getIt<RestoreLocalePreferenceUseCase>(),
       save: getIt<SaveLocalePreferenceUseCase>(),
+    ),
+  );
+  getIt.registerFactory<ThemeCubit>(
+    () => ThemeCubit(
+      restore: getIt<RestoreThemePreferenceUseCase>(),
+      save: getIt<SaveThemePreferenceUseCase>(),
     ),
   );
   getIt.registerFactory<SynchronizationCubit>(

@@ -5,6 +5,9 @@
   "foundationBootstrapRecoverable": "Namaa could not finish starting. Please try again.",
   "foundationBootstrapBlocking": "Namaa could not start safely.",
   "foundationLocaleRecoverable": "Your language preference could not be saved.",
+  "foundationThemeRecoverable": "Your appearance preference could not be saved.",
+  "foundationRouteUnavailable": "This route is unavailable.",
+  "foundationPlatformRecoverable": "This platform capability could not be verified.",
   "foundationGenericFailure": "Namaa needs attention before it can continue.",
   "retry": "Retry"
 }

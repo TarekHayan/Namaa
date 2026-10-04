@@ -5,6 +5,9 @@
   "foundationBootstrapRecoverable": "تعذر إكمال بدء نماء. حاول مرة أخرى.",
   "foundationBootstrapBlocking": "تعذر بدء نماء بأمان.",
   "foundationLocaleRecoverable": "تعذر حفظ تفضيل اللغة.",
+  "foundationThemeRecoverable": "تعذر حفظ تفضيل المظهر.",
+  "foundationRouteUnavailable": "هذا المسار غير متاح.",
+  "foundationPlatformRecoverable": "تعذر التحقق من قدرة هذه المنصة.",
   "foundationGenericFailure": "يحتاج نماء إلى معالجة قبل المتابعة.",
   "retry": "إعادة المحاولة"
 }

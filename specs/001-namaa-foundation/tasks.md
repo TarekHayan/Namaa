@@ -146,20 +146,20 @@ business-rule implementation exists.
 
 ### Tests for User Story 3
 
-- [ ] T049 [P] [US3] Write appearance preference restoration and fallback unit tests in `test/unit/features/foundation/application/theme_preference_test.dart`.
-- [ ] T050 [P] [US3] Write Theme Cubit transition tests for light, dark, and system modes in `test/unit/features/foundation/presentation/theme_cubit_test.dart`.
-- [ ] T051 [P] [US3] Write registered-root-route and handled unknown-route tests in `test/widget/app/app_router_test.dart`.
-- [ ] T052 [P] [US3] Write root theme-mode widget tests in `test/widget/app/theme_selection_test.dart`.
-- [ ] T053 [P] [US3] Write startup, encrypted-store, credential-vault, Supabase initialization, and offline/reconnect platform-capability integration coverage in `integration_test/foundation_platform_test.dart`.
+- [x] T049 [P] [US3] Write appearance preference restoration and fallback unit tests in `test/unit/features/foundation/application/theme_preference_test.dart`.
+- [x] T050 [P] [US3] Write Theme Cubit transition tests for light, dark, and system modes in `test/unit/features/foundation/presentation/theme_cubit_test.dart`.
+- [x] T051 [P] [US3] Write registered-root-route and handled unknown-route tests in `test/widget/app/app_router_test.dart`.
+- [x] T052 [P] [US3] Write root theme-mode widget tests in `test/widget/app/theme_selection_test.dart`.
+- [x] T053 [P] [US3] Write startup, encrypted-store, credential-vault, Supabase initialization, and offline/reconnect platform-capability integration coverage in `integration_test/foundation_platform_test.dart`.
 
 ### Implementation for User Story 3
 
-- [ ] T054 [US3] Define the root route registry and handled unknown-route boundary in `lib/app/routing/app_router.dart` without adding feature routes or product screens.
-- [ ] T055 [US3] Implement Foundation theme definitions and system appearance support in `lib/app/theme/app_theme.dart`.
-- [ ] T056 [US3] Implement theme preference use cases and `ThemeCubit` in `lib/features/foundation/application/theme_preferences.dart` and `lib/features/foundation/presentation/state/theme_cubit.dart`.
-- [ ] T057 [US3] Bind routing, light, dark, and system theme state at the application root in `lib/app/app.dart`.
-- [ ] T058 [US3] Implement target-capability reporting at the infrastructure boundary in `lib/core/platform/platform_capability_reporter.dart`; report capability failures without branching Domain business rules.
-- [ ] T059 [US3] Make T049–T053 pass on one mobile and one desktop target and record the evidence in `specs/001-namaa-foundation/platform-validation.md`.
+- [x] T054 [US3] Define the root route registry and handled unknown-route boundary in `lib/app/routing/app_router.dart` without adding feature routes or product screens.
+- [x] T055 [US3] Implement Foundation theme definitions and system appearance support in `lib/app/theme/app_theme.dart`.
+- [x] T056 [US3] Implement theme preference use cases and `ThemeCubit` in `lib/features/foundation/application/theme_preferences.dart` and `lib/features/foundation/presentation/state/theme_cubit.dart`.
+- [x] T057 [US3] Bind routing, light, dark, and system theme state at the application root in `lib/app/app.dart`.
+- [x] T058 [US3] Implement target-capability reporting at the infrastructure boundary in `lib/core/platform/platform_capability_reporter.dart`; report capability failures without branching Domain business rules.
+- [x] T059 [US3] Make T049–T053 pass on one mobile and one desktop target and record the evidence in `specs/001-namaa-foundation/platform-validation.md`.
 
 **Checkpoint**: The shared root route, routing failure handling, and all appearance modes work on
 both form factors without product features or divergent business semantics.

@@ -203,3 +203,24 @@ Checkpoint achieved: All User Story 1 tasks (T019–T039) are complete and valid
 ### T048 Platform Evidence — PASS
 
 T040–T042 pass on both a mobile target (Android) and a desktop target (Windows). T048 is complete.
+
+## US3 Routing, Theme, and Platform Validation (T049–T059, executed 2026-10-05)
+
+- `flutter analyze` — PASS (zero issues).
+- `flutter test --no-pub --reporter compact` — PASS (119 tests), including T049–T052 and
+  capability-reporting failure coverage.
+- `flutter test -d windows --no-pub --reporter expanded integration_test/foundation_platform_test.dart`
+  — PASS (2/2).
+- `flutter test -d emulator-5554 --no-pub --reporter expanded integration_test/foundation_platform_test.dart`
+  — PASS (2/2).
+
+The same integration test on Windows and Android verifies the registered root launch, handled
+unknown-route boundary, light/dark/system appearance selection, encrypted local-store open/read,
+OS-protected credential-vault read/write/delete, publishable-key-only Supabase initialization, and
+offline-to-online connectivity transitions. Capability availability is derived from executable
+adapter probes; a failed or absent probe is reported unavailable. No product-domain route or
+platform-specific business rule was added.
+
+### T059 Platform Evidence — PASS
+
+T049–T053 pass on both a mobile target (Android) and a desktop target (Windows). T059 is complete.

@@ -12,24 +12,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/routing/app_router.dart';
+import 'package:namma_project/app/theme/app_theme.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
+import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
+
+export 'theme/app_theme.dart' show kProjectFontFamily;
 
 /// Keys used by tests to locate the shell states.
 const Key kFoundationRootStartupKey = Key('foundation_root_startup');
 const Key kFoundationRootReadyKey = Key('foundation_root_ready');
 const Key kFoundationRootFailureKey = Key('foundation_root_failure');
 
-/// The Thmanyah Sans family is the default UI typeface for every app theme.
-const String kProjectFontFamily = 'ThmanyahSans';
-
 class FoundationApp extends StatefulWidget {
   const FoundationApp({
     super.key,
     this.cubitOverride,
     this.localeCubitOverride,
+    this.themeCubitOverride,
     this.synchronizationCubitOverride,
   });
 
@@ -40,6 +43,10 @@ class FoundationApp extends StatefulWidget {
   /// Optional locale binding for widget tests. Production resolves it from
   /// the composition root and restores the persisted Foundation preference.
   final LocaleCubit? localeCubitOverride;
+
+  /// Optional appearance binding for widget tests. Production resolves it
+  /// from the composition root and restores the persisted preference.
+  final ThemeCubit? themeCubitOverride;
 
   /// Optional synchronization binding for widget tests. Production resolves it
   /// from the composition root and starts it after a successful bootstrap.
@@ -52,6 +59,7 @@ class FoundationApp extends StatefulWidget {
 class _FoundationAppState extends State<FoundationApp> {
   FoundationCubit? _cubit;
   LocaleCubit? _localeCubit;
+  ThemeCubit? _themeCubit;
   SynchronizationCubit? _synchronizationCubit;
 
   /// True only when this shell resolved the Cubit from the composition root.
@@ -60,6 +68,7 @@ class _FoundationAppState extends State<FoundationApp> {
   /// semantics); only a shell-resolved Cubit is closed here.
   bool _ownsCubit = false;
   bool _ownsLocaleCubit = false;
+  bool _ownsThemeCubit = false;
   bool _ownsSynchronizationCubit = false;
 
   /// Set when the composition root itself cannot provide a Cubit; the shell
@@ -86,6 +95,10 @@ class _FoundationAppState extends State<FoundationApp> {
       unawaited(_localeCubit?.close());
       _localeCubit = null;
     }
+    if (_ownsThemeCubit) {
+      unawaited(_themeCubit?.close());
+      _themeCubit = null;
+    }
     super.dispose();
   }
 
@@ -110,6 +123,7 @@ class _FoundationAppState extends State<FoundationApp> {
     _ownsCubit = owns;
     setState(() => _cubit = cubit);
     await _restoreLocale();
+    await _restoreTheme();
     // Bootstrap failures are mapped to failure states inside the Cubit.
     await cubit.bootstrap();
     if (!mounted || cubit.state is! FoundationReady) {
@@ -168,6 +182,29 @@ class _FoundationAppState extends State<FoundationApp> {
     await cubit.restore();
   }
 
+  /// Resolves the app-wide appearance independently from bootstrap.
+  ///
+  /// A missing registration leaves the root in system appearance, so a
+  /// composition problem never blocks a safe Foundation launch.
+  Future<void> _restoreTheme() async {
+    ThemeCubit? cubit;
+    try {
+      cubit = widget.themeCubitOverride ?? GetIt.instance<ThemeCubit>();
+    } catch (_) {
+      return;
+    }
+    final owns = !identical(cubit, widget.themeCubitOverride);
+    if (!mounted) {
+      if (owns) {
+        unawaited(cubit.close());
+      }
+      return;
+    }
+    _ownsThemeCubit = owns;
+    setState(() => _themeCubit = cubit);
+    await cubit.restore();
+  }
+
   @override
   Widget build(BuildContext context) {
     final home = _bootFailed
@@ -176,15 +213,44 @@ class _FoundationAppState extends State<FoundationApp> {
         ? const _StartupShell()
         : BlocProvider.value(value: _cubit!, child: const _FoundationShell());
     final localeCubit = _localeCubit;
-    if (localeCubit == null) {
-      return _LocalizedFoundationApp(locale: const Locale('en'), home: home);
-    }
-    return BlocProvider.value(
-      value: localeCubit,
-      child: BlocBuilder<LocaleCubit, LocaleState>(
-        builder: (context, state) => _LocalizedFoundationApp(
-          locale: Locale(state.languageCode),
+    final themeCubit = _themeCubit;
+    Widget appFor(Locale locale, ThemeMode themeMode) =>
+        _LocalizedFoundationApp(
+          locale: locale,
+          themeMode: themeMode,
           home: home,
+        );
+
+    if (localeCubit == null && themeCubit == null) {
+      return appFor(const Locale('en'), ThemeMode.system);
+    }
+    if (localeCubit == null) {
+      return BlocProvider.value(
+        value: themeCubit!,
+        child: BlocBuilder<ThemeCubit, ThemeState>(
+          builder: (context, state) =>
+              appFor(const Locale('en'), state.themeMode),
+        ),
+      );
+    }
+    if (themeCubit == null) {
+      return BlocProvider.value(
+        value: localeCubit,
+        child: BlocBuilder<LocaleCubit, LocaleState>(
+          builder: (context, state) =>
+              appFor(Locale(state.languageCode), ThemeMode.system),
+        ),
+      );
+    }
+    return MultiBlocProvider(
+      providers: <BlocProvider<dynamic>>[
+        BlocProvider<LocaleCubit>.value(value: localeCubit),
+        BlocProvider<ThemeCubit>.value(value: themeCubit),
+      ],
+      child: BlocBuilder<LocaleCubit, LocaleState>(
+        builder: (context, localeState) => BlocBuilder<ThemeCubit, ThemeState>(
+          builder: (context, themeState) =>
+              appFor(Locale(localeState.languageCode), themeState.themeMode),
         ),
       ),
     );
@@ -194,31 +260,44 @@ class _FoundationAppState extends State<FoundationApp> {
 /// The root MaterialApp configuration for the two approved Foundation
 /// languages. Flutter's localization delegates provide RTL/LTR directionality
 /// for the whole tree; individual widgets never force direction manually.
-class _LocalizedFoundationApp extends StatelessWidget {
-  const _LocalizedFoundationApp({required this.locale, required this.home});
+class _LocalizedFoundationApp extends StatefulWidget {
+  const _LocalizedFoundationApp({
+    required this.locale,
+    required this.themeMode,
+    required this.home,
+  });
 
   final Locale locale;
+  final ThemeMode themeMode;
   final Widget home;
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      locale: locale,
-      supportedLocales: FoundationLocalizations.supportedLocales,
-      localizationsDelegates: FoundationLocalizations.localizationsDelegates,
-      onGenerateTitle: (context) =>
-          FoundationLocalizations.of(context).appTitle,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        fontFamily: kProjectFontFamily,
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        fontFamily: kProjectFontFamily,
-      ),
-      home: home,
-    );
+  State<_LocalizedFoundationApp> createState() =>
+      _LocalizedFoundationAppState();
+}
+
+class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
+  late final FoundationAppRouter _router = FoundationAppRouter(
+    rootBuilder: (_) => widget.home,
+  );
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp.router(
+    locale: widget.locale,
+    supportedLocales: FoundationLocalizations.supportedLocales,
+    localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+    onGenerateTitle: (context) => FoundationLocalizations.of(context).appTitle,
+    theme: AppTheme.light,
+    darkTheme: AppTheme.dark,
+    themeMode: widget.themeMode,
+    routerConfig: _router.router,
+  );
 }
 
 class _FoundationShell extends StatelessWidget {
@@ -299,6 +378,7 @@ String _localizedFoundationMessage(BuildContext context, String messageKey) {
     kMessageKeyBootstrapRecoverable => l10n.foundationBootstrapRecoverable,
     kMessageKeyBootstrapBlocking => l10n.foundationBootstrapBlocking,
     kMessageKeyLocaleRecoverable => l10n.foundationLocaleRecoverable,
+    kMessageKeyThemeRecoverable => l10n.foundationThemeRecoverable,
     _ => l10n.foundationGenericFailure,
   };
 }

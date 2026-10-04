@@ -25,6 +25,15 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get foundationLocaleRecoverable => 'تعذر حفظ تفضيل اللغة.';
 
   @override
+  String get foundationThemeRecoverable => 'تعذر حفظ تفضيل المظهر.';
+
+  @override
+  String get foundationRouteUnavailable => 'هذا المسار غير متاح.';
+
+  @override
+  String get foundationPlatformRecoverable => 'تعذر التحقق من قدرة هذه المنصة.';
+
+  @override
   String get foundationGenericFailure => 'يحتاج نماء إلى معالجة قبل المتابعة.';
 
   @override

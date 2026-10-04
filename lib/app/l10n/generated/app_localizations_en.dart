@@ -26,6 +26,17 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
       'Your language preference could not be saved.';
 
   @override
+  String get foundationThemeRecoverable =>
+      'Your appearance preference could not be saved.';
+
+  @override
+  String get foundationRouteUnavailable => 'This route is unavailable.';
+
+  @override
+  String get foundationPlatformRecoverable =>
+      'This platform capability could not be verified.';
+
+  @override
   String get foundationGenericFailure =>
       'Namaa needs attention before it can continue.';
 

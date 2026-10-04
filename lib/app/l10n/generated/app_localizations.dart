@@ -131,6 +131,24 @@ abstract class FoundationLocalizations {
   /// **'Your language preference could not be saved.'**
   String get foundationLocaleRecoverable;
 
+  /// No description provided for @foundationThemeRecoverable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your appearance preference could not be saved.'**
+  String get foundationThemeRecoverable;
+
+  /// No description provided for @foundationRouteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This route is unavailable.'**
+  String get foundationRouteUnavailable;
+
+  /// No description provided for @foundationPlatformRecoverable.
+  ///
+  /// In en, this message translates to:
+  /// **'This platform capability could not be verified.'**
+  String get foundationPlatformRecoverable;
+
   /// No description provided for @foundationGenericFailure.
   ///
   /// In en, this message translates to:
