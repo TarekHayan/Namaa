@@ -1,13 +1,13 @@
 # Platform Validation Record: Namaa Foundation
 
 **Feature**: [001-namaa-foundation](spec.md) | **Created**: 2026-09-03 |
-**Updated**: 2026-09-05 (Supabase direction, Constitution v2.0.0)
+**Updated**: 2026-10-05 (five-target GitHub Actions validation)
 
 This record proves or disproves target capability for Android, iOS, Windows, macOS, and Linux
 before production lock-in (Constitution III; research decision 5). A failed adapter capability
 blocks production lock-in but does not alter Domain/Application contracts.
 
-Status legend: PASS (verified with evidence), PENDING (not yet executed in this environment),
+Status legend: PASS (verified with evidence), PENDING (required evidence has not been executed),
 FAIL (verified unsupported/broken with evidence).
 
 ## Package Compatibility Record (T001/T008)
@@ -23,8 +23,8 @@ from each resolved package's `pubspec.yaml`.
 | go_router 17.5.0 | ^17.5.0 | all | Routing. |
 | drift 2.34.4 / drift_flutter 0.3.1 | ^2.34.4 / ^0.3.1 | all (Dart build hooks) | drift_flutter bundles sqlite3 via hooks on Android, iOS, macOS, Linux, Windows. |
 | sqlite3 3.x (transitive) | via drift_flutter | Android, iOS, macOS, Linux, Windows | Encryption selected through build hooks `source: sqlite3mc` (SQLite3MultipleCiphers, MIT, SQLCipher-compatible `PRAGMA key`). `sqlcipher_flutter_libs`/`sqlite3_flutter_libs` 0.7.0+eol are retired no-op stubs and are NOT used. |
-| supabase_flutter 2.17.2 | ^2.17.2 | android, ios, macos, web, windows, **linux** | Declares all five required targets (plus web). Linux Auth/Data API/session/sync transport remains a mandatory empirical proof before production lock-in (research decision 5); "declared" is not "verified". |
-| flutter_secure_storage 11.0.0 | ^11.0.0 | android, ios, macos, linux, windows, web | Full five-target coverage via federated platform packages. |
+| supabase_flutter 2.17.2 | ^2.17.2 | android, ios, macos, web, windows, **linux** | Declares all five required targets (plus web). Five-target initialization and Linux local Data API transport are verified; isolated non-production device transport remains pending. |
+| flutter_secure_storage 10.3.4 | ^10.3.1 | android, ios, macos, linux, windows, web | Full five-target coverage via federated platform packages; compatible with the Android SDK 36 project build. |
 | flutter_localizations / intl | sdk / ^0.20.2 | all | ARB/gen_l10n localization. |
 | freezed 3.2.5 / json_serializable 6.14.1 | dev | all (pure Dart codegen) | Immutable value types and payload serialization. |
 | bloc_test 10.0.0 / build_runner 2.15.1 / drift_dev 2.34.0 / injectable_generator 3.0.2 | dev | all | Test and build tooling. |
@@ -33,10 +33,9 @@ Key T001/T008 findings:
 
 1. `flutter pub get` succeeds with the Foundation dependency set after replacing
    `cloud_firestore`/`firebase_auth`/`firebase_core` with `supabase_flutter ^2.17.2` (T001).
-2. `supabase_flutter` declares Android, iOS, macOS, Windows, and Linux plugins. Unlike the
-   retired Firebase direction, Linux is declared; the Linux end-to-end proof (Auth, Data API,
-   session, sync transport) is still a required production-lock-in gate, not an assumed
-   capability.
+2. `supabase_flutter` declares Android, iOS, macOS, Windows, and Linux plugins. The final CI run
+   verifies initialization on every target and local Data API transport on Linux; the isolated
+   non-production Auth/Data API/session/sync device proof remains a production-lock-in gate.
 3. SQLite encryption is provided by the `sqlite3` build-hook system (not by the retired
    `sqlcipher_flutter_libs`), which bundles precompiled SQLite3MultipleCiphers binaries for every
    Dart-supported OS, including Linux.
@@ -49,90 +48,86 @@ Key T001/T008 findings:
 | Static analysis | `flutter analyze` | PASS (0 issues) | 2026-09-05 |
 | Localization generation | `flutter gen-l10n` | PASS (ar/en generated) | 2026-09-05 |
 | Starter test entry point | `flutter test` | PASS (1 test) | 2026-09-05 |
-| Native Windows compile of dependency set | `flutter build windows --debug` | PENDING — no Visual Studio toolchain on this host (`flutter doctor`: Visual Studio ✗, Android toolchain ✓). Command to re-run on a VS-equipped host recorded below. | 2026-09-05 |
+| Native Windows compile of dependency set | `flutter build windows --debug` | PASS — GitHub Actions Windows runner | 2026-10-05 |
 
 ## Target Capability Matrix
 
-For each target: clean launch; encrypted database open/restart; protected-vault
-read/write/delete; Supabase initialization; local-stack connection; non-production device
-integration; offline operation followed by reconnect retry.
+GitHub Actions run
+[37314500462](https://github.com/TarekHayan/Namaa/actions/runs/37314500462) built and
+exercised every required target with Flutter 3.41.8. The rows below distinguish real
+platform/runtime proof from cloud checks that still require an isolated non-production project.
 
 ### Android
 
 | Check | Status | Evidence |
 |---|---|---|
-| Clean root-route launch | PENDING | Deferred to US2/US3 root-route validation |
-| Encrypted database open/restart | PASS | `integration_test/foundation_offline_test.dart` passes across 10 consecutive offline restarts on Android (2026-09-07) |
-| Credential vault read/write/delete | PASS | Proven in host unit suite and in integration tests on Android via `SecureCredentialVault` (2026-09-07) |
-| Supabase initialization | PASS | `integration_test/foundation_supabase_test.dart` passes on Android (2026-09-07) |
-| Local stack connectivity | PASS | Loopback local stack URL boundary confirmed on Android; RLS isolation verified via `npx supabase test db` (2026-09-07) |
-| Non-production device integration | PASS | Automated tests reject production configuration and resolve non-production environments on Android (2026-09-07) |
-| Offline commit + reconnect retry | PASS | `integration_test/foundation_sync_test.dart` passes retry and conflict retention on Android (2026-09-07) |
-
+| Clean root-route launch | PASS | `foundation_platform_test.dart` passed on the Android emulator. |
+| Encrypted database open/restart | PASS | Ten-restart offline and migration/recovery suites passed. |
+| Credential vault read/write/delete | PASS | The real Android secure-storage adapter passed the platform probe. |
+| Supabase initialization | PASS | The real client/session boundary initialized successfully. |
+| Local stack connectivity | PASS | The local Data API request passed through ADB port forwarding; database/RLS tests passed separately. |
+| Non-production device integration | PENDING | Configuration isolation is verified, but no isolated non-production project credentials are configured in GitHub. |
+| Offline commit + reconnect retry | PASS | Retry/idempotency and conflict-retention integration suites passed. |
 
 ### iOS
 
 | Check | Status | Evidence |
 |---|---|---|
-| Clean root-route launch | PENDING | |
-| Encrypted database open/restart | PENDING | |
-| Credential vault read/write/delete | PENDING | |
-| Supabase initialization | PENDING | |
-| Local stack connectivity | PENDING | |
-| Non-production device integration | PENDING | |
-| Offline commit + reconnect retry | PENDING | |
+| Clean root-route launch | PASS | The iOS simulator platform matrix job passed. |
+| Encrypted database open/restart | PASS | Separate migration and ten-restart offline simulator jobs passed. |
+| Credential vault read/write/delete | PASS | The real iOS Keychain-backed adapter passed the platform probe. |
+| Supabase initialization | PASS | The real client/session boundary initialized successfully. |
+| Local stack connectivity | PENDING | The macOS hosted runner has no local Supabase Docker stack; only the safe configuration boundary ran. |
+| Non-production device integration | PENDING | No isolated non-production project credentials are configured in GitHub. |
+| Offline commit + reconnect retry | PASS | Retry/idempotency and conflict-retention simulator job passed. |
 
 ### Windows
 
 | Check | Status | Evidence |
 |---|---|---|
-| Clean root-route launch | PENDING | |
-| Encrypted database open/restart | PENDING | |
-| Credential vault read/write/delete | PENDING | |
-| Supabase initialization | PENDING | |
-| Local stack connectivity | PENDING | |
-| Non-production device integration | PENDING | |
-| Offline commit + reconnect retry | PENDING | |
+| Clean root-route launch | PASS | Native Windows build and platform suite passed. |
+| Encrypted database open/restart | PASS | Migration and ten-restart offline suites passed. |
+| Credential vault read/write/delete | PASS | The real Windows protected-storage adapter passed the platform probe. |
+| Supabase initialization | PASS | The real client/session boundary initialized successfully. |
+| Local stack connectivity | PASS | Local Data API integration passed during the Phase 6 host validation. |
+| Non-production device integration | PENDING | Configuration isolation is verified, but no isolated non-production project credentials are configured in GitHub. |
+| Offline commit + reconnect retry | PASS | Retry/idempotency and conflict-retention integration suites passed. |
 
 ### macOS
 
 | Check | Status | Evidence |
 |---|---|---|
-| Clean root-route launch | PENDING | |
-| Encrypted database open/restart | PENDING | |
-| Credential vault read/write/delete | PENDING | |
-| Supabase initialization | PENDING | |
-| Local stack connectivity | PENDING | |
-| Non-production device integration | PENDING | |
-| Offline commit + reconnect retry | PENDING | |
+| Clean root-route launch | PASS | Native macOS build and platform suite passed. |
+| Encrypted database open/restart | PASS | Migration and ten-restart offline suites passed. |
+| Credential vault read/write/delete | PASS | The real macOS Keychain-backed adapter passed without a Keychain Sharing entitlement. |
+| Supabase initialization | PASS | The real client/session boundary initialized successfully. |
+| Local stack connectivity | PENDING | The macOS hosted runner has no local Supabase Docker stack; only the safe configuration boundary ran. |
+| Non-production device integration | PENDING | No isolated non-production project credentials are configured in GitHub. |
+| Offline commit + reconnect retry | PASS | Retry/idempotency and conflict-retention integration suites passed. |
 
 ### Linux
 
 | Check | Status | Evidence |
 |---|---|---|
-| Clean root-route launch | PENDING | |
-| Encrypted database open/restart | PENDING | |
-| Credential vault read/write/delete | PENDING | |
-| Supabase initialization | PENDING (declared) | supabase_flutter 2.17.2 declares a Linux plugin; end-to-end Auth/Data API/session/sync proof still required. |
-| Local stack connectivity | PENDING | |
-| Non-production device integration | PENDING | |
-| Offline commit + reconnect retry | PENDING | |
+| Clean root-route launch | PASS | Native Linux build and platform suite passed under Xvfb. |
+| Encrypted database open/restart | PASS | Migration and ten-restart offline suites passed. |
+| Credential vault read/write/delete | PASS | The real Secret Service adapter passed with an isolated D-Bus/GNOME Keyring session. |
+| Supabase initialization | PASS | The real client/session boundary initialized successfully. |
+| Local stack connectivity | PASS | The local Supabase Data API request passed on the Linux runner. |
+| Non-production device integration | PENDING | Configuration isolation is verified, but no isolated non-production project credentials are configured in GitHub. |
+| Offline commit + reconnect retry | PASS | Retry/idempotency and conflict-retention integration suites passed. |
 
-## Environment Constraints of This Implementation Run
+## Execution Environments and Evidence Boundary
 
-- Implementation host: Windows 10 development machine with Flutter 3.41.8 stable; Android
-  SDK 36 toolchain and Chrome available; **no Visual Studio toolchain**, so native Windows
-  compilation cannot be exercised here. Re-run on a VS-equipped host with:
-  `flutter build windows --debug` (validates sqlite3mc hook binaries and the supabase_flutter
-  Windows plugin compiling together).
-- Host-verifiable checks (`flutter analyze`, `flutter test` unit/widget/architecture suites with
-  the hooks-bundled encrypted SQLite and test doubles, `flutter gen-l10n`) are executed and
-  recorded here.
-- Checks requiring physical/emulated targets (Android/iOS devices, macOS/Linux builds), a running
-  local Supabase Docker stack, or an isolated non-production Supabase project are recorded as
-  PENDING with the exact command to run, because this environment cannot execute them now.
-  PENDING is not PASS; production lock-in stays blocked until each cell is verified
-  (Constitution III).
+- The five-target CI run also passed formatting, analysis, the shared test suite, and 11 local
+  database/RLS checks.
+- Android and Linux ran against a job-local Supabase stack. The Windows local Data API evidence
+  comes from the Phase 6 host run. macOS and iOS verified real SDK initialization and safe
+  configuration boundaries, but did not make a Data API request because macOS hosted runners do
+  not have the local Docker stack used by the automated tests.
+- The approved isolated non-production Supabase device run is still PENDING on every target because
+  this repository has no non-production endpoint/key/test-account GitHub secrets. PENDING is not
+  PASS; production lock-in remains blocked by this external test-environment prerequisite.
 
 ## US1 Implementation Evidence (T029–T039, recorded 2026-09-06)
 
@@ -155,8 +150,8 @@ Implemented adapters and infrastructure (all on the Windows host, Flutter 3.41.8
   Unit-tested on host.
 - **T033** `lib/core/data/cloud/supabase/supabase_session_adapter.dart` +
   `supabase_sync_adapter.dart` — session snapshots without SDK types; idempotent dispatch via
-  remote `operation_id`, remote-newer conflict detection. Written; SDK-level behavior requires a
-  running stack (PENDING below).
+  remote `operation_id`, remote-newer conflict detection. Written and exercised through the
+  local-stack validation; isolated non-production device transport remains pending.
 - **T034** `supabase/migrations/0001_foundation_probe.sql` — probe table, RLS enabled, least-
   privilege grants (anon: none; authenticated: 4 row ops), owner policies bound to `auth.uid()`;
   caller-supplied owner values rejected by `with check`. Written.
@@ -178,7 +173,7 @@ The local Supabase Docker stack was started and verified. User Story 1 automated
 
 1. **Static Analysis**: `flutter analyze` — PASS (0 issues found).
 2. **Unit, Widget, and Architecture Tests (T019–T023)**: `flutter test` — PASS (67/67 passed).
-3. **Database Authorization and RLS (T024)**: `npx supabase test db` — PASS (8/8 tests passed in `supabase/tests/foundation_account_isolation_test.sql`, proving owner account allowed and different account denied for read/write/delete operations).
+3. **Database Authorization and RLS (T024)**: `supabase test db` — PASS (8/8 tests passed in `supabase/tests/foundation_account_isolation_test.sql`, proving owner account allowed and different account denied for read/write/delete operations).
 4. **Target Device Integration Tests (T025–T028)**: `flutter test integration_test` — PASS on Android target (7/7 tests passed):
    - `foundation_offline_test.dart` (T025): Survives 10 consecutive offline restarts with encrypted database.
    - `foundation_sync_test.dart` (T026): Reconnect/retry with idempotent operation ID and version conflict retention.
@@ -227,15 +222,17 @@ T049–T053 pass on both a mobile target (Android) and a desktop target (Windows
 
 ## Phase 6 Release-Gate Revalidation (2026-10-05)
 
-| Required target | Status | Evidence / blocking condition |
+| Required target | Platform/runtime status | Evidence / remaining cloud condition |
 |---|---|---|
-| Android | PASS | The complete integration suite passed 9/9 on Android 17 (API 37) after forwarding local port 54321 through ADB. The two platform checks exercised root launch, encrypted store, credential vault, Supabase/session boundary, connectivity transitions, Arabic RTL, English LTR, all appearance modes, and unknown-route handling. |
-| Windows | PASS | All five integration entry points passed individually (9/9 total). They cover migration/recovery, ten offline restarts, platform adapters, the local Supabase Data API, retry/idempotency, conflict retention, Arabic RTL, English LTR, theme modes, and routing. The installed Flutter runner loses its debug log reader after the first executable only when all Windows entry points are launched in one invocation, so the verified quickstart documents sequential entry-point execution. |
-| iOS | BLOCKED | This Windows host has no iOS simulator/device or Apple build toolchain. Verification must run on macOS with a real/simulated iOS target before production lock-in. |
-| macOS | BLOCKED | This Windows host cannot build or run macOS applications. Verification must run on a macOS host before production lock-in. |
-| Linux | BLOCKED | No Linux host or desktop target is available in this environment. Verification must run on a Linux host before production lock-in. |
+| Android | PASS | Complete integration suite passed against a local Supabase stack. Isolated non-production project run remains pending. |
+| Windows | PASS | Native build and all five integration entry points passed; local Data API evidence exists. Isolated non-production project run remains pending. |
+| iOS | PASS | Native simulator build and all five integration entry points passed across isolated matrix jobs. Local/isolated-project Data API transport remains pending. |
+| macOS | PASS | Native build and all five integration entry points passed. Local/isolated-project Data API transport remains pending. |
+| Linux | PASS | Native build, protected vault, all integration entry points, and local Data API transport passed. Isolated non-production project run remains pending. |
 
-The Android and Windows evidence confirms the available mobile and desktop paths. The shared unit,
-widget, architecture, and security suites also pass (122 tests), and the local database/RLS suite
-passes all 11 checks. This does **not** complete the five-target release gate in Constitution III:
-iOS, macOS, and Linux remain explicit production-lock-in blockers. Therefore T064 remains open.
+The five-target Flutter/platform CI gate is complete and green. The shared unit, widget,
+architecture, and security suites pass, and the local database/RLS suite passes all 11 checks.
+T064 remains open only for the Constitution-required end-to-end cloud proof: configure an isolated
+non-production Supabase project and verify Auth, Data API, session, and sync transport on every
+target (with local-stack Data API coverage also still required on Apple targets). No production
+endpoint may be used for that proof.

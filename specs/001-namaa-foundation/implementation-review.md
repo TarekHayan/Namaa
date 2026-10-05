@@ -6,11 +6,13 @@
 
 ## Result
 
-The Foundation implementation is functionally verified on the available Android and Windows
-targets, and its local Supabase security suite passes. It is **not approved for production
-lock-in**: the required iOS, macOS, and Linux target evidence is unavailable on this Windows host.
-This is the explicit hard blocker required by Constitution III and FR-018, not an inferred package
-compatibility result.
+The Foundation implementation is functionally verified on Android, iOS, Windows, macOS, and Linux,
+and its local Supabase security suite passes. GitHub Actions run
+[37314500462](https://github.com/TarekHayan/Namaa/actions/runs/37314500462) is green, including the
+five-target gate. It is **not yet approved for production lock-in** because the repository has no
+isolated non-production Supabase configuration for the required end-to-end Auth, Data API,
+session, and synchronization transport proof. Apple runners also verified the SDK boundary but
+could not run the Docker-backed local Data API test.
 
 ## Current Verification Evidence
 
@@ -24,7 +26,9 @@ compatibility result.
 | `supabase test db` | PASS — 11 local-only database/RLS checks |
 | Android platform integration | PASS — 2/2 checks, including Arabic RTL, English LTR, and all appearance modes |
 | Windows platform integration | PASS — 2/2 checks, including Arabic RTL, English LTR, and all appearance modes |
-| iOS, macOS, Linux platform integration | BLOCKED — no capable host/target available; see [platform-validation.md](platform-validation.md) |
+| iOS integration | PASS — simulator build plus migration, offline/restart, platform, synchronization, and Supabase-boundary matrix jobs |
+| macOS integration | PASS — native build plus all five integration entry points |
+| Linux integration | PASS — native build, all five integration entry points, protected keyring, and local Supabase Data API |
 
 Automated Supabase tests used only the local Docker stack. No production Supabase URL, key, or
 service-role credential was used.
@@ -47,10 +51,10 @@ service-role credential was used.
 | FR-012 | VERIFIED | Registered root router, route ownership structure, and unknown-route handling are tested. |
 | FR-013 | VERIFIED | Arabic/English resources and Arabic RTL root-direction tests pass. |
 | FR-014 | VERIFIED | Light, dark, and system theme selection is tested at the application root. |
-| FR-015 | BLOCKED | Android and Windows behavior is verified; iOS, macOS, and Linux evidence is still required. |
+| FR-015 | VERIFIED | Shared behavior and platform adapters passed on Android, iOS, Windows, macOS, and Linux. |
 | FR-016 | VERIFIED | `AppResult`/failure boundaries expose recoverable states without leaking infrastructure types to Domain. |
 | FR-017 | VERIFIED | Unit, widget, integration, architecture, persistence, offline/reconnect, localization, routing, theme, and platform test entry points operate. |
-| FR-018 | BLOCKED | Five-target package/runtime verification is incomplete: iOS, macOS, Linux. |
+| FR-018 | BLOCKED | Five-target Flutter/runtime verification passes, but full Supabase Data API/device integration against the approved isolated non-production environment is not configured. |
 | FR-019 | VERIFIED | Encrypted persistence migration, preservation, failure journal, and recovery tests pass. |
 | FR-020 | VERIFIED | Diff/scope review found no Tasks, Auth flow, Finance, Quran, Prayer, or other product-domain implementation. |
 | FR-021 | VERIFIED | `supabase test db` passed against the local stack; non-production-only configuration is enforced/tested at the device boundary. |
@@ -62,7 +66,7 @@ service-role credential was used.
 
 | Criterion | Status | Evidence |
 |---|---|---|
-| AC-001 | BLOCKED | Android and Windows launch evidence exists; iOS, macOS, and Linux launch evidence is missing. |
+| AC-001 | VERIFIED | Registered-root launch coverage passed on Android, iOS, Windows, macOS, and Linux. |
 | AC-002 | VERIFIED | Passing Domain architecture-boundary scan. |
 | AC-003 | VERIFIED | Offline persisted-record/restart integration coverage. |
 | AC-004 | VERIFIED | Offline-to-online retry, idempotency, newest-value, and conflict-retention coverage. |
@@ -81,7 +85,7 @@ service-role credential was used.
 
 | Criterion | Status | Evidence |
 |---|---|---|
-| SC-001 | BLOCKED | Required runs are absent for iOS, macOS, and Linux. |
+| SC-001 | VERIFIED | All five platform compatibility runs reached and exercised the registered root. |
 | SC-002 | VERIFIED | Architecture-boundary suite passes. |
 | SC-003 | VERIFIED | Ten consecutive offline restart checks pass. |
 | SC-004 | VERIFIED | Ten offline-to-online retry/idempotency/conflict checks pass. |
@@ -106,8 +110,9 @@ service-role credential was used.
 
 ## Required Follow-Up Before Production Lock-In
 
-Run the complete validation matrix on capable targets and append evidence to
-[platform-validation.md](platform-validation.md): iOS, macOS, and Linux must each prove clean root
-launch, encrypted persistence, credential vault, Supabase Auth/Data API/session/sync,
-offline/reconnect, localization/RTL, and theme behavior. Until then, T064 and the Foundation
-release checkpoint remain open.
+Provision an isolated non-production Supabase project, deploy the Foundation migration, and add
+the minimum protected GitHub configuration needed for device integration. Then run the Auth,
+Data API, session, and synchronization transport proof on Android, iOS, Windows, macOS, and Linux;
+also execute the local-stack Data API check on Apple where a suitable runner/environment is
+available. Until that evidence is recorded, T064 and the production-lock-in checkpoint remain
+open. No production URL or credential may be used.
