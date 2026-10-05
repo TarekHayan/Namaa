@@ -113,7 +113,12 @@ jobs:
         run: flutter pub get
 
       - name: Install Android compile SDK
-        run: yes | sdkmanager 'platforms;android-37'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager_path="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$sdkmanager_path"
+          yes | "$sdkmanager_path" 'platforms;android-37'
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
