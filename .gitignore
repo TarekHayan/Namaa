@@ -58,3 +58,8 @@ supabase/.branches/
 # Flutter DevTools local state.
 devtools_options.yaml
 node_modules/
+
+# Local staging credentials used to populate GitHub Actions repository secrets.
+# Never commit the populated file.
+.secrets/*.env
+!.secrets/*.env.example

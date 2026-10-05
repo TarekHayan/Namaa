@@ -144,6 +144,13 @@ jobs:
 
       - name: Run Android Foundation integration suite
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
         with:
           api-level: 35
           arch: x86_64
@@ -152,7 +159,15 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
             adb reverse tcp:54321 tcp:54321
-            flutter test --no-pub --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" -d emulator-5554 integration_test --reporter expanded
+            flutter test --no-pub \
+              --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+              -d emulator-5554 integration_test --reporter expanded
 
   linux:
     name: Linux integration
@@ -200,6 +215,13 @@ jobs:
 
       - name: Run Linux Foundation integration suite
         shell: bash
+        env:
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
         run: |
           set -euo pipefail
           dbus-run-session -- xvfb-run -a bash -c '
@@ -221,6 +243,15 @@ jobs:
               --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" \
               -d linux integration_test/foundation_supabase_test.dart \
               --name "production configuration|automated tests resolve|local Supabase Data API" \
+              --reporter expanded
+            flutter test --no-pub \
+              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+              -d linux integration_test/foundation_staging_supabase_test.dart \
               --reporter expanded
           '
 
@@ -251,6 +282,13 @@ jobs:
 
       - name: Run Windows Foundation integration entry points
         shell: pwsh
+        env:
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
         run: |
           $tests = @(
             'integration_test/foundation_migration_test.dart',
@@ -264,6 +302,15 @@ jobs:
           }
           flutter test --no-pub -d windows integration_test/foundation_supabase_test.dart --name 'production configuration|automated tests resolve' --reporter expanded
           if ($LASTEXITCODE -ne 0) { throw 'Supabase boundary tests failed on Windows' }
+          flutter test --no-pub `
+            --dart-define="NAMAA_SUPABASE_URL=$env:NAMAA_STAGING_SUPABASE_URL" `
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$env:NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$env:NAMAA_STAGING_TEST_USER_A_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$env:NAMAA_STAGING_TEST_USER_A_PASSWORD" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$env:NAMAA_STAGING_TEST_USER_B_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD" `
+            -d windows integration_test/foundation_staging_supabase_test.dart --reporter expanded
+          if ($LASTEXITCODE -ne 0) { throw 'Staging Supabase integration failed on Windows' }
 
   macos:
     name: macOS integration
@@ -291,6 +338,13 @@ jobs:
 
       - name: Run macOS Foundation integration entry points
         shell: bash
+        env:
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
         run: |
           set -euo pipefail
           tests=(
@@ -304,6 +358,15 @@ jobs:
           done
           flutter test --no-pub -d macos integration_test/foundation_supabase_test.dart \
             --name 'production configuration|automated tests resolve' --reporter expanded
+          flutter test --no-pub \
+            --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+            -d macos integration_test/foundation_staging_supabase_test.dart \
+            --reporter expanded
 
   ios:
     name: iOS simulator (${{ matrix.suite }})
@@ -328,6 +391,9 @@ jobs:
           - suite: supabase-boundary
             test_file: integration_test/foundation_supabase_test.dart
             test_name_pattern: 'production configuration|automated tests resolve'
+          - suite: staging-supabase
+            test_file: integration_test/foundation_staging_supabase_test.dart
+            test_name_pattern: ''
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -363,13 +429,29 @@ jobs:
           IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
           TEST_FILE: ${{ matrix.test_file }}
           TEST_NAME_PATTERN: ${{ matrix.test_name_pattern }}
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
         run: |
           set -euo pipefail
+          staging_defines=(
+            --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL"
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY"
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL"
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD"
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL"
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD"
+          )
           if [[ -n "$TEST_NAME_PATTERN" ]]; then
-            flutter test --no-pub -d "$IOS_DEVICE_ID" "$TEST_FILE" \
+            flutter test --no-pub "${staging_defines[@]}" \
+              -d "$IOS_DEVICE_ID" "$TEST_FILE" \
               --name "$TEST_NAME_PATTERN" --reporter expanded
           else
-            flutter test --no-pub -d "$IOS_DEVICE_ID" "$TEST_FILE" \
+            flutter test --no-pub "${staging_defines[@]}" \
+              -d "$IOS_DEVICE_ID" "$TEST_FILE" \
               --reporter expanded
           fi
 
