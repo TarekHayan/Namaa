@@ -118,7 +118,8 @@ jobs:
           set -euo pipefail
           sdkmanager_path="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           test -x "$sdkmanager_path"
-          yes | "$sdkmanager_path" 'platforms;android-37'
+          yes | "$sdkmanager_path" --licenses >/dev/null || true
+          "$sdkmanager_path" --channel=3 'platforms;android-37'
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -305,9 +306,28 @@ jobs:
             --name 'production configuration|automated tests resolve' --reporter expanded
 
   ios:
-    name: iOS simulator integration
+    name: iOS simulator (${{ matrix.suite }})
     runs-on: macos-latest
-    timeout-minutes: 75
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: migration
+            test_file: integration_test/foundation_migration_test.dart
+            test_name_pattern: ''
+          - suite: offline
+            test_file: integration_test/foundation_offline_test.dart
+            test_name_pattern: ''
+          - suite: platform
+            test_file: integration_test/foundation_platform_test.dart
+            test_name_pattern: ''
+          - suite: sync
+            test_file: integration_test/foundation_sync_test.dart
+            test_name_pattern: ''
+          - suite: supabase-boundary
+            test_file: integration_test/foundation_supabase_test.dart
+            test_name_pattern: 'production configuration|automated tests resolve'
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -337,23 +357,21 @@ jobs:
           xcrun simctl bootstatus "$device_id" -b
           echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
 
-      - name: Run iOS Foundation integration entry points
+      - name: Run iOS Foundation integration entry point
         shell: bash
         env:
           IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
+          TEST_FILE: ${{ matrix.test_file }}
+          TEST_NAME_PATTERN: ${{ matrix.test_name_pattern }}
         run: |
           set -euo pipefail
-          tests=(
-            integration_test/foundation_migration_test.dart
-            integration_test/foundation_offline_test.dart
-            integration_test/foundation_platform_test.dart
-            integration_test/foundation_sync_test.dart
-          )
-          for test_file in "${tests[@]}"; do
-            flutter test --no-pub -d "$IOS_DEVICE_ID" "$test_file" --reporter expanded
-          done
-          flutter test --no-pub -d "$IOS_DEVICE_ID" integration_test/foundation_supabase_test.dart \
-            --name 'production configuration|automated tests resolve' --reporter expanded
+          if [[ -n "$TEST_NAME_PATTERN" ]]; then
+            flutter test --no-pub -d "$IOS_DEVICE_ID" "$TEST_FILE" \
+              --name "$TEST_NAME_PATTERN" --reporter expanded
+          else
+            flutter test --no-pub -d "$IOS_DEVICE_ID" "$TEST_FILE" \
+              --reporter expanded
+          fi
 
   foundation-gate:
     name: Foundation five-target gate
