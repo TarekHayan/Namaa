@@ -201,11 +201,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          dbus-run-session -- bash -c '
+          dbus-run-session -- xvfb-run -a bash -c '
+            set -euo pipefail
+            eval "$(printf "%s" "namaa-ci" | gnome-keyring-daemon --unlock)"
             eval "$(gnome-keyring-daemon --start --components=secrets)"
-            xvfb-run -a flutter test --no-pub \
+            tests=(
+              integration_test/foundation_migration_test.dart
+              integration_test/foundation_offline_test.dart
+              integration_test/foundation_platform_test.dart
+              integration_test/foundation_sync_test.dart
+            )
+            for test_file in "${tests[@]}"; do
+              flutter test --no-pub \
+                --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" \
+                -d linux "$test_file" --reporter expanded
+            done
+            flutter test --no-pub \
               --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" \
-              -d linux integration_test --reporter expanded
+              -d linux integration_test/foundation_supabase_test.dart \
+              --name "production configuration|automated tests resolve|local Supabase Data API" \
+              --reporter expanded
           '
 
   windows:

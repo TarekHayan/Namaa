@@ -91,7 +91,14 @@ class SecureCredentialVault implements CredentialVaultPort {
 /// Linux libsecret — declared for all five targets).
 class FlutterSecureKeyValueStore implements SecureKeyValueStore {
   FlutterSecureKeyValueStore({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            // Namaa does not share credentials between applications. Using
+            // the legacy macOS Keychain keeps the vault OS-protected without
+            // requiring a provisioned Keychain Sharing entitlement in CI.
+            mOptions: MacOsOptions(usesDataProtectionKeychain: false),
+          );
 
   final FlutterSecureStorage _storage;
 
