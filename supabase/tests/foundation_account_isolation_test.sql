@@ -9,21 +9,21 @@
 
 begin;
 
-select plan(10);
+select plan(11);
 
 -- Two isolated accounts -----------------------------------------------------
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
-  email_confirmed_at, created_at, updated_at
+  created_at, updated_at
 ) values
   ('00000000-0000-0000-0000-000000000000',
    '11111111-1111-1111-1111-111111111111',
    'authenticated', 'authenticated', 'owner@example.com', 'x',
-   now(), now(), now()),
+   now(), now()),
   ('00000000-0000-0000-0000-000000000000',
    '22222222-2222-2222-2222-222222222222',
    'authenticated', 'authenticated', 'other@example.com', 'x',
-   now(), now(), now());
+   now(), now());
 
 -- Helper: act as an account by installing its JWT claims.
 create schema if not exists tests;
@@ -40,6 +40,15 @@ end;
 $$;
 
 grant execute on function tests.authenticate_as(uuid) to authenticated;
+
+select ok(
+  not has_function_privilege(
+    'anon',
+    'public.apply_foundation_change(uuid,text,text,timestamptz,text)',
+    'EXECUTE'
+  ),
+  'anonymous role cannot execute the foundation synchronization RPC'
+);
 
 -- ------------------------------------------------------------------ owner ---
 select tests.authenticate_as('11111111-1111-1111-1111-111111111111');

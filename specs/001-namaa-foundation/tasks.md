@@ -171,13 +171,13 @@ both form factors without product features or divergent business semantics.
 **Purpose**: Complete required cross-cutting validation and preserve explicit evidence before any
 later product-domain work is planned.
 
-- [ ] T060 [P] Re-run and extend `test/architecture/domain_dependency_test.dart` to verify that Presentation Cubits also do not import Drift, Supabase, or secure-storage adapters directly.
-- [ ] T061 [P] Review `supabase/migrations/0001_foundation_probe.sql` and `supabase/tests/foundation_account_isolation_test.sql` for least-privilege grants, enabled RLS, owner-allowed access, and cross-account denial.
-- [ ] T062 [P] Add a client-artifact and configuration scan test in `test/architecture/client_secret_scan_test.dart` that fails for Supabase secret/service-role key patterns in tracked Flutter client files.
-- [ ] T063 Run `dart format .`, `flutter analyze`, all unit/widget/architecture tests, `flutter test integration_test`, and `supabase test db` using the local Supabase stack; resolve only Foundation failures.
+- [x] T060 [P] Re-run and extend `test/architecture/domain_dependency_test.dart` to verify that Presentation Cubits also do not import Drift, Supabase, or secure-storage adapters directly.
+- [x] T061 [P] Review `supabase/migrations/0001_foundation_probe.sql` and `supabase/tests/foundation_account_isolation_test.sql` for least-privilege grants, enabled RLS, owner-allowed access, and cross-account denial.
+- [x] T062 [P] Add a client-artifact and configuration scan test in `test/architecture/client_secret_scan_test.dart` that fails for Supabase secret/service-role key patterns in tracked Flutter client files.
+- [x] T063 Run `dart format .`, `flutter analyze`, all unit/widget/architecture tests, `flutter test integration_test`, and `supabase test db` using the local Supabase stack; resolve only Foundation failures.
 - [ ] T064 Run the complete quickstart validation matrix on Android, iOS, Windows, macOS, and Linux and record launch, encryption, vault, Supabase Auth/Data API/session/sync, offline/reconnect, locale/RTL, and theme evidence in `specs/001-namaa-foundation/platform-validation.md`.
-- [ ] T065 Update `specs/001-namaa-foundation/quickstart.md` only if the implemented commands differ from the documented, verified commands; preserve the local-stack and non-production-only restrictions.
-- [ ] T066 Conduct a final Constitution and specification traceability review in `specs/001-namaa-foundation/implementation-review.md`, confirming FR-001–FR-024, AC-001–AC-014, and SC-001–SC-011 or recording a blocking unsupported target capability.
+- [x] T065 Update `specs/001-namaa-foundation/quickstart.md` only if the implemented commands differ from the documented, verified commands; preserve the local-stack and non-production-only restrictions.
+- [x] T066 Conduct a final Constitution and specification traceability review in `specs/001-namaa-foundation/implementation-review.md`, confirming FR-001–FR-024, AC-001–AC-014, and SC-001–SC-011 or recording a blocking unsupported target capability.
 
 **Checkpoint**: Foundation is complete only when every required target has evidence, all automated
 checks pass, no client secret is present, production is never contacted by automated tests, and no

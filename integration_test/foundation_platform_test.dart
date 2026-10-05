@@ -51,9 +51,7 @@ void main() {
 
       const vaultKey = 'namaa.foundation.platform_test_probe';
       const vaultValue = 'foundation-platform-probe';
-      final vault = SecureCredentialVault(
-        store: FlutterSecureKeyValueStore(),
-      );
+      final vault = SecureCredentialVault(store: FlutterSecureKeyValueStore());
       final previous = await vault.readSecret(vaultKey);
       expect(previous.failureOrNull, isNull);
       addTearDown(() async {
@@ -116,10 +114,7 @@ void main() {
       );
       final capabilities = (await reporter.report()).valueOrNull!;
       expect(capabilities, isNotEmpty);
-      expect(
-        capabilities.every((capability) => capability.available),
-        isTrue,
-      );
+      expect(capabilities.every((capability) => capability.available), isTrue);
     },
   );
 
@@ -183,6 +178,22 @@ void main() {
         await tester.pumpAndSettle();
         expect(app().themeMode, selection.$2);
       }
+
+      await localeCubit.selectLanguage('ar');
+      await tester.pumpAndSettle();
+      expect(app().locale, const Locale('ar'));
+      expect(
+        Directionality.of(tester.element(find.byKey(kFoundationRootReadyKey))),
+        TextDirection.rtl,
+      );
+
+      await localeCubit.selectLanguage('en');
+      await tester.pumpAndSettle();
+      expect(app().locale, const Locale('en'));
+      expect(
+        Directionality.of(tester.element(find.byKey(kFoundationRootReadyKey))),
+        TextDirection.ltr,
+      );
 
       final appRouter = FoundationAppRouter(
         rootBuilder: (_) => const Scaffold(body: Text('foundation root')),

@@ -134,3 +134,13 @@ begin
   return;
 end;
 $$;
+
+-- PostgreSQL functions otherwise grant EXECUTE to public by default. The
+-- synchronization RPC is available only to authenticated accounts and keeps
+-- its security-invoker behavior, so table RLS remains enforced.
+revoke all on function public.apply_foundation_change(
+  uuid, text, text, timestamptz, text
+) from public, anon;
+grant execute on function public.apply_foundation_change(
+  uuid, text, text, timestamptz, text
+) to authenticated;

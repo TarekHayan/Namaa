@@ -30,7 +30,17 @@ This guide validates Foundation after implementation. It does not implement prod
    tests must not point to a production Supabase project.
 
    ~~~powershell
-   npx supabase start
+   supabase start
+   ~~~
+
+4. For Android device or emulator tests, forward the local Supabase API port through ADB so
+   `127.0.0.1:54321` on the device reaches the local stack on the development host. Substitute
+   the target's actual device ID; if this host uses a non-default ADB server port, set
+   `ANDROID_ADB_SERVER_PORT` before this command and the Flutter test command.
+
+   ~~~powershell
+   $adbPath = Join-Path $env:LOCALAPPDATA 'Android/Sdk/platform-tools/adb.exe'
+   & $adbPath -s '<device-id>' reverse tcp:54321 tcp:54321
    ~~~
 
 ## Automated Validation
@@ -38,8 +48,32 @@ This guide validates Foundation after implementation. It does not implement prod
 ~~~powershell
 flutter analyze
 flutter test
-flutter test integration_test
-npx supabase test db
+$statusLines = supabase status -o env
+$publishableLine = $statusLines | Where-Object { $_ -match '^PUBLISHABLE_KEY=' } | Select-Object -First 1
+if (-not $publishableLine) { throw 'The local Supabase publishable key is unavailable.' }
+$localPublishableKey = ($publishableLine -replace '^PUBLISHABLE_KEY=', '').Trim()
+flutter test --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$localPublishableKey" integration_test
+Remove-Variable localPublishableKey,publishableLine,statusLines
+supabase test db
+~~~
+
+Select a target with Flutter's `-d <device-id>` option when more than one device is available.
+The publishable key above comes from the local stack only; do not print it, save it to a file, or
+substitute a hosted project's key.
+
+On Windows, run the integration entry points one at a time if the installed Flutter test runner
+stops its debug log reader while launching multiple desktop executables in one invocation:
+
+~~~powershell
+$statusLines = supabase status -o env
+$publishableLine = $statusLines | Where-Object { $_ -match '^PUBLISHABLE_KEY=' } | Select-Object -First 1
+if (-not $publishableLine) { throw 'The local Supabase publishable key is unavailable.' }
+$localPublishableKey = ($publishableLine -replace '^PUBLISHABLE_KEY=', '').Trim()
+Get-ChildItem integration_test -Filter '*_test.dart' | Sort-Object Name | ForEach-Object {
+  flutter test --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$localPublishableKey" -d windows $_.FullName
+  if ($LASTEXITCODE -ne 0) { throw "Integration test failed: $($_.Name)" }
+}
+Remove-Variable localPublishableKey,publishableLine,statusLines
 ~~~
 
 The completed suites demonstrate:

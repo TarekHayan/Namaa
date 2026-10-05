@@ -71,4 +71,47 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
     }
     expect(violations, isEmpty, reason: 'Domain must stay infrastructure-free');
   });
+
+  test(
+    'Foundation Presentation Cubits import no data or secure-storage adapters',
+    () {
+      const forbiddenCubitImports = <String>[
+        'package:drift',
+        'package:supabase',
+        'package:flutter_secure_storage',
+        'package:namma_project/core/data/',
+        'package:namma_project/core/platform/secure_credential_vault.dart',
+        'package:namma_project/core/data/cloud/supabase/secure_supabase_storage.dart',
+      ];
+      final cubitDirectory = Directory(
+        'lib/features/foundation/presentation/state',
+      );
+      expect(cubitDirectory.existsSync(), isTrue);
+
+      final violations = <String>[];
+      for (final entity in cubitDirectory.listSync(recursive: true)) {
+        if (entity is! File || !entity.path.endsWith('_cubit.dart')) {
+          continue;
+        }
+        final source = entity.readAsStringSync();
+        final directive = RegExp(
+          r'''^\s*(?:import|export)\s+['"]([^'"]+)['"]''',
+          multiLine: true,
+        );
+        for (final target
+            in directive.allMatches(source).map((match) => match.group(1)!)) {
+          if (forbiddenCubitImports.any(target.startsWith)) {
+            violations.add('${entity.path}: $target');
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Presentation Cubits must call application use cases, not adapters',
+      );
+    },
+  );
 }

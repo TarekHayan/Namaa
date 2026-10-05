@@ -224,3 +224,18 @@ platform-specific business rule was added.
 ### T059 Platform Evidence — PASS
 
 T049–T053 pass on both a mobile target (Android) and a desktop target (Windows). T059 is complete.
+
+## Phase 6 Release-Gate Revalidation (2026-10-05)
+
+| Required target | Status | Evidence / blocking condition |
+|---|---|---|
+| Android | PASS | The complete integration suite passed 9/9 on Android 17 (API 37) after forwarding local port 54321 through ADB. The two platform checks exercised root launch, encrypted store, credential vault, Supabase/session boundary, connectivity transitions, Arabic RTL, English LTR, all appearance modes, and unknown-route handling. |
+| Windows | PASS | All five integration entry points passed individually (9/9 total). They cover migration/recovery, ten offline restarts, platform adapters, the local Supabase Data API, retry/idempotency, conflict retention, Arabic RTL, English LTR, theme modes, and routing. The installed Flutter runner loses its debug log reader after the first executable only when all Windows entry points are launched in one invocation, so the verified quickstart documents sequential entry-point execution. |
+| iOS | BLOCKED | This Windows host has no iOS simulator/device or Apple build toolchain. Verification must run on macOS with a real/simulated iOS target before production lock-in. |
+| macOS | BLOCKED | This Windows host cannot build or run macOS applications. Verification must run on a macOS host before production lock-in. |
+| Linux | BLOCKED | No Linux host or desktop target is available in this environment. Verification must run on a Linux host before production lock-in. |
+
+The Android and Windows evidence confirms the available mobile and desktop paths. The shared unit,
+widget, architecture, and security suites also pass (122 tests), and the local database/RLS suite
+passes all 11 checks. This does **not** complete the five-target release gate in Constitution III:
+iOS, macOS, and Linux remain explicit production-lock-in blockers. Therefore T064 remains open.
