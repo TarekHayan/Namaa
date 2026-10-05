@@ -159,15 +159,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
             adb reverse tcp:54321 tcp:54321
-            flutter test --no-pub \
-              --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" \
-              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
-              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
-              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
-              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
-              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
-              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
-              -d emulator-5554 integration_test --reporter expanded
+            flutter test --no-pub --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" -d emulator-5554 integration_test --reporter expanded
 
   linux:
     name: Linux integration
