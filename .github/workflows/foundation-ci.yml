@@ -370,22 +370,14 @@ jobs:
         include:
           - suite: migration
             test_file: integration_test/foundation_migration_test.dart
-            test_name_pattern: ''
           - suite: offline
             test_file: integration_test/foundation_offline_test.dart
-            test_name_pattern: ''
           - suite: platform
             test_file: integration_test/foundation_platform_test.dart
-            test_name_pattern: ''
           - suite: sync
             test_file: integration_test/foundation_sync_test.dart
-            test_name_pattern: ''
-          - suite: supabase-boundary
-            test_file: integration_test/foundation_supabase_test.dart
-            test_name_pattern: 'production configuration|automated tests resolve'
           - suite: staging-supabase
             test_file: integration_test/foundation_staging_supabase_test.dart
-            test_name_pattern: ''
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -416,11 +408,11 @@ jobs:
           echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
 
       - name: Run iOS Foundation integration entry point
+        timeout-minutes: 15
         shell: bash
         env:
           IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
           TEST_FILE: ${{ matrix.test_file }}
-          TEST_NAME_PATTERN: ${{ matrix.test_name_pattern }}
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
           NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
           NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
@@ -437,15 +429,9 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL"
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD"
           )
-          if [[ -n "$TEST_NAME_PATTERN" ]]; then
-            flutter test --no-pub "${staging_defines[@]}" \
-              -d "$IOS_DEVICE_ID" "$TEST_FILE" \
-              --name "$TEST_NAME_PATTERN" --reporter expanded
-          else
-            flutter test --no-pub "${staging_defines[@]}" \
-              -d "$IOS_DEVICE_ID" "$TEST_FILE" \
-              --reporter expanded
-          fi
+          flutter test --no-pub "${staging_defines[@]}" \
+            -d "$IOS_DEVICE_ID" "$TEST_FILE" \
+            --reporter expanded
 
   foundation-gate:
     name: Foundation five-target gate

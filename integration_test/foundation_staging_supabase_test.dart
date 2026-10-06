@@ -49,6 +49,28 @@ void main() {
         );
       }
 
+      expect(
+        () => SupabaseEnvironmentConfig.localStack(
+          url: Uri.parse('https://prod.example.supabase.co'),
+          publishableKey: 'sb_publishable_boundary-check',
+        ),
+        throwsA(isA<ConfigurationError>()),
+      );
+      expect(
+        () => SupabaseEnvironmentConfig.isolatedNonProduction(
+          url: Uri.parse('https://prod.example.supabase.co'),
+          publishableKey: 'sb_publishable_boundary-check',
+        ),
+        throwsA(isA<ConfigurationError>()),
+      );
+      expect(
+        () => SupabaseEnvironmentConfig.isolatedNonProduction(
+          url: Uri.parse('https://arbitrary.example.com'),
+          publishableKey: 'sb_publishable_boundary-check',
+        ),
+        throwsA(isA<ConfigurationError>()),
+      );
+
       final stagingUri = Uri.parse(url);
       final config = SupabaseEnvironmentConfig.isolatedNonProduction(
         url: stagingUri,

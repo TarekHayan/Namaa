@@ -9,7 +9,7 @@
 
 begin;
 
-select plan(11);
+select plan(12);
 
 -- Two isolated accounts -----------------------------------------------------
 insert into auth.users (
@@ -135,13 +135,14 @@ select is(
   (select count(*) from public.foundation_probe), 0::bigint,
   'another account cannot read the owner row');
 
--- Cross-account update is denied (0 rows match, nothing changes).
-update public.foundation_probe set payload = 'hijacked'
-where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-select is(
-  (select count(*) from public.foundation_probe
-    where payload = 'hijacked'), 0::bigint,
-  'another account cannot update the owner row');
+-- Cross-account update is denied: RLS hides the row, so zero rows are
+-- affected. The unchanged payload is verified as the owner further below
+-- (checking as this account would always pass because the row is invisible).
+select is_empty(
+  $sql$ update public.foundation_probe set payload = 'hijacked'
+        where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        returning 1 $sql$,
+  'another account cannot update the owner row (zero rows affected)');
 
 -- Cross-account insert for the owner account is rejected by RLS.
 select throws_ok(
@@ -159,6 +160,11 @@ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
 -- Authenticate as owner again to verify the row was untouched.
 select tests.authenticate_as('11111111-1111-1111-1111-111111111111');
+select is(
+  (select payload from public.foundation_probe
+    where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+  'probe payload',
+  'owner row payload is unchanged after the cross-account update attempt');
 select is(
   (select count(*) from public.foundation_probe), 1::bigint,
   'another account cannot delete the owner row');

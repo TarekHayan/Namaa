@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 final RegExp _modernSecretKey = RegExp(r'\bsb_secret_[A-Za-z0-9_-]{16,}\b');
 final RegExp _credentialAssignment = RegExp(
-  r'''^\s*(?:SUPABASE_)?(?:SERVICE[_-]?ROLE|SECRET(?:_KEY)?)\s*[:=]\s*['"]?[^\s#'";]{12,}''',
+  r'''^\s*(?:export\s+)?(?:(?:static|late|const|final|var|String)\s+)*(?![\w.-]*(?:fake|dummy|mock|example|sample))[\w.-]*(?:service[_-]?role|secret)\w*\s*[:=]\s*['"]?(?![$<{])[^\s#'";]{12,}''',
   caseSensitive: false,
   multiLine: true,
 );
@@ -43,46 +43,46 @@ List<String> _secretFindings(String source) {
   return findings;
 }
 
-bool _isTrackedFlutterClientFile(String path) {
-  const clientRoots = <String>[
-    'lib/',
-    'android/',
-    'ios/',
-    'windows/',
-    'macos/',
-    'linux/',
-    'assets/',
-  ];
-  const rootFiles = <String>{'pubspec.yaml', 'pubspec.lock', 'l10n.yaml'};
-  const textExtensions = <String>{
-    '.dart',
-    '.gradle',
-    '.java',
-    '.json',
-    '.kt',
-    '.m',
-    '.mm',
-    '.plist',
-    '.properties',
-    '.swift',
-    '.toml',
-    '.xml',
-    '.yaml',
-    '.yml',
-    '.h',
-    '.hpp',
-    '.c',
-    '.cc',
-    '.cpp',
+/// This file embeds deliberate fake credentials as scanner controls.
+const String _selfPath = 'test/architecture/client_secret_scan_test.dart';
+
+/// Every tracked file is scanned unless it is a known binary type. A denylist
+/// (rather than an allowlist of folders/extensions) means new locations such as
+/// web/, .github/, supabase/, .env, .xcconfig and .arb files are covered by
+/// default.
+bool _isScannedFile(String path) {
+  const binaryExtensions = <String>{
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.webp',
+    '.ico',
+    '.icns',
+    '.ttf',
+    '.otf',
+    '.woff',
+    '.woff2',
+    '.pdf',
+    '.zip',
+    '.jar',
+    '.keystore',
+    '.jks',
+    '.so',
+    '.dll',
+    '.dylib',
+    '.a',
+    '.mp3',
+    '.mp4',
+    '.wav',
+    '.db',
+    '.sqlite',
   };
-  if (rootFiles.contains(path)) {
-    return true;
-  }
-  if (!clientRoots.any(path.startsWith)) {
+  if (path == _selfPath) {
     return false;
   }
   final fileName = path.split('/').last.toLowerCase();
-  return textExtensions.any(fileName.endsWith);
+  return !binaryExtensions.any(fileName.endsWith);
 }
 
 void main() {
@@ -101,6 +101,29 @@ const legacy = '$legacyJwt';
     },
   );
 
+  test('scanner detects common credential variable names (control)', () {
+    const value = 'abcdefghijklmnop0123';
+    for (final line in <String>[
+      'SUPABASE_SERVICE_ROLE_KEY=$value',
+      'export SUPABASE_SERVICE_ROLE_KEY="$value"',
+      "const serviceRoleKey = '$value';",
+      "static const String clientSecret = '$value';",
+      'service_role_key: $value',
+    ]) {
+      expect(_secretFindings(line), isNotEmpty, reason: 'must flag: $line');
+    }
+  });
+
+  test('scanner ignores placeholders and CI secret references (control)', () {
+    for (final line in <String>[
+      r'SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}',
+      'SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>',
+      'SUPABASE_SERVICE_ROLE_KEY=',
+    ]) {
+      expect(_secretFindings(line), isEmpty, reason: 'must not flag: $line');
+    }
+  });
+
   test(
     'tracked Flutter client artifacts contain no Supabase secret credentials',
     () {
@@ -111,14 +134,16 @@ const legacy = '$legacyJwt';
       for (final path in const LineSplitter().convert(
         result.stdout.toString(),
       )) {
-        if (!_isTrackedFlutterClientFile(path)) {
+        if (!_isScannedFile(path)) {
           continue;
         }
         final file = File(path);
         if (!file.existsSync()) {
           continue;
         }
-        final findings = _secretFindings(file.readAsStringSync());
+        final findings = _secretFindings(
+          utf8.decode(file.readAsBytesSync(), allowMalformed: true),
+        );
         if (findings.isNotEmpty) {
           violations.add('$path: ${findings.join(', ')}');
         }
