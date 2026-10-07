@@ -1,37 +1,38 @@
 # Namaa Foundation — Implementation Review
 
 **Feature**: 001-namaa-foundation
-**Review date**: 2026-10-05
+**Review date**: 2026-10-07
 **Scope**: Phase 6 final traceability and release-gate review
 
 ## Result
 
-The Foundation implementation is functionally verified on Android, iOS, Windows, macOS, and Linux,
-and its local Supabase security suite passes. GitHub Actions run
-[37314500462](https://github.com/TarekHayan/Namaa/actions/runs/37314500462) is green, including the
-five-target gate. It is **not yet approved for production lock-in** because the repository has no
-isolated non-production Supabase configuration for the required end-to-end Auth, Data API,
-session, and synchronization transport proof. Apple runners also verified the SDK boundary but
-could not run the Docker-backed local Data API test.
+The Foundation implementation is verified on Android, iOS, Windows, macOS, and Linux. GitHub
+Actions run [37548647271](https://github.com/TarekHayan/Namaa/actions/runs/37548647271) attempt 2 is green,
+including the five-target gate, 12 local database/RLS checks, and isolated non-production Supabase
+Auth, Data API, session, synchronization, and account-isolation proof on every target. The
+Foundation is **approved for production lock-in**; this approves the verified infrastructure
+direction, not any product-domain behavior.
 
 ## Current Verification Evidence
 
 | Check | Result |
 |---|---|
-| Source formatting | PASS — all 65 Dart source files were formatted; 0 changed. The literal `dart format .` command encountered a missing generated Gradle-transform path under ignored `build/`, not a source-format violation. |
+| Source formatting | PASS — all 69 Dart source files under `lib`, `test`, and `integration_test` passed the CI formatting check with 0 changes. |
 | `flutter analyze` | PASS — 0 issues |
-| `flutter test` | PASS — 122 unit, widget, architecture, persistence, localization, and security-scan tests |
-| Android integration | PASS — 9/9 tests in one suite run with this host's active Android ADB port (`5060`) and local API port forwarding |
-| Windows integration | PASS — 9/9 tests when the five entry-point files are run separately; the installed Flutter runner loses its debug log reader after the first executable in a combined Windows invocation |
-| `supabase test db` | PASS — 11 local-only database/RLS checks |
+| `flutter test` | PASS — 127 unit, widget, architecture, persistence, localization, and security-scan tests |
+| Android integration | PASS — the complete local and isolated non-production suites passed with local API port forwarding |
+| Windows integration | PASS — all Foundation entry-point files passed when run separately; the installed Flutter runner loses its debug log reader after the first executable in a combined Windows invocation |
+| `supabase test db` | PASS — 12 local-only database/RLS checks |
 | Android platform integration | PASS — 2/2 checks, including Arabic RTL, English LTR, and all appearance modes |
 | Windows platform integration | PASS — 2/2 checks, including Arabic RTL, English LTR, and all appearance modes |
-| iOS integration | PASS — simulator build plus migration, offline/restart, platform, synchronization, and Supabase-boundary matrix jobs |
-| macOS integration | PASS — native build plus all five integration entry points |
-| Linux integration | PASS — native build, all five integration entry points, protected keyring, and local Supabase Data API |
+| iOS integration | PASS — simulator build plus migration, offline/restart, platform, synchronization, and staging matrix jobs; configuration-boundary assertions run inside the staging test |
+| macOS integration | PASS — native build plus all Foundation integration entry points |
+| Linux integration | PASS — native build, all Foundation integration entry points, protected keyring, and local Supabase Data API |
+| Isolated non-production Supabase | PASS — the same Auth/Data API/session/sync and two-account isolation test passed on Android, iOS, Windows, macOS, and Linux |
 
-Automated Supabase tests used only the local Docker stack. No production Supabase URL, key, or
-service-role credential was used.
+Automated schema, grant, and RLS tests used only the local Docker stack. Device integration used
+only the isolated non-production project through protected GitHub secrets. No production Supabase
+URL, secret key, or service-role credential was used.
 
 ## Functional-Requirement Traceability
 
@@ -54,7 +55,7 @@ service-role credential was used.
 | FR-015 | VERIFIED | Shared behavior and platform adapters passed on Android, iOS, Windows, macOS, and Linux. |
 | FR-016 | VERIFIED | `AppResult`/failure boundaries expose recoverable states without leaking infrastructure types to Domain. |
 | FR-017 | VERIFIED | Unit, widget, integration, architecture, persistence, offline/reconnect, localization, routing, theme, and platform test entry points operate. |
-| FR-018 | BLOCKED | Five-target Flutter/runtime verification passes, but full Supabase Data API/device integration against the approved isolated non-production environment is not configured. |
+| FR-018 | VERIFIED | Persistence, Supabase Auth/Data API/session/sync, localization, and required platform adapters passed on Android, iOS, Windows, macOS, and Linux. |
 | FR-019 | VERIFIED | Encrypted persistence migration, preservation, failure journal, and recovery tests pass. |
 | FR-020 | VERIFIED | Diff/scope review found no Tasks, Auth flow, Finance, Quran, Prayer, or other product-domain implementation. |
 | FR-021 | VERIFIED | `supabase test db` passed against the local stack; non-production-only configuration is enforced/tested at the device boundary. |
@@ -76,10 +77,10 @@ service-role credential was used.
 | AC-008 | VERIFIED | Arabic/English, RTL/LTR, and three appearance-mode widget tests. |
 | AC-009 | VERIFIED | Unit, widget, and integration suites run with no product-domain implementation. |
 | AC-010 | VERIFIED | Persisted-record migration and injected-failure recovery tests. |
-| AC-011 | VERIFIED | Local-stack RLS tests and non-production-only integration boundary coverage. |
+| AC-011 | VERIFIED | Local-stack RLS tests and five-target isolated non-production device integration passed. |
 | AC-012 | VERIFIED | Encryption-at-rest and protected-vault test coverage. |
 | AC-013 | VERIFIED | Publishable-key and client-secret/service-role scan coverage. |
-| AC-014 | VERIFIED | 11 passing local RLS/account-isolation checks. |
+| AC-014 | VERIFIED | 12 passing local RLS/account-isolation checks. |
 
 ## Success-Criteria Traceability
 
@@ -108,11 +109,10 @@ service-role credential was used.
 - Updated the local RLS test fixture for the current Supabase Auth schema without changing its
   owner/cross-account security assertions.
 
-## Required Follow-Up Before Production Lock-In
+## Production Lock-In Decision
 
-Provision an isolated non-production Supabase project, deploy the Foundation migration, and add
-the minimum protected GitHub configuration needed for device integration. Then run the Auth,
-Data API, session, and synchronization transport proof on Android, iOS, Windows, macOS, and Linux;
-also execute the local-stack Data API check on Apple where a suitable runner/environment is
-available. Until that evidence is recorded, T064 and the production-lock-in checkpoint remain
-open. No production URL or credential may be used.
+The required isolated non-production project, Foundation schema/RLS policy, protected GitHub
+configuration, and five-target device proof are present and passing. T064 and the Foundation
+production-lock-in checkpoint are closed. Future schema or adapter changes must preserve the same
+local-stack automation and isolated non-production device gate; production credentials remain
+forbidden in client builds and tests.

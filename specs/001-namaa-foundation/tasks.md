@@ -175,7 +175,7 @@ later product-domain work is planned.
 - [x] T061 [P] Review `supabase/migrations/0001_foundation_probe.sql` and `supabase/tests/foundation_account_isolation_test.sql` for least-privilege grants, enabled RLS, owner-allowed access, and cross-account denial.
 - [x] T062 [P] Add a client-artifact and configuration scan test in `test/architecture/client_secret_scan_test.dart` that fails for Supabase secret/service-role key patterns in tracked Flutter client files.
 - [x] T063 Run `dart format .`, `flutter analyze`, all unit/widget/architecture tests, `flutter test integration_test`, and `supabase test db` using the local Supabase stack; resolve only Foundation failures.
-- [ ] T064 Run the complete quickstart validation matrix on Android, iOS, Windows, macOS, and Linux and record launch, encryption, vault, Supabase Auth/Data API/session/sync, offline/reconnect, locale/RTL, and theme evidence in `specs/001-namaa-foundation/platform-validation.md`.
+- [x] T064 Run the complete quickstart validation matrix on Android, iOS, Windows, macOS, and Linux and record launch, encryption, vault, Supabase Auth/Data API/session/sync, offline/reconnect, locale/RTL, and theme evidence in `specs/001-namaa-foundation/platform-validation.md`.
 - [x] T065 Update `specs/001-namaa-foundation/quickstart.md` only if the implemented commands differ from the documented, verified commands; preserve the local-stack and non-production-only restrictions.
 - [x] T066 Conduct a final Constitution and specification traceability review in `specs/001-namaa-foundation/implementation-review.md`, confirming FR-001–FR-024, AC-001–AC-014, and SC-001–SC-011 or recording a blocking unsupported target capability.
 

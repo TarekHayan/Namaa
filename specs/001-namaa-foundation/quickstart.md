@@ -61,6 +61,24 @@ Select a target with Flutter's `-d <device-id>` option when more than one device
 The publishable key above comes from the local stack only; do not print it, save it to a file, or
 substitute a hosted project's key.
 
+### Isolated Non-Production Device Validation
+
+The GitHub `Foundation CI` workflow runs
+`integration_test/foundation_staging_supabase_test.dart` on Android, iOS, Windows, macOS, and Linux.
+Configure these repository secrets with values from the isolated non-production project only:
+
+- `NAMAA_STAGING_SUPABASE_URL`
+- `NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY`
+- `NAMAA_STAGING_TEST_USER_A_EMAIL`
+- `NAMAA_STAGING_TEST_USER_A_PASSWORD`
+- `NAMAA_STAGING_TEST_USER_B_EMAIL`
+- `NAMAA_STAGING_TEST_USER_B_PASSWORD`
+
+The staging Foundation migrations must be applied before the workflow runs. The test signs in both
+accounts, verifies session and sync transport, allows the owner to create/read its temporary probe,
+denies the other account read/write access, verifies the owner value is unchanged, and deletes the
+temporary probe. Never place these values in tracked files or use a production project.
+
 On Windows, run the integration entry points one at a time if the installed Flutter test runner
 stops its debug log reader while launching multiple desktop executables in one invocation:
 
@@ -86,8 +104,9 @@ The completed suites demonstrate:
 - An offline change retries after reconnect with no duplicate logical effect.
 - Timestamp conflict retains both versions and selects newest as active.
 - Migration preserves data or yields recoverable failure with prior state retained.
-- Supabase tests use the local stack only, deny cross-account access through RLS, and do not ship
-  secret or service-role keys.
+- Automated Supabase schema/RLS tests use the local stack; device integration uses only the
+  isolated non-production project; both deny cross-account access and never ship secret or
+  service-role keys.
 
 ## Target Validation
 
@@ -98,8 +117,10 @@ Android | iOS | Windows | macOS | Linux
 ~~~
 
 For each target, record clean launch; encrypted database open/restart; protected-vault
-read/write/delete; Supabase initialization, local-stack connection, and non-production device
-integration; and an offline operation followed by reconnect retry.
+read/write/delete; Supabase initialization and non-production device integration; and an offline
+operation followed by reconnect retry. Record local-stack transport where that runner hosts the
+automated local stack, while the dedicated local database job remains authoritative for schema,
+grant, and RLS checks.
 
 A failed adapter capability on any target blocks production lock-in. Fix it at the infrastructure
 boundary without duplicating Domain/Application business rules.
