@@ -27,10 +27,10 @@ feature. Do not add a Supabase secret or service-role key to any client artifact
 
 ## Phase 1: Setup and Provider Migration
 
-**Purpose**: Prepare an intentionally small Flutter foundation workspace and remove the obsolete
-Firebase direction before implementation begins.
+**Purpose**: Prepare an intentionally small Flutter foundation workspace and establish the approved
+Supabase direction before implementation begins.
 
-- [x] T001 Replace `cloud_firestore`, `firebase_auth`, and `firebase_core` with `supabase_flutter` in `pubspec.yaml`; retain only Foundation-approved dependencies and run `flutter pub get`.
+- [x] T001 Replace the legacy cloud packages with `supabase_flutter` in `pubspec.yaml`; retain only Foundation-approved dependencies and run `flutter pub get`.
 - [x] T002 [P] Add ARB generation configuration with Arabic and English support in `l10n.yaml`.
 - [x] T003 [P] Create the initial Foundation domain entry files and types in `lib/core/domain/results/app_result.dart` and `lib/features/foundation/domain/foundation_entities.dart` without adding any product-domain behavior.
 - [x] T004 [P] Create local Supabase configuration in `supabase/config.toml` for Docker-backed automated tests; do not place non-local credentials or production URLs in it.
@@ -39,7 +39,7 @@ Firebase direction before implementation begins.
 - [x] T007 [P] Add the Foundation platform-validation record template in `specs/001-namaa-foundation/platform-validation.md` for Android, iOS, Windows, macOS, and Linux evidence.
 - [x] T008 Run `dart format .`, `flutter analyze`, and the existing test entry points; record only pre-existing failures in `specs/001-namaa-foundation/implementation-baseline.md` without changing unrelated code.
 
-**Checkpoint**: The dependency manifest contains no Firebase package, and the project is ready for
+**Checkpoint**: The dependency manifest contains only the approved cloud package, and the project is ready for
 Foundation-only source files and a local Supabase test configuration.
 
 ---

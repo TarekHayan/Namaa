@@ -25,7 +25,7 @@ failures are recorded here; no unrelated code was changed to make them disappear
 
 | Check | Command | Result |
 |---|---|---|
-| Dependency resolution | `flutter pub get` | PASS (Firebase packages removed; `supabase_flutter ^2.17.2` added) |
+| Dependency resolution | `flutter pub get` | PASS (`supabase_flutter ^2.17.2` is the approved cloud package) |
 | Static analysis | `flutter analyze` | PASS (0 issues) |
 | Formatting | `dart format .` | PASS (6 files, 3 reformatted) |
 | Localization generation | `flutter gen-l10n` | PASS (`app_en`/`app_ar` generated into `lib/app/l10n/generated/`) |
@@ -33,6 +33,6 @@ failures are recorded here; no unrelated code was changed to make them disappear
 
 ## Phase 1 checkpoint
 
-The dependency manifest contains no Firebase package (`cloud_firestore`, `firebase_auth`,
-`firebase_core` are removed), and the project is ready for Foundation-only source files and the
+The dependency manifest contains the approved Supabase cloud package and no legacy cloud package,
+and the project is ready for Foundation-only source files and the
 local Supabase test configuration (`supabase/config.toml`).

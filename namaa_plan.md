@@ -932,7 +932,7 @@ Build and verify:
 -   Flutter project
 -   Architecture
 -   Local database
--   Firebase integration
+-   Supabase integration
 -   Authentication infrastructure
 -   Sync foundation
 -   Dependency injection
@@ -1050,8 +1050,8 @@ The application will be built with:
 -   Feature-first organization
 -   BLoC/Cubit
 -   Drift / SQLite
--   Firebase Auth
--   Cloud Firestore
+-   Supabase Auth
+-   Supabase Postgres/Data API and Realtime
 -   Custom local-first synchronization
 -   get_it / injectable
 -   Freezed

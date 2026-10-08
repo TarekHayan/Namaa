@@ -13,7 +13,7 @@ PENDING (required evidence has not been executed), FAIL (verified unsupported/br
 ## Package Compatibility Record (T001/T008)
 
 Versions resolved by `flutter pub get` on 2026-09-05 (Flutter 3.41.8 / Dart 3.11.5, Windows
-development host) after replacing Firebase with Supabase (T001). "Declared platforms" are read
+development host) after establishing Supabase as the cloud integration (T001). "Declared platforms" are read
 from each resolved package's `pubspec.yaml`.
 
 | Package | Resolved | Declared Flutter platforms | Notes |
@@ -32,7 +32,7 @@ from each resolved package's `pubspec.yaml`.
 Key T001/T008 findings:
 
 1. `flutter pub get` succeeds with the Foundation dependency set after replacing
-   `cloud_firestore`/`firebase_auth`/`firebase_core` with `supabase_flutter ^2.17.2` (T001).
+   the legacy cloud packages with `supabase_flutter ^2.17.2` (T001).
 2. `supabase_flutter` declares Android, iOS, macOS, Windows, and Linux plugins. The final CI run
    verifies initialization and isolated non-production Auth/Data API/session/sync transport on
    every required target, including Linux.

@@ -35,5 +35,5 @@
 ## Notes
 
 - The specification intentionally includes the approved Foundation technology direction because the
-  request explicitly requires it. Supabase replaces Firebase under Constitution v2.0.0; its required
-  end-to-end capabilities, particularly on Linux, remain a production-lock-in verification gate.
+  request explicitly requires it. Supabase is the approved cloud integration under Constitution v2.0.1;
+  its end-to-end capabilities, including Linux, passed the completed five-target verification gate.
