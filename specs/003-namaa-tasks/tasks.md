@@ -20,8 +20,8 @@ description: "Dependency-ordered implementation tasks for Namaa Tasks"
 
 **Purpose**: Give an implementation agent a verified starting point without changing product behavior.
 
-- [ ] T001 Record the existing Foundation schema version, probe-only local/cloud adapters, sync runner triggers, DI/router entry points, active branch, and baseline results for flutter analyze, flutter test, and supabase test db (local stack) in specs/003-namaa-tasks/implementation-baseline.md; cite the exact source files and do not modify Foundation behavior.
-- [ ] T002 Create deterministic account A/B IDs, UTC clock/local-date, stable Task/operation ID, and offline/online test fixtures in test/support/tasks_test_support.dart; use existing Foundation test conventions and no production credentials.
+- [x] T001 Record the existing Foundation schema version, probe-only local/cloud adapters, sync runner triggers, DI/router entry points, active branch, and baseline results for flutter analyze, flutter test, and supabase test db (local stack) in specs/003-namaa-tasks/implementation-baseline.md; cite the exact source files and do not modify Foundation behavior.
+- [x] T002 Create deterministic account A/B IDs, UTC clock/local-date, stable Task/operation ID, and offline/online test fixtures in test/support/tasks_test_support.dart; use existing Foundation test conventions and no production credentials.
 
 **Checkpoint**: The agent can name what is already implemented versus what Tasks must add.
 
