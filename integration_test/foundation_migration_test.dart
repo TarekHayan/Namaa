@@ -76,12 +76,18 @@ VALUES ('locale', 'ar', '2026-09-06T00:00:00.000Z')''',
     await reopened.close();
 
     // Clean upgrade: data preserved and the failed attempt recovered.
-    final v2 = await FoundationDatabase.openEncrypted(path: path, key: key);
+    final current = await FoundationDatabase.openEncrypted(
+      path: path,
+      key: key,
+    );
     expect(
-      await v2.rawScalar('SELECT value FROM foundation_preferences'),
+      await current.rawScalar('SELECT value FROM foundation_preferences'),
       'ar',
     );
-    expect(await v2.journalStatusFor(2), 'recovered');
-    await v2.close();
+    expect(
+      await current.journalStatusFor(kFoundationSchemaVersion),
+      'recovered',
+    );
+    await current.close();
   });
 }
