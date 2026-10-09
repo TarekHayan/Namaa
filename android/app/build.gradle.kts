@@ -7,7 +7,9 @@ plugins {
 
 android {
     namespace = "com.example.namma_project"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_secure_storage 10.3.x compiles against Android SDK 36 (reviewed
+    // per https://flutter.dev/to/review-gradle-config).
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

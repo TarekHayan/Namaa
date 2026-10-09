@@ -34,7 +34,6 @@
 
 ## Notes
 
-- The specification intentionally includes the approved foundation technology direction because the
-  request explicitly requires it. Final conflict resolution, persisted-data lifecycle policy, and
-  production platform matrix remain unresolved and require product-owner approval before planning
-  any dependent release behavior.
+- The specification intentionally includes the approved Foundation technology direction because the
+  request explicitly requires it. Supabase replaces Firebase under Constitution v2.0.0; its required
+  end-to-end capabilities, particularly on Linux, remain a production-lock-in verification gate.

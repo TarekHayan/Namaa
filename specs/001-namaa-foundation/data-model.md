@@ -35,6 +35,14 @@ dark, or system. Invalid values fall back to a supported locale and system appea
 
 Local Record is a Foundation verification entity, not a generic product-data container.
 
+### Cloud Account Boundary
+
+The Foundation treats the authenticated Supabase account identifier as the remote owner for
+account-scoped records. Remote tables must enforce that ownership with grants and Row Level
+Security (RLS) policies; a client-supplied account identifier is never sufficient authorization.
+The Flutter client uses a publishable key only. Secret and service-role keys are server-side only
+and do not appear in source, tests, configuration committed to the client, or local persistence.
+
 ### Pending Change
 
 | Field | Purpose | Validation |

@@ -1,0 +1,470 @@
+name: Foundation CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/foundation-ci.yml'
+      - 'android/**'
+      - 'integration_test/**'
+      - 'ios/**'
+      - 'lib/**'
+      - 'linux/**'
+      - 'macos/**'
+      - 'pubspec.lock'
+      - 'pubspec.yaml'
+      - 'supabase/**'
+      - 'test/**'
+      - 'windows/**'
+  push:
+    branches:
+      - main
+      - 'feature/**'
+    paths:
+      - '.github/workflows/foundation-ci.yml'
+      - 'android/**'
+      - 'integration_test/**'
+      - 'ios/**'
+      - 'lib/**'
+      - 'linux/**'
+      - 'macos/**'
+      - 'pubspec.lock'
+      - 'pubspec.yaml'
+      - 'supabase/**'
+      - 'test/**'
+      - 'windows/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.41.8'
+  SUPABASE_CLI_VERSION: '2.119.0'
+
+jobs:
+  quality:
+    name: Quality and shared tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify source formatting
+        run: dart format --output=none --set-exit-if-changed lib test integration_test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run unit, widget, and architecture tests
+        run: flutter test --no-pub --reporter compact
+
+  database-security:
+    name: Supabase database and RLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Verify migrations, grants, and RLS
+        run: supabase test db
+
+  android:
+    name: Android integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Install Android compile SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager_path="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$sdkmanager_path"
+          yes | "$sdkmanager_path" --licenses >/dev/null || true
+          "$sdkmanager_path" 'platforms;android-36'
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Start local Supabase and export its publishable key
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase start
+          local_key="$(supabase status -o env | sed -n 's/^PUBLISHABLE_KEY=//p' | tr -d '\"')"
+          test -n "$local_key"
+          echo "::add-mask::$local_key"
+          echo "NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$local_key" >> "$GITHUB_ENV"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Android Foundation integration suite
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            adb reverse tcp:54321 tcp:54321
+            flutter test --no-pub --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" -d emulator-5554 integration_test --reporter expanded
+
+  linux:
+    name: Linux integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Linux desktop and keyring dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libsecret-1-dev libjsoncpp-dev gnome-keyring dbus-x11 xvfb
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+
+      - name: Enable Linux desktop and resolve dependencies
+        run: |
+          flutter config --enable-linux-desktop
+          flutter pub get
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Start local Supabase and export its publishable key
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase start
+          local_key="$(supabase status -o env | sed -n 's/^PUBLISHABLE_KEY=//p' | tr -d '\"')"
+          test -n "$local_key"
+          echo "::add-mask::$local_key"
+          echo "NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$local_key" >> "$GITHUB_ENV"
+
+      - name: Build Linux application
+        run: flutter build linux --debug
+
+      - name: Run Linux Foundation integration suite
+        shell: bash
+        env:
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
+        run: |
+          set -euo pipefail
+          dbus-run-session -- xvfb-run -a bash -c '
+            set -euo pipefail
+            eval "$(printf "%s" "namaa-ci" | gnome-keyring-daemon --unlock)"
+            eval "$(gnome-keyring-daemon --start --components=secrets)"
+            tests=(
+              integration_test/foundation_migration_test.dart
+              integration_test/foundation_offline_test.dart
+              integration_test/foundation_platform_test.dart
+              integration_test/foundation_sync_test.dart
+            )
+            for test_file in "${tests[@]}"; do
+              flutter test --no-pub \
+                --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" \
+                -d linux "$test_file" --reporter expanded
+            done
+            flutter test --no-pub \
+              --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" \
+              -d linux integration_test/foundation_supabase_test.dart \
+              --name "production configuration|automated tests resolve|local Supabase Data API" \
+              --reporter expanded
+            flutter test --no-pub \
+              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+              -d linux integration_test/foundation_staging_supabase_test.dart \
+              --reporter expanded
+          '
+
+  windows:
+    name: Windows integration
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+
+      - name: Enable Windows desktop and resolve dependencies
+        shell: pwsh
+        run: |
+          flutter config --enable-windows-desktop
+          flutter pub get
+
+      - name: Build Windows application
+        run: flutter build windows --debug
+
+      - name: Run Windows Foundation integration entry points
+        shell: pwsh
+        env:
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
+        run: |
+          $tests = @(
+            'integration_test/foundation_migration_test.dart',
+            'integration_test/foundation_offline_test.dart',
+            'integration_test/foundation_platform_test.dart',
+            'integration_test/foundation_sync_test.dart'
+          )
+          foreach ($test in $tests) {
+            flutter test --no-pub -d windows $test --reporter expanded
+            if ($LASTEXITCODE -ne 0) { throw "Integration test failed: $test" }
+          }
+          flutter test --no-pub -d windows integration_test/foundation_supabase_test.dart --name 'production configuration|automated tests resolve' --reporter expanded
+          if ($LASTEXITCODE -ne 0) { throw 'Supabase boundary tests failed on Windows' }
+          flutter test --no-pub `
+            --dart-define="NAMAA_SUPABASE_URL=$env:NAMAA_STAGING_SUPABASE_URL" `
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$env:NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$env:NAMAA_STAGING_TEST_USER_A_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$env:NAMAA_STAGING_TEST_USER_A_PASSWORD" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$env:NAMAA_STAGING_TEST_USER_B_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD" `
+            -d windows integration_test/foundation_staging_supabase_test.dart --reporter expanded
+          if ($LASTEXITCODE -ne 0) { throw 'Staging Supabase integration failed on Windows' }
+
+  macos:
+    name: macOS integration
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+
+      - name: Enable macOS desktop and resolve dependencies
+        run: |
+          flutter config --enable-macos-desktop
+          flutter pub get
+
+      - name: Build macOS application
+        run: flutter build macos --debug
+
+      - name: Run macOS Foundation integration entry points
+        shell: bash
+        env:
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
+        run: |
+          set -euo pipefail
+          tests=(
+            integration_test/foundation_migration_test.dart
+            integration_test/foundation_offline_test.dart
+            integration_test/foundation_platform_test.dart
+            integration_test/foundation_sync_test.dart
+          )
+          for test_file in "${tests[@]}"; do
+            flutter test --no-pub -d macos "$test_file" --reporter expanded
+          done
+          flutter test --no-pub -d macos integration_test/foundation_supabase_test.dart \
+            --name 'production configuration|automated tests resolve' --reporter expanded
+          flutter test --no-pub \
+            --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+            -d macos integration_test/foundation_staging_supabase_test.dart \
+            --reporter expanded
+
+  ios:
+    name: iOS simulator (${{ matrix.suite }})
+    runs-on: macos-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: migration
+            test_file: integration_test/foundation_migration_test.dart
+          - suite: offline
+            test_file: integration_test/foundation_offline_test.dart
+          - suite: platform
+            test_file: integration_test/foundation_platform_test.dart
+          - suite: sync
+            test_file: integration_test/foundation_sync_test.dart
+          - suite: staging-supabase
+            test_file: integration_test/foundation_staging_supabase_test.dart
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Build iOS simulator application
+        run: flutter build ios --simulator --debug --no-codesign
+
+      - name: Boot an available iPhone simulator
+        id: simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          device_id="$(xcrun simctl list devices available -j | \
+            python3 -c 'import json,sys; data=json.load(sys.stdin); print(next(d["udid"] for devices in data["devices"].values() for d in devices if d["name"].startswith("iPhone")))')"
+          xcrun simctl boot "$device_id" || true
+          xcrun simctl bootstatus "$device_id" -b
+          echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
+
+      - name: Run iOS Foundation integration entry point
+        timeout-minutes: 15
+        shell: bash
+        env:
+          IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
+          TEST_FILE: ${{ matrix.test_file }}
+          NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
+          NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+          NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
+          NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
+          NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
+          NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
+        run: |
+          set -euo pipefail
+          staging_defines=(
+            --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL"
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY"
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL"
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD"
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL"
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD"
+          )
+          flutter test --no-pub "${staging_defines[@]}" \
+            -d "$IOS_DEVICE_ID" "$TEST_FILE" \
+            --reporter expanded
+
+  foundation-gate:
+    name: Foundation five-target gate
+    if: always()
+    needs:
+      - quality
+      - database-security
+      - android
+      - linux
+      - windows
+      - macos
+      - ios
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every Foundation job to pass
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          DATABASE_RESULT: ${{ needs.database-security.result }}
+          ANDROID_RESULT: ${{ needs.android.result }}
+          LINUX_RESULT: ${{ needs.linux.result }}
+          WINDOWS_RESULT: ${{ needs.windows.result }}
+          MACOS_RESULT: ${{ needs.macos.result }}
+          IOS_RESULT: ${{ needs.ios.result }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for result in \
+            "$QUALITY_RESULT" \
+            "$DATABASE_RESULT" \
+            "$ANDROID_RESULT" \
+            "$LINUX_RESULT" \
+            "$WINDOWS_RESULT" \
+            "$MACOS_RESULT" \
+            "$IOS_RESULT"; do
+            test "$result" = success
+          done
