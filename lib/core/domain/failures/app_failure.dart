@@ -10,6 +10,9 @@ library;
 /// The category is the only classification that crosses the boundary;
 /// infrastructure exception text never does.
 enum AppFailureCategory {
+  validation,
+  authorization,
+  notFound,
   persistence,
   migration,
   network,

@@ -160,6 +160,324 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get retry;
+
+  /// No description provided for @tasksSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to access your tasks.'**
+  String get tasksSignInRequired;
+
+  /// No description provided for @tasksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get tasksTitle;
+
+  /// No description provided for @tasksFilterToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get tasksFilterToday;
+
+  /// No description provided for @tasksFilterUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get tasksFilterUrgent;
+
+  /// No description provided for @tasksFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get tasksFilterAll;
+
+  /// No description provided for @tasksFilterCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get tasksFilterCompleted;
+
+  /// No description provided for @tasksViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get tasksViewList;
+
+  /// No description provided for @tasksViewMatrix.
+  ///
+  /// In en, this message translates to:
+  /// **'Matrix'**
+  String get tasksViewMatrix;
+
+  /// No description provided for @tasksCategoryFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get tasksCategoryFilter;
+
+  /// No description provided for @tasksAllCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All Categories'**
+  String get tasksAllCategories;
+
+  /// No description provided for @taskCategoryWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get taskCategoryWork;
+
+  /// No description provided for @taskCategoryStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get taskCategoryStudy;
+
+  /// No description provided for @taskCategoryPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get taskCategoryPersonal;
+
+  /// No description provided for @taskCategoryHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get taskCategoryHealth;
+
+  /// No description provided for @taskCategorySpiritual.
+  ///
+  /// In en, this message translates to:
+  /// **'Spiritual'**
+  String get taskCategorySpiritual;
+
+  /// No description provided for @taskCategoryFinance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance'**
+  String get taskCategoryFinance;
+
+  /// No description provided for @taskCategoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get taskCategoryOther;
+
+  /// No description provided for @quadrantUrgentImportant.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent & Important'**
+  String get quadrantUrgentImportant;
+
+  /// No description provided for @quadrantNotUrgentImportant.
+  ///
+  /// In en, this message translates to:
+  /// **'Important, Not Urgent'**
+  String get quadrantNotUrgentImportant;
+
+  /// No description provided for @quadrantUrgentNotImportant.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent, Not Important'**
+  String get quadrantUrgentNotImportant;
+
+  /// No description provided for @quadrantNotUrgentNotImportant.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Urgent & Not Important'**
+  String get quadrantNotUrgentNotImportant;
+
+  /// No description provided for @quadrantDo.
+  ///
+  /// In en, this message translates to:
+  /// **'Do First'**
+  String get quadrantDo;
+
+  /// No description provided for @quadrantSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get quadrantSchedule;
+
+  /// No description provided for @quadrantDelegate.
+  ///
+  /// In en, this message translates to:
+  /// **'Delegate'**
+  String get quadrantDelegate;
+
+  /// No description provided for @quadrantEliminate.
+  ///
+  /// In en, this message translates to:
+  /// **'Eliminate'**
+  String get quadrantEliminate;
+
+  /// No description provided for @taskCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'New Task'**
+  String get taskCreate;
+
+  /// No description provided for @taskEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Task'**
+  String get taskEdit;
+
+  /// No description provided for @taskDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get taskDelete;
+
+  /// No description provided for @taskSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get taskSave;
+
+  /// No description provided for @taskCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get taskCancel;
+
+  /// No description provided for @taskTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get taskTitleLabel;
+
+  /// No description provided for @taskTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Task title'**
+  String get taskTitleHint;
+
+  /// No description provided for @taskDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get taskDescriptionLabel;
+
+  /// No description provided for @taskDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes or details'**
+  String get taskDescriptionHint;
+
+  /// No description provided for @taskDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated Duration (minutes)'**
+  String get taskDurationLabel;
+
+  /// No description provided for @taskDurationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'30'**
+  String get taskDurationHint;
+
+  /// No description provided for @taskScheduledDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled Date'**
+  String get taskScheduledDateLabel;
+
+  /// No description provided for @taskScheduledTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get taskScheduledTimeLabel;
+
+  /// No description provided for @taskDeadlineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline'**
+  String get taskDeadlineLabel;
+
+  /// No description provided for @taskDateTodayDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Today (default)'**
+  String get taskDateTodayDefault;
+
+  /// No description provided for @taskNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get taskNotSet;
+
+  /// No description provided for @taskClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get taskClear;
+
+  /// No description provided for @taskCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get taskCategoryLabel;
+
+  /// No description provided for @taskQuadrantLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get taskQuadrantLabel;
+
+  /// No description provided for @taskTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title is required'**
+  String get taskTitleRequired;
+
+  /// No description provided for @taskDurationInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration must be positive'**
+  String get taskDurationInvalid;
+
+  /// No description provided for @taskDurationUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get taskDurationUnit;
+
+  /// No description provided for @tasksEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks yet'**
+  String get tasksEmpty;
+
+  /// No description provided for @tasksLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading tasks...'**
+  String get tasksLoading;
+
+  /// No description provided for @tasksFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load tasks'**
+  String get tasksFailure;
+
+  /// No description provided for @tasksConflictNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync conflict detected. Local changes are preserved beside remote changes.'**
+  String get tasksConflictNotice;
+
+  /// No description provided for @tasksActiveLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local version'**
+  String get tasksActiveLocal;
+
+  /// No description provided for @tasksRetainedRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote version'**
+  String get tasksRetainedRemote;
 }
 
 class _FoundationLocalizationsDelegate

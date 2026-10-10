@@ -11,14 +11,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/l10n/tasks_strings_adapter.dart';
 import 'package:namma_project/app/routing/app_router.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
+import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
+import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
+import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
 
 export 'theme/app_theme.dart' show kProjectFontFamily;
 
@@ -26,6 +31,7 @@ export 'theme/app_theme.dart' show kProjectFontFamily;
 const Key kFoundationRootStartupKey = Key('foundation_root_startup');
 const Key kFoundationRootReadyKey = Key('foundation_root_ready');
 const Key kFoundationRootFailureKey = Key('foundation_root_failure');
+const Key kFoundationTasksNavigationKey = Key('foundation_tasks_navigation');
 
 class FoundationApp extends StatefulWidget {
   const FoundationApp({
@@ -277,9 +283,23 @@ class _LocalizedFoundationApp extends StatefulWidget {
 }
 
 class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
-  late final FoundationAppRouter _router = FoundationAppRouter(
-    rootBuilder: (_) => widget.home,
-  );
+  late final FoundationAppRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    final getIt = GetIt.instance;
+    final tasksAvailable =
+        getIt.isRegistered<CloudSessionPort>() &&
+        getIt.isRegistered<TasksCubit>();
+    _router = FoundationAppRouter(
+      rootBuilder: (_) => widget.home,
+      cloudSession: tasksAvailable ? getIt<CloudSessionPort>() : null,
+      tasksBuilder: tasksAvailable
+          ? (_, accountId) => _TasksRouteScope(accountId: accountId)
+          : null,
+    );
+  }
 
   @override
   void dispose() {
@@ -330,8 +350,50 @@ class _ReadyShell extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox.expand(
     key: kFoundationRootReadyKey,
     child: Center(
-      child: Text(FoundationLocalizations.of(context).foundationReady),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(FoundationLocalizations.of(context).foundationReady),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            key: kFoundationTasksNavigationKey,
+            onPressed: () => GoRouter.of(context).go(kTasksRoute),
+            icon: const Icon(Icons.task_alt),
+            label: Text(FoundationLocalizations.of(context).tasksTitle),
+          ),
+        ],
+      ),
     ),
+  );
+}
+
+/// Owns the feature Cubit for one authenticated Tasks route visit. The Cubit
+/// is created only after the router has resolved a non-secret account ID and
+/// is closed when the route leaves the tree.
+class _TasksRouteScope extends StatefulWidget {
+  const _TasksRouteScope({required this.accountId});
+
+  final String accountId;
+
+  @override
+  State<_TasksRouteScope> createState() => _TasksRouteScopeState();
+}
+
+class _TasksRouteScopeState extends State<_TasksRouteScope> {
+  late final TasksCubit _cubit = GetIt.instance<TasksCubit>();
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => TasksScreen(
+    cubit: _cubit,
+    accountId: widget.accountId,
+    stringsResolver: resolveTasksStrings,
+    session: GetIt.instance<CloudSessionPort>(),
   );
 }
 
