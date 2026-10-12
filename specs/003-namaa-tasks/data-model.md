@@ -61,6 +61,8 @@ It has no independent account, schedule, category, XP, route, or outbox entry. D
 
 Uniqueness is (accountId, source, sourceId). Award is immutable and never deleted on Task reopen/deletion. Derived XP sums this shared ledger; the Task domain does not maintain a second balance. Local Task completion and first award insert are atomic. Remote application of the same operation creates at most one award even on retry or another device.
 
+An offline first-completion award is the local copy until synchronization. If two devices first complete the same Task independently, the first award committed to the shared remote ledger is the account-wide record; inbound reconciliation updates a divergent local copy under the same key without creating a second award. The remote award itself is never rewritten by later completions. Task version conflicts retain the nonwinning Task completion evidence separately.
+
 ## TaskPendingChange (Foundation-owned outbox entry)
 
 Existing PendingChanges fields identify operationId, accountId, entityType='task', entityId, operation kind, serialized aggregate/change, and version timestamp. Its local write is atomic with Task/award effects. The existing coordinator retains retry, ack, and conflict behavior; Task transport must understand this entity type. No separate checklist or XP outbox operations are required for a Task completion.

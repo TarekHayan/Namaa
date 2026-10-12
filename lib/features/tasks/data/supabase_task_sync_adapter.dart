@@ -16,6 +16,13 @@ final class TaskRemotePage {
   final String? nextCursor;
 }
 
+final class TaskAwardRemotePage {
+  const TaskAwardRemotePage({required this.rows, this.nextCursor});
+
+  final List<Map<String, dynamic>> rows;
+  final String? nextCursor;
+}
+
 /// Narrow authenticated Supabase surface shared by Task upload and download.
 abstract interface class SupabaseTaskGateway {
   Future<Map<String, dynamic>> applyTaskChange({
@@ -28,6 +35,11 @@ abstract interface class SupabaseTaskGateway {
   });
 
   Future<TaskRemotePage> fetchTaskPage({required int pageSize, String? cursor});
+
+  Future<TaskAwardRemotePage> fetchTaskAwardPage({
+    required int pageSize,
+    String? cursor,
+  });
 }
 
 /// Real gateway. Ownership is never sent: the RPC and RLS derive it from the
@@ -86,6 +98,30 @@ final class SupabaseTaskGatewayImpl implements SupabaseTaskGateway {
       nextCursor: rows.length == pageSize ? rows.last['id'] as String? : null,
     );
   }
+
+  @override
+  Future<TaskAwardRemotePage> fetchTaskAwardPage({
+    required int pageSize,
+    String? cursor,
+  }) async {
+    var query = _client
+        .from('xp_awards')
+        .select('owner, source, source_id, amount, awarded_at')
+        .eq('source', 'task_done');
+    if (cursor != null) {
+      query = query.gt('source_id', cursor);
+    }
+    final response = await query.order('source_id').limit(pageSize);
+    final rows = <Map<String, dynamic>>[
+      for (final row in response) Map<String, dynamic>.from(row as Map),
+    ];
+    return TaskAwardRemotePage(
+      rows: rows,
+      nextCursor: rows.length == pageSize
+          ? rows.last['source_id'] as String?
+          : null,
+    );
+  }
 }
 
 /// Task-owned outbound adapter used by the Foundation entity router.
@@ -109,6 +145,10 @@ final class SupabaseTaskSyncAdapter implements CloudSyncPort {
       if (decoded is! Map<String, dynamic>) {
         throw const FormatException('Task payload must be a JSON object');
       }
+      _validateCompletionFields(decoded, change.kind);
+      // Completion and reopening remain ordinary Task aggregate changes. The
+      // remote RPC applies the Task and its first immutable award atomically;
+      // the client never dispatches a second reward operation.
       final row = await _gateway.applyTaskChange(
         expectedAccountId: change.accountId,
         id: change.entityId,
@@ -201,6 +241,28 @@ final class SupabaseTaskSyncAdapter implements CloudSyncPort {
       return null;
     }
     return DateTime.tryParse(value)?.toUtc();
+  }
+
+  static void _validateCompletionFields(
+    Map<String, dynamic> payload,
+    ChangeKind kind,
+  ) {
+    if (kind == ChangeKind.delete || !payload.containsKey('completedAt')) {
+      return;
+    }
+    final completedAt = payload['completedAt'];
+    if (completedAt != null &&
+        (completedAt is! String || DateTime.tryParse(completedAt) == null)) {
+      throw const FormatException(
+        'completedAt must be an ISO-8601 date-time or null',
+      );
+    }
+    final completionXp = payload['completionXp'];
+    if (completionXp is! int || completionXp < 0) {
+      throw const FormatException(
+        'completionXp must be a non-negative integer',
+      );
+    }
   }
 
   static AppFailure _cloudFailure(Object error) => AppFailure.recoverable(

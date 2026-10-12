@@ -33,6 +33,9 @@ abstract interface class TasksStrings {
   String get taskCreate;
   String get taskEdit;
   String get taskDelete;
+  String get taskComplete;
+  String get taskReopen;
+  String taskCompletedAt(String timestamp);
   String get taskSave;
   String get taskCancel;
   String get taskTitleLabel;

@@ -12,6 +12,7 @@ import 'package:namma_project/features/tasks/data/supabase_task_reader.dart';
 import 'package:namma_project/features/tasks/data/supabase_task_sync_adapter.dart';
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/data/task_reconciler.dart';
+import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 
 import '../test/support/foundation_test_support.dart';
 import '../test/support/tasks_test_support.dart';
@@ -186,12 +187,16 @@ final class _TestClient {
       codec: codec,
       detectedAt: clock.utcNow,
     );
+    final reader = SupabaseTaskReader(gateway: gateway, codec: codec);
+    final awardLedger = DriftAwardLedger(database);
     final sync = TaskSyncService(
       session: session,
       connectivity: connectivity,
       outbound: outbound,
-      remoteReader: SupabaseTaskReader(gateway: gateway, codec: codec),
+      remoteReader: reader,
       reconciler: reconciler,
+      awardReader: reader,
+      awardLedger: awardLedger,
     );
     final ids = TasksTestIds();
     final commands = TaskCommands(
@@ -336,4 +341,10 @@ final class _AccountTaskGateway implements SupabaseTaskGateway {
       nextCursor: end < rows.length ? '$end' : null,
     );
   }
+
+  @override
+  Future<TaskAwardRemotePage> fetchTaskAwardPage({
+    required int pageSize,
+    String? cursor,
+  }) async => const TaskAwardRemotePage(rows: <Map<String, dynamic>>[]);
 }

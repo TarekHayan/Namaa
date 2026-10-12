@@ -7,6 +7,7 @@ import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
+import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/platform/platform_capability_reporter.dart';
@@ -16,10 +17,15 @@ import 'package:namma_project/features/foundation/presentation/state/foundation_
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
+import 'package:namma_project/features/tasks/application/task_completion_service.dart';
+import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
+import 'package:namma_project/features/tasks/application/task_remote_reader.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/application/task_sync_service.dart';
 import 'package:namma_project/features/tasks/data/drift_task_repository.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
+import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 
 class _FailingSecureStore implements SecureKeyValueStore {
   @override
@@ -71,6 +77,16 @@ void main() {
       expect(getIt<ThemeCubit>(), isA<ThemeCubit>());
       expect(getIt<ThemeCubit>(), isNot(same(getIt<ThemeCubit>())));
       expect(getIt<TaskCommands>(), isA<TaskCommands>());
+      expect(getIt<AwardLedgerPort>(), isA<UnconfiguredAwardLedger>());
+      expect(
+        getIt<TaskCompletionUnitOfWork>(),
+        isA<UnconfiguredTaskCompletionUnitOfWork>(),
+      );
+      expect(getIt<TaskCompletionService>(), isA<TaskCompletionService>());
+      expect(
+        getIt<TaskAwardRemoteReaderPort>(),
+        isA<UnconfiguredTaskRemoteReader>(),
+      );
       final firstTasksCubit = getIt<TasksCubit>();
       final secondTasksCubit = getIt<TasksCubit>();
       expect(firstTasksCubit, isA<TasksCubit>());
@@ -125,6 +141,13 @@ void main() {
       expect(getIt<CloudSyncPort>(), isA<EntityDispatchRouter>());
       expect(getIt<TaskRepository>(), isA<DriftTaskRepository>());
       expect(getIt<TaskCommands>(), isA<TaskCommands>());
+      expect(getIt<AwardLedgerPort>(), isA<DriftAwardLedger>());
+      expect(
+        getIt<TaskCompletionUnitOfWork>(),
+        isA<DriftTaskCompletionUnitOfWork>(),
+      );
+      expect(getIt<TaskCompletionService>(), isA<TaskCompletionService>());
+      expect(getIt.isRegistered<TaskAwardRemoteReaderPort>(), isTrue);
       expect(getIt.isRegistered<TaskSyncService>(), isTrue);
       expect(getIt.isRegistered<TasksCubit>(), isTrue);
       expect(getIt<CredentialVaultPort>(), isA<SecureCredentialVault>());

@@ -38,6 +38,14 @@
   "taskCreate": "مهمة جديدة",
   "taskEdit": "تعديل المهمة",
   "taskDelete": "حذف",
+  "taskComplete": "إكمال",
+  "taskReopen": "إعادة الفتح",
+  "taskCompletedAt": "اكتملت في {timestamp}",
+  "@taskCompletedAt": {
+    "placeholders": {
+      "timestamp": {"type": "String"}
+    }
+  },
   "taskSave": "حفظ",
   "taskCancel": "إلغاء",
   "taskTitleLabel": "العنوان",

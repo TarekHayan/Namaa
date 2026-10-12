@@ -38,6 +38,14 @@
   "taskCreate": "New Task",
   "taskEdit": "Edit Task",
   "taskDelete": "Delete",
+  "taskComplete": "Complete",
+  "taskReopen": "Reopen",
+  "taskCompletedAt": "Completed {timestamp}",
+  "@taskCompletedAt": {
+    "placeholders": {
+      "timestamp": {"type": "String"}
+    }
+  },
   "taskSave": "Save",
   "taskCancel": "Cancel",
   "taskTitleLabel": "Title",

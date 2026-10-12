@@ -128,6 +128,17 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get taskDelete => 'Delete';
 
   @override
+  String get taskComplete => 'Complete';
+
+  @override
+  String get taskReopen => 'Reopen';
+
+  @override
+  String taskCompletedAt(String timestamp) {
+    return 'Completed $timestamp';
+  }
+
+  @override
   String get taskSave => 'Save';
 
   @override

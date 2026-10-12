@@ -1,5 +1,6 @@
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 enum TaskListFilter { today, urgent, all, completed }
 
@@ -49,6 +50,8 @@ final class TasksReady extends TasksState {
     this.selectedCategory,
     this.syncStatus = TasksSyncStatus.idle,
     List<TaskConflictView> conflicts = const <TaskConflictView>[],
+    List<TaskCompletionAward> taskCompletionAwards =
+        const <TaskCompletionAward>[],
     this.lastFailure,
   }) : allTasks = List<Task>.unmodifiable(allTasks),
        visibleTasks = List<Task>.unmodifiable(visibleTasks),
@@ -56,7 +59,10 @@ final class TasksReady extends TasksState {
          for (final entry in matrix.entries)
            entry.key: List<Task>.unmodifiable(entry.value),
        }),
-       conflicts = List<TaskConflictView>.unmodifiable(conflicts);
+       conflicts = List<TaskConflictView>.unmodifiable(conflicts),
+       taskCompletionAwards = List<TaskCompletionAward>.unmodifiable(
+         taskCompletionAwards,
+       );
 
   static const Object _unchanged = Object();
 
@@ -68,7 +74,21 @@ final class TasksReady extends TasksState {
   final TaskCategory? selectedCategory;
   final TasksSyncStatus syncStatus;
   final List<TaskConflictView> conflicts;
+  final List<TaskCompletionAward> taskCompletionAwards;
   final AppFailure? lastFailure;
+
+  /// Task XP is always derived from the shared immutable ledger query.
+  int get earnedTaskXp =>
+      taskCompletionAwards.fold<int>(0, (total, award) => total + award.amount);
+
+  TaskCompletionAward? awardForTask(String taskId) {
+    for (final award in taskCompletionAwards) {
+      if (award.source == kTaskDoneAwardSource && award.sourceId == taskId) {
+        return award;
+      }
+    }
+    return null;
+  }
 
   TasksReady copyWith({
     List<Task>? allTasks,
@@ -79,6 +99,7 @@ final class TasksReady extends TasksState {
     Object? selectedCategory = _unchanged,
     TasksSyncStatus? syncStatus,
     List<TaskConflictView>? conflicts,
+    List<TaskCompletionAward>? taskCompletionAwards,
     Object? lastFailure = _unchanged,
   }) => TasksReady(
     allTasks: allTasks ?? this.allTasks,
@@ -91,6 +112,7 @@ final class TasksReady extends TasksState {
         : selectedCategory as TaskCategory?,
     syncStatus: syncStatus ?? this.syncStatus,
     conflicts: conflicts ?? this.conflicts,
+    taskCompletionAwards: taskCompletionAwards ?? this.taskCompletionAwards,
     lastFailure: identical(lastFailure, _unchanged)
         ? this.lastFailure
         : lastFailure as AppFailure?,

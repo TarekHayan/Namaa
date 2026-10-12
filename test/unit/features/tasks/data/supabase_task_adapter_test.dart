@@ -6,6 +6,7 @@ import 'package:namma_project/features/tasks/data/supabase_task_reader.dart';
 import 'package:namma_project/features/tasks/data/supabase_task_sync_adapter.dart';
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../support/tasks_test_support.dart';
@@ -102,6 +103,54 @@ void main() {
                 now,
               ),
         );
+      },
+    );
+
+    test(
+      'sends completion and reopening as stable Task operations only',
+      () async {
+        final gateway = _FakeTaskGateway();
+        final adapter = SupabaseTaskSyncAdapter(gateway: gateway);
+        final completedAt = now.add(const Duration(minutes: 1));
+        final reopenedAt = now.add(const Duration(minutes: 2));
+        final completed = _task(updatedAt: now).complete(completedAt);
+        final reopened = completed.reopen(reopenedAt);
+
+        gateway.applyResponse = _acknowledgedRow(
+          now: completedAt,
+          operationId: 'complete-operation',
+        );
+        final completion = await adapter.dispatchChange(
+          change(
+            operationId: 'complete-operation',
+            payload: codec.encode(completed),
+            versionTimestamp: completedAt,
+          ),
+        );
+        gateway.applyResponse = _acknowledgedRow(
+          now: reopenedAt,
+          operationId: 'reopen-operation',
+        );
+        final reopening = await adapter.dispatchChange(
+          change(
+            operationId: 'reopen-operation',
+            payload: codec.encode(reopened),
+            versionTimestamp: reopenedAt,
+          ),
+        );
+
+        expect(completion.valueOrNull, isA<DispatchAcknowledged>());
+        expect(reopening.valueOrNull, isA<DispatchAcknowledged>());
+        expect(gateway.applied, hasLength(2));
+        expect(gateway.applied.first.operationId, 'complete-operation');
+        expect(
+          gateway.applied.first.payload['completedAt'],
+          completedAt.toIso8601String(),
+        );
+        expect(gateway.applied.first.payload['completionXp'], 20);
+        expect(gateway.applied.last.operationId, 'reopen-operation');
+        expect(gateway.applied.last.payload['completedAt'], isNull);
+        expect(gateway.applied.last.payload['completionXp'], 20);
       },
     );
 
@@ -209,6 +258,53 @@ void main() {
       },
     );
   });
+
+  group('account-scoped paginated Task award reader', () {
+    test(
+      'fetches every award page and deduplicates by immutable key',
+      () async {
+        final first = _remoteAwardRow();
+        final second = _remoteAwardRow(
+          sourceId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+          amount: 35,
+        );
+        final gateway = _FakeTaskGateway()
+          ..awardPages['<first>'] = TaskAwardRemotePage(
+            rows: <Map<String, dynamic>>[first],
+            nextCursor: 'page-2',
+          )
+          ..awardPages['page-2'] = TaskAwardRemotePage(
+            rows: <Map<String, dynamic>>[first, second],
+          );
+        final reader = SupabaseTaskReader(gateway: gateway, codec: codec);
+
+        final result = await reader.readAllTaskAwards(kTasksTestAccountA);
+
+        expect(gateway.requestedAwardCursors, <String?>[null, 'page-2']);
+        expect(result.failureOrNull, isNull);
+        expect(result.valueOrNull, hasLength(2));
+        expect(
+          result.valueOrNull!.map((award) => award.amount),
+          containsAll(<int>[20, 35]),
+        );
+      },
+    );
+
+    test('fails safely if an award belongs to another account', () async {
+      final gateway = _FakeTaskGateway()
+        ..awardPages['<first>'] = TaskAwardRemotePage(
+          rows: <Map<String, dynamic>>[
+            _remoteAwardRow(owner: kTasksTestAccountB),
+          ],
+        );
+      final reader = SupabaseTaskReader(gateway: gateway, codec: codec);
+
+      final result = await reader.readAllTaskAwards(kTasksTestAccountA);
+
+      expect(result.failureOrNull, isNotNull);
+      expect(result.valueOrNull, isNull);
+    });
+  });
 }
 
 Task _task({String id = kTasksTestTaskId, DateTime? updatedAt}) => Task.create(
@@ -222,11 +318,12 @@ Task _task({String id = kTasksTestTaskId, DateTime? updatedAt}) => Task.create(
 Map<String, dynamic> _acknowledgedRow({
   required DateTime now,
   bool replayed = false,
+  String operationId = kTasksTestOperationId,
 }) => <String, dynamic>{
   'id': kTasksTestTaskId,
   'owner': kTasksTestAccountA,
   'payload': <String, dynamic>{'title': 'Remote task'},
-  'operation_id': kTasksTestOperationId,
+  'operation_id': operationId,
   'updated_at': now.toIso8601String(),
   'deleted_at': null,
   'conflict_detected': false,
@@ -244,6 +341,18 @@ Map<String, dynamic> _remoteRow(Task task, {String? owner}) =>
       'updated_at': task.updatedAt.toIso8601String(),
       'deleted_at': task.deletedAt?.toIso8601String(),
     };
+
+Map<String, dynamic> _remoteAwardRow({
+  String owner = kTasksTestAccountA,
+  String sourceId = kTasksTestTaskId,
+  int amount = 20,
+}) => <String, dynamic>{
+  'owner': owner,
+  'source': kTaskDoneAwardSource,
+  'source_id': sourceId,
+  'amount': amount,
+  'awarded_at': DateTime.utc(2026, 10, 8, 10).toIso8601String(),
+};
 
 final class _AppliedCall {
   const _AppliedCall({
@@ -269,7 +378,10 @@ final class _FakeTaskGateway implements SupabaseTaskGateway {
   Map<String, dynamic> applyResponse = <String, dynamic>{};
   final List<_AppliedCall> applied = <_AppliedCall>[];
   final Map<String, TaskRemotePage> pages = <String, TaskRemotePage>{};
+  final Map<String, TaskAwardRemotePage> awardPages =
+      <String, TaskAwardRemotePage>{};
   final List<String?> requestedCursors = <String?>[];
+  final List<String?> requestedAwardCursors = <String?>[];
 
   @override
   Future<Map<String, dynamic>> applyTaskChange({
@@ -301,5 +413,15 @@ final class _FakeTaskGateway implements SupabaseTaskGateway {
   }) async {
     requestedCursors.add(cursor);
     return pages[cursor ?? '<first>'] ?? const TaskRemotePage(rows: []);
+  }
+
+  @override
+  Future<TaskAwardRemotePage> fetchTaskAwardPage({
+    required int pageSize,
+    String? cursor,
+  }) async {
+    requestedAwardCursors.add(cursor);
+    return awardPages[cursor ?? '<first>'] ??
+        const TaskAwardRemotePage(rows: []);
   }
 }

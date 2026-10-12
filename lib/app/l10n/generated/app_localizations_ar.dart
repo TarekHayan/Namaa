@@ -124,6 +124,17 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get taskDelete => 'حذف';
 
   @override
+  String get taskComplete => 'إكمال';
+
+  @override
+  String get taskReopen => 'إعادة الفتح';
+
+  @override
+  String taskCompletedAt(String timestamp) {
+    return 'اكتملت في $timestamp';
+  }
+
+  @override
   String get taskSave => 'حفظ';
 
   @override

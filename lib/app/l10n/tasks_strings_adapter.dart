@@ -70,6 +70,12 @@ final class _AppTasksStrings implements TasksStrings {
   @override
   String get taskDelete => _l10n.taskDelete;
   @override
+  String get taskComplete => _l10n.taskComplete;
+  @override
+  String get taskReopen => _l10n.taskReopen;
+  @override
+  String taskCompletedAt(String timestamp) => _l10n.taskCompletedAt(timestamp);
+  @override
   String get taskSave => _l10n.taskSave;
   @override
   String get taskCancel => _l10n.taskCancel;

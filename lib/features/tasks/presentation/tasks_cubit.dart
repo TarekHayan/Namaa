@@ -4,21 +4,28 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
+import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/application/task_sync_service.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/tasks/domain/task_rules.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 /// Presentation controller over the single repository-owned Task stream.
 final class TasksCubit extends Cubit<TasksState> {
   TasksCubit({
     required TaskRepository repository,
     required TaskCommands commands,
+    required TaskCompletionService completionService,
+    required AwardLedgerPort awardLedger,
     required DateTime Function() localDate,
     TaskSyncService? syncService,
   }) : _repository = repository,
        _commands = commands,
+       _completionService = completionService,
+       _awardLedger = awardLedger,
        _localDate = localDate,
        _syncService = syncService,
        super(const TasksInitial()) {
@@ -27,14 +34,18 @@ final class TasksCubit extends Cubit<TasksState> {
 
   final TaskRepository _repository;
   final TaskCommands _commands;
+  final TaskCompletionService _completionService;
+  final AwardLedgerPort _awardLedger;
   final DateTime Function() _localDate;
   final TaskSyncService? _syncService;
 
   StreamSubscription<List<Task>>? _tasksSubscription;
   StreamSubscription<List<TaskConflictRecord>>? _conflictsSubscription;
+  StreamSubscription<List<TaskCompletionAward>>? _awardsSubscription;
   StreamSubscription<TaskSyncSnapshot>? _syncSubscription;
   Timer? _dayChangeTimer;
   List<TaskConflictView> _latestConflicts = const [];
+  List<TaskCompletionAward> _latestAwards = const [];
   String? _accountId;
 
   Future<void> load(String accountId) async {
@@ -47,8 +58,10 @@ final class TasksCubit extends Cubit<TasksState> {
     _accountId = accountId;
     await _tasksSubscription?.cancel();
     await _conflictsSubscription?.cancel();
+    await _awardsSubscription?.cancel();
     _dayChangeTimer?.cancel();
     _latestConflicts = const [];
+    _latestAwards = const [];
     emit(const TasksLoading());
     _conflictsSubscription = _repository
         .watchConflicts(accountId)
@@ -65,33 +78,12 @@ final class TasksCubit extends Cubit<TasksState> {
             }
           },
         );
+    _awardsSubscription = _awardLedger
+        .watchAwards(accountId)
+        .listen(_onAwards, onError: _onObservedDataError);
     _tasksSubscription = _repository
         .watchTasks(accountId)
-        .listen(
-          _onTasks,
-          onError: (Object error, StackTrace stackTrace) {
-            final current = state;
-            if (current is TasksReady) {
-              emit(
-                current.copyWith(
-                  syncStatus: TasksSyncStatus.recoverableFailure,
-                ),
-              );
-            } else {
-              emit(
-                TasksFailure(
-                  error is AppFailure
-                      ? error
-                      : AppFailure.recoverable(
-                          category: AppFailureCategory.persistence,
-                          messageKey: 'foundation.database.unreadable',
-                          occurredAt: DateTime.now().toUtc(),
-                        ),
-                ),
-              );
-            }
-          },
-        );
+        .listen(_onTasks, onError: _onObservedDataError);
     _scheduleDayChange();
     await _syncService?.synchronizeOnTasksEntry();
   }
@@ -115,6 +107,14 @@ final class TasksCubit extends Cubit<TasksState> {
 
   Future<AppResult<void>> deleteTask(String taskId) =>
       _saveAndSync(_commands.deleteTask(taskId, expectedAccountId: _accountId));
+
+  Future<AppResult<Task>> completeTask(String taskId) => _saveAndSync(
+    _completionService.completeTask(taskId, expectedAccountId: _accountId),
+  );
+
+  Future<AppResult<Task>> reopenTask(String taskId) => _saveAndSync(
+    _completionService.reopenTask(taskId, expectedAccountId: _accountId),
+  );
 
   Future<AppResult<T>> _saveAndSync<T>(Future<AppResult<T>> write) async {
     final result = await write;
@@ -173,6 +173,33 @@ final class TasksCubit extends Cubit<TasksState> {
     }
   }
 
+  void _onAwards(List<TaskCompletionAward> awards) {
+    _latestAwards = List<TaskCompletionAward>.unmodifiable(awards);
+    final current = state;
+    if (current is TasksReady) {
+      emit(current.copyWith(taskCompletionAwards: _latestAwards));
+    }
+  }
+
+  void _onObservedDataError(Object error, StackTrace stackTrace) {
+    final current = state;
+    if (current is TasksReady) {
+      emit(current.copyWith(syncStatus: TasksSyncStatus.recoverableFailure));
+      return;
+    }
+    emit(
+      TasksFailure(
+        error is AppFailure
+            ? error
+            : AppFailure.recoverable(
+                category: AppFailureCategory.persistence,
+                messageKey: 'foundation.database.unreadable',
+                occurredAt: DateTime.now().toUtc(),
+              ),
+      ),
+    );
+  }
+
   void selectFilter(TaskListFilter filter) {
     final current = state;
     if (current is! TasksReady) {
@@ -225,6 +252,7 @@ final class TasksCubit extends Cubit<TasksState> {
             viewMode: TasksViewMode.list,
             syncStatus: _syncStatus(_syncService?.snapshot),
             conflicts: _latestConflicts,
+            taskCompletionAwards: _latestAwards,
           );
     _emitProjection(ready);
   }
@@ -281,6 +309,7 @@ final class TasksCubit extends Cubit<TasksState> {
     pause();
     await _tasksSubscription?.cancel();
     await _conflictsSubscription?.cancel();
+    await _awardsSubscription?.cancel();
     await _syncSubscription?.cancel();
     return super.close();
   }

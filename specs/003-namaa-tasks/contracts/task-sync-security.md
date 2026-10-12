@@ -16,6 +16,8 @@ After sign-in, initial Task synchronization fetches the authenticated account's 
 
 For competing Task versions, the newer UTC timestamp becomes active and the nonwinning version is retained as a visible Task conflict. Equal timestamps remain unresolved with both versions recoverable; no arbitrary winner is chosen. A deletion tombstone is a competing version under the same policy. Immutable XP awards merge by (accountId, source='task_done', taskId) key, with at most one award per Task lifetime. No clock tie-breaker, field merge, or Realtime requirement is added.
 
+An explicit completion's first award is committed independently of whether its Task version wins that conflict. When different offline first-completion copies share the same award key, the first award committed remotely is the account-wide record; inbound synchronization reconciles local copies to that record, while Task conflict evidence remains recoverable. Later completions cannot rewrite the remote award.
+
 ## Cloud transaction and access control
 
 Supabase structures expose account-owned Task rows, XP awards, and operation receipts. Authenticated owner identity is derived from auth context for writes and reads. RLS and callable operations must allow an owner to read/change their own records and deny another account every Task/checklist/award/operation access. The completion operation and first XP award are committed atomically; repeat operationId or repeat award key cannot add another award. The Task domain does not import Supabase types, credentials, or SQL.

@@ -257,6 +257,36 @@ final class Task {
     return copyWith(updatedAt: instant, deletedAt: instant);
   }
 
+  /// Records an explicit completion. Repeating completion is not a new event.
+  Task complete(DateTime instant) {
+    _requireUtc(instant, 'instant');
+    if (isCompleted) {
+      return this;
+    }
+    _requireNewerVersion(instant);
+    return copyWith(completedAt: instant, updatedAt: instant);
+  }
+
+  /// Clears the current completion state without touching checklist progress.
+  Task reopen(DateTime instant) {
+    _requireUtc(instant, 'instant');
+    if (!isCompleted) {
+      return this;
+    }
+    _requireNewerVersion(instant);
+    return copyWith(completedAt: null, updatedAt: instant);
+  }
+
+  void _requireNewerVersion(DateTime instant) {
+    if (!instant.isAfter(updatedAt)) {
+      throw ArgumentError.value(
+        instant,
+        'instant',
+        'must advance the current version',
+      );
+    }
+  }
+
   static void _requireNonBlank(String value, String name) {
     if (value.trim().isEmpty) {
       throw ArgumentError.value(value, name, 'must not be blank');

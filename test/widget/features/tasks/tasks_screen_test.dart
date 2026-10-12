@@ -7,33 +7,49 @@ import 'package:namma_project/app/l10n/tasks_strings_adapter.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
+import 'package:namma_project/features/tasks/application/task_completion_service.dart';
+import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
+import 'package:namma_project/features/tasks/domain/checklist_item.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 import '../../../support/tasks_test_support.dart';
 
 void main() {
   late TasksTestClock clock;
   late _WidgetTaskRepository repository;
+  late _WidgetAwardLedger awardLedger;
   late TasksCubit cubit;
 
   setUp(() {
     clock = TasksTestClock();
     repository = _WidgetTaskRepository();
+    awardLedger = _WidgetAwardLedger();
     final ids = TasksTestIds();
+    const session = _Session(kTasksTestAccountA);
     cubit = TasksCubit(
       repository: repository,
       commands: TaskCommands(
         repository: repository,
-        session: const _Session(kTasksTestAccountA),
+        session: session,
         nowUtc: clock.utcNow,
         localDate: clock.localDate,
         nextTaskId: ids.nextTaskId,
         nextOperationId: ids.nextOperationId,
       ),
+      completionService: TaskCompletionService(
+        repository: repository,
+        unitOfWork: _WidgetCompletionUnitOfWork(repository, awardLedger),
+        session: session,
+        nowUtc: clock.utcNow,
+        nextOperationId: ids.nextOperationId,
+      ),
+      awardLedger: awardLedger,
       localDate: clock.localDate,
     );
   });
@@ -41,6 +57,7 @@ void main() {
   tearDown(() async {
     if (!cubit.isClosed) await cubit.close();
     await repository.close();
+    await awardLedger.close();
   });
 
   void taskTestWidgets(
@@ -266,6 +283,70 @@ void main() {
     },
   );
 
+  taskTestWidgets(
+    'explicit complete and reopen controls preserve an incomplete checklist',
+    (tester) async {
+      final incompleteStep = ChecklistItem(
+        id: 'step-1',
+        text: 'Still open',
+        completed: false,
+        order: 0,
+      );
+      final task = _task(
+        id: 'completion-control',
+        title: 'Use the explicit control',
+        checklistItems: <ChecklistItem>[incompleteStep],
+      );
+      repository.replace(<Task>[task]);
+      await _pumpTasks(tester, cubit: cubit);
+      await tester.tap(find.byKey(kTasksAllFilterKey));
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('task-complete-completion-control')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repository.tasks.single.isCompleted, isTrue);
+      expect(repository.tasks.single.checklistItems, <ChecklistItem>[
+        incompleteStep,
+      ]);
+      expect(
+        find.byKey(const ValueKey<String>('task-reopen-completion-control')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(
+          const ValueKey<String>('task-completed-at-completion-control'),
+        ),
+        findsOneWidget,
+      );
+      expect((cubit.state as TasksReady).earnedTaskXp, 20);
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('task-reopen-completion-control')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repository.tasks.single.isCompleted, isFalse);
+      expect(repository.tasks.single.checklistItems, <ChecklistItem>[
+        incompleteStep,
+      ]);
+      expect(
+        find.byKey(const ValueKey<String>('task-complete-completion-control')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(
+          const ValueKey<String>('task-completed-at-completion-control'),
+        ),
+        findsNothing,
+      );
+      expect((cubit.state as TasksReady).earnedTaskXp, 20);
+      expect(awardLedger.awards, hasLength(1));
+    },
+  );
+
   taskTestWidgets('signed-out access renders guard and never reads Task data', (
     tester,
   ) async {
@@ -350,6 +431,8 @@ Task _task({
   required String title,
   TaskCategory category = TaskCategory.work,
   EisenhowerQuadrant quadrant = EisenhowerQuadrant.urgentImportant,
+  List<ChecklistItem> checklistItems = const <ChecklistItem>[],
+  DateTime? completedAt,
 }) => Task.create(
   id: id,
   accountId: kTasksTestAccountA,
@@ -357,6 +440,8 @@ Task _task({
   scheduledDate: DateTime(2026, 10, 8),
   category: category,
   quadrant: quadrant,
+  checklistItems: checklistItems,
+  completedAt: completedAt,
   createdAt: DateTime.utc(2026, 10, 8, 9),
 );
 
@@ -482,4 +567,91 @@ final class _WidgetTaskRepository implements TaskRepository {
       controller.onCancel = subscription.cancel;
     });
   }
+}
+
+final class _WidgetCompletionUnitOfWork implements TaskCompletionUnitOfWork {
+  _WidgetCompletionUnitOfWork(this.repository, this.awardLedger);
+
+  final _WidgetTaskRepository repository;
+  final _WidgetAwardLedger awardLedger;
+
+  @override
+  Future<AppResult<void>> commit(TaskCompletionCommit request) async {
+    final award = request.firstAward;
+    if (award != null) {
+      final awardResult = await awardLedger.insertOnce(award);
+      if (awardResult.failureOrNull != null) {
+        return AppResult<void>.failure(awardResult.failureOrNull!);
+      }
+    }
+    return repository.commitTask(
+      TaskWriteRequest(
+        task: request.task,
+        operationId: request.operationId,
+        kind: ChangeKind.update,
+        queuedAt: request.queuedAt,
+      ),
+    );
+  }
+}
+
+final class _WidgetAwardLedger implements AwardLedgerPort {
+  final Map<String, TaskCompletionAward> _stored =
+      <String, TaskCompletionAward>{};
+  final StreamController<List<TaskCompletionAward>> _controller =
+      StreamController<List<TaskCompletionAward>>.broadcast(sync: true);
+
+  List<TaskCompletionAward> get awards =>
+      _stored.values.toList(growable: false);
+
+  Future<void> close() => _controller.close();
+
+  void _emit(String accountId) {
+    _controller.add(
+      awards
+          .where((award) => award.accountId == accountId)
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<AppResult<AwardInsertOutcome>> insertOnce(
+    TaskCompletionAward award,
+  ) async {
+    final previous = _stored.putIfAbsent(award.uniqueKey, () => award);
+    _emit(award.accountId);
+    return AppResult<AwardInsertOutcome>.success(
+      identical(previous, award)
+          ? AwardInsertOutcome.inserted
+          : AwardInsertOutcome.alreadyExists,
+    );
+  }
+
+  @override
+  Future<AppResult<void>> applyRemoteAward(TaskCompletionAward award) async {
+    _stored[award.uniqueKey] = award;
+    _emit(award.accountId);
+    return AppResult<void>.success(null);
+  }
+
+  @override
+  Future<AppResult<TaskCompletionAward?>> readAward({
+    required String accountId,
+    required String source,
+    required String sourceId,
+  }) async => AppResult<TaskCompletionAward?>.success(
+    _stored['$accountId/$source/$sourceId'],
+  );
+
+  @override
+  Stream<List<TaskCompletionAward>> watchAwards(String accountId) =>
+      Stream<List<TaskCompletionAward>>.multi((controller) {
+        controller.add(
+          awards
+              .where((award) => award.accountId == accountId)
+              .toList(growable: false),
+        );
+        final subscription = _controller.stream.listen(controller.add);
+        controller.onCancel = subscription.cancel;
+      });
 }

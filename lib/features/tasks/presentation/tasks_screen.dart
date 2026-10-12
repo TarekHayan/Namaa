@@ -478,6 +478,21 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
       key: cardKey,
       margin: const EdgeInsets.symmetric(vertical: 4.0),
       child: ListTile(
+        leading: IconButton(
+          key: ValueKey<String>(
+            task.isCompleted
+                ? 'task-reopen-${task.id}'
+                : 'task-complete-${task.id}',
+          ),
+          icon: Icon(
+            task.isCompleted
+                ? Icons.check_circle
+                : Icons.radio_button_unchecked,
+          ),
+          color: task.isCompleted ? theme.colorScheme.primary : null,
+          tooltip: task.isCompleted ? l10n.taskReopen : l10n.taskComplete,
+          onPressed: () => _changeCompletion(context, task, l10n),
+        ),
         title: Text(task.title),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,6 +520,18 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                   ),
               ],
             ),
+            if (task.completedAt != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.taskCompletedAt(
+                  _localizedTimestamp(context, task.completedAt!),
+                ),
+                key: ValueKey<String>('task-completed-at-${task.id}'),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ],
         ),
         trailing: Row(
@@ -540,6 +567,32 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  Future<void> _changeCompletion(
+    BuildContext context,
+    Task task,
+    TasksStrings l10n,
+  ) async {
+    final result = task.isCompleted
+        ? await widget.cubit.reopenTask(task.id)
+        : await widget.cubit.completeTask(task.id);
+    if (result.failureOrNull != null && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.tasksFailure)));
+    }
+  }
+
+  static String _localizedTimestamp(BuildContext context, DateTime timestamp) {
+    final local = timestamp.toLocal();
+    final material = MaterialLocalizations.of(context);
+    final date = material.formatMediumDate(local);
+    final time = material.formatTimeOfDay(
+      TimeOfDay.fromDateTime(local),
+      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+    );
+    return '$date, $time';
   }
 
   static String _localizedCategory(TaskCategory category, TasksStrings l10n) =>

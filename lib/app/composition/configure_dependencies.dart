@@ -29,6 +29,7 @@ import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.
 import 'package:namma_project/core/data/cloud/supabase/supabase_sync_adapter.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/data/sync/synchronization_coordinator.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
@@ -46,6 +47,8 @@ import 'package:namma_project/features/foundation/presentation/state/locale_cubi
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
+import 'package:namma_project/features/tasks/application/task_completion_service.dart';
+import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
 import 'package:namma_project/features/tasks/application/task_reconciliation.dart';
 import 'package:namma_project/features/tasks/application/task_remote_reader.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
@@ -56,6 +59,8 @@ import 'package:namma_project/features/tasks/data/supabase_task_sync_adapter.dar
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/data/task_reconciler.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
+import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
@@ -160,9 +165,22 @@ Future<void> configureDependencies({
     getIt.registerLazySingleton<TaskRepository>(
       () => DriftTaskRepository(database: database, codec: taskCodec),
     );
-    getIt.registerLazySingleton<TaskRemoteReaderPort>(
-      () => SupabaseTaskReader(gateway: taskGateway, codec: taskCodec),
+    getIt.registerLazySingleton<AwardLedgerPort>(
+      () => DriftAwardLedger(database),
     );
+    getIt.registerLazySingleton<TaskCompletionUnitOfWork>(
+      () => DriftTaskCompletionUnitOfWork(
+        database: database,
+        codec: taskCodec,
+        awardLedger: getIt<AwardLedgerPort>(),
+      ),
+    );
+    final taskReader = SupabaseTaskReader(
+      gateway: taskGateway,
+      codec: taskCodec,
+    );
+    getIt.registerLazySingleton<TaskRemoteReaderPort>(() => taskReader);
+    getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(() => taskReader);
     getIt.registerLazySingleton<TaskReconciliationPort>(
       () => TaskReconciler(
         repository: getIt<TaskRepository>(),
@@ -177,6 +195,8 @@ Future<void> configureDependencies({
         outbound: getIt<PendingSynchronizationEngine>(),
         remoteReader: getIt<TaskRemoteReaderPort>(),
         reconciler: getIt<TaskReconciliationPort>(),
+        awardReader: getIt<TaskAwardRemoteReaderPort>(),
+        awardLedger: getIt<AwardLedgerPort>(),
       ),
       dispose: (service) => service.dispose(),
     );
@@ -233,7 +253,14 @@ void _registerSafeFail(GetIt getIt) {
   getIt.registerLazySingleton<TaskRepository>(
     () => UnconfiguredTaskRepository(),
   );
+  getIt.registerLazySingleton<AwardLedgerPort>(() => UnconfiguredAwardLedger());
+  getIt.registerLazySingleton<TaskCompletionUnitOfWork>(
+    () => UnconfiguredTaskCompletionUnitOfWork(),
+  );
   getIt.registerLazySingleton<TaskRemoteReaderPort>(
+    () => UnconfiguredTaskRemoteReader(),
+  );
+  getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(
     () => UnconfiguredTaskRemoteReader(),
   );
   getIt.registerLazySingleton<TaskReconciliationPort>(
@@ -246,6 +273,8 @@ void _registerSafeFail(GetIt getIt) {
       outbound: getIt<PendingSynchronizationEngine>(),
       remoteReader: getIt<TaskRemoteReaderPort>(),
       reconciler: getIt<TaskReconciliationPort>(),
+      awardReader: getIt<TaskAwardRemoteReaderPort>(),
+      awardLedger: getIt<AwardLedgerPort>(),
     ),
     dispose: (service) => service.dispose(),
   );
@@ -258,6 +287,13 @@ void _registerUseCasesAndCubits(
   getIt.registerLazySingleton<TaskCommands>(
     () => TaskCommands(
       repository: getIt<TaskRepository>(),
+      session: getIt<CloudSessionPort>(),
+    ),
+  );
+  getIt.registerLazySingleton<TaskCompletionService>(
+    () => TaskCompletionService(
+      repository: getIt<TaskRepository>(),
+      unitOfWork: getIt<TaskCompletionUnitOfWork>(),
       session: getIt<CloudSessionPort>(),
     ),
   );
@@ -307,6 +343,8 @@ void _registerUseCasesAndCubits(
     () => TasksCubit(
       repository: getIt<TaskRepository>(),
       commands: getIt<TaskCommands>(),
+      completionService: getIt<TaskCompletionService>(),
+      awardLedger: getIt<AwardLedgerPort>(),
       localDate: _systemLocalDate,
       syncService: getIt<TaskSyncService>(),
     ),

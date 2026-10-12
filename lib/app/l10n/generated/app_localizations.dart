@@ -329,6 +329,24 @@ abstract class FoundationLocalizations {
   /// **'Delete'**
   String get taskDelete;
 
+  /// No description provided for @taskComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get taskComplete;
+
+  /// No description provided for @taskReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get taskReopen;
+
+  /// No description provided for @taskCompletedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed {timestamp}'**
+  String taskCompletedAt(String timestamp);
+
   /// No description provided for @taskSave.
   ///
   /// In en, this message translates to:

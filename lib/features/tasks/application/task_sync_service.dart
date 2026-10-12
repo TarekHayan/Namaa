@@ -6,6 +6,7 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/tasks/application/task_reconciliation.dart';
 import 'package:namma_project/features/tasks/application/task_remote_reader.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
 
 enum TaskInitialSyncStatus { idle, synchronizing, ready, failed }
 
@@ -34,11 +35,15 @@ final class TaskSyncService {
     required PendingSynchronizationEngine outbound,
     required TaskRemoteReaderPort remoteReader,
     required TaskReconciliationPort reconciler,
+    required TaskAwardRemoteReaderPort awardReader,
+    required AwardLedgerPort awardLedger,
   }) : _session = session,
        _connectivity = connectivity,
        _outbound = outbound,
        _remoteReader = remoteReader,
-       _reconciler = reconciler {
+       _reconciler = reconciler,
+       _awardReader = awardReader,
+       _awardLedger = awardLedger {
     _connectivitySubscription = _connectivity.changes.listen((status) {
       if (status == ConnectivityStatus.online) {
         unawaited(synchronize());
@@ -65,6 +70,8 @@ final class TaskSyncService {
   final PendingSynchronizationEngine _outbound;
   final TaskRemoteReaderPort _remoteReader;
   final TaskReconciliationPort _reconciler;
+  final TaskAwardRemoteReaderPort _awardReader;
+  final AwardLedgerPort _awardLedger;
   final StreamController<TaskSyncSnapshot> _snapshots =
       StreamController<TaskSyncSnapshot>.broadcast(sync: true);
 
@@ -159,6 +166,18 @@ final class TaskSyncService {
       return AppResult<TaskSyncSummary>.failure(remoteFailure);
     }
 
+    // Finish every immutable award page before mutating local inbound state or
+    // reporting this account's initial synchronization as ready.
+    final awardResult = await _awardReader.readAllTaskAwards(accountId);
+    if (!await _stillCurrentAccount(accountId)) {
+      return _accountChanged();
+    }
+    final awardFailure = awardResult.failureOrNull;
+    if (awardFailure != null) {
+      _emitFailure(awardFailure);
+      return AppResult<TaskSyncSummary>.failure(awardFailure);
+    }
+
     final inboundResult = await _reconciler.reconcile(
       accountId: accountId,
       remoteTasks: remoteResult.valueOrNull!,
@@ -170,6 +189,26 @@ final class TaskSyncService {
     if (inboundFailure != null) {
       _emitFailure(inboundFailure);
       return AppResult<TaskSyncSummary>.failure(inboundFailure);
+    }
+
+    for (final award in awardResult.valueOrNull!) {
+      if (award.accountId != accountId) {
+        final failure = _failure(
+          AppFailureCategory.authorization,
+          'tasks.auth.sign_in_required',
+        );
+        _emitFailure(failure);
+        return AppResult<TaskSyncSummary>.failure(failure);
+      }
+      final mergeResult = await _awardLedger.applyRemoteAward(award);
+      final mergeFailure = mergeResult.failureOrNull;
+      if (mergeFailure != null) {
+        _emitFailure(mergeFailure);
+        return AppResult<TaskSyncSummary>.failure(mergeFailure);
+      }
+    }
+    if (!await _stillCurrentAccount(accountId)) {
+      return _accountChanged();
     }
 
     _readyAccountId = accountId;

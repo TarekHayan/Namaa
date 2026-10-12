@@ -4,25 +4,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
+import 'package:namma_project/features/tasks/application/task_completion_service.dart';
+import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
+import 'package:namma_project/features/tasks/domain/checklist_item.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 import '../../../../support/tasks_test_support.dart';
 
 void main() {
   late TasksTestClock clock;
   late _WatchTaskRepository repository;
+  late _MemoryAwardLedger awardLedger;
   late TasksCubit cubit;
 
   setUp(() {
     clock = TasksTestClock();
     repository = _WatchTaskRepository();
+    awardLedger = _MemoryAwardLedger();
     final ids = TasksTestIds();
+    const session = _Session(kTasksTestAccountA);
     final commands = TaskCommands(
       repository: repository,
-      session: const _Session(kTasksTestAccountA),
+      session: session,
       nowUtc: clock.utcNow,
       localDate: clock.localDate,
       nextTaskId: ids.nextTaskId,
@@ -31,6 +39,14 @@ void main() {
     cubit = TasksCubit(
       repository: repository,
       commands: commands,
+      completionService: TaskCompletionService(
+        repository: repository,
+        unitOfWork: _MemoryCompletionUnitOfWork(repository, awardLedger),
+        session: session,
+        nowUtc: clock.utcNow,
+        nextOperationId: ids.nextOperationId,
+      ),
+      awardLedger: awardLedger,
       localDate: clock.localDate,
     );
   });
@@ -38,6 +54,7 @@ void main() {
   tearDown(() async {
     await cubit.close();
     await repository.close();
+    await awardLedger.close();
   });
 
   test(
@@ -162,6 +179,70 @@ void main() {
     await _nextEvent();
 
     expect((cubit.state as TasksReady).conflicts.single.retainedTitle, 'Older');
+  });
+
+  test(
+    'complete and reopen preserve checklist state and retain one observed award',
+    () async {
+      final incompleteStep = ChecklistItem(
+        id: 'step-1',
+        text: 'Still open',
+        completed: false,
+        order: 0,
+      );
+      final task = _task(
+        id: 'completion',
+        title: 'Complete me',
+      ).copyWith(checklistItems: <ChecklistItem>[incompleteStep]);
+      await cubit.load(kTasksTestAccountA);
+      repository.replace(<Task>[task]);
+      await _nextEvent();
+
+      final completed = await cubit.completeTask(task.id);
+      await _nextEvent();
+
+      expect(completed.failureOrNull, isNull);
+      var state = cubit.state as TasksReady;
+      expect(state.allTasks.single.isCompleted, isTrue);
+      expect(state.allTasks.single.checklistItems, <ChecklistItem>[
+        incompleteStep,
+      ]);
+      expect(state.taskCompletionAwards, hasLength(1));
+      expect(state.awardForTask(task.id)?.amount, 20);
+      expect(state.earnedTaskXp, 20);
+
+      final reopened = await cubit.reopenTask(task.id);
+      await _nextEvent();
+
+      expect(reopened.failureOrNull, isNull);
+      state = cubit.state as TasksReady;
+      expect(state.allTasks.single.isCompleted, isFalse);
+      expect(state.allTasks.single.checklistItems, <ChecklistItem>[
+        incompleteStep,
+      ]);
+      expect(state.taskCompletionAwards, hasLength(1));
+      expect(state.earnedTaskXp, 20);
+    },
+  );
+
+  test('earned XP changes only when the shared award query emits', () async {
+    awardLedger.publishInserts = false;
+    final task = _task(id: 'query-owned-xp', title: 'Query owned XP');
+    await cubit.load(kTasksTestAccountA);
+    repository.replace(<Task>[task]);
+    await _nextEvent();
+
+    final result = await cubit.completeTask(task.id);
+    await _nextEvent();
+
+    expect(result.failureOrNull, isNull);
+    expect((cubit.state as TasksReady).allTasks.single.isCompleted, isTrue);
+    expect((cubit.state as TasksReady).earnedTaskXp, 0);
+
+    awardLedger.publish(kTasksTestAccountA);
+    await _nextEvent();
+
+    expect((cubit.state as TasksReady).earnedTaskXp, 20);
   });
 
   test('matrix groups open Tasks once under their current quadrant', () async {
@@ -336,4 +417,89 @@ final class _WatchTaskRepository implements TaskRepository {
     }
     return _controller.stream;
   }
+}
+
+final class _MemoryCompletionUnitOfWork implements TaskCompletionUnitOfWork {
+  _MemoryCompletionUnitOfWork(this.repository, this.awardLedger);
+
+  final _WatchTaskRepository repository;
+  final _MemoryAwardLedger awardLedger;
+
+  @override
+  Future<AppResult<void>> commit(TaskCompletionCommit request) async {
+    final award = request.firstAward;
+    if (award != null) {
+      final awardResult = await awardLedger.insertOnce(award);
+      if (awardResult.failureOrNull != null) {
+        return AppResult<void>.failure(awardResult.failureOrNull!);
+      }
+    }
+    return repository.commitTask(
+      TaskWriteRequest(
+        task: request.task,
+        operationId: request.operationId,
+        kind: ChangeKind.update,
+        queuedAt: request.queuedAt,
+      ),
+    );
+  }
+}
+
+final class _MemoryAwardLedger implements AwardLedgerPort {
+  final Map<String, TaskCompletionAward> _awards =
+      <String, TaskCompletionAward>{};
+  final StreamController<List<TaskCompletionAward>> _controller =
+      StreamController<List<TaskCompletionAward>>.broadcast(sync: true);
+  bool publishInserts = true;
+
+  Future<void> close() => _controller.close();
+
+  void publish(String accountId) {
+    _controller.add(
+      _awards.values
+          .where((award) => award.accountId == accountId)
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<AppResult<AwardInsertOutcome>> insertOnce(
+    TaskCompletionAward award,
+  ) async {
+    final previous = _awards.putIfAbsent(award.uniqueKey, () => award);
+    if (publishInserts) publish(award.accountId);
+    return AppResult<AwardInsertOutcome>.success(
+      identical(previous, award)
+          ? AwardInsertOutcome.inserted
+          : AwardInsertOutcome.alreadyExists,
+    );
+  }
+
+  @override
+  Future<AppResult<void>> applyRemoteAward(TaskCompletionAward award) async {
+    _awards[award.uniqueKey] = award;
+    publish(award.accountId);
+    return AppResult<void>.success(null);
+  }
+
+  @override
+  Future<AppResult<TaskCompletionAward?>> readAward({
+    required String accountId,
+    required String source,
+    required String sourceId,
+  }) async => AppResult<TaskCompletionAward?>.success(
+    _awards['$accountId/$source/$sourceId'],
+  );
+
+  @override
+  Stream<List<TaskCompletionAward>> watchAwards(String accountId) =>
+      Stream<List<TaskCompletionAward>>.multi((controller) {
+        controller.add(
+          _awards.values
+              .where((award) => award.accountId == accountId)
+              .toList(growable: false),
+        );
+        final subscription = _controller.stream.listen(controller.add);
+        controller.onCancel = subscription.cancel;
+      });
 }
