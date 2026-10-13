@@ -150,9 +150,9 @@ description: "Dependency-ordered implementation tasks for Namaa Tasks"
 
 **Purpose**: Verify constitutional Definition of Done and preserve the separate Auth prerequisite.
 
-- [ ] T072 Extend .github/workflows/foundation-ci.yml so Task unit/widget/SQL and Task integration checks run in the existing quality, database-security, Android, iOS, Windows, macOS, and Linux gates; retain Foundation checks and ensure the namaa/003-tasks branch can receive CI results.
+- [x] T072 Extend .github/workflows/foundation-ci.yml so Task unit/widget/SQL and Task integration checks run in the existing quality, database-security, Android, iOS, Windows, macOS, and Linux gates; retain Foundation checks and ensure the namaa/003-tasks branch can receive CI results.
 - [ ] T073 Execute formatting/code generation, flutter analyze, flutter test, supabase test db, and specs/003-namaa-tasks/quickstart.md scenarios; record commands/results and any failures in specs/003-namaa-tasks/verification.md, without marking failed checks done.
-- [ ] T074 Verify the separate basic user-facing sign-in path is present and /tasks waits for a complete initial authenticated Task+award sync before user release; record the external Auth feature/commit evidence or an explicit blocked release gate in specs/003-namaa-tasks/verification.md. Do not implement Auth inside Tasks.
+- [x] T074 Verify the separate basic user-facing sign-in path is present and /tasks waits for a complete initial authenticated Task+award sync before user release; record the external Auth feature/commit evidence or an explicit blocked release gate in specs/003-namaa-tasks/verification.md. Do not implement Auth inside Tasks.
 - [ ] T075 Collect green Task persistence/account-sync results for Android, iOS, Windows, macOS, and Linux plus Arabic/English mobile/desktop RTL evidence in specs/003-namaa-tasks/verification.md; preserve failing/missing target results as open blockers rather than declaring the feature complete.
 
 ---

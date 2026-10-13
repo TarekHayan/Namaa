@@ -13,6 +13,7 @@ on:
       - 'macos/**'
       - 'pubspec.lock'
       - 'pubspec.yaml'
+      - 'specs/003-namaa-tasks/**'
       - 'supabase/**'
       - 'test/**'
       - 'windows/**'
@@ -20,6 +21,7 @@ on:
     branches:
       - main
       - 'feature/**'
+      - 'namaa/003-tasks'
     paths:
       - '.github/workflows/foundation-ci.yml'
       - 'android/**'
@@ -30,6 +32,7 @@ on:
       - 'macos/**'
       - 'pubspec.lock'
       - 'pubspec.yaml'
+      - 'specs/003-namaa-tasks/**'
       - 'supabase/**'
       - 'test/**'
       - 'windows/**'
@@ -71,7 +74,7 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      - name: Run unit, widget, and architecture tests
+      - name: Run Foundation and Task unit, widget, and architecture tests
         run: flutter test --no-pub --reporter compact
 
   database-security:
@@ -90,7 +93,7 @@ jobs:
       - name: Start local Supabase
         run: supabase start
 
-      - name: Verify migrations, grants, and RLS
+      - name: Verify Foundation and Task migrations, grants, RLS, and XP integrity
         run: supabase test db
 
   android:
@@ -142,7 +145,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run Android Foundation integration suite
+      - name: Run Android Foundation and Task integration suite
         uses: reactivecircus/android-emulator-runner@v2
         env:
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
@@ -225,6 +228,9 @@ jobs:
               integration_test/foundation_offline_test.dart
               integration_test/foundation_platform_test.dart
               integration_test/foundation_sync_test.dart
+              integration_test/tasks_offline_sync_test.dart
+              integration_test/tasks_completion_sync_test.dart
+              integration_test/tasks_checklist_history_test.dart
             )
             for test_file in "${tests[@]}"; do
               flutter test --no-pub \
@@ -272,7 +278,7 @@ jobs:
       - name: Build Windows application
         run: flutter build windows --debug
 
-      - name: Run Windows Foundation integration entry points
+      - name: Run Windows Foundation and Task integration entry points
         shell: pwsh
         env:
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
@@ -286,7 +292,10 @@ jobs:
             'integration_test/foundation_migration_test.dart',
             'integration_test/foundation_offline_test.dart',
             'integration_test/foundation_platform_test.dart',
-            'integration_test/foundation_sync_test.dart'
+            'integration_test/foundation_sync_test.dart',
+            'integration_test/tasks_offline_sync_test.dart',
+            'integration_test/tasks_completion_sync_test.dart',
+            'integration_test/tasks_checklist_history_test.dart'
           )
           foreach ($test in $tests) {
             flutter test --no-pub -d windows $test --reporter expanded
@@ -328,7 +337,7 @@ jobs:
       - name: Build macOS application
         run: flutter build macos --debug
 
-      - name: Run macOS Foundation integration entry points
+      - name: Run macOS Foundation and Task integration entry points
         shell: bash
         env:
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
@@ -344,6 +353,9 @@ jobs:
             integration_test/foundation_offline_test.dart
             integration_test/foundation_platform_test.dart
             integration_test/foundation_sync_test.dart
+            integration_test/tasks_offline_sync_test.dart
+            integration_test/tasks_completion_sync_test.dart
+            integration_test/tasks_checklist_history_test.dart
           )
           for test_file in "${tests[@]}"; do
             flutter test --no-pub -d macos "$test_file" --reporter expanded
@@ -378,6 +390,12 @@ jobs:
             test_file: integration_test/foundation_sync_test.dart
           - suite: staging-supabase
             test_file: integration_test/foundation_staging_supabase_test.dart
+          - suite: tasks-offline-sync
+            test_file: integration_test/tasks_offline_sync_test.dart
+          - suite: tasks-completion-sync
+            test_file: integration_test/tasks_completion_sync_test.dart
+          - suite: tasks-checklist-history
+            test_file: integration_test/tasks_checklist_history_test.dart
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -407,7 +425,7 @@ jobs:
           xcrun simctl bootstatus "$device_id" -b
           echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
 
-      - name: Run iOS Foundation integration entry point
+      - name: Run iOS Foundation or Task integration entry point
         timeout-minutes: 15
         shell: bash
         env:
@@ -434,7 +452,7 @@ jobs:
             --reporter expanded
 
   foundation-gate:
-    name: Foundation five-target gate
+    name: Foundation and Task five-target gate
     if: always()
     needs:
       - quality
@@ -446,7 +464,7 @@ jobs:
       - ios
     runs-on: ubuntu-latest
     steps:
-      - name: Require every Foundation job to pass
+      - name: Require every Foundation and Task job to pass
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
           DATABASE_RESULT: ${{ needs.database-security.result }}

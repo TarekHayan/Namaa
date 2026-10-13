@@ -380,3 +380,34 @@ The Windows integration scenarios intentionally open multiple encrypted test cli
 T071 and Phase 5 / US3 are complete as a functional feature checkpoint. All three Task stories are testable together, and the US1/US2 regression gates remain green.
 
 This does not declare Tasks user-release-ready. Phase 6 remains open for workflow integration, final generated/format/quickstart validation, the separate user-facing Auth prerequisite, and fresh Android/iOS/Windows/macOS/Linux evidence.
+
+## Phase 6 verification — 2026-10-13
+
+### T072 CI integration
+
+The Foundation workflow now also covers Tasks on pushes to `namaa/003-tasks`: shared Flutter and local Supabase gates include Task tests; Android runs the whole integration directory; Linux, Windows, and macOS run each of the three Task integration files individually; and the iOS simulator matrix includes all three. Existing Foundation entries remain. Local YAML parsing and `git diff --check` passed. Remote results are still required by T075.
+
+### T073 local checks and Quickstart
+
+| Check | Result |
+|---|---|
+| `flutter pub get` | PASS; lockfile unchanged |
+| `dart format --output=none --set-exit-if-changed lib test integration_test` | PASS; 118 files, 0 changes |
+| `dart run build_runner build --delete-conflicting-outputs` | PASS; 220 outputs, no content diff; the installed builder ignores the obsolete flag |
+| `flutter gen-l10n` | PASS; no content diff |
+| `flutter analyze --no-pub` | PASS; no issues |
+| `flutter test --no-pub` | PASS; 259 tests |
+| `supabase test db` on the unlinked local stack | PASS; 4 files, 93 assertions |
+| Windows Task offline, completion, checklist integration files individually | PASS; 1 + 3 + 1 tests |
+
+A combined Windows invocation passed its first file, then Flutter failed to open a debug connection for the second and third app launches. Both files passed when rerun individually, as the workflow invokes them. The tests emitted Drift's existing debug-only multiple-database warning from isolated test clients.
+
+Quickstart A/B have Task domain, command, widget, encrypted restart, and XP-award coverage. C has offline two-client, retry/conflict, checklist, and ten-cycle completion coverage. D has account-partition and local Supabase RLS coverage. E has Arabic/English RTL and mobile/desktop-size widget coverage, but the actual sign-in route, initial-sync gate, and native five-target Task results remain missing. T073 stays open until the complete Quickstart passes.
+
+### T074 Auth and initial-sync release gate — BLOCKED
+
+No separate basic user-facing sign-in path or Auth feature commit exists in this repository. `lib/app/routing/app_router.dart` shows a localized signed-out message only. `TaskSyncService` marks initial sync ready only after outbound delivery and complete Task and award reads, but `TasksCubit` can emit `TasksReady` from its local repository stream before that point, so `/tasks` does not currently wait for complete initial authenticated sync. Release remains blocked pending the separate Auth work and a verified route gate; no Auth flow was added under Tasks.
+
+### T075 five-target evidence — OPEN
+
+Windows Task persistence/account-sync integration passed locally. Fresh Android, iOS, macOS, and Linux Task results are not yet available. Widget tests cover Arabic RTL and English behavior at mobile and desktop sizes; native language/platform proof remains to be collected. SC-005 and user release remain blocked until all five targets pass.
