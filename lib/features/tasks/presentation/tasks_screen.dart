@@ -17,10 +17,14 @@ export 'task_editor.dart'
         kTaskDeadlineButtonKey,
         kTaskSaveButtonKey,
         kTaskTitleValidationKey,
+        kTaskChecklistNewFieldKey,
+        kTaskChecklistAddButtonKey,
         TaskEditor;
 
 const Key kTaskAddButtonKey = Key('task_add_button');
 const Key kTasksAllFilterKey = Key('tasks_all_filter');
+const Key kTasksOverdueFilterKey = Key('tasks_overdue_filter');
+const Key kTasksHistoryFilterKey = Key('tasks_history_filter');
 const Key kTasksCategoryFilterKey = Key('tasks_category_filter');
 const Key kTasksMatrixToggleKey = Key('tasks_matrix_toggle');
 const Key kTasksConflictBannerKey = Key('tasks_conflict_banner');
@@ -254,6 +258,22 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(width: 8),
           FilterChip(
+            key: kTasksOverdueFilterKey,
+            label: Text(l10n.tasksFilterOverdue),
+            selected: state.filter == TaskListFilter.overdue,
+            onSelected: (_) =>
+                widget.cubit.selectFilter(TaskListFilter.overdue),
+          ),
+          const SizedBox(width: 8),
+          FilterChip(
+            key: kTasksHistoryFilterKey,
+            label: Text(l10n.tasksFilterHistory),
+            selected: state.filter == TaskListFilter.completed,
+            onSelected: (_) =>
+                widget.cubit.selectFilter(TaskListFilter.completed),
+          ),
+          const SizedBox(width: 8),
+          FilterChip(
             label: Text(l10n.tasksFilterUrgent),
             selected: state.filter == TaskListFilter.urgent,
             onSelected: (_) => widget.cubit.selectFilter(TaskListFilter.urgent),
@@ -264,13 +284,6 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
             label: Text(l10n.tasksFilterAll),
             selected: state.filter == TaskListFilter.all,
             onSelected: (_) => widget.cubit.selectFilter(TaskListFilter.all),
-          ),
-          const SizedBox(width: 8),
-          FilterChip(
-            label: Text(l10n.tasksFilterCompleted),
-            selected: state.filter == TaskListFilter.completed,
-            onSelected: (_) =>
-                widget.cubit.selectFilter(TaskListFilter.completed),
           ),
           const SizedBox(width: 16),
           PopupMenuButton<Object>(

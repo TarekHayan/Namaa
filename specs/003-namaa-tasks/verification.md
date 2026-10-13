@@ -284,3 +284,99 @@ This does not declare the complete Tasks feature or user release ready: US3 chec
 - The two-client fake gateway now follows the server's Task winner, retained conflict, reward snapshot, and independent award behavior. Windows integration includes losing offline completion and two competing offline completions.
 - After resetting the empty local test database, `supabase test db` passed all 4 files and 93 assertions. The focused award-ledger and sync tests passed; `flutter analyze --no-pub` found no issues.
 - `flutter test --no-pub -d windows integration_test/tasks_completion_sync_test.dart` passed all 3 scenarios. The full Flutter suite passed on rerun and again with `--concurrency=1` (234 tests). Its first concurrent run had one unisolated failure, which did not recur.
+
+## Phase 5A — US3 test-first gate
+
+### Authored tests
+
+- T057 defines Task-owned checklist identity, order, validation, isolation, explicit parent completion, and no automatic completion/reward behavior.
+- T058 defines account-scoped add/edit/check/uncheck/remove commands, one parent Task outbox write per mutation, encrypted restart round-trip, and parent tombstone behavior.
+- T059 defines completed-history dates and the approved overdue rule: passed scheduled date or passed deadline, excluding completed/deleted Tasks and elapsed same-day scheduled time.
+- T060 defines checklist controls, explicit completion with an unfinished step, no step XP, history/overdue filters, completion-date text, and Arabic RTL.
+- T061 defines offline checklist edits through encrypted restart/reconnect and same-account second-client convergence, with one Task identity across list/matrix/review projections and no step award.
+
+### Initial RED evidence
+
+- Focused T057–T060 Flutter command — **EXPECTED RED**. Compilation stops only at the planned Phase 5 production surface: Task checklist mutations, TaskCommands checklist APIs/ID provider, and TaskReviewQueries.
+- `flutter test --no-pub -d windows integration_test/tasks_checklist_history_test.dart` — **EXPECTED RED**. Windows reaches the application build and stops on the same missing checklist command/query APIs.
+- Focused Dart analysis of all five new files reports only those deliberately missing production APIs; no independent test syntax, lint warning, or environment/configuration failure remains.
+
+### Outcome
+
+T057–T061 are complete and intentionally red before T062–T070, preserving the required TDD order. No Phase 5 production code, UI behavior, persistence schema, or synchronization behavior was implemented in this block.
+
+## Phase 5B — US3 checklist and review logic
+
+### Implemented scope
+
+- T062 adds pure Task-owned checklist creation, editing, checking, unchecking, and removal. Every mutation advances the parent Task version while retaining stable step identity/order and never changing parent completion or XP.
+- T063 adds validated, account-scoped checklist commands. Blank text and missing steps return typed failures, session changes prevent cross-account commits, and each successful mutation uses one existing parent Task repository/outbox write.
+- T064 reuses and verifies the existing ordered checklist JSON codec, encrypted Drift Task record, and atomic Task/outbox transaction. No checklist table, remote entity, or independent checklist operation was introduced.
+- T065 adds pure completed-history and overdue projections. History preserves saved completion times; overdue uses the device local calendar date plus the saved deadline instant, excludes completed/deleted Tasks, and ignores elapsed same-day scheduled time alone.
+
+### Verification evidence
+
+- Focused T057–T059 command — **PASS, 17 tests** covering domain rules, commands, ownership, persistence restart, history, and overdue behavior.
+- `flutter test --no-pub -d windows integration_test/tasks_checklist_history_test.dart` — **PASS, 1 Windows integration test**. Offline checklist changes survived encrypted restart, synchronized to a second same-account client, retained one Task identity across projections, and created no XP award.
+- Full unit suite plus the existing Tasks screen regression — **PASS, 223 tests**.
+- `flutter analyze --no-pub` — **PASS, no issues found**.
+- T060 now compiles and remains **EXPECTED RED** only at the deliberately absent checklist controls and overdue/history filter widgets assigned to Phase 5C (T066–T070).
+- The Windows integration emitted Drift's known debug-only multiple-database warning while reopening test clients; all assertions and teardown completed successfully.
+
+### Outcome
+
+T062–T065 and Phase 5B are complete. The checklist aggregate, application commands, durable parent-Task persistence/synchronization path, and pure review queries are green. Presentation wiring, UI controls, localization, and the final US3 closure gate remain T066–T071.
+
+## Phase 5C — US3 presentation and localization
+
+### Implemented scope
+
+- T066 exposes account-scoped checklist add, edit, toggle, and remove actions through `TasksCubit`. Completed history and overdue are canonical projections of the same repository-owned Task identities used by list and matrix views.
+- T067 adds the delegated and reviewed checklist editor UI for existing Tasks. Steps remain simple Task-owned text/completion values with no independent schedule, category, XP, or automatic parent completion.
+- T068 adds History and Overdue review filters while preserving the prototype list/matrix presentation and the existing completion timestamp display.
+- T069 and T070 add matching English and Arabic checklist/review resources, regenerate Flutter localization output, and preserve inherited Arabic RTL directionality with readable localized date text.
+
+### Verification evidence
+
+- Focused Phase 5C widget command — **PASS, 15 tests**. It covers checklist editing/toggling/removal, explicit parent completion with an unfinished step, History and Overdue filters, completion dates, stable Task identity, signed-out guarding, responsive layouts, and Arabic RTL.
+- Tasks unit suite — **PASS, 94 tests**. It covers the checklist domain/commands, repository-backed Cubit actions, account isolation, history/overdue rules, persistence, synchronization, and XP invariants.
+- `flutter test --no-pub` — **PASS, 255 tests** across the complete non-integration suite.
+- The Phase 5B Windows integration remains green for encrypted checklist restart/reconnect, second-client convergence, one Task identity, and no checklist XP award.
+- `flutter analyze --no-pub` — **PASS, no issues found**.
+- `git diff --check` — **PASS** before this documentation update; only Git's Windows line-ending notices were emitted.
+
+### Outcome
+
+T066–T070 are complete. Checklist interaction, review projections, English/Arabic copy, and RTL presentation are wired to the existing local-first Task aggregate without adding an independent checklist entity or reward path.
+
+T071 closure evidence is recorded below after rerunning the prescribed US3, US1/US2, integration, database, and regression gates.
+
+## T071 — US3 and Phase 5 closure verification
+
+### Executed gates
+
+- T057–T060 focused command — **PASS, 20 tests**. Domain, application, and widget coverage verifies stable checklist identity/order, validation, account ownership, one parent Task outbox write per mutation, encrypted restart persistence, History/Overdue rules, no parent auto-completion, no checklist XP, explicit completion with an unfinished step, and Arabic RTL/readable dates.
+- `flutter test --no-pub -d windows integration_test/tasks_checklist_history_test.dart` — **PASS, 1 integration test**. Offline checklist changes survived encrypted restart, synchronized to a second same-account client, retained one Task identity across projections, and created no step award.
+- `flutter test --no-pub -d windows integration_test/tasks_offline_sync_test.dart` — **PASS, 1 US1 integration test**. Authenticated offline create/edit/delete survived restart and converged to a second client with tombstone and account-isolation behavior intact.
+- `flutter test --no-pub -d windows integration_test/tasks_completion_sync_test.dart` — **PASS, 3 US2 integration tests**. Ten completion/reopen cycles, a losing offline completion, and competing first completions converged without creating more than one lifetime award.
+- `supabase test db` — **PASS, 4 files / 93 pgTAP assertions**. Foundation and Task ownership, RLS, authorized RPCs, operation replay/tombstones, completion atomicity, and one-award integrity all passed on the local unlinked stack. Two initial connection attempts occurred while the local PostgreSQL test container was recovering; restarting only that local test container restored a healthy connection before the recorded pass.
+- `flutter test --no-pub` — **PASS, 255 tests** across architecture, Foundation, US1, US2, US3, persistence, synchronization, XP, localization, and widget behavior.
+- `flutter analyze --no-pub` — **PASS, no issues found**.
+
+The Windows integration scenarios intentionally open multiple encrypted test clients. Drift emitted its debug-only multiple-database warning; every assertion and teardown completed successfully, with no production database sharing or integrity failure observed.
+
+### Scenario evidence
+
+- **Checklist lifecycle — PASS:** add, edit, check, uncheck, and remove mutate only the parent Task aggregate while retaining stable item identity and order.
+- **Parent independence — PASS:** completing all checklist steps leaves the parent open; the user may explicitly complete the parent while a step remains unfinished.
+- **No extra XP — PASS:** checklist mutations create no award. Explicit Task completion continues to use the shared immutable ledger and converges to one lifetime award across retries, conflicts, restart, deletion rules, and two clients.
+- **History and overdue — PASS:** completed history retains its completion time; overdue uses passed scheduled date or target deadline and excludes completed/deleted Tasks and elapsed same-day scheduled time alone.
+- **Restart and synchronization — PASS:** encrypted local state survives restart, queued parent-Task operations replay with stable identity, and the second same-account client converges without a separate checklist entity.
+- **Account ownership — PASS:** local partitions, application commands, authenticated RPCs, grants, and RLS expose no foreign-account Task, checklist payload, award, or operation receipt.
+- **Presentation parity — PASS:** list, matrix, History, and Overdue derive from the same repository Task identities; Arabic remains RTL and mobile/desktop widget layouts preserve the same behavior.
+
+### Outcome
+
+T071 and Phase 5 / US3 are complete as a functional feature checkpoint. All three Task stories are testable together, and the US1/US2 regression gates remain green.
+
+This does not declare Tasks user-release-ready. Phase 6 remains open for workflow integration, final generated/format/quickstart validation, the separate user-facing Auth prerequisite, and fresh Android/iOS/Windows/macOS/Linux evidence.

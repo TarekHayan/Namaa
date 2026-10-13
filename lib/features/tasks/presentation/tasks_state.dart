@@ -2,7 +2,7 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
-enum TaskListFilter { today, urgent, all, completed }
+enum TaskListFilter { today, urgent, all, completed, overdue }
 
 enum TasksViewMode { list, matrix }
 

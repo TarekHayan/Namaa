@@ -277,6 +277,84 @@ final class Task {
     return copyWith(completedAt: null, updatedAt: instant);
   }
 
+  /// Adds one simple step to this aggregate without changing completion or XP.
+  Task addChecklistItem({
+    required String id,
+    required String text,
+    required DateTime updatedAt,
+  }) {
+    _requireUtc(updatedAt, 'updatedAt');
+    _requireNewerVersion(updatedAt);
+    if (checklistItems.any((item) => item.id == id.trim())) {
+      throw ArgumentError.value(id, 'id', 'duplicate');
+    }
+    final nextOrder = checklistItems.isEmpty
+        ? 0
+        : checklistItems
+                  .map((item) => item.order)
+                  .reduce((left, right) => left > right ? left : right) +
+              1;
+    return copyWith(
+      checklistItems: <ChecklistItem>[
+        ...checklistItems,
+        ChecklistItem.create(id: id, text: text, order: nextOrder),
+      ],
+      updatedAt: updatedAt,
+    );
+  }
+
+  /// Edits one owned step while retaining its identity and stable order.
+  Task editChecklistItem({
+    required String itemId,
+    required String text,
+    required DateTime updatedAt,
+  }) {
+    _requireUtc(updatedAt, 'updatedAt');
+    _requireNewerVersion(updatedAt);
+    final index = _checklistIndex(itemId);
+    final changed = List<ChecklistItem>.of(checklistItems);
+    changed[index] = changed[index].editText(text);
+    return copyWith(checklistItems: changed, updatedAt: updatedAt);
+  }
+
+  /// Changes only a step's checked state; parent completion remains explicit.
+  Task setChecklistItemCompleted({
+    required String itemId,
+    required bool completed,
+    required DateTime updatedAt,
+  }) {
+    _requireUtc(updatedAt, 'updatedAt');
+    _requireNewerVersion(updatedAt);
+    final index = _checklistIndex(itemId);
+    final changed = List<ChecklistItem>.of(checklistItems);
+    changed[index] = changed[index].setCompleted(completed);
+    return copyWith(checklistItems: changed, updatedAt: updatedAt);
+  }
+
+  /// Removes one owned step without renumbering the remaining stable order.
+  Task removeChecklistItem({
+    required String itemId,
+    required DateTime updatedAt,
+  }) {
+    _requireUtc(updatedAt, 'updatedAt');
+    _requireNewerVersion(updatedAt);
+    final index = _checklistIndex(itemId);
+    final changed = List<ChecklistItem>.of(checklistItems)..removeAt(index);
+    return copyWith(checklistItems: changed, updatedAt: updatedAt);
+  }
+
+  int _checklistIndex(String itemId) {
+    final normalizedId = itemId.trim();
+    if (normalizedId.isEmpty) {
+      throw ArgumentError.value(itemId, 'itemId', 'must not be blank');
+    }
+    final index = checklistItems.indexWhere((item) => item.id == normalizedId);
+    if (index == -1) {
+      throw ArgumentError.value(itemId, 'itemId', 'not found');
+    }
+    return index;
+  }
+
   void _requireNewerVersion(DateTime instant) {
     if (!instant.isAfter(updatedAt)) {
       throw ArgumentError.value(

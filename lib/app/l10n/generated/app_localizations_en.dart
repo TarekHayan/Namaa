@@ -62,6 +62,12 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get tasksFilterCompleted => 'Completed';
 
   @override
+  String get tasksFilterHistory => 'History';
+
+  @override
+  String get tasksFilterOverdue => 'Overdue';
+
+  @override
   String get tasksViewList => 'List';
 
   @override
@@ -132,6 +138,24 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get taskReopen => 'Reopen';
+
+  @override
+  String get taskChecklistTitle => 'Checklist';
+
+  @override
+  String get taskChecklistNewHint => 'Add a step';
+
+  @override
+  String get taskChecklistAdd => 'Add step';
+
+  @override
+  String get taskChecklistSave => 'Save step';
+
+  @override
+  String get taskChecklistRemove => 'Remove step';
+
+  @override
+  String get taskChecklistTextRequired => 'Step text is required';
 
   @override
   String taskCompletedAt(String timestamp) {

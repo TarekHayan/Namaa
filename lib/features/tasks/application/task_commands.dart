@@ -81,12 +81,14 @@ final class TaskCommands {
     InstantProvider? localDate,
     IdProvider? nextTaskId,
     IdProvider? nextOperationId,
+    IdProvider? nextChecklistItemId,
   }) : _repository = repository,
        _session = session,
        _nowUtc = nowUtc ?? _systemUtcNow,
        _localDate = localDate ?? _systemLocalDate,
        _nextTaskId = nextTaskId ?? _newUuidV4,
-       _nextOperationId = nextOperationId ?? _newUuidV4;
+       _nextOperationId = nextOperationId ?? _newUuidV4,
+       _nextChecklistItemId = nextChecklistItemId ?? _newUuidV4;
 
   final TaskRepository _repository;
   final CloudSessionPort _session;
@@ -94,6 +96,7 @@ final class TaskCommands {
   final InstantProvider _localDate;
   final IdProvider _nextTaskId;
   final IdProvider _nextOperationId;
+  final IdProvider _nextChecklistItemId;
 
   Future<AppResult<Task>> createTask(
     CreateTaskInput input, {
@@ -185,6 +188,65 @@ final class TaskCommands {
     expectedAccountId: expectedAccountId,
   );
 
+  Future<AppResult<Task>> addChecklistItem({
+    required String taskId,
+    required String text,
+    String? expectedAccountId,
+  }) {
+    final validation = _validateChecklistText(text);
+    if (validation != null) {
+      return Future<AppResult<Task>>.value(AppResult<Task>.failure(validation));
+    }
+    return _changeExisting(
+      taskId,
+      (task, now) => task.addChecklistItem(
+        id: _nextChecklistItemId(),
+        text: text,
+        updatedAt: now,
+      ),
+      expectedAccountId: expectedAccountId,
+    );
+  }
+
+  Future<AppResult<Task>> editChecklistItem({
+    required String taskId,
+    required String itemId,
+    required String text,
+    String? expectedAccountId,
+  }) {
+    final validation = _validateChecklistText(text);
+    if (validation != null) {
+      return Future<AppResult<Task>>.value(AppResult<Task>.failure(validation));
+    }
+    return _changeExisting(taskId, (task, now) {
+      _requireChecklistItem(task, itemId);
+      return task.editChecklistItem(itemId: itemId, text: text, updatedAt: now);
+    }, expectedAccountId: expectedAccountId);
+  }
+
+  Future<AppResult<Task>> setChecklistItemCompleted({
+    required String taskId,
+    required String itemId,
+    required bool completed,
+    String? expectedAccountId,
+  }) => _changeExisting(taskId, (task, now) {
+    _requireChecklistItem(task, itemId);
+    return task.setChecklistItemCompleted(
+      itemId: itemId,
+      completed: completed,
+      updatedAt: now,
+    );
+  }, expectedAccountId: expectedAccountId);
+
+  Future<AppResult<Task>> removeChecklistItem({
+    required String taskId,
+    required String itemId,
+    String? expectedAccountId,
+  }) => _changeExisting(taskId, (task, now) {
+    _requireChecklistItem(task, itemId);
+    return task.removeChecklistItem(itemId: itemId, updatedAt: now);
+  }, expectedAccountId: expectedAccountId);
+
   Future<AppResult<void>> deleteTask(
     String taskId, {
     String? expectedAccountId,
@@ -217,27 +279,36 @@ final class TaskCommands {
     if (expectedAccountId != null && context.accountId != expectedAccountId) {
       return AppResult<Task>.failure(_signInFailure(_nowUtc()));
     }
-    final read = await _repository.readTask(
-      accountId: context.accountId,
-      taskId: taskId,
-    );
-    final readFailure = read.failureOrNull;
-    if (readFailure != null) {
-      return AppResult<Task>.failure(readFailure);
-    }
-    final task = read.valueOrNull;
-    if (task == null || task.accountId != context.accountId || task.isDeleted) {
-      return AppResult<Task>.failure(_notFoundFailure(_nowUtc()));
-    }
-    final requestedNow = _nowUtc();
-    final now = requestedNow.isAfter(task.updatedAt)
-        ? requestedNow
-        : task.updatedAt.add(const Duration(microseconds: 1));
-    try {
-      return _commit(change(task, now), kind, now);
-    } on ArgumentError catch (error) {
-      return AppResult<Task>.failure(_validationFailure(now, error));
-    }
+    // The aggregate must be read and written under the same repository lock.
+    // Otherwise simultaneous checklist edits can each overwrite the other's
+    // copy of the parent Task (and its owned checklist payload).
+    return _repository.runInTransaction(() async {
+      final read = await _repository.readTask(
+        accountId: context.accountId,
+        taskId: taskId,
+      );
+      final readFailure = read.failureOrNull;
+      if (readFailure != null) {
+        return AppResult<Task>.failure(readFailure);
+      }
+      final task = read.valueOrNull;
+      if (task == null ||
+          task.accountId != context.accountId ||
+          task.isDeleted) {
+        return AppResult<Task>.failure(_notFoundFailure(_nowUtc()));
+      }
+      final requestedNow = _nowUtc();
+      final now = requestedNow.isAfter(task.updatedAt)
+          ? requestedNow
+          : task.updatedAt.add(const Duration(microseconds: 1));
+      try {
+        return await _commit(change(task, now), kind, now);
+      } on _ChecklistItemNotFound {
+        return AppResult<Task>.failure(_checklistNotFoundFailure(now));
+      } on ArgumentError catch (error) {
+        return AppResult<Task>.failure(_validationFailure(now, error));
+      }
+    });
   }
 
   Future<AppResult<Task>> _commit(
@@ -271,6 +342,22 @@ final class TaskCommands {
         )
       : null;
 
+  AppFailure? _validateChecklistText(String text) => text.trim().isEmpty
+      ? taskCommandFailure(
+          category: AppFailureCategory.validation,
+          messageKey: 'tasks.validation.checklist_text_required',
+          occurredAt: _nowUtc(),
+        )
+      : null;
+
+  static void _requireChecklistItem(Task task, String itemId) {
+    final normalizedId = itemId.trim();
+    if (normalizedId.isEmpty ||
+        !task.checklistItems.any((item) => item.id == normalizedId)) {
+      throw const _ChecklistItemNotFound();
+    }
+  }
+
   static AppFailure _validationFailure(DateTime now, ArgumentError error) =>
       taskCommandFailure(
         category: AppFailureCategory.validation,
@@ -284,6 +371,13 @@ final class TaskCommands {
     messageKey: 'tasks.error.not_found',
     occurredAt: now,
   );
+
+  static AppFailure _checklistNotFoundFailure(DateTime now) =>
+      taskCommandFailure(
+        category: AppFailureCategory.notFound,
+        messageKey: 'tasks.error.checklist_not_found',
+        occurredAt: now,
+      );
 
   static AppFailure _signInFailure(DateTime now) => taskCommandFailure(
     messageKey: 'tasks.auth.sign_in_required',
@@ -309,6 +403,10 @@ final class TaskCommands {
         '${byte(8)}${byte(9)}-'
         '${byte(10)}${byte(11)}${byte(12)}${byte(13)}${byte(14)}${byte(15)}';
   }
+}
+
+final class _ChecklistItemNotFound implements Exception {
+  const _ChecklistItemNotFound();
 }
 
 /// Builds a non-recoverable, localized application failure without exposing

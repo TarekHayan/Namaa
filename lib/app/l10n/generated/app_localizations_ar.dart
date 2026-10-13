@@ -58,6 +58,12 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get tasksFilterCompleted => 'المكتملة';
 
   @override
+  String get tasksFilterHistory => 'السجل';
+
+  @override
+  String get tasksFilterOverdue => 'المتأخرة';
+
+  @override
   String get tasksViewList => 'قائمة';
 
   @override
@@ -128,6 +134,24 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get taskReopen => 'إعادة الفتح';
+
+  @override
+  String get taskChecklistTitle => 'قائمة الخطوات';
+
+  @override
+  String get taskChecklistNewHint => 'أضف خطوة';
+
+  @override
+  String get taskChecklistAdd => 'إضافة خطوة';
+
+  @override
+  String get taskChecklistSave => 'حفظ الخطوة';
+
+  @override
+  String get taskChecklistRemove => 'حذف الخطوة';
+
+  @override
+  String get taskChecklistTextRequired => 'نص الخطوة مطلوب';
 
   @override
   String taskCompletedAt(String timestamp) {

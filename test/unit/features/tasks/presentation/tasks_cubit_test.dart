@@ -48,6 +48,7 @@ void main() {
       ),
       awardLedger: awardLedger,
       localDate: clock.localDate,
+      nowUtc: clock.utcNow,
     );
   });
 
@@ -145,6 +146,90 @@ void main() {
 
     expect(_visibleIds(cubit), <String>{'study'});
     expect((cubit.state as TasksReady).allTasks, hasLength(2));
+  });
+
+  test('checklist actions and review filters reuse canonical Tasks', () async {
+    await cubit.load(kTasksTestAccountA);
+    repository.replace(<Task>[
+      _task(
+        id: 'overdue',
+        title: 'Overdue',
+        scheduledDate: clock.localDate().subtract(const Duration(days: 1)),
+      ),
+      _task(id: 'history', title: 'History', completedAt: clock.utcNow()),
+    ]);
+    await _nextEvent();
+
+    final added = await cubit.addChecklistItem(
+      taskId: 'overdue',
+      text: 'First step',
+    );
+    await _nextEvent();
+    final stepId = added.valueOrNull!.checklistItems.single.id;
+    await cubit.setChecklistItemCompleted(
+      taskId: 'overdue',
+      itemId: stepId,
+      completed: true,
+    );
+    await _nextEvent();
+
+    cubit.selectFilter(TaskListFilter.overdue);
+    expect(_visibleIds(cubit), <String>{'overdue'});
+    expect(
+      (cubit.state as TasksReady)
+          .visibleTasks
+          .single
+          .checklistItems
+          .single
+          .completed,
+      isTrue,
+    );
+
+    cubit.selectFilter(TaskListFilter.completed);
+    expect(_visibleIds(cubit), <String>{'history'});
+  });
+
+  testWidgets('overdue projection refreshes when a deadline passes today', (
+    tester,
+  ) async {
+    clock.setUtc(DateTime.now().toUtc());
+    final deadline = clock.utcNow().add(const Duration(seconds: 2));
+    await cubit.load(kTasksTestAccountA);
+    repository.replace(<Task>[
+      _task(
+        id: 'deadline-today',
+        title: 'Due soon',
+        scheduledDate: clock.localDate(),
+      ).copyWith(targetDeadline: deadline, targetDeadlineUtcOffsetMinutes: 0),
+    ]);
+    await tester.pump();
+    cubit.selectFilter(TaskListFilter.overdue);
+    expect(_visibleIds(cubit), isEmpty);
+
+    clock.advance(const Duration(seconds: 3));
+    await tester.pump(const Duration(seconds: 3));
+    expect(_visibleIds(cubit), <String>{'deadline-today'});
+    cubit.pause();
+
+    final laterDeadline = clock.utcNow().add(const Duration(seconds: 2));
+    repository.replace(<Task>[
+      _task(
+        id: 'while-paused',
+        title: 'Due in background',
+        scheduledDate: clock.localDate(),
+      ).copyWith(
+        targetDeadline: laterDeadline,
+        targetDeadlineUtcOffsetMinutes: 0,
+      ),
+    ]);
+    await tester.pump();
+    expect(_visibleIds(cubit), isEmpty);
+    clock.advance(const Duration(seconds: 3));
+    await tester.pump(const Duration(seconds: 3));
+    expect(_visibleIds(cubit), isEmpty);
+    cubit.resume();
+    expect(_visibleIds(cubit), <String>{'while-paused'});
+    cubit.pause();
   });
 
   test(

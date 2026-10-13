@@ -25,6 +25,10 @@ final class _AppTasksStrings implements TasksStrings {
   @override
   String get tasksFilterCompleted => _l10n.tasksFilterCompleted;
   @override
+  String get tasksFilterHistory => _l10n.tasksFilterHistory;
+  @override
+  String get tasksFilterOverdue => _l10n.tasksFilterOverdue;
+  @override
   String get tasksViewList => _l10n.tasksViewList;
   @override
   String get tasksViewMatrix => _l10n.tasksViewMatrix;
@@ -73,6 +77,18 @@ final class _AppTasksStrings implements TasksStrings {
   String get taskComplete => _l10n.taskComplete;
   @override
   String get taskReopen => _l10n.taskReopen;
+  @override
+  String get taskChecklistTitle => _l10n.taskChecklistTitle;
+  @override
+  String get taskChecklistNewHint => _l10n.taskChecklistNewHint;
+  @override
+  String get taskChecklistAdd => _l10n.taskChecklistAdd;
+  @override
+  String get taskChecklistSave => _l10n.taskChecklistSave;
+  @override
+  String get taskChecklistRemove => _l10n.taskChecklistRemove;
+  @override
+  String get taskChecklistTextRequired => _l10n.taskChecklistTextRequired;
   @override
   String taskCompletedAt(String timestamp) => _l10n.taskCompletedAt(timestamp);
   @override

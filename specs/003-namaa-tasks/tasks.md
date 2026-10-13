@@ -126,21 +126,21 @@ description: "Dependency-ordered implementation tasks for Namaa Tasks"
 
 **Test-first block — write and run T057–T061 before T062–T070.**
 
-- [ ] T057 [P] [US3] Test stable checklist item IDs/order, nonblank text, parent ownership, no independent schedule/category/XP, no parent auto-completion, and explicit parent completion with unfinished steps in test/unit/features/tasks/domain/task_checklist_test.dart.
-- [ ] T058 [P] [US3] Test checklist add/edit/check/uncheck/remove commands, only one parent Task outbox change per edit, account isolation, restart round-trip, and deletion tombstone in test/unit/features/tasks/application/task_checklist_commands_test.dart.
-- [ ] T059 [P] [US3] Test Completed/history completion dates and overdue when scheduled date or target deadline passed; exclude completed Tasks and elapsed same-day scheduledTime in test/unit/features/tasks/application/task_review_queries_test.dart.
-- [ ] T060 [P] [US3] Widget-test checklist controls, no auto parent completion/XP, incomplete-step parent completion, history/overdue filters, date text, and Arabic RTL in test/widget/features/tasks/task_review_screen_test.dart.
-- [ ] T061 [P] [US3] Add offline checklist edits→restart→reconnect and history/overdue projection agreement in integration_test/tasks_checklist_history_test.dart; verify one Task identity in list/matrix and no step XP.
-- [ ] T062 [US3] Implement pure Task-owned checklist add/edit/toggle/remove rules in lib/features/tasks/domain/task.dart and lib/features/tasks/domain/checklist_item.dart; each mutation versions the parent, with no independent checklist entity or reward.
-- [ ] T063 [US3] Add validated, account-scoped checklist commands to lib/features/tasks/application/task_commands.dart; call the existing Task repository/outbox path and never infer parent completion from step states.
-- [ ] T064 [US3] Extend lib/features/tasks/data/task_payload_codec.dart and lib/features/tasks/data/drift_task_repository.dart for ordered checklist JSON round-trip and atomic parent Task outbox writes; do not create a separate checklist table or remote operation.
-- [ ] T065 [US3] Implement pure Completed/history/overdue Task queries in lib/features/tasks/application/task_review_queries.dart; use saved completion time, local calendar date, deadline timezone context, and the approved overdue rule.
-- [ ] T066 [US3] Expose checklist and review-query state/actions from lib/features/tasks/presentation/tasks_cubit.dart; keep list, matrix, history, and overdue derived from the same repository Task identities.
-- [ ] T067 [US3] Add simple checklist item editing/checking/removal to lib/features/tasks/presentation/task_editor.dart; no independent date, category, XP, or automatic parent-complete control.
-- [ ] T068 [US3] Add Completed/history date and Overdue views to lib/features/tasks/presentation/tasks_screen.dart; preserve prototype list/matrix structure and exclude completed Tasks from overdue/matrix.
-- [ ] T069 [P] [US3] Add US3 checklist/history/overdue labels and validation to lib/app/l10n/app_en.arb; use existing localization style.
-- [ ] T070 [P] [US3] Add matching Arabic resources to lib/app/l10n/app_ar.arb and regenerate l10n through Flutter; verify RTL layout and readable mixed Arabic/English numbers.
-- [ ] T071 [US3] Run T057–T061 and all US1/US2 tests; record checklist, overdue, history, restart, and no-extra-XP evidence in specs/003-namaa-tasks/verification.md.
+- [x] T057 [P] [US3] Test stable checklist item IDs/order, nonblank text, parent ownership, no independent schedule/category/XP, no parent auto-completion, and explicit parent completion with unfinished steps in test/unit/features/tasks/domain/task_checklist_test.dart.
+- [x] T058 [P] [US3] Test checklist add/edit/check/uncheck/remove commands, only one parent Task outbox change per edit, account isolation, restart round-trip, and deletion tombstone in test/unit/features/tasks/application/task_checklist_commands_test.dart.
+- [x] T059 [P] [US3] Test Completed/history completion dates and overdue when scheduled date or target deadline passed; exclude completed Tasks and elapsed same-day scheduledTime in test/unit/features/tasks/application/task_review_queries_test.dart.
+- [x] T060 [P] [US3] Widget-test checklist controls, no auto parent completion/XP, incomplete-step parent completion, history/overdue filters, date text, and Arabic RTL in test/widget/features/tasks/task_review_screen_test.dart.
+- [x] T061 [P] [US3] Add offline checklist edits→restart→reconnect and history/overdue projection agreement in integration_test/tasks_checklist_history_test.dart; verify one Task identity in list/matrix and no step XP.
+- [x] T062 [US3] Implement pure Task-owned checklist add/edit/toggle/remove rules in lib/features/tasks/domain/task.dart and lib/features/tasks/domain/checklist_item.dart; each mutation versions the parent, with no independent checklist entity or reward.
+- [x] T063 [US3] Add validated, account-scoped checklist commands to lib/features/tasks/application/task_commands.dart; call the existing Task repository/outbox path and never infer parent completion from step states.
+- [x] T064 [US3] Extend lib/features/tasks/data/task_payload_codec.dart and lib/features/tasks/data/drift_task_repository.dart for ordered checklist JSON round-trip and atomic parent Task outbox writes; do not create a separate checklist table or remote operation.
+- [x] T065 [US3] Implement pure Completed/history/overdue Task queries in lib/features/tasks/application/task_review_queries.dart; use saved completion time, local calendar date, deadline timezone context, and the approved overdue rule.
+- [x] T066 [US3] Expose checklist and review-query state/actions from lib/features/tasks/presentation/tasks_cubit.dart; keep list, matrix, history, and overdue derived from the same repository Task identities.
+- [x] T067 [US3] Add simple checklist item editing/checking/removal to lib/features/tasks/presentation/task_editor.dart; no independent date, category, XP, or automatic parent-complete control.
+- [x] T068 [US3] Add Completed/history date and Overdue views to lib/features/tasks/presentation/tasks_screen.dart; preserve prototype list/matrix structure and exclude completed Tasks from overdue/matrix.
+- [x] T069 [P] [US3] Add US3 checklist/history/overdue labels and validation to lib/app/l10n/app_en.arb; use existing localization style.
+- [x] T070 [P] [US3] Add matching Arabic resources to lib/app/l10n/app_ar.arb and regenerate l10n through Flutter; verify RTL layout and readable mixed Arabic/English numbers.
+- [x] T071 [US3] Run T057–T061 and all US1/US2 tests; record checklist, overdue, history, restart, and no-extra-XP evidence in specs/003-namaa-tasks/verification.md.
 
 **Checkpoint**: All three Task stories are functionally testable together.
 

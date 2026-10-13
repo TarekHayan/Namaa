@@ -6,6 +6,7 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
+import 'package:namma_project/features/tasks/application/task_review_queries.dart';
 import 'package:namma_project/features/tasks/application/task_sync_service.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/tasks/domain/task_rules.dart';
@@ -21,12 +22,14 @@ final class TasksCubit extends Cubit<TasksState> {
     required TaskCompletionService completionService,
     required AwardLedgerPort awardLedger,
     required DateTime Function() localDate,
+    DateTime Function()? nowUtc,
     TaskSyncService? syncService,
   }) : _repository = repository,
        _commands = commands,
        _completionService = completionService,
        _awardLedger = awardLedger,
        _localDate = localDate,
+       _nowUtc = nowUtc ?? _systemUtcNow,
        _syncService = syncService,
        super(const TasksInitial()) {
     _syncSubscription = syncService?.snapshots.listen(_onSyncSnapshot);
@@ -37,6 +40,7 @@ final class TasksCubit extends Cubit<TasksState> {
   final TaskCompletionService _completionService;
   final AwardLedgerPort _awardLedger;
   final DateTime Function() _localDate;
+  final DateTime Function() _nowUtc;
   final TaskSyncService? _syncService;
 
   StreamSubscription<List<Task>>? _tasksSubscription;
@@ -44,6 +48,7 @@ final class TasksCubit extends Cubit<TasksState> {
   StreamSubscription<List<TaskCompletionAward>>? _awardsSubscription;
   StreamSubscription<TaskSyncSnapshot>? _syncSubscription;
   Timer? _dayChangeTimer;
+  bool _isPaused = false;
   List<TaskConflictView> _latestConflicts = const [];
   List<TaskCompletionAward> _latestAwards = const [];
   String? _accountId;
@@ -105,6 +110,54 @@ final class TasksCubit extends Cubit<TasksState> {
     ),
   );
 
+  Future<AppResult<Task>> addChecklistItem({
+    required String taskId,
+    required String text,
+  }) => _saveAndSync(
+    _commands.addChecklistItem(
+      taskId: taskId,
+      text: text,
+      expectedAccountId: _accountId,
+    ),
+  );
+
+  Future<AppResult<Task>> editChecklistItem({
+    required String taskId,
+    required String itemId,
+    required String text,
+  }) => _saveAndSync(
+    _commands.editChecklistItem(
+      taskId: taskId,
+      itemId: itemId,
+      text: text,
+      expectedAccountId: _accountId,
+    ),
+  );
+
+  Future<AppResult<Task>> setChecklistItemCompleted({
+    required String taskId,
+    required String itemId,
+    required bool completed,
+  }) => _saveAndSync(
+    _commands.setChecklistItemCompleted(
+      taskId: taskId,
+      itemId: itemId,
+      completed: completed,
+      expectedAccountId: _accountId,
+    ),
+  );
+
+  Future<AppResult<Task>> removeChecklistItem({
+    required String taskId,
+    required String itemId,
+  }) => _saveAndSync(
+    _commands.removeChecklistItem(
+      taskId: taskId,
+      itemId: itemId,
+      expectedAccountId: _accountId,
+    ),
+  );
+
   Future<AppResult<void>> deleteTask(String taskId) =>
       _saveAndSync(_commands.deleteTask(taskId, expectedAccountId: _accountId));
 
@@ -126,13 +179,12 @@ final class TasksCubit extends Cubit<TasksState> {
   }
 
   void resume() {
-    if (_accountId != null && _dayChangeTimer == null) {
-      _scheduleDayChange();
-    }
+    _isPaused = false;
     final current = state;
     if (current is TasksReady) {
       _emitProjection(current);
     }
+    if (_accountId != null) _scheduleDayChange();
     final service = _syncService;
     if (service != null) {
       unawaited(service.synchronize());
@@ -141,9 +193,31 @@ final class TasksCubit extends Cubit<TasksState> {
 
   void _scheduleDayChange() {
     _dayChangeTimer?.cancel();
+    if (_isPaused) {
+      _dayChangeTimer = null;
+      return;
+    }
     final now = DateTime.now();
     final nextDay = DateTime(now.year, now.month, now.day + 1);
-    _dayChangeTimer = Timer(nextDay.difference(now), () {
+    var delay = nextDay.difference(now);
+    final nowUtc = _nowUtc();
+    final current = state;
+    if (current is TasksReady) {
+      for (final task in current.allTasks) {
+        final deadline = task.targetDeadline?.toUtc();
+        if (task.isCompleted ||
+            task.isDeleted ||
+            deadline == null ||
+            !deadline.isAfter(nowUtc)) {
+          continue;
+        }
+        // The overdue query uses strict 'before', so reproject just after it.
+        final untilOverdue =
+            deadline.difference(nowUtc) + const Duration(milliseconds: 1);
+        if (untilOverdue < delay) delay = untilOverdue;
+      }
+    }
+    _dayChangeTimer = Timer(delay, () {
       final current = state;
       if (!isClosed && current is TasksReady) {
         _emitProjection(current);
@@ -153,6 +227,7 @@ final class TasksCubit extends Cubit<TasksState> {
   }
 
   void pause() {
+    _isPaused = true;
     _dayChangeTimer?.cancel();
     _dayChangeTimer = null;
   }
@@ -255,6 +330,7 @@ final class TasksCubit extends Cubit<TasksState> {
             taskCompletionAwards: _latestAwards,
           );
     _emitProjection(ready);
+    _scheduleDayChange();
   }
 
   void _emitProjection(TasksReady base) {
@@ -262,7 +338,14 @@ final class TasksCubit extends Cubit<TasksState> {
       TaskListFilter.today => TaskRules.today(base.allTasks, _localDate()),
       TaskListFilter.urgent => TaskRules.urgent(base.allTasks),
       TaskListFilter.all => TaskRules.all(base.allTasks),
-      TaskListFilter.completed => TaskRules.completed(base.allTasks),
+      TaskListFilter.completed => TaskReviewQueries.completedHistory(
+        base.allTasks,
+      ),
+      TaskListFilter.overdue => TaskReviewQueries.overdue(
+        base.allTasks,
+        localDate: _localDate(),
+        nowUtc: _nowUtc(),
+      ),
     };
     final category = base.selectedCategory;
     if (category != null) {
@@ -303,6 +386,8 @@ final class TasksCubit extends Cubit<TasksState> {
         TaskInitialSyncStatus.failed => TasksSyncStatus.recoverableFailure,
         _ => TasksSyncStatus.idle,
       };
+
+  static DateTime _systemUtcNow() => DateTime.now().toUtc();
 
   @override
   Future<void> close() async {

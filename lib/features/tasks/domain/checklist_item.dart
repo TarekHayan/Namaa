@@ -15,6 +15,41 @@ final class ChecklistItem {
   final bool completed;
   final int order;
 
+  /// Creates a new Task-owned step with normalized user text.
+  factory ChecklistItem.create({
+    required String id,
+    required String text,
+    required int order,
+  }) {
+    final normalizedId = id.trim();
+    final normalizedText = text.trim();
+    if (normalizedId.isEmpty) {
+      throw ArgumentError.value(id, 'id', 'must not be blank');
+    }
+    if (normalizedText.isEmpty) {
+      throw ArgumentError.value(text, 'text', 'must not be blank');
+    }
+    if (order < 0) {
+      throw ArgumentError.value(order, 'order', 'must not be negative');
+    }
+    return ChecklistItem(
+      id: normalizedId,
+      text: normalizedText,
+      completed: false,
+      order: order,
+    );
+  }
+
+  ChecklistItem editText(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      throw ArgumentError.value(value, 'text', 'must not be blank');
+    }
+    return copyWith(text: normalized);
+  }
+
+  ChecklistItem setCompleted(bool value) => copyWith(completed: value);
+
   ChecklistItem copyWith({
     String? id,
     String? text,

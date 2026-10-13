@@ -16,6 +16,8 @@
   "tasksFilterUrgent": "عاجل",
   "tasksFilterAll": "الكل",
   "tasksFilterCompleted": "المكتملة",
+  "tasksFilterHistory": "السجل",
+  "tasksFilterOverdue": "المتأخرة",
   "tasksViewList": "قائمة",
   "tasksViewMatrix": "المصفوفة",
   "tasksCategoryFilter": "التصنيف",
@@ -40,6 +42,12 @@
   "taskDelete": "حذف",
   "taskComplete": "إكمال",
   "taskReopen": "إعادة الفتح",
+  "taskChecklistTitle": "قائمة الخطوات",
+  "taskChecklistNewHint": "أضف خطوة",
+  "taskChecklistAdd": "إضافة خطوة",
+  "taskChecklistSave": "حفظ الخطوة",
+  "taskChecklistRemove": "حذف الخطوة",
+  "taskChecklistTextRequired": "نص الخطوة مطلوب",
   "taskCompletedAt": "اكتملت في {timestamp}",
   "@taskCompletedAt": {
     "placeholders": {

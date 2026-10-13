@@ -197,6 +197,18 @@ abstract class FoundationLocalizations {
   /// **'Completed'**
   String get tasksFilterCompleted;
 
+  /// No description provided for @tasksFilterHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get tasksFilterHistory;
+
+  /// No description provided for @tasksFilterOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get tasksFilterOverdue;
+
   /// No description provided for @tasksViewList.
   ///
   /// In en, this message translates to:
@@ -340,6 +352,42 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Reopen'**
   String get taskReopen;
+
+  /// No description provided for @taskChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get taskChecklistTitle;
+
+  /// No description provided for @taskChecklistNewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a step'**
+  String get taskChecklistNewHint;
+
+  /// No description provided for @taskChecklistAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add step'**
+  String get taskChecklistAdd;
+
+  /// No description provided for @taskChecklistSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save step'**
+  String get taskChecklistSave;
+
+  /// No description provided for @taskChecklistRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove step'**
+  String get taskChecklistRemove;
+
+  /// No description provided for @taskChecklistTextRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Step text is required'**
+  String get taskChecklistTextRequired;
 
   /// No description provided for @taskCompletedAt.
   ///

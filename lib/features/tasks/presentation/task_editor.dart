@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
+import 'package:namma_project/features/tasks/domain/checklist_item.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
+import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_strings.dart';
 
 const Key kTaskTitleFieldKey = Key('task_title_field');
@@ -15,6 +17,8 @@ const Key kTaskScheduledTimeButtonKey = Key('task_scheduled_time_button');
 const Key kTaskDeadlineButtonKey = Key('task_deadline_button');
 const Key kTaskSaveButtonKey = Key('task_save_button');
 const Key kTaskTitleValidationKey = Key('task_title_validation');
+const Key kTaskChecklistNewFieldKey = Key('task_checklist_new_field');
+const Key kTaskChecklistAddButtonKey = Key('task_checklist_add_button');
 
 class TaskEditor extends StatefulWidget {
   const TaskEditor({
@@ -70,6 +74,14 @@ class _TaskEditorState extends State<TaskEditor> {
   late final TextEditingController _descriptionController;
   late final TextEditingController _durationController;
 
+  Task? _currentTask;
+  List<ChecklistItem> _checklistItems = const [];
+  late final TextEditingController _newStepController;
+  String? _newStepError;
+  final Map<String, TextEditingController> _stepControllers = {};
+  final Map<String, String?> _stepErrors = {};
+  final Set<String> _dirtyStepIds = {};
+
   DateTime? _scheduledDate;
   DateTime? _scheduledTime;
   DateTime? _targetDeadline;
@@ -81,6 +93,7 @@ class _TaskEditorState extends State<TaskEditor> {
   String? _submissionError;
   bool _isSaving = false;
   StreamSubscription<CloudSessionSnapshot>? _sessionSubscription;
+  StreamSubscription<TasksState>? _tasksSubscription;
 
   @override
   void initState() {
@@ -94,6 +107,30 @@ class _TaskEditorState extends State<TaskEditor> {
       }
     });
     final task = widget.initialTask;
+    _currentTask = task;
+    if (task != null) {
+      _tasksSubscription = widget.cubit.stream.listen((state) {
+        if (!mounted || state is! TasksReady) return;
+        for (final latest in state.allTasks) {
+          if (latest.id == task.id &&
+              latest.accountId == widget.accountId &&
+              !latest.isDeleted &&
+              !latest.updatedAt.isBefore(_currentTask!.updatedAt) &&
+              !identical(latest, _currentTask)) {
+            setState(() => _updateChecklistFromTask(latest));
+            break;
+          }
+        }
+      });
+    }
+    _newStepController = TextEditingController();
+    if (task != null) {
+      _checklistItems = List<ChecklistItem>.from(task.checklistItems)
+        ..sort((a, b) => a.order.compareTo(b.order));
+      for (final item in _checklistItems) {
+        _stepControllers[item.id] = TextEditingController(text: item.text);
+      }
+    }
     _titleController = TextEditingController(text: task?.title ?? '');
     _descriptionController = TextEditingController(
       text: task?.description ?? '',
@@ -113,9 +150,14 @@ class _TaskEditorState extends State<TaskEditor> {
   @override
   void dispose() {
     unawaited(_sessionSubscription?.cancel());
+    unawaited(_tasksSubscription?.cancel());
     _titleController.dispose();
     _descriptionController.dispose();
     _durationController.dispose();
+    _newStepController.dispose();
+    for (final controller in _stepControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -238,7 +280,7 @@ class _TaskEditorState extends State<TaskEditor> {
       _isSaving = true;
     });
 
-    final task = widget.initialTask;
+    final task = _currentTask ?? widget.initialTask;
     final deadlineOffset = _targetDeadline == null
         ? null
         : _deadlineChanged
@@ -302,6 +344,134 @@ class _TaskEditorState extends State<TaskEditor> {
           _submissionError = l10n.tasksFailure;
         });
       }
+    }
+  }
+
+  void _updateChecklistFromTask(Task updatedTask) {
+    if (_currentTask != null &&
+        updatedTask.updatedAt.isBefore(_currentTask!.updatedAt)) {
+      return;
+    }
+    _currentTask = updatedTask;
+    _checklistItems = List<ChecklistItem>.from(updatedTask.checklistItems)
+      ..sort((a, b) => a.order.compareTo(b.order));
+    final currentIds = _checklistItems.map((item) => item.id).toSet();
+    _stepControllers.removeWhere((id, controller) {
+      if (!currentIds.contains(id)) {
+        controller.dispose();
+        _dirtyStepIds.remove(id);
+        return true;
+      }
+      return false;
+    });
+    _stepErrors.removeWhere((id, _) => !currentIds.contains(id));
+    for (final item in _checklistItems) {
+      if (!_stepControllers.containsKey(item.id)) {
+        _stepControllers[item.id] = TextEditingController(text: item.text);
+      } else {
+        if (_stepControllers[item.id]!.text != item.text &&
+            !_dirtyStepIds.contains(item.id)) {
+          _stepControllers[item.id]!.text = item.text;
+        }
+      }
+    }
+  }
+
+  Future<void> _addChecklistItem() async {
+    final text = _newStepController.text.trim();
+    final l10n = widget.stringsResolver(context);
+    if (text.isEmpty) {
+      setState(() {
+        _newStepError = l10n.taskChecklistTextRequired;
+      });
+      return;
+    }
+    final task = _currentTask ?? widget.initialTask!;
+    final result = await widget.cubit.addChecklistItem(
+      taskId: task.id,
+      text: text,
+    );
+    if (!mounted) return;
+    if (result.failureOrNull == null && result.valueOrNull != null) {
+      _newStepController.clear();
+      setState(() {
+        _newStepError = null;
+        _updateChecklistFromTask(result.valueOrNull!);
+      });
+    } else {
+      setState(() {
+        _submissionError = l10n.tasksFailure;
+      });
+    }
+  }
+
+  Future<void> _toggleChecklistItem(ChecklistItem item) async {
+    final task = _currentTask ?? widget.initialTask!;
+    final result = await widget.cubit.setChecklistItemCompleted(
+      taskId: task.id,
+      itemId: item.id,
+      completed: !item.completed,
+    );
+    if (!mounted) return;
+    if (result.failureOrNull == null && result.valueOrNull != null) {
+      setState(() {
+        _updateChecklistFromTask(result.valueOrNull!);
+      });
+    } else {
+      final l10n = widget.stringsResolver(context);
+      setState(() {
+        _submissionError = l10n.tasksFailure;
+      });
+    }
+  }
+
+  Future<void> _saveChecklistItem(ChecklistItem item) async {
+    final text = _stepControllers[item.id]?.text.trim() ?? '';
+    final l10n = widget.stringsResolver(context);
+    if (text.isEmpty) {
+      setState(() {
+        _stepErrors[item.id] = l10n.taskChecklistTextRequired;
+      });
+      return;
+    }
+    final task = _currentTask ?? widget.initialTask!;
+    final result = await widget.cubit.editChecklistItem(
+      taskId: task.id,
+      itemId: item.id,
+      text: text,
+    );
+    if (!mounted) return;
+    if (result.failureOrNull == null && result.valueOrNull != null) {
+      setState(() {
+        _stepErrors.remove(item.id);
+        if (_stepControllers[item.id]?.text.trim() == text) {
+          _dirtyStepIds.remove(item.id);
+        }
+        _updateChecklistFromTask(result.valueOrNull!);
+      });
+    } else {
+      setState(() {
+        _submissionError = l10n.tasksFailure;
+      });
+    }
+  }
+
+  Future<void> _removeChecklistItem(ChecklistItem item) async {
+    final task = _currentTask ?? widget.initialTask!;
+    final result = await widget.cubit.removeChecklistItem(
+      taskId: task.id,
+      itemId: item.id,
+    );
+    if (!mounted) return;
+    if (result.failureOrNull == null && result.valueOrNull != null) {
+      setState(() {
+        _updateChecklistFromTask(result.valueOrNull!);
+      });
+    } else {
+      final l10n = widget.stringsResolver(context);
+      setState(() {
+        _submissionError = l10n.tasksFailure;
+      });
     }
   }
 
@@ -382,6 +552,10 @@ class _TaskEditorState extends State<TaskEditor> {
                   ),
                   maxLines: 2,
                 ),
+                if (isEditing) ...[
+                  const SizedBox(height: 16),
+                  _buildChecklistSection(context, theme, l10n),
+                ],
                 const SizedBox(height: 16),
                 TextField(
                   key: kTaskDurationFieldKey,
@@ -513,6 +687,103 @@ class _TaskEditorState extends State<TaskEditor> {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChecklistSection(
+    BuildContext context,
+    ThemeData theme,
+    TasksStrings l10n,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.taskChecklistTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        for (final item in _checklistItems) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              key: ValueKey<String>('task-checklist-row-${item.id}'),
+              children: [
+                Semantics(
+                  label: item.text,
+                  child: Checkbox(
+                    key: ValueKey<String>('task-checklist-toggle-${item.id}'),
+                    value: item.completed,
+                    onChanged: (_) => _toggleChecklistItem(item),
+                  ),
+                ),
+                Expanded(
+                  child: TextField(
+                    key: ValueKey<String>('task-checklist-text-${item.id}'),
+                    controller: _stepControllers.putIfAbsent(
+                      item.id,
+                      () => TextEditingController(text: item.text),
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      errorText: _stepErrors[item.id],
+                    ),
+                    onChanged: (_) {
+                      _dirtyStepIds.add(item.id);
+                      if (_stepErrors[item.id] != null) {
+                        setState(() => _stepErrors.remove(item.id));
+                      }
+                    },
+                  ),
+                ),
+                IconButton(
+                  key: ValueKey<String>('task-checklist-save-${item.id}'),
+                  icon: const Icon(Icons.check, size: 20),
+                  tooltip: l10n.taskChecklistSave,
+                  onPressed: () => _saveChecklistItem(item),
+                ),
+                IconButton(
+                  key: ValueKey<String>('task-checklist-remove-${item.id}'),
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  tooltip: l10n.taskChecklistRemove,
+                  onPressed: () => _removeChecklistItem(item),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextField(
+                key: kTaskChecklistNewFieldKey,
+                controller: _newStepController,
+                decoration: InputDecoration(
+                  hintText: l10n.taskChecklistNewHint,
+                  errorText: _newStepError,
+                  isDense: true,
+                ),
+                onChanged: (_) {
+                  if (_newStepError != null) {
+                    setState(() => _newStepError = null);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              key: kTaskChecklistAddButtonKey,
+              icon: const Icon(Icons.add),
+              tooltip: l10n.taskChecklistAdd,
+              onPressed: _addChecklistItem,
+            ),
+          ],
         ),
       ],
     );

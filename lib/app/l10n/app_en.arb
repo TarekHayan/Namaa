@@ -16,6 +16,8 @@
   "tasksFilterUrgent": "Urgent",
   "tasksFilterAll": "All",
   "tasksFilterCompleted": "Completed",
+  "tasksFilterHistory": "History",
+  "tasksFilterOverdue": "Overdue",
   "tasksViewList": "List",
   "tasksViewMatrix": "Matrix",
   "tasksCategoryFilter": "Category",
@@ -40,6 +42,12 @@
   "taskDelete": "Delete",
   "taskComplete": "Complete",
   "taskReopen": "Reopen",
+  "taskChecklistTitle": "Checklist",
+  "taskChecklistNewHint": "Add a step",
+  "taskChecklistAdd": "Add step",
+  "taskChecklistSave": "Save step",
+  "taskChecklistRemove": "Remove step",
+  "taskChecklistTextRequired": "Step text is required",
   "taskCompletedAt": "Completed {timestamp}",
   "@taskCompletedAt": {
     "placeholders": {

@@ -11,6 +11,8 @@ abstract interface class TasksStrings {
   String get tasksFilterUrgent;
   String get tasksFilterAll;
   String get tasksFilterCompleted;
+  String get tasksFilterHistory;
+  String get tasksFilterOverdue;
   String get tasksViewList;
   String get tasksViewMatrix;
   String get tasksCategoryFilter;
@@ -35,6 +37,12 @@ abstract interface class TasksStrings {
   String get taskDelete;
   String get taskComplete;
   String get taskReopen;
+  String get taskChecklistTitle;
+  String get taskChecklistNewHint;
+  String get taskChecklistAdd;
+  String get taskChecklistSave;
+  String get taskChecklistRemove;
+  String get taskChecklistTextRequired;
   String taskCompletedAt(String timestamp);
   String get taskSave;
   String get taskCancel;
