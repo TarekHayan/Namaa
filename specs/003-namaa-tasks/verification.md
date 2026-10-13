@@ -411,3 +411,9 @@ No separate basic user-facing sign-in path or Auth feature commit exists in this
 ### T075 five-target evidence — OPEN
 
 Windows Task persistence/account-sync integration passed locally. Fresh Android, iOS, macOS, and Linux Task results are not yet available. Widget tests cover Arabic RTL and English behavior at mobile and desktop sizes; native language/platform proof remains to be collected. SC-005 and user release remain blocked until all five targets pass.
+
+### Native Arabic/English route evidence added after the first Phase 6 CI push
+
+- `integration_test/tasks_localized_route_test.dart` opens the registered `/tasks` route against encrypted local data on a native target, checks English LTR and Arabic RTL, verifies the expected mobile/desktop layout and localized title, and retains the same Task identity in list and matrix.
+- `flutter test --no-pub -d windows integration_test/tasks_localized_route_test.dart --reporter expanded` — **PASS, 1 native Windows test**. The earlier table's three Task suites now have a fourth native localization suite; Windows local Task integration totals 6 tests.
+- The workflow now schedules this fourth Task suite on Android, iOS, Windows, macOS, and Linux. Its fresh CI results, especially native mobile Arabic/English evidence, remain pending.

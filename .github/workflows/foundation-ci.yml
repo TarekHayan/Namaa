@@ -231,6 +231,7 @@ jobs:
               integration_test/tasks_offline_sync_test.dart
               integration_test/tasks_completion_sync_test.dart
               integration_test/tasks_checklist_history_test.dart
+              integration_test/tasks_localized_route_test.dart
             )
             for test_file in "${tests[@]}"; do
               flutter test --no-pub \
@@ -295,7 +296,8 @@ jobs:
             'integration_test/foundation_sync_test.dart',
             'integration_test/tasks_offline_sync_test.dart',
             'integration_test/tasks_completion_sync_test.dart',
-            'integration_test/tasks_checklist_history_test.dart'
+            'integration_test/tasks_checklist_history_test.dart',
+            'integration_test/tasks_localized_route_test.dart'
           )
           foreach ($test in $tests) {
             flutter test --no-pub -d windows $test --reporter expanded
@@ -356,6 +358,7 @@ jobs:
             integration_test/tasks_offline_sync_test.dart
             integration_test/tasks_completion_sync_test.dart
             integration_test/tasks_checklist_history_test.dart
+            integration_test/tasks_localized_route_test.dart
           )
           for test_file in "${tests[@]}"; do
             flutter test --no-pub -d macos "$test_file" --reporter expanded
@@ -396,6 +399,8 @@ jobs:
             test_file: integration_test/tasks_completion_sync_test.dart
           - suite: tasks-checklist-history
             test_file: integration_test/tasks_checklist_history_test.dart
+          - suite: tasks-localized-route
+            test_file: integration_test/tasks_localized_route_test.dart
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
