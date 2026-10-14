@@ -455,19 +455,12 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL"
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD"
           )
-          if [[ "$TEST_FILE" == integration_test/foundation_sync_test.dart || \
-                "$TEST_FILE" == integration_test/foundation_staging_supabase_test.dart ]]; then
-            # Flutter's iOS simulator log reader can miss the VM service URI
-            # after build. Publishing the port avoids that startup race.
-            flutter drive --no-pub --publish-port "${staging_defines[@]}" \
-              -d "$IOS_DEVICE_ID" \
-              --driver=test_driver/integration_test.dart \
-              --target="$TEST_FILE"
-          else
-            flutter test --no-pub "${staging_defines[@]}" \
-              -d "$IOS_DEVICE_ID" "$TEST_FILE" \
-              --reporter expanded
-          fi
+          # The simulator log reader can miss the VM service URI after build
+          # for any integration suite, so use published-port discovery for all.
+          flutter drive --no-pub --publish-port "${staging_defines[@]}" \
+            -d "$IOS_DEVICE_ID" \
+            --driver=test_driver/integration_test.dart \
+            --target="$TEST_FILE"
 
   foundation-gate:
     name: Foundation and Task five-target gate
