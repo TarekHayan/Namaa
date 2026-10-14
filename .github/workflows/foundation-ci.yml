@@ -380,7 +380,7 @@ jobs:
   ios:
     name: iOS simulator (${{ matrix.suite }})
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -434,7 +434,7 @@ jobs:
           echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
 
       - name: Run iOS Foundation or Task integration entry point
-        timeout-minutes: 15
+        timeout-minutes: 40
         shell: bash
         env:
           IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
@@ -455,9 +455,10 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL"
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD"
           )
-          # The simulator log reader can miss the VM service URI after build
-          # for any integration suite, so use published-port discovery for all.
-          flutter drive --no-pub --publish-port "${staging_defines[@]}" \
+          # Retry only a pre-test VM-service startup stall. Test failures do
+          # not retry, and a second startup stall still fails this gate.
+          python3 .github/scripts/run-ios-integration.py "$IOS_DEVICE_ID" -- \
+            flutter drive --no-pub --publish-port "${staging_defines[@]}" \
             -d "$IOS_DEVICE_ID" \
             --driver=test_driver/integration_test.dart \
             --target="$TEST_FILE"
