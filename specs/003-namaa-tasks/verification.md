@@ -426,3 +426,8 @@ Windows Task persistence/account-sync integration passed locally. Fresh Android,
 - In attempt 2, iOS Task offline-sync and localized-route passed. The checklist/history job timed out again after a successful Xcode build. The five-target gate remains failed; a successful earlier attempt is not substituted for a failing current one.
 - The iOS workflow now limits simulator jobs to three in parallel and uses Flutter's supported `--no-dds` option, while retaining the 15-minute test-step timeout. A fresh run is required to validate this CI change and the iOS checklist/history result.
 - T075 and SC-005 remain **OPEN** until the current code has green Task persistence/account-sync evidence on all five targets and mobile/desktop Arabic/English evidence. T073 remains **OPEN** because Quickstart E still requires the separate basic sign-in path and a verified complete initial authenticated sync gate.
+
+### iOS runner correction — 2026-10-14
+
+- Run [38534794245](https://github.com/TarekHayan/Namaa/actions/runs/38534794245) showed that `--no-dds` is incompatible with the iOS Foundation platform integration runner: `VmServiceProxyGoldenFileComparator` failed at `streamListen` with an invalid stream ID. A local Windows checklist test passed with the flag, but that did not establish iOS compatibility.
+- The iOS command was restored to normal DDS operation. The `max-parallel: 3` simulator limit remains; a new full run must validate it before T075 can be marked complete. T073 and the Auth/initial-sync release gate remain open.
