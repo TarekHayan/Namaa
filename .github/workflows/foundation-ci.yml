@@ -17,6 +17,7 @@ on:
       - 'specs/003-namaa-tasks/**'
       - 'supabase/**'
       - 'test/**'
+      - 'test_driver/**'
       - 'windows/**'
   push:
     branches:
@@ -37,6 +38,7 @@ on:
       - 'specs/003-namaa-tasks/**'
       - 'supabase/**'
       - 'test/**'
+      - 'test_driver/**'
       - 'windows/**'
 
 permissions:
