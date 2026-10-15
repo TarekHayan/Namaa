@@ -1,0 +1,14 @@
+.git/
+.dart_tool/
+build/
+coverage/
+node_modules/
+.idea/
+.vscode/
+*.log*
+.env*
+.secrets/
+supabase/.temp/
+supabase/.branches/
+Dockerfile*
+.dockerignore

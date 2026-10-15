@@ -1,0 +1,401 @@
+import 'dart:async';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:namma_project/core/domain/failures/app_failure.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/features/tasks/application/task_commands.dart';
+import 'package:namma_project/features/tasks/application/task_completion_service.dart';
+import 'package:namma_project/features/tasks/application/task_repository.dart';
+import 'package:namma_project/features/tasks/application/task_review_queries.dart';
+import 'package:namma_project/features/tasks/application/task_sync_service.dart';
+import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/tasks/domain/task_rules.dart';
+import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
+
+/// Presentation controller over the single repository-owned Task stream.
+final class TasksCubit extends Cubit<TasksState> {
+  TasksCubit({
+    required TaskRepository repository,
+    required TaskCommands commands,
+    required TaskCompletionService completionService,
+    required AwardLedgerPort awardLedger,
+    required DateTime Function() localDate,
+    DateTime Function()? nowUtc,
+    TaskSyncService? syncService,
+  }) : _repository = repository,
+       _commands = commands,
+       _completionService = completionService,
+       _awardLedger = awardLedger,
+       _localDate = localDate,
+       _nowUtc = nowUtc ?? _systemUtcNow,
+       _syncService = syncService,
+       super(const TasksInitial()) {
+    _syncSubscription = syncService?.snapshots.listen(_onSyncSnapshot);
+  }
+
+  final TaskRepository _repository;
+  final TaskCommands _commands;
+  final TaskCompletionService _completionService;
+  final AwardLedgerPort _awardLedger;
+  final DateTime Function() _localDate;
+  final DateTime Function() _nowUtc;
+  final TaskSyncService? _syncService;
+
+  StreamSubscription<List<Task>>? _tasksSubscription;
+  StreamSubscription<List<TaskConflictRecord>>? _conflictsSubscription;
+  StreamSubscription<List<TaskCompletionAward>>? _awardsSubscription;
+  StreamSubscription<TaskSyncSnapshot>? _syncSubscription;
+  Timer? _dayChangeTimer;
+  bool _isPaused = false;
+  List<TaskConflictView> _latestConflicts = const [];
+  List<TaskCompletionAward> _latestAwards = const [];
+  String? _accountId;
+
+  Future<void> load(String accountId) async {
+    if (_accountId == accountId &&
+        _tasksSubscription != null &&
+        state is! TasksFailure) {
+      if (_dayChangeTimer == null) _scheduleDayChange();
+      return;
+    }
+    _accountId = accountId;
+    await _tasksSubscription?.cancel();
+    await _conflictsSubscription?.cancel();
+    await _awardsSubscription?.cancel();
+    _dayChangeTimer?.cancel();
+    _latestConflicts = const [];
+    _latestAwards = const [];
+    emit(const TasksLoading());
+    _conflictsSubscription = _repository
+        .watchConflicts(accountId)
+        .listen(
+          _onConflicts,
+          onError: (Object error, StackTrace stackTrace) {
+            final current = state;
+            if (current is TasksReady) {
+              emit(
+                current.copyWith(
+                  syncStatus: TasksSyncStatus.recoverableFailure,
+                ),
+              );
+            }
+          },
+        );
+    _awardsSubscription = _awardLedger
+        .watchAwards(accountId)
+        .listen(_onAwards, onError: _onObservedDataError);
+    _tasksSubscription = _repository
+        .watchTasks(accountId)
+        .listen(_onTasks, onError: _onObservedDataError);
+    _scheduleDayChange();
+    await _syncService?.synchronizeOnTasksEntry();
+  }
+
+  Future<AppResult<Task>> createTask(CreateTaskInput input) =>
+      _saveAndSync(_commands.createTask(input, expectedAccountId: _accountId));
+
+  Future<AppResult<Task>> editTask(EditTaskInput input) =>
+      _saveAndSync(_commands.editTask(input, expectedAccountId: _accountId));
+
+  Future<AppResult<Task>> moveTask({
+    required String taskId,
+    required EisenhowerQuadrant quadrant,
+  }) => _saveAndSync(
+    _commands.moveTask(
+      taskId: taskId,
+      quadrant: quadrant,
+      expectedAccountId: _accountId,
+    ),
+  );
+
+  Future<AppResult<Task>> addChecklistItem({
+    required String taskId,
+    required String text,
+  }) => _saveAndSync(
+    _commands.addChecklistItem(
+      taskId: taskId,
+      text: text,
+      expectedAccountId: _accountId,
+    ),
+  );
+
+  Future<AppResult<Task>> editChecklistItem({
+    required String taskId,
+    required String itemId,
+    required String text,
+  }) => _saveAndSync(
+    _commands.editChecklistItem(
+      taskId: taskId,
+      itemId: itemId,
+      text: text,
+      expectedAccountId: _accountId,
+    ),
+  );
+
+  Future<AppResult<Task>> setChecklistItemCompleted({
+    required String taskId,
+    required String itemId,
+    required bool completed,
+  }) => _saveAndSync(
+    _commands.setChecklistItemCompleted(
+      taskId: taskId,
+      itemId: itemId,
+      completed: completed,
+      expectedAccountId: _accountId,
+    ),
+  );
+
+  Future<AppResult<Task>> removeChecklistItem({
+    required String taskId,
+    required String itemId,
+  }) => _saveAndSync(
+    _commands.removeChecklistItem(
+      taskId: taskId,
+      itemId: itemId,
+      expectedAccountId: _accountId,
+    ),
+  );
+
+  Future<AppResult<void>> deleteTask(String taskId) =>
+      _saveAndSync(_commands.deleteTask(taskId, expectedAccountId: _accountId));
+
+  Future<AppResult<Task>> completeTask(String taskId) => _saveAndSync(
+    _completionService.completeTask(taskId, expectedAccountId: _accountId),
+  );
+
+  Future<AppResult<Task>> reopenTask(String taskId) => _saveAndSync(
+    _completionService.reopenTask(taskId, expectedAccountId: _accountId),
+  );
+
+  Future<AppResult<T>> _saveAndSync<T>(Future<AppResult<T>> write) async {
+    final result = await write;
+    final service = _syncService;
+    if (result.failureOrNull == null && service != null) {
+      unawaited(service.synchronize());
+    }
+    return result;
+  }
+
+  void resume() {
+    _isPaused = false;
+    final current = state;
+    if (current is TasksReady) {
+      _emitProjection(current);
+    }
+    if (_accountId != null) _scheduleDayChange();
+    final service = _syncService;
+    if (service != null) {
+      unawaited(service.synchronize());
+    }
+  }
+
+  void _scheduleDayChange() {
+    _dayChangeTimer?.cancel();
+    if (_isPaused) {
+      _dayChangeTimer = null;
+      return;
+    }
+    final now = DateTime.now();
+    final nextDay = DateTime(now.year, now.month, now.day + 1);
+    var delay = nextDay.difference(now);
+    final nowUtc = _nowUtc();
+    final current = state;
+    if (current is TasksReady) {
+      for (final task in current.allTasks) {
+        final deadline = task.targetDeadline?.toUtc();
+        if (task.isCompleted ||
+            task.isDeleted ||
+            deadline == null ||
+            !deadline.isAfter(nowUtc)) {
+          continue;
+        }
+        // The overdue query uses strict 'before', so reproject just after it.
+        final untilOverdue =
+            deadline.difference(nowUtc) + const Duration(milliseconds: 1);
+        if (untilOverdue < delay) delay = untilOverdue;
+      }
+    }
+    _dayChangeTimer = Timer(delay, () {
+      final current = state;
+      if (!isClosed && current is TasksReady) {
+        _emitProjection(current);
+      }
+      if (!isClosed) _scheduleDayChange();
+    });
+  }
+
+  void pause() {
+    _isPaused = true;
+    _dayChangeTimer?.cancel();
+    _dayChangeTimer = null;
+  }
+
+  void _onConflicts(List<TaskConflictRecord> conflicts) {
+    _latestConflicts = [
+      for (final conflict in conflicts)
+        TaskConflictView(
+          conflictId: conflict.id,
+          taskId: conflict.taskId,
+          activeTitle: conflict.activeTitle,
+          retainedTitle: conflict.retainedTitle,
+        ),
+    ];
+    final current = state;
+    if (current is TasksReady) {
+      emit(current.copyWith(conflicts: _latestConflicts));
+    }
+  }
+
+  void _onAwards(List<TaskCompletionAward> awards) {
+    _latestAwards = List<TaskCompletionAward>.unmodifiable(awards);
+    final current = state;
+    if (current is TasksReady) {
+      emit(current.copyWith(taskCompletionAwards: _latestAwards));
+    }
+  }
+
+  void _onObservedDataError(Object error, StackTrace stackTrace) {
+    final current = state;
+    if (current is TasksReady) {
+      emit(current.copyWith(syncStatus: TasksSyncStatus.recoverableFailure));
+      return;
+    }
+    emit(
+      TasksFailure(
+        error is AppFailure
+            ? error
+            : AppFailure.recoverable(
+                category: AppFailureCategory.persistence,
+                messageKey: 'foundation.database.unreadable',
+                occurredAt: DateTime.now().toUtc(),
+              ),
+      ),
+    );
+  }
+
+  void selectFilter(TaskListFilter filter) {
+    final current = state;
+    if (current is! TasksReady) {
+      return;
+    }
+    _emitProjection(current.copyWith(filter: filter));
+  }
+
+  void selectCategory(TaskCategory? category) {
+    final current = state;
+    if (current is! TasksReady) {
+      return;
+    }
+    _emitProjection(current.copyWith(selectedCategory: category));
+  }
+
+  void showList() {
+    final current = state;
+    if (current is TasksReady) {
+      emit(current.copyWith(viewMode: TasksViewMode.list));
+    }
+  }
+
+  void showMatrix() {
+    final current = state;
+    if (current is TasksReady) {
+      emit(current.copyWith(viewMode: TasksViewMode.matrix));
+    }
+  }
+
+  void reportSynchronization({
+    required TasksSyncStatus status,
+    List<TaskConflictView> conflicts = const <TaskConflictView>[],
+  }) {
+    final current = state;
+    if (current is TasksReady) {
+      emit(current.copyWith(syncStatus: status, conflicts: conflicts));
+    }
+  }
+
+  void _onTasks(List<Task> tasks) {
+    final current = state;
+    final ready = current is TasksReady
+        ? current.copyWith(allTasks: tasks)
+        : TasksReady(
+            allTasks: tasks,
+            visibleTasks: const <Task>[],
+            matrix: const <EisenhowerQuadrant, List<Task>>{},
+            filter: TaskListFilter.today,
+            viewMode: TasksViewMode.list,
+            syncStatus: _syncStatus(_syncService?.snapshot),
+            conflicts: _latestConflicts,
+            taskCompletionAwards: _latestAwards,
+          );
+    _emitProjection(ready);
+    _scheduleDayChange();
+  }
+
+  void _emitProjection(TasksReady base) {
+    Iterable<Task> visible = switch (base.filter) {
+      TaskListFilter.today => TaskRules.today(base.allTasks, _localDate()),
+      TaskListFilter.urgent => TaskRules.urgent(base.allTasks),
+      TaskListFilter.all => TaskRules.all(base.allTasks),
+      TaskListFilter.completed => TaskReviewQueries.completedHistory(
+        base.allTasks,
+      ),
+      TaskListFilter.overdue => TaskReviewQueries.overdue(
+        base.allTasks,
+        localDate: _localDate(),
+        nowUtc: _nowUtc(),
+      ),
+    };
+    final category = base.selectedCategory;
+    if (category != null) {
+      visible = visible.where((task) => task.category == category);
+    }
+    emit(
+      base.copyWith(
+        visibleTasks: List<Task>.unmodifiable(visible),
+        matrix: TaskRules.matrix(
+          category == null
+              ? base.allTasks
+              : base.allTasks.where((task) => task.category == category),
+        ),
+      ),
+    );
+  }
+
+  void _onSyncSnapshot(TaskSyncSnapshot snapshot) {
+    final current = state;
+    if (current is! TasksReady) {
+      return;
+    }
+    emit(
+      current.copyWith(
+        syncStatus: _syncStatus(snapshot),
+        lastFailure: snapshot.lastFailure,
+      ),
+    );
+  }
+
+  static TasksSyncStatus _syncStatus(TaskSyncSnapshot? snapshot) =>
+      switch (snapshot?.status) {
+        TaskInitialSyncStatus.synchronizing => TasksSyncStatus.synchronizing,
+        TaskInitialSyncStatus.ready =>
+          snapshot?.lastFailure == null
+              ? TasksSyncStatus.ready
+              : TasksSyncStatus.recoverableFailure,
+        TaskInitialSyncStatus.failed => TasksSyncStatus.recoverableFailure,
+        _ => TasksSyncStatus.idle,
+      };
+
+  static DateTime _systemUtcNow() => DateTime.now().toUtc();
+
+  @override
+  Future<void> close() async {
+    pause();
+    await _tasksSubscription?.cancel();
+    await _conflictsSubscription?.cancel();
+    await _awardsSubscription?.cancel();
+    await _syncSubscription?.cancel();
+    return super.close();
+  }
+}

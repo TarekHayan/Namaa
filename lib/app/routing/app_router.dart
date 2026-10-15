@@ -1,37 +1,180 @@
-/// Foundation root-route registry and unknown-route boundary.
+/// Foundation root-route registry and authenticated feature boundaries.
 library;
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/core/application/ports/foundation_ports.dart';
 
 /// The only registered route in the Foundation scope.
 const String kFoundationRootRoute = '/';
 
+/// Account-scoped Tasks entry point.
+const String kTasksRoute = '/tasks';
+
 /// Key used by tests and diagnostics to identify handled route failures.
 const Key kFoundationUnknownRouteKey = Key('foundation_unknown_route');
+
+/// Keys used to verify that account data is never opened before a session is
+/// resolved.
+const Key kTasksRouteLoadingKey = Key('tasks_route_loading');
+const Key kTasksRouteSignedOutKey = Key('tasks_route_signed_out');
+
+typedef AuthenticatedTasksBuilder =
+    Widget Function(BuildContext context, String accountId);
 
 /// Owns Foundation routing only. Future features register their own entries;
 /// no product feature route or screen is created here.
 class FoundationAppRouter {
-  FoundationAppRouter({required WidgetBuilder rootBuilder})
-    : router = GoRouter(
-        initialLocation: kFoundationRootRoute,
-        routes: <RouteBase>[
-          GoRoute(
-            path: kFoundationRootRoute,
-            name: 'foundation-root',
-            builder: (context, _) => rootBuilder(context),
-          ),
-        ],
-        errorBuilder: (context, state) => const _UnknownRouteBoundary(),
-      );
+  FoundationAppRouter({
+    required WidgetBuilder rootBuilder,
+    CloudSessionPort? cloudSession,
+    AuthenticatedTasksBuilder? tasksBuilder,
+  }) : router = GoRouter(
+         initialLocation: kFoundationRootRoute,
+         routes: _routes(rootBuilder, cloudSession, tasksBuilder),
+         errorBuilder: (context, state) => const _UnknownRouteBoundary(),
+       );
 
   final GoRouter router;
 
   void go(String location) => router.go(location);
 
   void dispose() => router.dispose();
+
+  static List<RouteBase> _routes(
+    WidgetBuilder rootBuilder,
+    CloudSessionPort? cloudSession,
+    AuthenticatedTasksBuilder? tasksBuilder,
+  ) => <RouteBase>[
+    GoRoute(
+      path: kFoundationRootRoute,
+      name: 'foundation-root',
+      builder: (context, _) => rootBuilder(context),
+    ),
+    if (cloudSession != null && tasksBuilder != null)
+      GoRoute(
+        path: kTasksRoute,
+        name: 'tasks',
+        builder: (context, _) => _TasksRouteGate(
+          cloudSession: cloudSession,
+          tasksBuilder: tasksBuilder,
+        ),
+      ),
+  ];
+}
+
+/// Resolves the non-secret account identity before creating the Tasks graph.
+/// A signed-out session stays at a localized boundary and cannot resolve an
+/// account-scoped repository stream.
+class _TasksRouteGate extends StatefulWidget {
+  const _TasksRouteGate({
+    required this.cloudSession,
+    required this.tasksBuilder,
+  });
+
+  final CloudSessionPort cloudSession;
+  final AuthenticatedTasksBuilder tasksBuilder;
+
+  @override
+  State<_TasksRouteGate> createState() => _TasksRouteGateState();
+}
+
+class _TasksRouteGateState extends State<_TasksRouteGate> {
+  StreamSubscription<CloudSessionSnapshot>? _subscription;
+  CloudSessionStatus _status = CloudSessionStatus.unknown;
+  String? _accountId;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = widget.cloudSession.observeSession().listen(
+      _applySnapshot,
+      onError: (_, _) => _applySignedOut(),
+    );
+    unawaited(_resolveInitialSession());
+  }
+
+  Future<void> _resolveInitialSession() async {
+    final result = await widget.cloudSession.obtainSyncContext();
+    if (!mounted) {
+      return;
+    }
+    final accountId = result.valueOrNull?.accountId;
+    if (accountId == null || accountId.isEmpty) {
+      _applySignedOut();
+      return;
+    }
+    setState(() {
+      _status = CloudSessionStatus.signedIn;
+      _accountId = accountId;
+    });
+  }
+
+  void _applySnapshot(CloudSessionSnapshot snapshot) {
+    if (!mounted) {
+      return;
+    }
+    final accountId = snapshot.accountId;
+    if (snapshot.status != CloudSessionStatus.signedIn ||
+        accountId == null ||
+        accountId.isEmpty) {
+      if (snapshot.status == CloudSessionStatus.unknown) {
+        setState(() {
+          _status = CloudSessionStatus.unknown;
+          _accountId = null;
+        });
+      } else {
+        _applySignedOut();
+      }
+      return;
+    }
+    setState(() {
+      _status = CloudSessionStatus.signedIn;
+      _accountId = accountId;
+    });
+  }
+
+  void _applySignedOut() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _status = CloudSessionStatus.signedOut;
+      _accountId = null;
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_subscription?.cancel());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accountId = _accountId;
+    if (_status == CloudSessionStatus.signedIn && accountId != null) {
+      return widget.tasksBuilder(context, accountId);
+    }
+    if (_status == CloudSessionStatus.signedOut) {
+      return Scaffold(
+        key: kTasksRouteSignedOutKey,
+        body: Center(
+          child: Text(
+            FoundationLocalizations.of(context).tasksSignInRequired,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+    return const Scaffold(
+      key: kTasksRouteLoadingKey,
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
 }
 
 /// Safe, localized presentation for an unresolved route.

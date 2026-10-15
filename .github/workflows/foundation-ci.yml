@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/foundation-ci.yml'
+      - '.github/scripts/**'
       - 'android/**'
       - 'integration_test/**'
       - 'ios/**'
@@ -13,15 +14,19 @@ on:
       - 'macos/**'
       - 'pubspec.lock'
       - 'pubspec.yaml'
+      - 'specs/003-namaa-tasks/**'
       - 'supabase/**'
       - 'test/**'
+      - 'test_driver/**'
       - 'windows/**'
   push:
     branches:
       - main
       - 'feature/**'
+      - 'namaa/003-tasks'
     paths:
       - '.github/workflows/foundation-ci.yml'
+      - '.github/scripts/**'
       - 'android/**'
       - 'integration_test/**'
       - 'ios/**'
@@ -30,8 +35,10 @@ on:
       - 'macos/**'
       - 'pubspec.lock'
       - 'pubspec.yaml'
+      - 'specs/003-namaa-tasks/**'
       - 'supabase/**'
       - 'test/**'
+      - 'test_driver/**'
       - 'windows/**'
 
 permissions:
@@ -71,7 +78,7 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      - name: Run unit, widget, and architecture tests
+      - name: Run Foundation and Task unit, widget, and architecture tests
         run: flutter test --no-pub --reporter compact
 
   database-security:
@@ -90,7 +97,7 @@ jobs:
       - name: Start local Supabase
         run: supabase start
 
-      - name: Verify migrations, grants, and RLS
+      - name: Verify Foundation and Task migrations, grants, RLS, and XP integrity
         run: supabase test db
 
   android:
@@ -142,7 +149,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run Android Foundation integration suite
+      - name: Run Android Foundation and Task integration suite
         uses: reactivecircus/android-emulator-runner@v2
         env:
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
@@ -157,9 +164,7 @@ jobs:
           target: google_apis
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            adb reverse tcp:54321 tcp:54321
-            flutter test --no-pub --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" -d emulator-5554 integration_test --reporter expanded
+          script: bash .github/scripts/run-android-integration.sh
 
   linux:
     name: Linux integration
@@ -225,6 +230,10 @@ jobs:
               integration_test/foundation_offline_test.dart
               integration_test/foundation_platform_test.dart
               integration_test/foundation_sync_test.dart
+              integration_test/tasks_offline_sync_test.dart
+              integration_test/tasks_completion_sync_test.dart
+              integration_test/tasks_checklist_history_test.dart
+              integration_test/tasks_localized_route_test.dart
             )
             for test_file in "${tests[@]}"; do
               flutter test --no-pub \
@@ -272,7 +281,7 @@ jobs:
       - name: Build Windows application
         run: flutter build windows --debug
 
-      - name: Run Windows Foundation integration entry points
+      - name: Run Windows Foundation and Task integration entry points
         shell: pwsh
         env:
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
@@ -286,7 +295,11 @@ jobs:
             'integration_test/foundation_migration_test.dart',
             'integration_test/foundation_offline_test.dart',
             'integration_test/foundation_platform_test.dart',
-            'integration_test/foundation_sync_test.dart'
+            'integration_test/foundation_sync_test.dart',
+            'integration_test/tasks_offline_sync_test.dart',
+            'integration_test/tasks_completion_sync_test.dart',
+            'integration_test/tasks_checklist_history_test.dart',
+            'integration_test/tasks_localized_route_test.dart'
           )
           foreach ($test in $tests) {
             flutter test --no-pub -d windows $test --reporter expanded
@@ -328,7 +341,7 @@ jobs:
       - name: Build macOS application
         run: flutter build macos --debug
 
-      - name: Run macOS Foundation integration entry points
+      - name: Run macOS Foundation and Task integration entry points
         shell: bash
         env:
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
@@ -344,6 +357,10 @@ jobs:
             integration_test/foundation_offline_test.dart
             integration_test/foundation_platform_test.dart
             integration_test/foundation_sync_test.dart
+            integration_test/tasks_offline_sync_test.dart
+            integration_test/tasks_completion_sync_test.dart
+            integration_test/tasks_checklist_history_test.dart
+            integration_test/tasks_localized_route_test.dart
           )
           for test_file in "${tests[@]}"; do
             flutter test --no-pub -d macos "$test_file" --reporter expanded
@@ -363,9 +380,10 @@ jobs:
   ios:
     name: iOS simulator (${{ matrix.suite }})
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
+      max-parallel: 3
       matrix:
         include:
           - suite: migration
@@ -378,6 +396,14 @@ jobs:
             test_file: integration_test/foundation_sync_test.dart
           - suite: staging-supabase
             test_file: integration_test/foundation_staging_supabase_test.dart
+          - suite: tasks-offline-sync
+            test_file: integration_test/tasks_offline_sync_test.dart
+          - suite: tasks-completion-sync
+            test_file: integration_test/tasks_completion_sync_test.dart
+          - suite: tasks-checklist-history
+            test_file: integration_test/tasks_checklist_history_test.dart
+          - suite: tasks-localized-route
+            test_file: integration_test/tasks_localized_route_test.dart
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -407,8 +433,8 @@ jobs:
           xcrun simctl bootstatus "$device_id" -b
           echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
 
-      - name: Run iOS Foundation integration entry point
-        timeout-minutes: 15
+      - name: Run iOS Foundation or Task integration entry point
+        timeout-minutes: 40
         shell: bash
         env:
           IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
@@ -429,12 +455,16 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL"
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD"
           )
-          flutter test --no-pub "${staging_defines[@]}" \
-            -d "$IOS_DEVICE_ID" "$TEST_FILE" \
-            --reporter expanded
+          # Retry only a pre-test VM-service startup stall. Test failures do
+          # not retry, and a second startup stall still fails this gate.
+          python3 .github/scripts/run-ios-integration.py "$IOS_DEVICE_ID" -- \
+            flutter drive --no-pub --publish-port "${staging_defines[@]}" \
+            -d "$IOS_DEVICE_ID" \
+            --driver=test_driver/integration_test.dart \
+            --target="$TEST_FILE"
 
   foundation-gate:
-    name: Foundation five-target gate
+    name: Foundation and Task five-target gate
     if: always()
     needs:
       - quality
@@ -446,7 +476,7 @@ jobs:
       - ios
     runs-on: ubuntu-latest
     steps:
-      - name: Require every Foundation job to pass
+      - name: Require every Foundation and Task job to pass
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
           DATABASE_RESULT: ${{ needs.database-security.result }}

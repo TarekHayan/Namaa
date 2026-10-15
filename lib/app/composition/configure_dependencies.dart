@@ -29,6 +29,8 @@ import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.
 import 'package:namma_project/core/data/cloud/supabase/supabase_sync_adapter.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
+import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/data/sync/synchronization_coordinator.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/platform/connectivity_adapter.dart';
@@ -44,6 +46,21 @@ import 'package:namma_project/features/foundation/presentation/state/foundation_
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
+import 'package:namma_project/features/tasks/application/task_commands.dart';
+import 'package:namma_project/features/tasks/application/task_completion_service.dart';
+import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
+import 'package:namma_project/features/tasks/application/task_reconciliation.dart';
+import 'package:namma_project/features/tasks/application/task_remote_reader.dart';
+import 'package:namma_project/features/tasks/application/task_repository.dart';
+import 'package:namma_project/features/tasks/application/task_sync_service.dart';
+import 'package:namma_project/features/tasks/data/drift_task_repository.dart';
+import 'package:namma_project/features/tasks/data/supabase_task_reader.dart';
+import 'package:namma_project/features/tasks/data/supabase_task_sync_adapter.dart';
+import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
+import 'package:namma_project/features/tasks/data/task_reconciler.dart';
+import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
+import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
@@ -82,6 +99,10 @@ Future<void> configureDependencies({
       path: dbPath,
       key: key,
     );
+    getIt.registerSingleton<FoundationDatabase>(
+      database,
+      dispose: (value) => value.close(),
+    );
     final localStore = DriftLocalStore(database);
     getIt.registerLazySingleton<LocalStorePort>(() => localStore);
 
@@ -90,9 +111,16 @@ Future<void> configureDependencies({
       secureStore: secureStore,
     );
     getIt.registerLazySingleton<CloudSessionPort>(() => session.adapter);
+    final foundationSync = SupabaseSyncAdapter(
+      gateway: SupabaseProbeGatewayImpl(session.client),
+    );
+    final taskGateway = SupabaseTaskGatewayImpl(session.client);
+    final taskSyncAdapter = SupabaseTaskSyncAdapter(gateway: taskGateway);
+    getIt.registerLazySingleton<SupabaseTaskGateway>(() => taskGateway);
     getIt.registerLazySingleton<CloudSyncPort>(
-      () => SupabaseSyncAdapter(
-        gateway: SupabaseProbeGatewayImpl(session.client),
+      () => EntityDispatchRouter(
+        foundationAdapter: foundationSync,
+        taskAdapter: taskSyncAdapter,
       ),
     );
 
@@ -130,6 +158,47 @@ Future<void> configureDependencies({
         cloudSession: session.adapter,
         cloudSync: getIt<CloudSyncPort>(),
       ),
+    );
+
+    const taskCodec = TaskPayloadCodec();
+    getIt.registerLazySingleton<TaskPayloadCodec>(() => taskCodec);
+    getIt.registerLazySingleton<TaskRepository>(
+      () => DriftTaskRepository(database: database, codec: taskCodec),
+    );
+    getIt.registerLazySingleton<AwardLedgerPort>(
+      () => DriftAwardLedger(database),
+    );
+    getIt.registerLazySingleton<TaskCompletionUnitOfWork>(
+      () => DriftTaskCompletionUnitOfWork(
+        database: database,
+        codec: taskCodec,
+        awardLedger: getIt<AwardLedgerPort>(),
+      ),
+    );
+    final taskReader = SupabaseTaskReader(
+      gateway: taskGateway,
+      codec: taskCodec,
+    );
+    getIt.registerLazySingleton<TaskRemoteReaderPort>(() => taskReader);
+    getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(() => taskReader);
+    getIt.registerLazySingleton<TaskReconciliationPort>(
+      () => TaskReconciler(
+        repository: getIt<TaskRepository>(),
+        localStore: localStore,
+        codec: taskCodec,
+      ),
+    );
+    getIt.registerLazySingleton<TaskSyncService>(
+      () => TaskSyncService(
+        session: session.adapter,
+        connectivity: getIt<ConnectivityPort>(),
+        outbound: getIt<PendingSynchronizationEngine>(),
+        remoteReader: getIt<TaskRemoteReaderPort>(),
+        reconciler: getIt<TaskReconciliationPort>(),
+        awardReader: getIt<TaskAwardRemoteReaderPort>(),
+        awardLedger: getIt<AwardLedgerPort>(),
+      ),
+      dispose: (service) => service.dispose(),
     );
 
     _registerUseCasesAndCubits(getIt);
@@ -181,12 +250,53 @@ void _registerSafeFail(GetIt getIt) {
   getIt.registerLazySingleton<PendingSynchronizationEngine>(
     () => UnconfiguredEngine(),
   );
+  getIt.registerLazySingleton<TaskRepository>(
+    () => UnconfiguredTaskRepository(),
+  );
+  getIt.registerLazySingleton<AwardLedgerPort>(() => UnconfiguredAwardLedger());
+  getIt.registerLazySingleton<TaskCompletionUnitOfWork>(
+    () => UnconfiguredTaskCompletionUnitOfWork(),
+  );
+  getIt.registerLazySingleton<TaskRemoteReaderPort>(
+    () => UnconfiguredTaskRemoteReader(),
+  );
+  getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(
+    () => UnconfiguredTaskRemoteReader(),
+  );
+  getIt.registerLazySingleton<TaskReconciliationPort>(
+    () => UnconfiguredTaskReconciler(),
+  );
+  getIt.registerLazySingleton<TaskSyncService>(
+    () => TaskSyncService(
+      session: getIt<CloudSessionPort>(),
+      connectivity: getIt<ConnectivityPort>(),
+      outbound: getIt<PendingSynchronizationEngine>(),
+      remoteReader: getIt<TaskRemoteReaderPort>(),
+      reconciler: getIt<TaskReconciliationPort>(),
+      awardReader: getIt<TaskAwardRemoteReaderPort>(),
+      awardLedger: getIt<AwardLedgerPort>(),
+    ),
+    dispose: (service) => service.dispose(),
+  );
 }
 
 void _registerUseCasesAndCubits(
   GetIt getIt, {
   AppFailure? initializationFailure,
 }) {
+  getIt.registerLazySingleton<TaskCommands>(
+    () => TaskCommands(
+      repository: getIt<TaskRepository>(),
+      session: getIt<CloudSessionPort>(),
+    ),
+  );
+  getIt.registerLazySingleton<TaskCompletionService>(
+    () => TaskCompletionService(
+      repository: getIt<TaskRepository>(),
+      unitOfWork: getIt<TaskCompletionUnitOfWork>(),
+      session: getIt<CloudSessionPort>(),
+    ),
+  );
   getIt.registerLazySingleton<BootstrapUseCase>(
     () => BootstrapUseCase(
       cloudSession: getIt<CloudSessionPort>(),
@@ -229,6 +339,21 @@ void _registerUseCasesAndCubits(
       connectivity: getIt<ConnectivityPort>(),
     ),
   );
+  getIt.registerFactory<TasksCubit>(
+    () => TasksCubit(
+      repository: getIt<TaskRepository>(),
+      commands: getIt<TaskCommands>(),
+      completionService: getIt<TaskCompletionService>(),
+      awardLedger: getIt<AwardLedgerPort>(),
+      localDate: _systemLocalDate,
+      syncService: getIt<TaskSyncService>(),
+    ),
+  );
+}
+
+DateTime _systemLocalDate() {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day);
 }
 
 /// Cloud session adapter bound to the validated environment configuration,

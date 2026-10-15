@@ -1,15 +1,13 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 -> 2.0.0
-- Modified principles: III. Local-First, Durable, and Synchronizable Data; IV. Account Data
-  Integrity and Safe Cloud Synchronization; IX. Protected Local Account Data.
+- Version change: 2.0.0 -> 2.0.1
+- Modified principles: none.
+- Modified sections: Engineering Constraints (verified Foundation lock-in; Supabase precedence).
 - Added principles: none.
 - Added sections: none.
 - Removed sections: none.
-- Follow-up TODOs: Verify the required Supabase Flutter capabilities on Linux before production
-  lock-in. Supabase's Flutter quickstart explicitly lists Android, iOS, macOS, and Windows;
-  package metadata lists Linux, so the required Auth, Data API, session, and sync transport
-  capabilities require an end-to-end proof rather than an assumption.
+- Follow-up TODOs: Legacy cloud-provider wording in namaa_plan.md was reconciled to the approved
+  Supabase direction in this update.
 -->
 # Namaa Constitution
 
@@ -109,11 +107,14 @@ Drift/SQLite, Supabase Flutter, Supabase Auth, Supabase Postgres/Data API, and S
 only where an approved feature requires it, custom local-first synchronization, get_it /
 injectable, Freezed, json_serializable, go_router, Dio for required external APIs,
 flutter_local_notifications with platform support, just_audio, ARB/gen_l10n, flutter_test,
-bloc_test, and integration_test. These are the approved direction, not an unconditional
-production lock: capability and compatibility on Android, iOS, Windows, macOS, and Linux MUST be
-verified before adoption is finalized. Automated Supabase integration tests MUST use the local
-Supabase stack; device integration before production release MUST use an isolated non-production
-Supabase project.
+bloc_test, and integration_test. The Foundation-selected persistence and Supabase integration
+passed the five-target verification gate on 2026-10-07 and are approved for production lock-in
+for the verified Foundation scope. New capabilities, dependencies, and domain behavior MUST still
+be verified on affected targets before adoption. Supabase is the approved cloud integration;
+legacy cloud-provider wording in older project-plan material does not authorize a different
+provider.
+Automated Supabase integration tests MUST use the local Supabase stack; device integration before
+production release MUST use an isolated non-production Supabase project.
 
 Local data, sync metadata, and user-facing state MUST have clear ownership. Notifications MUST
 respect per-device enablement and preferences and MUST NOT imply that an unconfirmed religious
@@ -149,4 +150,4 @@ MUST assess compliance with the principles and Definition of Done. A conflict be
 Constitution and an unapproved feature requirement MUST be raised for resolution rather than
 implemented by assumption.
 
-**Version**: 2.0.0 | **Ratified**: 2026-09-03 | **Last Amended**: 2026-09-04
+**Version**: 2.0.1 | **Ratified**: 2026-09-03 | **Last Amended**: 2026-10-07

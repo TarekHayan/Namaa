@@ -2829,6 +2829,1400 @@ class FoundationAuditLogCompanion
   }
 }
 
+class $TaskRecordsTable extends TaskRecords
+    with TableInfo<$TaskRecordsTable, TaskRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TaskRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _scheduledDateMeta = const VerificationMeta(
+    'scheduledDate',
+  );
+  @override
+  late final GeneratedColumn<String> scheduledDate = GeneratedColumn<String>(
+    'scheduled_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scheduledTimeMeta = const VerificationMeta(
+    'scheduledTime',
+  );
+  @override
+  late final GeneratedColumn<String> scheduledTime = GeneratedColumn<String>(
+    'scheduled_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetDeadlineMeta = const VerificationMeta(
+    'targetDeadline',
+  );
+  @override
+  late final GeneratedColumn<DateTime> targetDeadline =
+      GeneratedColumn<DateTime>(
+        'target_deadline',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _targetDeadlineUtcOffsetMinutesMeta =
+      const VerificationMeta('targetDeadlineUtcOffsetMinutes');
+  @override
+  late final GeneratedColumn<int> targetDeadlineUtcOffsetMinutes =
+      GeneratedColumn<int>(
+        'target_deadline_utc_offset_minutes',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quadrantMeta = const VerificationMeta(
+    'quadrant',
+  );
+  @override
+  late final GeneratedColumn<String> quadrant = GeneratedColumn<String>(
+    'quadrant',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _estimatedDurationMinutesMeta =
+      const VerificationMeta('estimatedDurationMinutes');
+  @override
+  late final GeneratedColumn<int> estimatedDurationMinutes =
+      GeneratedColumn<int>(
+        'estimated_duration_minutes',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _checklistJsonMeta = const VerificationMeta(
+    'checklistJson',
+  );
+  @override
+  late final GeneratedColumn<String> checklistJson = GeneratedColumn<String>(
+    'checklist_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>('[]'),
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _completionXpMeta = const VerificationMeta(
+    'completionXp',
+  );
+  @override
+  late final GeneratedColumn<int> completionXp = GeneratedColumn<int>(
+    'completion_xp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    taskId,
+    title,
+    description,
+    scheduledDate,
+    scheduledTime,
+    targetDeadline,
+    targetDeadlineUtcOffsetMinutes,
+    category,
+    quadrant,
+    estimatedDurationMinutes,
+    checklistJson,
+    completedAt,
+    completionXp,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'task_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TaskRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_taskIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('scheduled_date')) {
+      context.handle(
+        _scheduledDateMeta,
+        scheduledDate.isAcceptableOrUnknown(
+          data['scheduled_date']!,
+          _scheduledDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_scheduledDateMeta);
+    }
+    if (data.containsKey('scheduled_time')) {
+      context.handle(
+        _scheduledTimeMeta,
+        scheduledTime.isAcceptableOrUnknown(
+          data['scheduled_time']!,
+          _scheduledTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('target_deadline')) {
+      context.handle(
+        _targetDeadlineMeta,
+        targetDeadline.isAcceptableOrUnknown(
+          data['target_deadline']!,
+          _targetDeadlineMeta,
+        ),
+      );
+    }
+    if (data.containsKey('target_deadline_utc_offset_minutes')) {
+      context.handle(
+        _targetDeadlineUtcOffsetMinutesMeta,
+        targetDeadlineUtcOffsetMinutes.isAcceptableOrUnknown(
+          data['target_deadline_utc_offset_minutes']!,
+          _targetDeadlineUtcOffsetMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('quadrant')) {
+      context.handle(
+        _quadrantMeta,
+        quadrant.isAcceptableOrUnknown(data['quadrant']!, _quadrantMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quadrantMeta);
+    }
+    if (data.containsKey('estimated_duration_minutes')) {
+      context.handle(
+        _estimatedDurationMinutesMeta,
+        estimatedDurationMinutes.isAcceptableOrUnknown(
+          data['estimated_duration_minutes']!,
+          _estimatedDurationMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('checklist_json')) {
+      context.handle(
+        _checklistJsonMeta,
+        checklistJson.isAcceptableOrUnknown(
+          data['checklist_json']!,
+          _checklistJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completion_xp')) {
+      context.handle(
+        _completionXpMeta,
+        completionXp.isAcceptableOrUnknown(
+          data['completion_xp']!,
+          _completionXpMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_completionXpMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, taskId};
+  @override
+  TaskRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TaskRecord(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      scheduledDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scheduled_date'],
+      )!,
+      scheduledTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scheduled_time'],
+      ),
+      targetDeadline: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}target_deadline'],
+      ),
+      targetDeadlineUtcOffsetMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_deadline_utc_offset_minutes'],
+      ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      quadrant: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quadrant'],
+      )!,
+      estimatedDurationMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}estimated_duration_minutes'],
+      ),
+      checklistJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}checklist_json'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      completionXp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completion_xp'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $TaskRecordsTable createAlias(String alias) {
+    return $TaskRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class TaskRecord extends DataClass implements Insertable<TaskRecord> {
+  final String accountId;
+  final String taskId;
+  final String title;
+  final String? description;
+  final String scheduledDate;
+  final String? scheduledTime;
+  final DateTime? targetDeadline;
+  final int? targetDeadlineUtcOffsetMinutes;
+  final String category;
+  final String quadrant;
+  final int? estimatedDurationMinutes;
+  final String checklistJson;
+  final DateTime? completedAt;
+  final int completionXp;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const TaskRecord({
+    required this.accountId,
+    required this.taskId,
+    required this.title,
+    this.description,
+    required this.scheduledDate,
+    this.scheduledTime,
+    this.targetDeadline,
+    this.targetDeadlineUtcOffsetMinutes,
+    required this.category,
+    required this.quadrant,
+    this.estimatedDurationMinutes,
+    required this.checklistJson,
+    this.completedAt,
+    required this.completionXp,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['task_id'] = Variable<String>(taskId);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['scheduled_date'] = Variable<String>(scheduledDate);
+    if (!nullToAbsent || scheduledTime != null) {
+      map['scheduled_time'] = Variable<String>(scheduledTime);
+    }
+    if (!nullToAbsent || targetDeadline != null) {
+      map['target_deadline'] = Variable<DateTime>(targetDeadline);
+    }
+    if (!nullToAbsent || targetDeadlineUtcOffsetMinutes != null) {
+      map['target_deadline_utc_offset_minutes'] = Variable<int>(
+        targetDeadlineUtcOffsetMinutes,
+      );
+    }
+    map['category'] = Variable<String>(category);
+    map['quadrant'] = Variable<String>(quadrant);
+    if (!nullToAbsent || estimatedDurationMinutes != null) {
+      map['estimated_duration_minutes'] = Variable<int>(
+        estimatedDurationMinutes,
+      );
+    }
+    map['checklist_json'] = Variable<String>(checklistJson);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['completion_xp'] = Variable<int>(completionXp);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  TaskRecordsCompanion toCompanion(bool nullToAbsent) {
+    return TaskRecordsCompanion(
+      accountId: Value(accountId),
+      taskId: Value(taskId),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      scheduledDate: Value(scheduledDate),
+      scheduledTime: scheduledTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scheduledTime),
+      targetDeadline: targetDeadline == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetDeadline),
+      targetDeadlineUtcOffsetMinutes:
+          targetDeadlineUtcOffsetMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetDeadlineUtcOffsetMinutes),
+      category: Value(category),
+      quadrant: Value(quadrant),
+      estimatedDurationMinutes: estimatedDurationMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(estimatedDurationMinutes),
+      checklistJson: Value(checklistJson),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      completionXp: Value(completionXp),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory TaskRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TaskRecord(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      taskId: serializer.fromJson<String>(json['taskId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      scheduledDate: serializer.fromJson<String>(json['scheduledDate']),
+      scheduledTime: serializer.fromJson<String?>(json['scheduledTime']),
+      targetDeadline: serializer.fromJson<DateTime?>(json['targetDeadline']),
+      targetDeadlineUtcOffsetMinutes: serializer.fromJson<int?>(
+        json['targetDeadlineUtcOffsetMinutes'],
+      ),
+      category: serializer.fromJson<String>(json['category']),
+      quadrant: serializer.fromJson<String>(json['quadrant']),
+      estimatedDurationMinutes: serializer.fromJson<int?>(
+        json['estimatedDurationMinutes'],
+      ),
+      checklistJson: serializer.fromJson<String>(json['checklistJson']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      completionXp: serializer.fromJson<int>(json['completionXp']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'taskId': serializer.toJson<String>(taskId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'scheduledDate': serializer.toJson<String>(scheduledDate),
+      'scheduledTime': serializer.toJson<String?>(scheduledTime),
+      'targetDeadline': serializer.toJson<DateTime?>(targetDeadline),
+      'targetDeadlineUtcOffsetMinutes': serializer.toJson<int?>(
+        targetDeadlineUtcOffsetMinutes,
+      ),
+      'category': serializer.toJson<String>(category),
+      'quadrant': serializer.toJson<String>(quadrant),
+      'estimatedDurationMinutes': serializer.toJson<int?>(
+        estimatedDurationMinutes,
+      ),
+      'checklistJson': serializer.toJson<String>(checklistJson),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'completionXp': serializer.toJson<int>(completionXp),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  TaskRecord copyWith({
+    String? accountId,
+    String? taskId,
+    String? title,
+    Value<String?> description = const Value.absent(),
+    String? scheduledDate,
+    Value<String?> scheduledTime = const Value.absent(),
+    Value<DateTime?> targetDeadline = const Value.absent(),
+    Value<int?> targetDeadlineUtcOffsetMinutes = const Value.absent(),
+    String? category,
+    String? quadrant,
+    Value<int?> estimatedDurationMinutes = const Value.absent(),
+    String? checklistJson,
+    Value<DateTime?> completedAt = const Value.absent(),
+    int? completionXp,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => TaskRecord(
+    accountId: accountId ?? this.accountId,
+    taskId: taskId ?? this.taskId,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    scheduledDate: scheduledDate ?? this.scheduledDate,
+    scheduledTime: scheduledTime.present
+        ? scheduledTime.value
+        : this.scheduledTime,
+    targetDeadline: targetDeadline.present
+        ? targetDeadline.value
+        : this.targetDeadline,
+    targetDeadlineUtcOffsetMinutes: targetDeadlineUtcOffsetMinutes.present
+        ? targetDeadlineUtcOffsetMinutes.value
+        : this.targetDeadlineUtcOffsetMinutes,
+    category: category ?? this.category,
+    quadrant: quadrant ?? this.quadrant,
+    estimatedDurationMinutes: estimatedDurationMinutes.present
+        ? estimatedDurationMinutes.value
+        : this.estimatedDurationMinutes,
+    checklistJson: checklistJson ?? this.checklistJson,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    completionXp: completionXp ?? this.completionXp,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  TaskRecord copyWithCompanion(TaskRecordsCompanion data) {
+    return TaskRecord(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      scheduledDate: data.scheduledDate.present
+          ? data.scheduledDate.value
+          : this.scheduledDate,
+      scheduledTime: data.scheduledTime.present
+          ? data.scheduledTime.value
+          : this.scheduledTime,
+      targetDeadline: data.targetDeadline.present
+          ? data.targetDeadline.value
+          : this.targetDeadline,
+      targetDeadlineUtcOffsetMinutes:
+          data.targetDeadlineUtcOffsetMinutes.present
+          ? data.targetDeadlineUtcOffsetMinutes.value
+          : this.targetDeadlineUtcOffsetMinutes,
+      category: data.category.present ? data.category.value : this.category,
+      quadrant: data.quadrant.present ? data.quadrant.value : this.quadrant,
+      estimatedDurationMinutes: data.estimatedDurationMinutes.present
+          ? data.estimatedDurationMinutes.value
+          : this.estimatedDurationMinutes,
+      checklistJson: data.checklistJson.present
+          ? data.checklistJson.value
+          : this.checklistJson,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      completionXp: data.completionXp.present
+          ? data.completionXp.value
+          : this.completionXp,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskRecord(')
+          ..write('accountId: $accountId, ')
+          ..write('taskId: $taskId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('scheduledDate: $scheduledDate, ')
+          ..write('scheduledTime: $scheduledTime, ')
+          ..write('targetDeadline: $targetDeadline, ')
+          ..write(
+            'targetDeadlineUtcOffsetMinutes: $targetDeadlineUtcOffsetMinutes, ',
+          )
+          ..write('category: $category, ')
+          ..write('quadrant: $quadrant, ')
+          ..write('estimatedDurationMinutes: $estimatedDurationMinutes, ')
+          ..write('checklistJson: $checklistJson, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('completionXp: $completionXp, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    taskId,
+    title,
+    description,
+    scheduledDate,
+    scheduledTime,
+    targetDeadline,
+    targetDeadlineUtcOffsetMinutes,
+    category,
+    quadrant,
+    estimatedDurationMinutes,
+    checklistJson,
+    completedAt,
+    completionXp,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TaskRecord &&
+          other.accountId == this.accountId &&
+          other.taskId == this.taskId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.scheduledDate == this.scheduledDate &&
+          other.scheduledTime == this.scheduledTime &&
+          other.targetDeadline == this.targetDeadline &&
+          other.targetDeadlineUtcOffsetMinutes ==
+              this.targetDeadlineUtcOffsetMinutes &&
+          other.category == this.category &&
+          other.quadrant == this.quadrant &&
+          other.estimatedDurationMinutes == this.estimatedDurationMinutes &&
+          other.checklistJson == this.checklistJson &&
+          other.completedAt == this.completedAt &&
+          other.completionXp == this.completionXp &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
+  final Value<String> accountId;
+  final Value<String> taskId;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<String> scheduledDate;
+  final Value<String?> scheduledTime;
+  final Value<DateTime?> targetDeadline;
+  final Value<int?> targetDeadlineUtcOffsetMinutes;
+  final Value<String> category;
+  final Value<String> quadrant;
+  final Value<int?> estimatedDurationMinutes;
+  final Value<String> checklistJson;
+  final Value<DateTime?> completedAt;
+  final Value<int> completionXp;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const TaskRecordsCompanion({
+    this.accountId = const Value.absent(),
+    this.taskId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.scheduledDate = const Value.absent(),
+    this.scheduledTime = const Value.absent(),
+    this.targetDeadline = const Value.absent(),
+    this.targetDeadlineUtcOffsetMinutes = const Value.absent(),
+    this.category = const Value.absent(),
+    this.quadrant = const Value.absent(),
+    this.estimatedDurationMinutes = const Value.absent(),
+    this.checklistJson = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.completionXp = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TaskRecordsCompanion.insert({
+    required String accountId,
+    required String taskId,
+    required String title,
+    this.description = const Value.absent(),
+    required String scheduledDate,
+    this.scheduledTime = const Value.absent(),
+    this.targetDeadline = const Value.absent(),
+    this.targetDeadlineUtcOffsetMinutes = const Value.absent(),
+    required String category,
+    required String quadrant,
+    this.estimatedDurationMinutes = const Value.absent(),
+    this.checklistJson = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    required int completionXp,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       taskId = Value(taskId),
+       title = Value(title),
+       scheduledDate = Value(scheduledDate),
+       category = Value(category),
+       quadrant = Value(quadrant),
+       completionXp = Value(completionXp),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TaskRecord> custom({
+    Expression<String>? accountId,
+    Expression<String>? taskId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? scheduledDate,
+    Expression<String>? scheduledTime,
+    Expression<DateTime>? targetDeadline,
+    Expression<int>? targetDeadlineUtcOffsetMinutes,
+    Expression<String>? category,
+    Expression<String>? quadrant,
+    Expression<int>? estimatedDurationMinutes,
+    Expression<String>? checklistJson,
+    Expression<DateTime>? completedAt,
+    Expression<int>? completionXp,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (taskId != null) 'task_id': taskId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (scheduledDate != null) 'scheduled_date': scheduledDate,
+      if (scheduledTime != null) 'scheduled_time': scheduledTime,
+      if (targetDeadline != null) 'target_deadline': targetDeadline,
+      if (targetDeadlineUtcOffsetMinutes != null)
+        'target_deadline_utc_offset_minutes': targetDeadlineUtcOffsetMinutes,
+      if (category != null) 'category': category,
+      if (quadrant != null) 'quadrant': quadrant,
+      if (estimatedDurationMinutes != null)
+        'estimated_duration_minutes': estimatedDurationMinutes,
+      if (checklistJson != null) 'checklist_json': checklistJson,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (completionXp != null) 'completion_xp': completionXp,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TaskRecordsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? taskId,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<String>? scheduledDate,
+    Value<String?>? scheduledTime,
+    Value<DateTime?>? targetDeadline,
+    Value<int?>? targetDeadlineUtcOffsetMinutes,
+    Value<String>? category,
+    Value<String>? quadrant,
+    Value<int?>? estimatedDurationMinutes,
+    Value<String>? checklistJson,
+    Value<DateTime?>? completedAt,
+    Value<int>? completionXp,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return TaskRecordsCompanion(
+      accountId: accountId ?? this.accountId,
+      taskId: taskId ?? this.taskId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      scheduledDate: scheduledDate ?? this.scheduledDate,
+      scheduledTime: scheduledTime ?? this.scheduledTime,
+      targetDeadline: targetDeadline ?? this.targetDeadline,
+      targetDeadlineUtcOffsetMinutes:
+          targetDeadlineUtcOffsetMinutes ?? this.targetDeadlineUtcOffsetMinutes,
+      category: category ?? this.category,
+      quadrant: quadrant ?? this.quadrant,
+      estimatedDurationMinutes:
+          estimatedDurationMinutes ?? this.estimatedDurationMinutes,
+      checklistJson: checklistJson ?? this.checklistJson,
+      completedAt: completedAt ?? this.completedAt,
+      completionXp: completionXp ?? this.completionXp,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (scheduledDate.present) {
+      map['scheduled_date'] = Variable<String>(scheduledDate.value);
+    }
+    if (scheduledTime.present) {
+      map['scheduled_time'] = Variable<String>(scheduledTime.value);
+    }
+    if (targetDeadline.present) {
+      map['target_deadline'] = Variable<DateTime>(targetDeadline.value);
+    }
+    if (targetDeadlineUtcOffsetMinutes.present) {
+      map['target_deadline_utc_offset_minutes'] = Variable<int>(
+        targetDeadlineUtcOffsetMinutes.value,
+      );
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (quadrant.present) {
+      map['quadrant'] = Variable<String>(quadrant.value);
+    }
+    if (estimatedDurationMinutes.present) {
+      map['estimated_duration_minutes'] = Variable<int>(
+        estimatedDurationMinutes.value,
+      );
+    }
+    if (checklistJson.present) {
+      map['checklist_json'] = Variable<String>(checklistJson.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (completionXp.present) {
+      map['completion_xp'] = Variable<int>(completionXp.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskRecordsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('taskId: $taskId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('scheduledDate: $scheduledDate, ')
+          ..write('scheduledTime: $scheduledTime, ')
+          ..write('targetDeadline: $targetDeadline, ')
+          ..write(
+            'targetDeadlineUtcOffsetMinutes: $targetDeadlineUtcOffsetMinutes, ',
+          )
+          ..write('category: $category, ')
+          ..write('quadrant: $quadrant, ')
+          ..write('estimatedDurationMinutes: $estimatedDurationMinutes, ')
+          ..write('checklistJson: $checklistJson, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('completionXp: $completionXp, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $XpAwardsTable extends XpAwards with TableInfo<$XpAwardsTable, XpAward> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $XpAwardsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
+    'source_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _awardedAtMeta = const VerificationMeta(
+    'awardedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> awardedAt = GeneratedColumn<DateTime>(
+    'awarded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    source,
+    sourceId,
+    amount,
+    awardedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'xp_awards';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<XpAward> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('awarded_at')) {
+      context.handle(
+        _awardedAtMeta,
+        awardedAt.isAcceptableOrUnknown(data['awarded_at']!, _awardedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_awardedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, source, sourceId};
+  @override
+  XpAward map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return XpAward(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      awardedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}awarded_at'],
+      )!,
+    );
+  }
+
+  @override
+  $XpAwardsTable createAlias(String alias) {
+    return $XpAwardsTable(attachedDatabase, alias);
+  }
+}
+
+class XpAward extends DataClass implements Insertable<XpAward> {
+  final String accountId;
+  final String source;
+  final String sourceId;
+  final int amount;
+  final DateTime awardedAt;
+  const XpAward({
+    required this.accountId,
+    required this.source,
+    required this.sourceId,
+    required this.amount,
+    required this.awardedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['source'] = Variable<String>(source);
+    map['source_id'] = Variable<String>(sourceId);
+    map['amount'] = Variable<int>(amount);
+    map['awarded_at'] = Variable<DateTime>(awardedAt);
+    return map;
+  }
+
+  XpAwardsCompanion toCompanion(bool nullToAbsent) {
+    return XpAwardsCompanion(
+      accountId: Value(accountId),
+      source: Value(source),
+      sourceId: Value(sourceId),
+      amount: Value(amount),
+      awardedAt: Value(awardedAt),
+    );
+  }
+
+  factory XpAward.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return XpAward(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      source: serializer.fromJson<String>(json['source']),
+      sourceId: serializer.fromJson<String>(json['sourceId']),
+      amount: serializer.fromJson<int>(json['amount']),
+      awardedAt: serializer.fromJson<DateTime>(json['awardedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'source': serializer.toJson<String>(source),
+      'sourceId': serializer.toJson<String>(sourceId),
+      'amount': serializer.toJson<int>(amount),
+      'awardedAt': serializer.toJson<DateTime>(awardedAt),
+    };
+  }
+
+  XpAward copyWith({
+    String? accountId,
+    String? source,
+    String? sourceId,
+    int? amount,
+    DateTime? awardedAt,
+  }) => XpAward(
+    accountId: accountId ?? this.accountId,
+    source: source ?? this.source,
+    sourceId: sourceId ?? this.sourceId,
+    amount: amount ?? this.amount,
+    awardedAt: awardedAt ?? this.awardedAt,
+  );
+  XpAward copyWithCompanion(XpAwardsCompanion data) {
+    return XpAward(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      source: data.source.present ? data.source.value : this.source,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      awardedAt: data.awardedAt.present ? data.awardedAt.value : this.awardedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('XpAward(')
+          ..write('accountId: $accountId, ')
+          ..write('source: $source, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('amount: $amount, ')
+          ..write('awardedAt: $awardedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(accountId, source, sourceId, amount, awardedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is XpAward &&
+          other.accountId == this.accountId &&
+          other.source == this.source &&
+          other.sourceId == this.sourceId &&
+          other.amount == this.amount &&
+          other.awardedAt == this.awardedAt);
+}
+
+class XpAwardsCompanion extends UpdateCompanion<XpAward> {
+  final Value<String> accountId;
+  final Value<String> source;
+  final Value<String> sourceId;
+  final Value<int> amount;
+  final Value<DateTime> awardedAt;
+  final Value<int> rowid;
+  const XpAwardsCompanion({
+    this.accountId = const Value.absent(),
+    this.source = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.awardedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  XpAwardsCompanion.insert({
+    required String accountId,
+    required String source,
+    required String sourceId,
+    required int amount,
+    required DateTime awardedAt,
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       source = Value(source),
+       sourceId = Value(sourceId),
+       amount = Value(amount),
+       awardedAt = Value(awardedAt);
+  static Insertable<XpAward> custom({
+    Expression<String>? accountId,
+    Expression<String>? source,
+    Expression<String>? sourceId,
+    Expression<int>? amount,
+    Expression<DateTime>? awardedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (source != null) 'source': source,
+      if (sourceId != null) 'source_id': sourceId,
+      if (amount != null) 'amount': amount,
+      if (awardedAt != null) 'awarded_at': awardedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  XpAwardsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? source,
+    Value<String>? sourceId,
+    Value<int>? amount,
+    Value<DateTime>? awardedAt,
+    Value<int>? rowid,
+  }) {
+    return XpAwardsCompanion(
+      accountId: accountId ?? this.accountId,
+      source: source ?? this.source,
+      sourceId: sourceId ?? this.sourceId,
+      amount: amount ?? this.amount,
+      awardedAt: awardedAt ?? this.awardedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<String>(sourceId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (awardedAt.present) {
+      map['awarded_at'] = Variable<DateTime>(awardedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('XpAwardsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('source: $source, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('amount: $amount, ')
+          ..write('awardedAt: $awardedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$FoundationDatabase extends GeneratedDatabase {
   _$FoundationDatabase(QueryExecutor e) : super(e);
   $FoundationDatabaseManager get managers => $FoundationDatabaseManager(this);
@@ -2844,6 +4238,32 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
   );
   late final $FoundationAuditLogTable foundationAuditLog =
       $FoundationAuditLogTable(this);
+  late final $TaskRecordsTable taskRecords = $TaskRecordsTable(this);
+  late final $XpAwardsTable xpAwards = $XpAwardsTable(this);
+  late final Index taskRecordsAccountDate = Index(
+    'task_records_account_date',
+    'CREATE INDEX task_records_account_date ON task_records (account_id, scheduled_date)',
+  );
+  late final Index taskRecordsAccountCategory = Index(
+    'task_records_account_category',
+    'CREATE INDEX task_records_account_category ON task_records (account_id, category)',
+  );
+  late final Index taskRecordsAccountQuadrant = Index(
+    'task_records_account_quadrant',
+    'CREATE INDEX task_records_account_quadrant ON task_records (account_id, quadrant)',
+  );
+  late final Index taskRecordsAccountCompletion = Index(
+    'task_records_account_completion',
+    'CREATE INDEX task_records_account_completion ON task_records (account_id, completed_at)',
+  );
+  late final Index taskRecordsAccountUpdated = Index(
+    'task_records_account_updated',
+    'CREATE INDEX task_records_account_updated ON task_records (account_id, updated_at)',
+  );
+  late final Index taskRecordsAccountDeleted = Index(
+    'task_records_account_deleted',
+    'CREATE INDEX task_records_account_deleted ON task_records (account_id, deleted_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2855,6 +4275,14 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     conflictRecords,
     migrationJournal,
     foundationAuditLog,
+    taskRecords,
+    xpAwards,
+    taskRecordsAccountDate,
+    taskRecordsAccountCategory,
+    taskRecordsAccountQuadrant,
+    taskRecordsAccountCompletion,
+    taskRecordsAccountUpdated,
+    taskRecordsAccountDeleted,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -4365,6 +5793,653 @@ typedef $$FoundationAuditLogTableProcessedTableManager =
       FoundationAuditLogData,
       PrefetchHooks Function()
     >;
+typedef $$TaskRecordsTableCreateCompanionBuilder =
+    TaskRecordsCompanion Function({
+      required String accountId,
+      required String taskId,
+      required String title,
+      Value<String?> description,
+      required String scheduledDate,
+      Value<String?> scheduledTime,
+      Value<DateTime?> targetDeadline,
+      Value<int?> targetDeadlineUtcOffsetMinutes,
+      required String category,
+      required String quadrant,
+      Value<int?> estimatedDurationMinutes,
+      Value<String> checklistJson,
+      Value<DateTime?> completedAt,
+      required int completionXp,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$TaskRecordsTableUpdateCompanionBuilder =
+    TaskRecordsCompanion Function({
+      Value<String> accountId,
+      Value<String> taskId,
+      Value<String> title,
+      Value<String?> description,
+      Value<String> scheduledDate,
+      Value<String?> scheduledTime,
+      Value<DateTime?> targetDeadline,
+      Value<int?> targetDeadlineUtcOffsetMinutes,
+      Value<String> category,
+      Value<String> quadrant,
+      Value<int?> estimatedDurationMinutes,
+      Value<String> checklistJson,
+      Value<DateTime?> completedAt,
+      Value<int> completionXp,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$TaskRecordsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $TaskRecordsTable> {
+  $$TaskRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scheduledDate => $composableBuilder(
+    column: $table.scheduledDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scheduledTime => $composableBuilder(
+    column: $table.scheduledTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get targetDeadline => $composableBuilder(
+    column: $table.targetDeadline,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetDeadlineUtcOffsetMinutes => $composableBuilder(
+    column: $table.targetDeadlineUtcOffsetMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quadrant => $composableBuilder(
+    column: $table.quadrant,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get estimatedDurationMinutes => $composableBuilder(
+    column: $table.estimatedDurationMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get checklistJson => $composableBuilder(
+    column: $table.checklistJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get completionXp => $composableBuilder(
+    column: $table.completionXp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TaskRecordsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $TaskRecordsTable> {
+  $$TaskRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scheduledDate => $composableBuilder(
+    column: $table.scheduledDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scheduledTime => $composableBuilder(
+    column: $table.scheduledTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get targetDeadline => $composableBuilder(
+    column: $table.targetDeadline,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get targetDeadlineUtcOffsetMinutes => $composableBuilder(
+    column: $table.targetDeadlineUtcOffsetMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quadrant => $composableBuilder(
+    column: $table.quadrant,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get estimatedDurationMinutes => $composableBuilder(
+    column: $table.estimatedDurationMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get checklistJson => $composableBuilder(
+    column: $table.checklistJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get completionXp => $composableBuilder(
+    column: $table.completionXp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TaskRecordsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $TaskRecordsTable> {
+  $$TaskRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get taskId =>
+      $composableBuilder(column: $table.taskId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get scheduledDate => $composableBuilder(
+    column: $table.scheduledDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get scheduledTime => $composableBuilder(
+    column: $table.scheduledTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get targetDeadline => $composableBuilder(
+    column: $table.targetDeadline,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get targetDeadlineUtcOffsetMinutes => $composableBuilder(
+    column: $table.targetDeadlineUtcOffsetMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get quadrant =>
+      $composableBuilder(column: $table.quadrant, builder: (column) => column);
+
+  GeneratedColumn<int> get estimatedDurationMinutes => $composableBuilder(
+    column: $table.estimatedDurationMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get checklistJson => $composableBuilder(
+    column: $table.checklistJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get completionXp => $composableBuilder(
+    column: $table.completionXp,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$TaskRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $TaskRecordsTable,
+          TaskRecord,
+          $$TaskRecordsTableFilterComposer,
+          $$TaskRecordsTableOrderingComposer,
+          $$TaskRecordsTableAnnotationComposer,
+          $$TaskRecordsTableCreateCompanionBuilder,
+          $$TaskRecordsTableUpdateCompanionBuilder,
+          (
+            TaskRecord,
+            BaseReferences<_$FoundationDatabase, $TaskRecordsTable, TaskRecord>,
+          ),
+          TaskRecord,
+          PrefetchHooks Function()
+        > {
+  $$TaskRecordsTableTableManager(
+    _$FoundationDatabase db,
+    $TaskRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TaskRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TaskRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TaskRecordsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> taskId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> scheduledDate = const Value.absent(),
+                Value<String?> scheduledTime = const Value.absent(),
+                Value<DateTime?> targetDeadline = const Value.absent(),
+                Value<int?> targetDeadlineUtcOffsetMinutes =
+                    const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> quadrant = const Value.absent(),
+                Value<int?> estimatedDurationMinutes = const Value.absent(),
+                Value<String> checklistJson = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> completionXp = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaskRecordsCompanion(
+                accountId: accountId,
+                taskId: taskId,
+                title: title,
+                description: description,
+                scheduledDate: scheduledDate,
+                scheduledTime: scheduledTime,
+                targetDeadline: targetDeadline,
+                targetDeadlineUtcOffsetMinutes: targetDeadlineUtcOffsetMinutes,
+                category: category,
+                quadrant: quadrant,
+                estimatedDurationMinutes: estimatedDurationMinutes,
+                checklistJson: checklistJson,
+                completedAt: completedAt,
+                completionXp: completionXp,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String taskId,
+                required String title,
+                Value<String?> description = const Value.absent(),
+                required String scheduledDate,
+                Value<String?> scheduledTime = const Value.absent(),
+                Value<DateTime?> targetDeadline = const Value.absent(),
+                Value<int?> targetDeadlineUtcOffsetMinutes =
+                    const Value.absent(),
+                required String category,
+                required String quadrant,
+                Value<int?> estimatedDurationMinutes = const Value.absent(),
+                Value<String> checklistJson = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                required int completionXp,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaskRecordsCompanion.insert(
+                accountId: accountId,
+                taskId: taskId,
+                title: title,
+                description: description,
+                scheduledDate: scheduledDate,
+                scheduledTime: scheduledTime,
+                targetDeadline: targetDeadline,
+                targetDeadlineUtcOffsetMinutes: targetDeadlineUtcOffsetMinutes,
+                category: category,
+                quadrant: quadrant,
+                estimatedDurationMinutes: estimatedDurationMinutes,
+                checklistJson: checklistJson,
+                completedAt: completedAt,
+                completionXp: completionXp,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TaskRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $TaskRecordsTable,
+      TaskRecord,
+      $$TaskRecordsTableFilterComposer,
+      $$TaskRecordsTableOrderingComposer,
+      $$TaskRecordsTableAnnotationComposer,
+      $$TaskRecordsTableCreateCompanionBuilder,
+      $$TaskRecordsTableUpdateCompanionBuilder,
+      (
+        TaskRecord,
+        BaseReferences<_$FoundationDatabase, $TaskRecordsTable, TaskRecord>,
+      ),
+      TaskRecord,
+      PrefetchHooks Function()
+    >;
+typedef $$XpAwardsTableCreateCompanionBuilder =
+    XpAwardsCompanion Function({
+      required String accountId,
+      required String source,
+      required String sourceId,
+      required int amount,
+      required DateTime awardedAt,
+      Value<int> rowid,
+    });
+typedef $$XpAwardsTableUpdateCompanionBuilder =
+    XpAwardsCompanion Function({
+      Value<String> accountId,
+      Value<String> source,
+      Value<String> sourceId,
+      Value<int> amount,
+      Value<DateTime> awardedAt,
+      Value<int> rowid,
+    });
+
+class $$XpAwardsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $XpAwardsTable> {
+  $$XpAwardsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get awardedAt => $composableBuilder(
+    column: $table.awardedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$XpAwardsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $XpAwardsTable> {
+  $$XpAwardsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get awardedAt => $composableBuilder(
+    column: $table.awardedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$XpAwardsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $XpAwardsTable> {
+  $$XpAwardsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get awardedAt =>
+      $composableBuilder(column: $table.awardedAt, builder: (column) => column);
+}
+
+class $$XpAwardsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $XpAwardsTable,
+          XpAward,
+          $$XpAwardsTableFilterComposer,
+          $$XpAwardsTableOrderingComposer,
+          $$XpAwardsTableAnnotationComposer,
+          $$XpAwardsTableCreateCompanionBuilder,
+          $$XpAwardsTableUpdateCompanionBuilder,
+          (
+            XpAward,
+            BaseReferences<_$FoundationDatabase, $XpAwardsTable, XpAward>,
+          ),
+          XpAward,
+          PrefetchHooks Function()
+        > {
+  $$XpAwardsTableTableManager(_$FoundationDatabase db, $XpAwardsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$XpAwardsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$XpAwardsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$XpAwardsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> sourceId = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<DateTime> awardedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => XpAwardsCompanion(
+                accountId: accountId,
+                source: source,
+                sourceId: sourceId,
+                amount: amount,
+                awardedAt: awardedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String source,
+                required String sourceId,
+                required int amount,
+                required DateTime awardedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => XpAwardsCompanion.insert(
+                accountId: accountId,
+                source: source,
+                sourceId: sourceId,
+                amount: amount,
+                awardedAt: awardedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$XpAwardsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $XpAwardsTable,
+      XpAward,
+      $$XpAwardsTableFilterComposer,
+      $$XpAwardsTableOrderingComposer,
+      $$XpAwardsTableAnnotationComposer,
+      $$XpAwardsTableCreateCompanionBuilder,
+      $$XpAwardsTableUpdateCompanionBuilder,
+      (XpAward, BaseReferences<_$FoundationDatabase, $XpAwardsTable, XpAward>),
+      XpAward,
+      PrefetchHooks Function()
+    >;
 
 class $FoundationDatabaseManager {
   final _$FoundationDatabase _db;
@@ -4381,4 +6456,8 @@ class $FoundationDatabaseManager {
       $$MigrationJournalTableTableManager(_db, _db.migrationJournal);
   $$FoundationAuditLogTableTableManager get foundationAuditLog =>
       $$FoundationAuditLogTableTableManager(_db, _db.foundationAuditLog);
+  $$TaskRecordsTableTableManager get taskRecords =>
+      $$TaskRecordsTableTableManager(_db, _db.taskRecords);
+  $$XpAwardsTableTableManager get xpAwards =>
+      $$XpAwardsTableTableManager(_db, _db.xpAwards);
 }

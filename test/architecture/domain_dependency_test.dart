@@ -56,7 +56,6 @@ const List<String> _forbiddenInfrastructurePrefixes = <String>[
   'package:drift',
   'package:go_router',
   'package:flutter_local_notifications',
-  'package:firebase_messaging',
   'package:flutter_secure_storage',
   'package:shared_preferences',
   'package:path_provider',

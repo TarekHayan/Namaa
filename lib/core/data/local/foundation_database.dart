@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 2;
+const int kFoundationSchemaVersion = 3;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -118,6 +118,76 @@ class FoundationAuditLog extends Table {
   DateTimeColumn get at => dateTime()();
 }
 
+/// Account-scoped canonical Task aggregates added in schema version 3.
+///
+/// Checklist items stay embedded in [checklistJson], while the fields needed
+/// by list, matrix, history, overdue, and synchronization queries remain
+/// ordinary columns. Dates and local wall-clock times are stored separately
+/// so no device silently changes their calendar meaning.
+@TableIndex(
+  name: 'task_records_account_date',
+  columns: {#accountId, #scheduledDate},
+)
+@TableIndex(
+  name: 'task_records_account_category',
+  columns: {#accountId, #category},
+)
+@TableIndex(
+  name: 'task_records_account_quadrant',
+  columns: {#accountId, #quadrant},
+)
+@TableIndex(
+  name: 'task_records_account_completion',
+  columns: {#accountId, #completedAt},
+)
+@TableIndex(
+  name: 'task_records_account_updated',
+  columns: {#accountId, #updatedAt},
+)
+@TableIndex(
+  name: 'task_records_account_deleted',
+  columns: {#accountId, #deletedAt},
+)
+class TaskRecords extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get taskId => text()();
+  TextColumn get title => text()();
+  TextColumn get description => text().nullable()();
+  TextColumn get scheduledDate => text()();
+  TextColumn get scheduledTime => text().nullable()();
+  DateTimeColumn get targetDeadline => dateTime().nullable()();
+  IntColumn get targetDeadlineUtcOffsetMinutes => integer().nullable()();
+  TextColumn get category => text()();
+  TextColumn get quadrant => text()();
+  IntColumn get estimatedDurationMinutes => integer().nullable()();
+  TextColumn get checklistJson =>
+      text().withDefault(const Constant<String>('[]'))();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get completionXp => integer()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, taskId};
+}
+
+/// Immutable shared XP ledger rows introduced with the Task schema.
+///
+/// The composite key is the integrity boundary: a source entity can award XP
+/// at most once for one account. Later phases add the first-insert behavior;
+/// this table deliberately exposes no mutable XP balance.
+class XpAwards extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get source => text()();
+  TextColumn get sourceId => text()();
+  IntColumn get amount => integer()();
+  DateTimeColumn get awardedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, source, sourceId};
+}
+
 @DriftDatabase(
   tables: [
     FoundationPreferences,
@@ -126,6 +196,8 @@ class FoundationAuditLog extends Table {
     ConflictRecords,
     MigrationJournal,
     FoundationAuditLog,
+    TaskRecords,
+    XpAwards,
   ],
 )
 class FoundationDatabase extends _$FoundationDatabase {
@@ -237,9 +309,25 @@ class FoundationDatabase extends _$FoundationDatabase {
     onUpgrade: (migrator, from, to) async {
       _migrationAttemptedFor = to;
       await _recordJournalStart(to);
-      if (to >= 2 && from < 2) {
+      if ((to >= 2 && from < 2) || (to >= 3 && from < 3)) {
         await testMigrationHook?.call(migrator, from, to);
+      }
+      if (to >= 2 && from < 2) {
         await migrator.createTable(foundationAuditLog);
+      }
+      if (to >= 3 && from < 3) {
+        await migrator.createTable(taskRecords);
+        await migrator.createTable(xpAwards);
+        for (final index in <Index>[
+          taskRecordsAccountDate,
+          taskRecordsAccountCategory,
+          taskRecordsAccountQuadrant,
+          taskRecordsAccountCompletion,
+          taskRecordsAccountUpdated,
+          taskRecordsAccountDeleted,
+        ]) {
+          await _createIndexIfMissing(migrator, index);
+        }
       }
       await _recordJournalComplete(to);
     },
@@ -257,6 +345,19 @@ class FoundationDatabase extends _$FoundationDatabase {
       );
     },
   );
+
+  Future<void> _createIndexIfMissing(Migrator migrator, Index index) async {
+    final existing = await customSelect(
+      'SELECT 1 FROM sqlite_master WHERE type = ? AND name = ? LIMIT 1',
+      variables: [
+        const Variable('index'),
+        Variable.withString(index.entityName),
+      ],
+    ).getSingleOrNull();
+    if (existing == null) {
+      await migrator.createIndex(index);
+    }
+  }
 
   Future<void> _recordJournalStart(int version) {
     final startedAt = DateTime.now().toUtc();

@@ -29,19 +29,23 @@ void main() {
       final path = v1.resolvedPath;
       await v1.close();
 
-      // Upgrade to v2 (adds the foundation_audit_log table).
-      final v2 = await FoundationDatabase.openEncrypted(
+      // Upgrade to the current schema (v2 adds the audit table; later
+      // versions remain additive).
+      final current = await FoundationDatabase.openEncrypted(
         path: path,
         key: _testKey,
       );
       // Prior data survived the upgrade.
       expect(
-        await v2.rawScalar('SELECT value FROM foundation_preferences'),
+        await current.rawScalar('SELECT value FROM foundation_preferences'),
         'ar',
       );
-      // The migration journal recorded a completed entry for version 2.
-      expect(await v2.journalStatusFor(2), 'completed');
-      await v2.close();
+      // The migration journal recorded the current version as completed.
+      expect(
+        await current.journalStatusFor(kFoundationSchemaVersion),
+        'completed',
+      );
+      await current.close();
     },
   );
 
@@ -60,7 +64,7 @@ void main() {
       final path = v1.resolvedPath;
       await v1.close();
 
-      // Injected failure: the v1 -> v2 step throws.
+      // Injected failure: the v1 -> current-schema upgrade throws.
       await expectLater(
         FoundationDatabase.openEncrypted(
           path: path,
@@ -96,16 +100,19 @@ void main() {
         'SELECT version FROM migration_journal '
         "WHERE status = 'failed' ORDER BY started_at DESC LIMIT 1",
       );
-      expect(failedVersion, 2);
+      expect(failedVersion, kFoundationSchemaVersion);
       await reopened.close();
 
       // A subsequent clean upgrade marks the failed attempt recovered.
-      final v2 = await FoundationDatabase.openEncrypted(
+      final current = await FoundationDatabase.openEncrypted(
         path: path,
         key: _testKey,
       );
-      expect(await v2.journalStatusFor(2), 'recovered');
-      await v2.close();
+      expect(
+        await current.journalStatusFor(kFoundationSchemaVersion),
+        'recovered',
+      );
+      await current.close();
     },
   );
 }

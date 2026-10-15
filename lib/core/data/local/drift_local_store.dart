@@ -248,6 +248,29 @@ class DriftLocalStore implements LocalStorePort {
   @override
   Future<AppResult<void>> recordConflict(ConflictRecordInput conflict) async {
     try {
+      final existing =
+          await (database.select(
+                database.conflictRecords,
+              )..where((table) => table.conflictId.equals(conflict.conflictId)))
+              .getSingleOrNull();
+      if (existing != null) {
+        final same =
+            existing.accountId == conflict.accountId &&
+            existing.entityType == conflict.entityType &&
+            existing.entityId == conflict.entityId &&
+            existing.activeSource == conflict.activeVersion.source &&
+            existing.activeTimestamp ==
+                conflict.activeVersion.versionTimestamp &&
+            existing.activePayload == conflict.activeVersion.payload &&
+            existing.retainedSource == conflict.retainedVersion.source &&
+            existing.retainedTimestamp ==
+                conflict.retainedVersion.versionTimestamp &&
+            existing.retainedPayload == conflict.retainedVersion.payload;
+        if (!same) {
+          throw StateError('conflict id identifies different versions');
+        }
+        return AppResult<void>.success(null);
+      }
       await database
           .into(database.conflictRecords)
           .insert(

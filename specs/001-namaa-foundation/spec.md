@@ -29,7 +29,7 @@ implementing any product domain.
 
 ### Session 2026-09-04
 
-- Decision: Supabase replaces Firebase for cloud integration. Automated cloud tests use the local
+- Decision: Supabase is the approved cloud integration. Automated cloud tests use the local
   Supabase stack, device integration uses an isolated non-production Supabase project, and
   Supabase account data uses Row Level Security with least-privilege access.
 
@@ -251,9 +251,9 @@ localized root presentation work on both.
 
 - Foundation operations exist only to verify the platform, persistence, synchronization, routing,
   localization, theme, and error-handling capabilities; they do not create a product feature.
-- The explicit Supabase decision and Constitution v2.0.0 supersede older Firebase references in
-  the project plan. No selected package is production-locked until target verification is complete,
-  including end-to-end Supabase verification on Linux.
+- The explicit Supabase decision and Constitution v2.0.1 supersede older cloud-provider wording in
+  the project plan. The Foundation-selected package is production-locked after the completed
+  five-target verification gate.
 - The set of product domains and their detailed behavior remain out of scope for this
   specification and require their own approved specifications.
 - Device-specific notification behavior is not implemented in this foundation; the foundation

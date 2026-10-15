@@ -12,6 +12,13 @@ import 'package:namma_project/core/application/synchronization_engine.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
+import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
+import 'package:namma_project/features/tasks/application/task_reconciliation.dart';
+import 'package:namma_project/features/tasks/application/task_remote_reader.dart';
+import 'package:namma_project/features/tasks/application/task_repository.dart';
+import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/xp/application/award_ledger.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 /// Message key reported by every unconfigured adapter.
 const String kFoundationUnconfiguredMessageKey = kMessageKeyUnconfigured;
@@ -135,4 +142,88 @@ class UnconfiguredEngine implements PendingSynchronizationEngine {
   @override
   Future<AppResult<SyncSummary>> synchronize() async =>
       AppResult<SyncSummary>.failure(_unconfiguredFailure());
+}
+
+class UnconfiguredTaskRepository implements TaskRepository {
+  @override
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  ) async => AppResult<T>.failure(_unconfiguredFailure());
+  @override
+  Future<AppResult<void>> applyInboundTask(Task task) async =>
+      AppResult<void>.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<void>> commitTask(TaskWriteRequest request) async =>
+      AppResult<void>.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<bool>> hasPendingChange({
+    required String accountId,
+    required String taskId,
+  }) async => AppResult<bool>.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<Task?>> readTask({
+    required String accountId,
+    required String taskId,
+  }) async => AppResult<Task?>.failure(_unconfiguredFailure());
+
+  @override
+  Stream<List<Task>> watchTasks(String accountId) =>
+      Stream<List<Task>>.error(_unconfiguredFailure());
+
+  @override
+  Stream<List<TaskConflictRecord>> watchConflicts(String accountId) =>
+      Stream<List<TaskConflictRecord>>.error(_unconfiguredFailure());
+}
+
+class UnconfiguredTaskRemoteReader
+    implements TaskRemoteReaderPort, TaskAwardRemoteReaderPort {
+  @override
+  Future<AppResult<List<Task>>> readAllTasks(String accountId) async =>
+      AppResult<List<Task>>.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<List<TaskCompletionAward>>> readAllTaskAwards(
+    String accountId,
+  ) async =>
+      AppResult<List<TaskCompletionAward>>.failure(_unconfiguredFailure());
+}
+
+class UnconfiguredTaskReconciler implements TaskReconciliationPort {
+  @override
+  Future<AppResult<TaskReconciliationSummary>> reconcile({
+    required String accountId,
+    required List<Task> remoteTasks,
+  }) async =>
+      AppResult<TaskReconciliationSummary>.failure(_unconfiguredFailure());
+}
+
+class UnconfiguredAwardLedger implements AwardLedgerPort {
+  @override
+  Future<AppResult<AwardInsertOutcome>> insertOnce(
+    TaskCompletionAward award,
+  ) async => AppResult<AwardInsertOutcome>.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<void>> applyRemoteAward(TaskCompletionAward award) async =>
+      AppResult<void>.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<TaskCompletionAward?>> readAward({
+    required String accountId,
+    required String source,
+    required String sourceId,
+  }) async => AppResult<TaskCompletionAward?>.failure(_unconfiguredFailure());
+
+  @override
+  Stream<List<TaskCompletionAward>> watchAwards(String accountId) =>
+      Stream<List<TaskCompletionAward>>.error(_unconfiguredFailure());
+}
+
+class UnconfiguredTaskCompletionUnitOfWork implements TaskCompletionUnitOfWork {
+  @override
+  Future<AppResult<void>> commit(TaskCompletionCommit request) async =>
+      AppResult<void>.failure(_unconfiguredFailure());
 }
