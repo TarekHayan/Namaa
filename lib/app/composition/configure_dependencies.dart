@@ -20,6 +20,7 @@ import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
+import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/application/synchronization_engine.dart';
@@ -65,7 +66,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
 /// The environments the composition root can prepare.
-enum FoundationEnvironment { unconfigured, local, test, nonProduction }
+enum FoundationEnvironment {
+  unconfigured,
+  local,
+  test,
+  nonProduction,
+  tasksPreview,
+}
 
 /// Configures the dependency graph for [environment].
 Future<void> configureDependencies({
@@ -105,27 +112,46 @@ Future<void> configureDependencies({
     );
     final localStore = DriftLocalStore(database);
     getIt.registerLazySingleton<LocalStorePort>(() => localStore);
+    const taskCodec = TaskPayloadCodec();
+    getIt.registerLazySingleton<TaskPayloadCodec>(() => taskCodec);
 
-    final session = await _cloudSessionFor(
-      environment,
-      secureStore: secureStore,
-    );
-    getIt.registerLazySingleton<CloudSessionPort>(() => session.adapter);
-    final foundationSync = SupabaseSyncAdapter(
-      gateway: SupabaseProbeGatewayImpl(session.client),
-    );
-    final taskGateway = SupabaseTaskGatewayImpl(session.client);
-    final taskSyncAdapter = SupabaseTaskSyncAdapter(gateway: taskGateway);
-    getIt.registerLazySingleton<SupabaseTaskGateway>(() => taskGateway);
-    getIt.registerLazySingleton<CloudSyncPort>(
-      () => EntityDispatchRouter(
-        foundationAdapter: foundationSync,
-        taskAdapter: taskSyncAdapter,
-      ),
-    );
+    final preview = environment == FoundationEnvironment.tasksPreview;
+    final cloud = preview
+        ? null
+        : await _cloudSessionFor(environment, secureStore: secureStore);
+    final session = preview ? const TasksPreviewSession() : cloud!.adapter;
+    getIt.registerLazySingleton<CloudSessionPort>(() => session);
+    if (preview) {
+      getIt.registerLazySingleton<CloudSyncPort>(() => UnconfiguredCloudSync());
+      getIt.registerLazySingleton<TaskRemoteReaderPort>(
+        () => UnconfiguredTaskRemoteReader(),
+      );
+      getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(
+        () => UnconfiguredTaskRemoteReader(),
+      );
+    } else {
+      final foundationSync = SupabaseSyncAdapter(
+        gateway: SupabaseProbeGatewayImpl(cloud!.client),
+      );
+      final taskGateway = SupabaseTaskGatewayImpl(cloud.client);
+      final taskSyncAdapter = SupabaseTaskSyncAdapter(gateway: taskGateway);
+      getIt.registerLazySingleton<SupabaseTaskGateway>(() => taskGateway);
+      getIt.registerLazySingleton<CloudSyncPort>(
+        () => EntityDispatchRouter(
+          foundationAdapter: foundationSync,
+          taskAdapter: taskSyncAdapter,
+        ),
+      );
+      final taskReader = SupabaseTaskReader(
+        gateway: taskGateway,
+        codec: taskCodec,
+      );
+      getIt.registerLazySingleton<TaskRemoteReaderPort>(() => taskReader);
+      getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(() => taskReader);
+    }
 
     getIt.registerLazySingleton<ConnectivityPort>(
-      () => environment == FoundationEnvironment.test
+      () => environment == FoundationEnvironment.test || preview
           ? DefaultConnectivityPort()
           : ConnectivityAdapter(Connectivity()),
     );
@@ -142,7 +168,7 @@ Future<void> configureDependencies({
             )).failureOrNull ==
             null,
         supabaseInitializationProbe: () async =>
-            (await session.adapter.initialize()).failureOrNull == null,
+            !preview && (await session.initialize()).failureOrNull == null,
         offlineReconnectProbe: () async {
           final connectivity = getIt<ConnectivityPort>();
           connectivity.current;
@@ -153,15 +179,15 @@ Future<void> configureDependencies({
     );
 
     getIt.registerLazySingleton<PendingSynchronizationEngine>(
-      () => SynchronizationCoordinator(
-        localStore: localStore,
-        cloudSession: session.adapter,
-        cloudSync: getIt<CloudSyncPort>(),
-      ),
+      () => preview
+          ? const TasksPreviewSynchronization()
+          : SynchronizationCoordinator(
+              localStore: localStore,
+              cloudSession: session,
+              cloudSync: getIt<CloudSyncPort>(),
+            ),
     );
 
-    const taskCodec = TaskPayloadCodec();
-    getIt.registerLazySingleton<TaskPayloadCodec>(() => taskCodec);
     getIt.registerLazySingleton<TaskRepository>(
       () => DriftTaskRepository(database: database, codec: taskCodec),
     );
@@ -175,12 +201,6 @@ Future<void> configureDependencies({
         awardLedger: getIt<AwardLedgerPort>(),
       ),
     );
-    final taskReader = SupabaseTaskReader(
-      gateway: taskGateway,
-      codec: taskCodec,
-    );
-    getIt.registerLazySingleton<TaskRemoteReaderPort>(() => taskReader);
-    getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(() => taskReader);
     getIt.registerLazySingleton<TaskReconciliationPort>(
       () => TaskReconciler(
         repository: getIt<TaskRepository>(),
@@ -188,20 +208,22 @@ Future<void> configureDependencies({
         codec: taskCodec,
       ),
     );
-    getIt.registerLazySingleton<TaskSyncService>(
-      () => TaskSyncService(
-        session: session.adapter,
-        connectivity: getIt<ConnectivityPort>(),
-        outbound: getIt<PendingSynchronizationEngine>(),
-        remoteReader: getIt<TaskRemoteReaderPort>(),
-        reconciler: getIt<TaskReconciliationPort>(),
-        awardReader: getIt<TaskAwardRemoteReaderPort>(),
-        awardLedger: getIt<AwardLedgerPort>(),
-      ),
-      dispose: (service) => service.dispose(),
-    );
+    if (!preview) {
+      getIt.registerLazySingleton<TaskSyncService>(
+        () => TaskSyncService(
+          session: session,
+          connectivity: getIt<ConnectivityPort>(),
+          outbound: getIt<PendingSynchronizationEngine>(),
+          remoteReader: getIt<TaskRemoteReaderPort>(),
+          reconciler: getIt<TaskReconciliationPort>(),
+          awardReader: getIt<TaskAwardRemoteReaderPort>(),
+          awardLedger: getIt<AwardLedgerPort>(),
+        ),
+        dispose: (service) => service.dispose(),
+      );
+    }
 
-    _registerUseCasesAndCubits(getIt);
+    _registerUseCasesAndCubits(getIt, enableTaskSync: !preview);
   } catch (error) {
     // If vault access, database opening, migration, or cloud configuration fails,
     // safe-fail doubles are registered with an initialization failure so the
@@ -283,6 +305,7 @@ void _registerSafeFail(GetIt getIt) {
 void _registerUseCasesAndCubits(
   GetIt getIt, {
   AppFailure? initializationFailure,
+  bool enableTaskSync = true,
 }) {
   getIt.registerLazySingleton<TaskCommands>(
     () => TaskCommands(
@@ -346,7 +369,7 @@ void _registerUseCasesAndCubits(
       completionService: getIt<TaskCompletionService>(),
       awardLedger: getIt<AwardLedgerPort>(),
       localDate: _systemLocalDate,
-      syncService: getIt<TaskSyncService>(),
+      syncService: enableTaskSync ? getIt<TaskSyncService>() : null,
     ),
   );
 }
