@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/composition/configure_dependencies.dart';
+import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.dart';
@@ -24,6 +25,7 @@ import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/application/task_sync_service.dart';
 import 'package:namma_project/features/tasks/data/drift_task_repository.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
+import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
 import 'package:namma_project/features/xp/application/award_ledger.dart';
 import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 
@@ -121,6 +123,61 @@ void main() {
   });
 
   group('normal application composition', () {
+    test('local Tasks trial works without sign-in and keeps work', () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'namaa_tasks_preview_',
+      );
+      final dbPath = <String>[
+        tempDir.path,
+        'foundation_encrypted.db',
+      ].join(Platform.pathSeparator);
+      final secureStore = InMemorySecureKeyValueStore();
+      addTearDown(() async {
+        await getIt.reset();
+        await tempDir.delete(recursive: true);
+      });
+
+      await configureDependencies(
+        environment: FoundationEnvironment.tasksPreview,
+        secureStoreOverride: secureStore,
+        databasePathOverride: dbPath,
+      );
+      expect(getIt<CloudSessionPort>(), isA<TasksPreviewSession>());
+      expect(getIt<CloudSyncPort>(), isA<UnconfiguredCloudSync>());
+      expect(getIt.isRegistered<TaskSyncService>(), isFalse);
+      final session = getIt<CloudSessionPort>();
+      expect((await session.initialize()).failureOrNull, isNull);
+      expect(
+        (await session.obtainSyncContext()).valueOrNull?.accountId,
+        kTasksPreviewAccountId,
+      );
+
+      final tasksCubit = getIt<TasksCubit>();
+      final ready = tasksCubit.stream
+          .firstWhere((state) => state is TasksReady)
+          .timeout(const Duration(seconds: 5));
+      await tasksCubit.load(kTasksPreviewAccountId);
+      await ready;
+      final created = await tasksCubit.createTask(
+        const CreateTaskInput(title: 'Trial task'),
+      );
+      expect(created.failureOrNull, isNull);
+      final taskId = created.valueOrNull!.id;
+
+      await tasksCubit.close();
+      await getIt.reset();
+      await configureDependencies(
+        environment: FoundationEnvironment.tasksPreview,
+        secureStoreOverride: secureStore,
+        databasePathOverride: dbPath,
+      );
+      final restored = await getIt<TaskRepository>().readTask(
+        accountId: kTasksPreviewAccountId,
+        taskId: taskId,
+      );
+      expect(restored.valueOrNull?.title, 'Trial task');
+    });
+
     test('default launch resolves real Foundation adapters', () async {
       final tempDir = await Directory.systemTemp.createTemp(
         'namaa_normal_launch_',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/routing/app_router.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
@@ -136,6 +137,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('account-a'), findsOneWidget);
+    expect(find.byKey(kTasksRouteSignedOutKey), findsNothing);
+  });
+
+  testWidgets('local Tasks trial opens the route without sign-in', (
+    tester,
+  ) async {
+    final appRouter = FoundationAppRouter(
+      rootBuilder: (_) => const Scaffold(body: Text('foundation root')),
+      cloudSession: const TasksPreviewSession(),
+      tasksBuilder: (_, accountId) => Scaffold(body: Text(accountId)),
+    );
+    addTearDown(appRouter.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: appRouter.router,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+      ),
+    );
+    appRouter.go(kTasksRoute);
+    await tester.pumpAndSettle();
+
+    expect(find.text(kTasksPreviewAccountId), findsOneWidget);
     expect(find.byKey(kTasksRouteSignedOutKey), findsNothing);
   });
 }
