@@ -233,4 +233,70 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get tasksRetainedRemote => 'النسخة البعيدة';
+
+  @override
+  String get habitsTitle => 'العادات';
+
+  @override
+  String get habitsEmpty => 'لا توجد عادات بعد';
+
+  @override
+  String get habitsCreate => 'عادة جديدة';
+
+  @override
+  String get habitNameLabel => 'اسم العادة';
+
+  @override
+  String get habitNameRequired => 'اكتب اسم العادة';
+
+  @override
+  String get habitWeekdaysRequired => 'اختر يومًا واحدًا على الأقل';
+
+  @override
+  String get habitSave => 'حفظ العادة';
+
+  @override
+  String get habitCancel => 'إلغاء';
+
+  @override
+  String get habitComplete => 'إنجاز اليوم';
+
+  @override
+  String get habitUndo => 'التراجع عن إنجاز اليوم';
+
+  @override
+  String get habitDueToday => 'مطلوبة اليوم';
+
+  @override
+  String get habitNotDueToday => 'غير مطلوبة اليوم';
+
+  @override
+  String get habitsLoadFailure => 'تعذر تحميل العادات. حاول مرة أخرى.';
+
+  @override
+  String get habitsSaveFailure => 'تعذر حفظ التغيير. حاول مرة أخرى.';
+
+  @override
+  String get habitsSignInRequired => 'سجّل الدخول للوصول إلى عاداتك.';
+
+  @override
+  String get habitMonday => 'الاثنين';
+
+  @override
+  String get habitTuesday => 'الثلاثاء';
+
+  @override
+  String get habitWednesday => 'الأربعاء';
+
+  @override
+  String get habitThursday => 'الخميس';
+
+  @override
+  String get habitFriday => 'الجمعة';
+
+  @override
+  String get habitSaturday => 'السبت';
+
+  @override
+  String get habitSunday => 'الأحد';
 }

@@ -45,31 +45,31 @@ description: "Dependency-ordered implementation tasks for Namaa Habits 004"
 
 ### Tests for User Story 1 — write first
 
-- [ ] T006 [P] [US1] Test nonblank names, canonical weekday sets, valid reminder minutes, stable local dates/offsets, and one-day identity in test/unit/features/habits/domain/habit_model_test.dart.
-- [ ] T007 [P] [US1] Test CreateHabit, CompleteHabitToday, UndoHabitToday, ten repeated taps, past-date rejection, unscheduled-date rejection, and typed failures in test/unit/features/habits/application/habit_commands_test.dart.
-- [ ] T008 [P] [US1] Test atomic Habit/HabitDay row plus stable-ID PendingChange, account partitioning, restart, and rollback on local failure in test/unit/features/habits/data/drift_habit_repository_test.dart.
-- [ ] T009 [P] [US1] Test empty/list/create/validation/complete/undo states and accessible controls in test/widget/features/habits/habits_screen_test.dart.
-- [ ] T010 [P] [US1] Add a debug-preview create/complete/undo/offline-restart journey in integration_test/habits_offline_sync_test.dart; leave cross-device assertions for US4.
+- [X] T006 [P] [US1] Test nonblank names, canonical weekday sets, valid reminder minutes, stable local dates/offsets, and one-day identity in test/unit/features/habits/domain/habit_model_test.dart.
+- [X] T007 [P] [US1] Test CreateHabit, CompleteHabitToday, UndoHabitToday, ten repeated taps, past-date rejection, unscheduled-date rejection, and typed failures in test/unit/features/habits/application/habit_commands_test.dart.
+- [X] T008 [P] [US1] Test atomic Habit/HabitDay row plus stable-ID PendingChange, account partitioning, restart, and rollback on local failure in test/unit/features/habits/data/drift_habit_repository_test.dart.
+- [X] T009 [P] [US1] Test empty/list/create/validation/complete/undo states and accessible controls in test/widget/features/habits/habits_screen_test.dart.
+- [X] T010 [P] [US1] Add a debug-preview create/complete/undo/offline-restart journey in integration_test/habits_offline_sync_test.dart; leave cross-device assertions for US4.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [P] [US1] Define immutable account-owned Habit, initial schedule revision, name/weekdays/reminder validation, version, and tombstone fields in lib/features/habits/domain/habit.dart.
-- [ ] T012 [P] [US1] Define independently keyed HabitDay with immutable localDate, UTC action version, recorded offset, completion/undo, and earned-while-due evidence in lib/features/habits/domain/habit_day.dart.
-- [ ] T013 [US1] Encode/decode Habit revisions and HabitDay payloads with version and date/offset round trips in lib/features/habits/data/habit_payload_codec.dart.
-- [ ] T014 [US1] Define account-scoped Habit repository and atomic mutation/outbox interfaces in lib/features/habits/application/habit_repository.dart.
-- [ ] T015 [US1] Implement create, complete and undo use cases in lib/features/habits/application/habit_commands.dart using the current session account and acting device date; reject foreign/deleted habits and never award XP.
-- [ ] T016 [US1] Persist local Habit and HabitDay versions with their PendingChanges in one encrypted transaction, enforce one row per account/habit/date, and preserve confirmed state on failure in lib/features/habits/data/drift_habit_repository.dart.
-- [ ] T017 [US1] Expose account-scoped active Habits and due-today/completion projections for later screens and aggregators in lib/features/habits/application/habit_queries.dart.
-- [ ] T018 [P] [US1] Add English names, weekday labels, route gate, validation, save/undo and local failure strings in lib/app/l10n/app_en.arb.
-- [ ] T019 [P] [US1] Add equivalent Arabic names, weekday labels, validation, save/undo and local failure strings in lib/app/l10n/app_ar.arb.
-- [ ] T020 [US1] Regenerate localized Dart resources in lib/app/l10n/generated/app_localizations.dart after both ARB files are complete.
-- [ ] T021 [US1] Connect ARB messages to the Habits presentation boundary in lib/app/l10n/habits_strings_adapter.dart and lib/features/habits/presentation/habits_strings.dart.
-- [ ] T022 [US1] Implement one Cubit/state owner for loading, active account, local mutation, validation failure, save failure and per-habit due/completion state in lib/features/habits/presentation/habits_cubit.dart and lib/features/habits/presentation/habits_state.dart.
-- [ ] T023 [US1] Build the accessible create form with name and Monday–Sunday selection in lib/features/habits/presentation/habit_editor.dart.
-- [ ] T024 [US1] Build responsive empty/list and due-today completion/undo controls with localized semantics in lib/features/habits/presentation/habits_screen.dart.
-- [ ] T025 [US1] Register Habit local ports/Cubit and an isolated non-release preview account in lib/app/composition/configure_dependencies.dart and lib/app/composition/habits_preview_adapters.dart.
-- [ ] T026 [US1] Add session-gated /habits routing that constructs account-scoped data only after account resolution in lib/app/routing/app_router.dart.
-- [ ] T027 [US1] Add the Habits entry to the existing app navigation and preview flow in lib/app/app.dart.
+- [X] T011 [P] [US1] Define immutable account-owned Habit, initial schedule revision, name/weekdays/reminder validation, version, and tombstone fields in lib/features/habits/domain/habit.dart.
+- [X] T012 [P] [US1] Define independently keyed HabitDay with immutable localDate, UTC action version, recorded offset, completion/undo, and earned-while-due evidence in lib/features/habits/domain/habit_day.dart.
+- [X] T013 [US1] Encode/decode Habit revisions and HabitDay payloads with version and date/offset round trips in lib/features/habits/data/habit_payload_codec.dart.
+- [X] T014 [US1] Define account-scoped Habit repository and atomic mutation/outbox interfaces in lib/features/habits/application/habit_repository.dart.
+- [X] T015 [US1] Implement create, complete and undo use cases in lib/features/habits/application/habit_commands.dart using the current session account and acting device date; reject foreign/deleted habits and never award XP.
+- [X] T016 [US1] Persist local Habit and HabitDay versions with their PendingChanges in one encrypted transaction, enforce one row per account/habit/date, and preserve confirmed state on failure in lib/features/habits/data/drift_habit_repository.dart.
+- [X] T017 [US1] Expose account-scoped active Habits and due-today/completion projections for later screens and aggregators in lib/features/habits/application/habit_queries.dart.
+- [X] T018 [P] [US1] Add English names, weekday labels, route gate, validation, save/undo and local failure strings in lib/app/l10n/app_en.arb.
+- [X] T019 [P] [US1] Add equivalent Arabic names, weekday labels, validation, save/undo and local failure strings in lib/app/l10n/app_ar.arb.
+- [X] T020 [US1] Regenerate localized Dart resources in lib/app/l10n/generated/app_localizations.dart after both ARB files are complete.
+- [X] T021 [US1] Connect ARB messages to the Habits presentation boundary in lib/app/l10n/habits_strings_adapter.dart and lib/features/habits/presentation/habits_strings.dart.
+- [X] T022 [US1] Implement one Cubit/state owner for loading, active account, local mutation, validation failure, save failure and per-habit due/completion state in lib/features/habits/presentation/habits_cubit.dart and lib/features/habits/presentation/habits_state.dart.
+- [X] T023 [US1] Build the accessible create form with name and Monday–Sunday selection in lib/features/habits/presentation/habit_editor.dart.
+- [X] T024 [US1] Build responsive empty/list and due-today completion/undo controls with localized semantics in lib/features/habits/presentation/habits_screen.dart.
+- [X] T025 [US1] Register Habit local ports/Cubit and an isolated non-release preview account in lib/app/composition/configure_dependencies.dart and lib/app/composition/habits_preview_adapters.dart.
+- [X] T026 [US1] Add session-gated /habits routing that constructs account-scoped data only after account resolution in lib/app/routing/app_router.dart.
+- [X] T027 [US1] Add the Habits entry to the existing app navigation and preview flow in lib/app/app.dart.
 
 **Checkpoint**: US1 passes its domain, local, widget and preview restart tests without a network or Auth UI.
 

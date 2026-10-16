@@ -20,6 +20,7 @@ import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
+import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
@@ -47,6 +48,12 @@ import 'package:namma_project/features/foundation/presentation/state/foundation_
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
+import 'package:namma_project/features/habits/application/habit_commands.dart';
+import 'package:namma_project/features/habits/application/habit_repository.dart';
+import 'package:namma_project/features/habits/data/drift_habit_repository.dart';
+import 'package:namma_project/features/habits/data/habit_payload_codec.dart';
+import 'package:namma_project/features/habits/domain/habit.dart';
+import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
@@ -122,6 +129,11 @@ Future<void> configureDependencies({
     final session = preview ? const TasksPreviewSession() : cloud!.adapter;
     getIt.registerLazySingleton<CloudSessionPort>(() => session);
     if (preview) {
+      getIt.registerLazySingleton<HabitsPreviewSession>(
+        () => const HabitsPreviewSession(),
+      );
+    }
+    if (preview) {
       getIt.registerLazySingleton<CloudSyncPort>(() => UnconfiguredCloudSync());
       getIt.registerLazySingleton<TaskRemoteReaderPort>(
         () => UnconfiguredTaskRemoteReader(),
@@ -190,6 +202,33 @@ Future<void> configureDependencies({
 
     getIt.registerLazySingleton<TaskRepository>(
       () => DriftTaskRepository(database: database, codec: taskCodec),
+    );
+    getIt.registerLazySingleton<HabitRepository>(
+      () => DriftHabitRepository(
+        database: database,
+        codec: const HabitPayloadCodec(),
+      ),
+    );
+    getIt.registerLazySingleton<HabitCommands>(
+      () => HabitCommands(
+        repository: getIt<HabitRepository>(),
+        session: preview
+            ? getIt<HabitsPreviewSession>()
+            : getIt<CloudSessionPort>(),
+      ),
+    );
+    getIt.registerFactory<HabitsCubit>(
+      () => HabitsCubit(
+        repository: getIt<HabitRepository>(),
+        commands: getIt<HabitCommands>(),
+        localCalendar: () {
+          final now = DateTime.now();
+          return (
+            localDate: habitLocalDate(now),
+            utcOffsetMinutes: now.timeZoneOffset.inMinutes,
+          );
+        },
+      ),
     );
     getIt.registerLazySingleton<AwardLedgerPort>(
       () => DriftAwardLedger(database),

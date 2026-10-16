@@ -237,4 +237,71 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get tasksRetainedRemote => 'Remote version';
+
+  @override
+  String get habitsTitle => 'Habits';
+
+  @override
+  String get habitsEmpty => 'No habits yet';
+
+  @override
+  String get habitsCreate => 'New habit';
+
+  @override
+  String get habitNameLabel => 'Name';
+
+  @override
+  String get habitNameRequired => 'Enter a habit name';
+
+  @override
+  String get habitWeekdaysRequired => 'Choose at least one day';
+
+  @override
+  String get habitSave => 'Save habit';
+
+  @override
+  String get habitCancel => 'Cancel';
+
+  @override
+  String get habitComplete => 'Complete today';
+
+  @override
+  String get habitUndo => 'Undo today';
+
+  @override
+  String get habitDueToday => 'Due today';
+
+  @override
+  String get habitNotDueToday => 'Not due today';
+
+  @override
+  String get habitsLoadFailure => 'Could not load habits. Try again.';
+
+  @override
+  String get habitsSaveFailure =>
+      'Could not save your change. Please try again.';
+
+  @override
+  String get habitsSignInRequired => 'Sign in to access your habits.';
+
+  @override
+  String get habitMonday => 'Monday';
+
+  @override
+  String get habitTuesday => 'Tuesday';
+
+  @override
+  String get habitWednesday => 'Wednesday';
+
+  @override
+  String get habitThursday => 'Thursday';
+
+  @override
+  String get habitFriday => 'Friday';
+
+  @override
+  String get habitSaturday => 'Saturday';
+
+  @override
+  String get habitSunday => 'Sunday';
 }

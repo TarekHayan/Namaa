@@ -13,6 +13,7 @@ const String kFoundationRootRoute = '/';
 
 /// Account-scoped Tasks entry point.
 const String kTasksRoute = '/tasks';
+const String kHabitsRoute = '/habits';
 
 /// Key used by tests and diagnostics to identify handled route failures.
 const Key kFoundationUnknownRouteKey = Key('foundation_unknown_route');
@@ -21,8 +22,12 @@ const Key kFoundationUnknownRouteKey = Key('foundation_unknown_route');
 /// resolved.
 const Key kTasksRouteLoadingKey = Key('tasks_route_loading');
 const Key kTasksRouteSignedOutKey = Key('tasks_route_signed_out');
+const Key kHabitsRouteLoadingKey = Key('habits_route_loading');
+const Key kHabitsRouteSignedOutKey = Key('habits_route_signed_out');
 
 typedef AuthenticatedTasksBuilder =
+    Widget Function(BuildContext context, String accountId);
+typedef AuthenticatedHabitsBuilder =
     Widget Function(BuildContext context, String accountId);
 
 /// Owns Foundation routing only. Future features register their own entries;
@@ -32,9 +37,17 @@ class FoundationAppRouter {
     required WidgetBuilder rootBuilder,
     CloudSessionPort? cloudSession,
     AuthenticatedTasksBuilder? tasksBuilder,
+    CloudSessionPort? habitsSession,
+    AuthenticatedHabitsBuilder? habitsBuilder,
   }) : router = GoRouter(
          initialLocation: kFoundationRootRoute,
-         routes: _routes(rootBuilder, cloudSession, tasksBuilder),
+         routes: _routes(
+           rootBuilder,
+           cloudSession,
+           tasksBuilder,
+           habitsSession,
+           habitsBuilder,
+         ),
          errorBuilder: (context, state) => const _UnknownRouteBoundary(),
        );
 
@@ -48,6 +61,8 @@ class FoundationAppRouter {
     WidgetBuilder rootBuilder,
     CloudSessionPort? cloudSession,
     AuthenticatedTasksBuilder? tasksBuilder,
+    CloudSessionPort? habitsSession,
+    AuthenticatedHabitsBuilder? habitsBuilder,
   ) => <RouteBase>[
     GoRoute(
       path: kFoundationRootRoute,
@@ -63,6 +78,16 @@ class FoundationAppRouter {
           tasksBuilder: tasksBuilder,
         ),
       ),
+    if (habitsSession != null && habitsBuilder != null)
+      GoRoute(
+        path: kHabitsRoute,
+        name: 'habits',
+        builder: (context, _) => _TasksRouteGate(
+          cloudSession: habitsSession,
+          tasksBuilder: habitsBuilder,
+          habits: true,
+        ),
+      ),
   ];
 }
 
@@ -73,10 +98,12 @@ class _TasksRouteGate extends StatefulWidget {
   const _TasksRouteGate({
     required this.cloudSession,
     required this.tasksBuilder,
+    this.habits = false,
   });
 
   final CloudSessionPort cloudSession;
   final AuthenticatedTasksBuilder tasksBuilder;
+  final bool habits;
 
   @override
   State<_TasksRouteGate> createState() => _TasksRouteGateState();
@@ -161,18 +188,20 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
     }
     if (_status == CloudSessionStatus.signedOut) {
       return Scaffold(
-        key: kTasksRouteSignedOutKey,
+        key: widget.habits ? kHabitsRouteSignedOutKey : kTasksRouteSignedOutKey,
         body: Center(
           child: Text(
-            FoundationLocalizations.of(context).tasksSignInRequired,
+            widget.habits
+                ? FoundationLocalizations.of(context).habitsSignInRequired
+                : FoundationLocalizations.of(context).tasksSignInRequired,
             textAlign: TextAlign.center,
           ),
         ),
       );
     }
-    return const Scaffold(
-      key: kTasksRouteLoadingKey,
-      body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      key: widget.habits ? kHabitsRouteLoadingKey : kTasksRouteLoadingKey,
+      body: const Center(child: CircularProgressIndicator()),
     );
   }
 }
