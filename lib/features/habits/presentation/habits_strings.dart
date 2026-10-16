@@ -16,6 +16,15 @@ abstract interface class HabitsStrings {
   String get loadFailure;
   String get saveFailure;
   String get signInRequired;
+  String get history;
+  String get currentStreak;
+  String get completedDates;
+  String get noCompletedDates;
+  String get pendingToday;
+  String get scheduleHistory;
+  String get effectiveFrom;
+  String get completedOn;
+  String get closeHistory;
   String weekday(int weekday);
 }
 

@@ -635,6 +635,60 @@ abstract class FoundationLocalizations {
   /// **'Sign in to access your habits.'**
   String get habitsSignInRequired;
 
+  /// No description provided for @habitHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get habitHistory;
+
+  /// No description provided for @habitCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak (days)'**
+  String get habitCurrentStreak;
+
+  /// No description provided for @habitCompletedDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed dates'**
+  String get habitCompletedDates;
+
+  /// No description provided for @habitNoCompletedDates.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed dates yet'**
+  String get habitNoCompletedDates;
+
+  /// No description provided for @habitPendingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today is still in progress'**
+  String get habitPendingToday;
+
+  /// No description provided for @habitScheduleHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule history'**
+  String get habitScheduleHistory;
+
+  /// No description provided for @habitEffectiveFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective from'**
+  String get habitEffectiveFrom;
+
+  /// No description provided for @habitCompletedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed on'**
+  String get habitCompletedOn;
+
+  /// No description provided for @habitCloseHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Close history'**
+  String get habitCloseHistory;
+
   /// No description provided for @habitMonday.
   ///
   /// In en, this message translates to:

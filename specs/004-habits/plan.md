@@ -1,6 +1,6 @@
 # Implementation Plan: Namaa Habits
 
-**Branch**: codex/004-habits | **Date**: 2026-10-16 | **Spec**: specs/004-habits/spec.md
+**Branch**: namaa/004-habits | **Date**: 2026-10-16 | **Spec**: specs/004-habits/spec.md
 
 **Input**: Approved feature specification and five 2026-10-16 clarifications; Namaa Constitution v2.0.1; namaa_plan.md Phase 3/Habits/Notifications/Auth/offline sections; verified Foundation and Tasks 003 code and contracts. This phase produces design artifacts only; tasks.md and application code belong to later steps.
 

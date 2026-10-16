@@ -1,6 +1,6 @@
 # Feature Specification: Habits
 
-**Feature Branch**: codex/004-habits
+**Feature Branch**: namaa/004-habits
 
 **Created**: 2026-10-16
 

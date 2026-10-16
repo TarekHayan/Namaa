@@ -280,6 +280,33 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get habitsSignInRequired => 'سجّل الدخول للوصول إلى عاداتك.';
 
   @override
+  String get habitHistory => 'السجل';
+
+  @override
+  String get habitCurrentStreak => 'السلسلة الحالية (أيام)';
+
+  @override
+  String get habitCompletedDates => 'تواريخ الإنجاز';
+
+  @override
+  String get habitNoCompletedDates => 'لا توجد أيام مكتملة بعد';
+
+  @override
+  String get habitPendingToday => 'اليوم لم ينته بعد';
+
+  @override
+  String get habitScheduleHistory => 'سجل الجدول';
+
+  @override
+  String get habitEffectiveFrom => 'سارٍ من';
+
+  @override
+  String get habitCompletedOn => 'أُنجزت في';
+
+  @override
+  String get habitCloseHistory => 'إغلاق السجل';
+
+  @override
   String get habitMonday => 'الاثنين';
 
   @override

@@ -83,18 +83,18 @@ description: "Dependency-ordered implementation tasks for Namaa Habits 004"
 
 ### Tests for User Story 2 — write first
 
-- [ ] T028 [P] [US2] Test selected-day streaks, closed misses, pending today, duplicate day, zero history and per-Habit isolation across ten schedule cases in test/unit/features/habits/domain/habit_streak_rules_test.dart.
-- [ ] T029 [P] [US2] Test account-scoped completed-date/history projections and exclusion of deleted parents in test/unit/features/habits/application/habit_queries_test.dart.
-- [ ] T030 [P] [US2] Test displayed independent streaks and read-only prior dates in test/widget/features/habits/habit_history_view_test.dart.
-- [ ] T031 [P] [US2] Add due/missed/neutral-day and history journey for two Habits in integration_test/habits_streak_history_test.dart.
+- [X] T028 [P] [US2] Test selected-day streaks, closed misses, pending today, duplicate day, zero history and per-Habit isolation across ten schedule cases in test/unit/features/habits/domain/habit_streak_rules_test.dart.
+- [X] T029 [P] [US2] Test account-scoped completed-date/history projections and exclusion of deleted parents in test/unit/features/habits/application/habit_queries_test.dart.
+- [X] T030 [P] [US2] Test displayed independent streaks and read-only prior dates in test/widget/features/habits/habit_history_view_test.dart.
+- [X] T031 [P] [US2] Add due/missed/neutral-day and history journey for two Habits in integration_test/habits_streak_history_test.dart.
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] Derive the current streak from Habit schedule revisions and one HabitDay per date, treating unfinished today as pending and unscheduled dates as neutral, in lib/features/habits/domain/habit_streak_rules.dart.
-- [ ] T033 [US2] Add one-Habit completed-date, schedule and streak projections to lib/features/habits/application/habit_queries.dart without a second canonical streak store.
-- [ ] T034 [US2] Add Arabic/English streak, history, date and pending-day strings in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb, then regenerate lib/app/l10n/generated/app_localizations.dart.
-- [ ] T035 [US2] Build localized, accessible, read-only history and streak presentation in lib/features/habits/presentation/habit_history_view.dart.
-- [ ] T036 [US2] Wire the independent streak/history state into lib/features/habits/presentation/habits_cubit.dart and lib/features/habits/presentation/habits_screen.dart.
+- [X] T032 [US2] Derive the current streak from Habit schedule revisions and one HabitDay per date, treating unfinished today as pending and unscheduled dates as neutral, in lib/features/habits/domain/habit_streak_rules.dart.
+- [X] T033 [US2] Add one-Habit completed-date, schedule and streak projections to lib/features/habits/application/habit_queries.dart without a second canonical streak store.
+- [X] T034 [US2] Add Arabic/English streak, history, date and pending-day strings in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb, then regenerate lib/app/l10n/generated/app_localizations.dart.
+- [X] T035 [US2] Build localized, accessible, read-only history and streak presentation in lib/features/habits/presentation/habit_history_view.dart.
+- [X] T036 [US2] Wire the independent streak/history state into lib/features/habits/presentation/habits_cubit.dart and lib/features/habits/presentation/habits_screen.dart.
 
 **Checkpoint**: US2 tests pass independently using local seeded Habits and recorded dates; Task progress and XP stay untouched.
 

@@ -94,12 +94,13 @@ final class HabitsCubit extends Cubit<HabitsState> {
     if (isClosed || _accountId == null || _habits == null || _days == null) {
       return;
     }
+    final localDate = _localCalendar().localDate;
     emit(
       HabitsReady(
         accountId: _accountId!,
         today: HabitQueries.today(
           accountId: _accountId!,
-          localDate: _localCalendar().localDate,
+          localDate: localDate,
           habits: _habits!,
           days: _days!,
         ),

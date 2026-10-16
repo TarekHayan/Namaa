@@ -39,6 +39,24 @@ final class _AppHabitsStrings implements HabitsStrings {
   String get saveFailure => _l10n.habitsSaveFailure;
   @override
   String get signInRequired => _l10n.habitsSignInRequired;
+  @override
+  String get history => _l10n.habitHistory;
+  @override
+  String get currentStreak => _l10n.habitCurrentStreak;
+  @override
+  String get completedDates => _l10n.habitCompletedDates;
+  @override
+  String get noCompletedDates => _l10n.habitNoCompletedDates;
+  @override
+  String get pendingToday => _l10n.habitPendingToday;
+  @override
+  String get scheduleHistory => _l10n.habitScheduleHistory;
+  @override
+  String get effectiveFrom => _l10n.habitEffectiveFrom;
+  @override
+  String get completedOn => _l10n.habitCompletedOn;
+  @override
+  String get closeHistory => _l10n.habitCloseHistory;
 
   @override
   String weekday(int weekday) => switch (weekday) {

@@ -285,6 +285,33 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get habitsSignInRequired => 'Sign in to access your habits.';
 
   @override
+  String get habitHistory => 'History';
+
+  @override
+  String get habitCurrentStreak => 'Current streak (days)';
+
+  @override
+  String get habitCompletedDates => 'Completed dates';
+
+  @override
+  String get habitNoCompletedDates => 'No completed dates yet';
+
+  @override
+  String get habitPendingToday => 'Today is still in progress';
+
+  @override
+  String get habitScheduleHistory => 'Schedule history';
+
+  @override
+  String get habitEffectiveFrom => 'Effective from';
+
+  @override
+  String get habitCompletedOn => 'Completed on';
+
+  @override
+  String get habitCloseHistory => 'Close history';
+
+  @override
   String get habitMonday => 'Monday';
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/features/habits/application/habit_queries.dart';
 import 'package:namma_project/features/habits/presentation/habit_editor.dart';
+import 'package:namma_project/features/habits/presentation/habit_history_view.dart';
 import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/habits/presentation/habits_state.dart';
 import 'package:namma_project/features/habits/presentation/habits_strings.dart';
@@ -136,6 +137,11 @@ class _HabitsScreenState extends State<HabitsScreen>
                                 onUndo: () => widget.cubit.undoToday(
                                   today[index].habit.id,
                                 ),
+                                onHistory: () => HabitHistoryView.show(
+                                  context,
+                                  history: today[index].history,
+                                  strings: strings,
+                                ),
                               ),
                             ),
                     ),
@@ -156,11 +162,13 @@ class _HabitCard extends StatelessWidget {
     required this.strings,
     required this.onComplete,
     required this.onUndo,
+    required this.onHistory,
   });
   final HabitToday value;
   final HabitsStrings strings;
   final VoidCallback onComplete;
   final VoidCallback onUndo;
+  final VoidCallback onHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -186,6 +194,17 @@ class _HabitCard extends StatelessWidget {
                         .join(' • '),
                   ),
                   Text(value.isDue ? strings.dueToday : strings.notDueToday),
+                  Text('${strings.currentStreak}: ${value.currentStreak}'),
+                  if (value.history.isTodayPending) Text(strings.pendingToday),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      key: ValueKey('habit-history-${habit.id}'),
+                      onPressed: onHistory,
+                      icon: const Icon(Icons.history),
+                      label: Text(strings.history),
+                    ),
+                  ),
                 ],
               ),
             ),

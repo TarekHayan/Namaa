@@ -1,6 +1,6 @@
 # Habits 004 implementation baseline
 
-**Scope:** source inspection for Phase 1 on branch codex/004-habits. This records the existing integration seams before Habit code is added. It is not evidence that the 004 behavior or five-platform checks pass.
+**Scope:** source inspection for Phase 1 on branch namaa/004-habits. This records the existing integration seams before Habit code is added. It is not evidence that the 004 behavior or five-platform checks pass.
 
 ## Verified starting state
 
