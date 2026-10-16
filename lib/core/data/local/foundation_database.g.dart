@@ -4223,6 +4223,1108 @@ class XpAwardsCompanion extends UpdateCompanion<XpAward> {
   }
 }
 
+class $HabitRecordsTable extends HabitRecords
+    with TableInfo<$HabitRecordsTable, HabitRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HabitRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<String> habitId = GeneratedColumn<String>(
+    'habit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scheduleRevisionsJsonMeta =
+      const VerificationMeta('scheduleRevisionsJson');
+  @override
+  late final GeneratedColumn<String> scheduleRevisionsJson =
+      GeneratedColumn<String>(
+        'schedule_revisions_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _reminderMinuteOfDayMeta =
+      const VerificationMeta('reminderMinuteOfDay');
+  @override
+  late final GeneratedColumn<int> reminderMinuteOfDay = GeneratedColumn<int>(
+    'reminder_minute_of_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    habitId,
+    name,
+    scheduleRevisionsJson,
+    reminderMinuteOfDay,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'habit_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HabitRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_habitIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('schedule_revisions_json')) {
+      context.handle(
+        _scheduleRevisionsJsonMeta,
+        scheduleRevisionsJson.isAcceptableOrUnknown(
+          data['schedule_revisions_json']!,
+          _scheduleRevisionsJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_scheduleRevisionsJsonMeta);
+    }
+    if (data.containsKey('reminder_minute_of_day')) {
+      context.handle(
+        _reminderMinuteOfDayMeta,
+        reminderMinuteOfDay.isAcceptableOrUnknown(
+          data['reminder_minute_of_day']!,
+          _reminderMinuteOfDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, habitId};
+  @override
+  HabitRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HabitRecord(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      scheduleRevisionsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}schedule_revisions_json'],
+      )!,
+      reminderMinuteOfDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reminder_minute_of_day'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $HabitRecordsTable createAlias(String alias) {
+    return $HabitRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class HabitRecord extends DataClass implements Insertable<HabitRecord> {
+  final String accountId;
+  final String habitId;
+  final String name;
+  final String scheduleRevisionsJson;
+  final int? reminderMinuteOfDay;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const HabitRecord({
+    required this.accountId,
+    required this.habitId,
+    required this.name,
+    required this.scheduleRevisionsJson,
+    this.reminderMinuteOfDay,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['habit_id'] = Variable<String>(habitId);
+    map['name'] = Variable<String>(name);
+    map['schedule_revisions_json'] = Variable<String>(scheduleRevisionsJson);
+    if (!nullToAbsent || reminderMinuteOfDay != null) {
+      map['reminder_minute_of_day'] = Variable<int>(reminderMinuteOfDay);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  HabitRecordsCompanion toCompanion(bool nullToAbsent) {
+    return HabitRecordsCompanion(
+      accountId: Value(accountId),
+      habitId: Value(habitId),
+      name: Value(name),
+      scheduleRevisionsJson: Value(scheduleRevisionsJson),
+      reminderMinuteOfDay: reminderMinuteOfDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderMinuteOfDay),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory HabitRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HabitRecord(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      habitId: serializer.fromJson<String>(json['habitId']),
+      name: serializer.fromJson<String>(json['name']),
+      scheduleRevisionsJson: serializer.fromJson<String>(
+        json['scheduleRevisionsJson'],
+      ),
+      reminderMinuteOfDay: serializer.fromJson<int?>(
+        json['reminderMinuteOfDay'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'habitId': serializer.toJson<String>(habitId),
+      'name': serializer.toJson<String>(name),
+      'scheduleRevisionsJson': serializer.toJson<String>(scheduleRevisionsJson),
+      'reminderMinuteOfDay': serializer.toJson<int?>(reminderMinuteOfDay),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  HabitRecord copyWith({
+    String? accountId,
+    String? habitId,
+    String? name,
+    String? scheduleRevisionsJson,
+    Value<int?> reminderMinuteOfDay = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => HabitRecord(
+    accountId: accountId ?? this.accountId,
+    habitId: habitId ?? this.habitId,
+    name: name ?? this.name,
+    scheduleRevisionsJson: scheduleRevisionsJson ?? this.scheduleRevisionsJson,
+    reminderMinuteOfDay: reminderMinuteOfDay.present
+        ? reminderMinuteOfDay.value
+        : this.reminderMinuteOfDay,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  HabitRecord copyWithCompanion(HabitRecordsCompanion data) {
+    return HabitRecord(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+      name: data.name.present ? data.name.value : this.name,
+      scheduleRevisionsJson: data.scheduleRevisionsJson.present
+          ? data.scheduleRevisionsJson.value
+          : this.scheduleRevisionsJson,
+      reminderMinuteOfDay: data.reminderMinuteOfDay.present
+          ? data.reminderMinuteOfDay.value
+          : this.reminderMinuteOfDay,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HabitRecord(')
+          ..write('accountId: $accountId, ')
+          ..write('habitId: $habitId, ')
+          ..write('name: $name, ')
+          ..write('scheduleRevisionsJson: $scheduleRevisionsJson, ')
+          ..write('reminderMinuteOfDay: $reminderMinuteOfDay, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    habitId,
+    name,
+    scheduleRevisionsJson,
+    reminderMinuteOfDay,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HabitRecord &&
+          other.accountId == this.accountId &&
+          other.habitId == this.habitId &&
+          other.name == this.name &&
+          other.scheduleRevisionsJson == this.scheduleRevisionsJson &&
+          other.reminderMinuteOfDay == this.reminderMinuteOfDay &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class HabitRecordsCompanion extends UpdateCompanion<HabitRecord> {
+  final Value<String> accountId;
+  final Value<String> habitId;
+  final Value<String> name;
+  final Value<String> scheduleRevisionsJson;
+  final Value<int?> reminderMinuteOfDay;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const HabitRecordsCompanion({
+    this.accountId = const Value.absent(),
+    this.habitId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.scheduleRevisionsJson = const Value.absent(),
+    this.reminderMinuteOfDay = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HabitRecordsCompanion.insert({
+    required String accountId,
+    required String habitId,
+    required String name,
+    required String scheduleRevisionsJson,
+    this.reminderMinuteOfDay = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       habitId = Value(habitId),
+       name = Value(name),
+       scheduleRevisionsJson = Value(scheduleRevisionsJson),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<HabitRecord> custom({
+    Expression<String>? accountId,
+    Expression<String>? habitId,
+    Expression<String>? name,
+    Expression<String>? scheduleRevisionsJson,
+    Expression<int>? reminderMinuteOfDay,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (habitId != null) 'habit_id': habitId,
+      if (name != null) 'name': name,
+      if (scheduleRevisionsJson != null)
+        'schedule_revisions_json': scheduleRevisionsJson,
+      if (reminderMinuteOfDay != null)
+        'reminder_minute_of_day': reminderMinuteOfDay,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HabitRecordsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? habitId,
+    Value<String>? name,
+    Value<String>? scheduleRevisionsJson,
+    Value<int?>? reminderMinuteOfDay,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return HabitRecordsCompanion(
+      accountId: accountId ?? this.accountId,
+      habitId: habitId ?? this.habitId,
+      name: name ?? this.name,
+      scheduleRevisionsJson:
+          scheduleRevisionsJson ?? this.scheduleRevisionsJson,
+      reminderMinuteOfDay: reminderMinuteOfDay ?? this.reminderMinuteOfDay,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (habitId.present) {
+      map['habit_id'] = Variable<String>(habitId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (scheduleRevisionsJson.present) {
+      map['schedule_revisions_json'] = Variable<String>(
+        scheduleRevisionsJson.value,
+      );
+    }
+    if (reminderMinuteOfDay.present) {
+      map['reminder_minute_of_day'] = Variable<int>(reminderMinuteOfDay.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HabitRecordsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('habitId: $habitId, ')
+          ..write('name: $name, ')
+          ..write('scheduleRevisionsJson: $scheduleRevisionsJson, ')
+          ..write('reminderMinuteOfDay: $reminderMinuteOfDay, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HabitDayRecordsTable extends HabitDayRecords
+    with TableInfo<$HabitDayRecordsTable, HabitDayRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HabitDayRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<String> habitId = GeneratedColumn<String>(
+    'habit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _localDateMeta = const VerificationMeta(
+    'localDate',
+  );
+  @override
+  late final GeneratedColumn<String> localDate = GeneratedColumn<String>(
+    'local_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _earnedWhileDueMeta = const VerificationMeta(
+    'earnedWhileDue',
+  );
+  @override
+  late final GeneratedColumn<bool> earnedWhileDue = GeneratedColumn<bool>(
+    'earned_while_due',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("earned_while_due" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _earnedAgainstRevisionIdMeta =
+      const VerificationMeta('earnedAgainstRevisionId');
+  @override
+  late final GeneratedColumn<String> earnedAgainstRevisionId =
+      GeneratedColumn<String>(
+        'earned_against_revision_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recordedUtcOffsetMinutesMeta =
+      const VerificationMeta('recordedUtcOffsetMinutes');
+  @override
+  late final GeneratedColumn<int> recordedUtcOffsetMinutes =
+      GeneratedColumn<int>(
+        'recorded_utc_offset_minutes',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    habitId,
+    localDate,
+    completedAt,
+    earnedWhileDue,
+    earnedAgainstRevisionId,
+    recordedUtcOffsetMinutes,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'habit_day_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HabitDayRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_habitIdMeta);
+    }
+    if (data.containsKey('local_date')) {
+      context.handle(
+        _localDateMeta,
+        localDate.isAcceptableOrUnknown(data['local_date']!, _localDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_localDateMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('earned_while_due')) {
+      context.handle(
+        _earnedWhileDueMeta,
+        earnedWhileDue.isAcceptableOrUnknown(
+          data['earned_while_due']!,
+          _earnedWhileDueMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_earnedWhileDueMeta);
+    }
+    if (data.containsKey('earned_against_revision_id')) {
+      context.handle(
+        _earnedAgainstRevisionIdMeta,
+        earnedAgainstRevisionId.isAcceptableOrUnknown(
+          data['earned_against_revision_id']!,
+          _earnedAgainstRevisionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recorded_utc_offset_minutes')) {
+      context.handle(
+        _recordedUtcOffsetMinutesMeta,
+        recordedUtcOffsetMinutes.isAcceptableOrUnknown(
+          data['recorded_utc_offset_minutes']!,
+          _recordedUtcOffsetMinutesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedUtcOffsetMinutesMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, habitId, localDate};
+  @override
+  HabitDayRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HabitDayRecord(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_id'],
+      )!,
+      localDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_date'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      earnedWhileDue: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}earned_while_due'],
+      )!,
+      earnedAgainstRevisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}earned_against_revision_id'],
+      ),
+      recordedUtcOffsetMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recorded_utc_offset_minutes'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $HabitDayRecordsTable createAlias(String alias) {
+    return $HabitDayRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
+  final String accountId;
+  final String habitId;
+  final String localDate;
+  final DateTime? completedAt;
+  final bool earnedWhileDue;
+  final String? earnedAgainstRevisionId;
+  final int recordedUtcOffsetMinutes;
+  final DateTime updatedAt;
+  const HabitDayRecord({
+    required this.accountId,
+    required this.habitId,
+    required this.localDate,
+    this.completedAt,
+    required this.earnedWhileDue,
+    this.earnedAgainstRevisionId,
+    required this.recordedUtcOffsetMinutes,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['habit_id'] = Variable<String>(habitId);
+    map['local_date'] = Variable<String>(localDate);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['earned_while_due'] = Variable<bool>(earnedWhileDue);
+    if (!nullToAbsent || earnedAgainstRevisionId != null) {
+      map['earned_against_revision_id'] = Variable<String>(
+        earnedAgainstRevisionId,
+      );
+    }
+    map['recorded_utc_offset_minutes'] = Variable<int>(
+      recordedUtcOffsetMinutes,
+    );
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  HabitDayRecordsCompanion toCompanion(bool nullToAbsent) {
+    return HabitDayRecordsCompanion(
+      accountId: Value(accountId),
+      habitId: Value(habitId),
+      localDate: Value(localDate),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      earnedWhileDue: Value(earnedWhileDue),
+      earnedAgainstRevisionId: earnedAgainstRevisionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(earnedAgainstRevisionId),
+      recordedUtcOffsetMinutes: Value(recordedUtcOffsetMinutes),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory HabitDayRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HabitDayRecord(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      habitId: serializer.fromJson<String>(json['habitId']),
+      localDate: serializer.fromJson<String>(json['localDate']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      earnedWhileDue: serializer.fromJson<bool>(json['earnedWhileDue']),
+      earnedAgainstRevisionId: serializer.fromJson<String?>(
+        json['earnedAgainstRevisionId'],
+      ),
+      recordedUtcOffsetMinutes: serializer.fromJson<int>(
+        json['recordedUtcOffsetMinutes'],
+      ),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'habitId': serializer.toJson<String>(habitId),
+      'localDate': serializer.toJson<String>(localDate),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'earnedWhileDue': serializer.toJson<bool>(earnedWhileDue),
+      'earnedAgainstRevisionId': serializer.toJson<String?>(
+        earnedAgainstRevisionId,
+      ),
+      'recordedUtcOffsetMinutes': serializer.toJson<int>(
+        recordedUtcOffsetMinutes,
+      ),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  HabitDayRecord copyWith({
+    String? accountId,
+    String? habitId,
+    String? localDate,
+    Value<DateTime?> completedAt = const Value.absent(),
+    bool? earnedWhileDue,
+    Value<String?> earnedAgainstRevisionId = const Value.absent(),
+    int? recordedUtcOffsetMinutes,
+    DateTime? updatedAt,
+  }) => HabitDayRecord(
+    accountId: accountId ?? this.accountId,
+    habitId: habitId ?? this.habitId,
+    localDate: localDate ?? this.localDate,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    earnedWhileDue: earnedWhileDue ?? this.earnedWhileDue,
+    earnedAgainstRevisionId: earnedAgainstRevisionId.present
+        ? earnedAgainstRevisionId.value
+        : this.earnedAgainstRevisionId,
+    recordedUtcOffsetMinutes:
+        recordedUtcOffsetMinutes ?? this.recordedUtcOffsetMinutes,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  HabitDayRecord copyWithCompanion(HabitDayRecordsCompanion data) {
+    return HabitDayRecord(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+      localDate: data.localDate.present ? data.localDate.value : this.localDate,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      earnedWhileDue: data.earnedWhileDue.present
+          ? data.earnedWhileDue.value
+          : this.earnedWhileDue,
+      earnedAgainstRevisionId: data.earnedAgainstRevisionId.present
+          ? data.earnedAgainstRevisionId.value
+          : this.earnedAgainstRevisionId,
+      recordedUtcOffsetMinutes: data.recordedUtcOffsetMinutes.present
+          ? data.recordedUtcOffsetMinutes.value
+          : this.recordedUtcOffsetMinutes,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HabitDayRecord(')
+          ..write('accountId: $accountId, ')
+          ..write('habitId: $habitId, ')
+          ..write('localDate: $localDate, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('earnedWhileDue: $earnedWhileDue, ')
+          ..write('earnedAgainstRevisionId: $earnedAgainstRevisionId, ')
+          ..write('recordedUtcOffsetMinutes: $recordedUtcOffsetMinutes, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    habitId,
+    localDate,
+    completedAt,
+    earnedWhileDue,
+    earnedAgainstRevisionId,
+    recordedUtcOffsetMinutes,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HabitDayRecord &&
+          other.accountId == this.accountId &&
+          other.habitId == this.habitId &&
+          other.localDate == this.localDate &&
+          other.completedAt == this.completedAt &&
+          other.earnedWhileDue == this.earnedWhileDue &&
+          other.earnedAgainstRevisionId == this.earnedAgainstRevisionId &&
+          other.recordedUtcOffsetMinutes == this.recordedUtcOffsetMinutes &&
+          other.updatedAt == this.updatedAt);
+}
+
+class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
+  final Value<String> accountId;
+  final Value<String> habitId;
+  final Value<String> localDate;
+  final Value<DateTime?> completedAt;
+  final Value<bool> earnedWhileDue;
+  final Value<String?> earnedAgainstRevisionId;
+  final Value<int> recordedUtcOffsetMinutes;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const HabitDayRecordsCompanion({
+    this.accountId = const Value.absent(),
+    this.habitId = const Value.absent(),
+    this.localDate = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.earnedWhileDue = const Value.absent(),
+    this.earnedAgainstRevisionId = const Value.absent(),
+    this.recordedUtcOffsetMinutes = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HabitDayRecordsCompanion.insert({
+    required String accountId,
+    required String habitId,
+    required String localDate,
+    this.completedAt = const Value.absent(),
+    required bool earnedWhileDue,
+    this.earnedAgainstRevisionId = const Value.absent(),
+    required int recordedUtcOffsetMinutes,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       habitId = Value(habitId),
+       localDate = Value(localDate),
+       earnedWhileDue = Value(earnedWhileDue),
+       recordedUtcOffsetMinutes = Value(recordedUtcOffsetMinutes),
+       updatedAt = Value(updatedAt);
+  static Insertable<HabitDayRecord> custom({
+    Expression<String>? accountId,
+    Expression<String>? habitId,
+    Expression<String>? localDate,
+    Expression<DateTime>? completedAt,
+    Expression<bool>? earnedWhileDue,
+    Expression<String>? earnedAgainstRevisionId,
+    Expression<int>? recordedUtcOffsetMinutes,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (habitId != null) 'habit_id': habitId,
+      if (localDate != null) 'local_date': localDate,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (earnedWhileDue != null) 'earned_while_due': earnedWhileDue,
+      if (earnedAgainstRevisionId != null)
+        'earned_against_revision_id': earnedAgainstRevisionId,
+      if (recordedUtcOffsetMinutes != null)
+        'recorded_utc_offset_minutes': recordedUtcOffsetMinutes,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HabitDayRecordsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? habitId,
+    Value<String>? localDate,
+    Value<DateTime?>? completedAt,
+    Value<bool>? earnedWhileDue,
+    Value<String?>? earnedAgainstRevisionId,
+    Value<int>? recordedUtcOffsetMinutes,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return HabitDayRecordsCompanion(
+      accountId: accountId ?? this.accountId,
+      habitId: habitId ?? this.habitId,
+      localDate: localDate ?? this.localDate,
+      completedAt: completedAt ?? this.completedAt,
+      earnedWhileDue: earnedWhileDue ?? this.earnedWhileDue,
+      earnedAgainstRevisionId:
+          earnedAgainstRevisionId ?? this.earnedAgainstRevisionId,
+      recordedUtcOffsetMinutes:
+          recordedUtcOffsetMinutes ?? this.recordedUtcOffsetMinutes,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (habitId.present) {
+      map['habit_id'] = Variable<String>(habitId.value);
+    }
+    if (localDate.present) {
+      map['local_date'] = Variable<String>(localDate.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (earnedWhileDue.present) {
+      map['earned_while_due'] = Variable<bool>(earnedWhileDue.value);
+    }
+    if (earnedAgainstRevisionId.present) {
+      map['earned_against_revision_id'] = Variable<String>(
+        earnedAgainstRevisionId.value,
+      );
+    }
+    if (recordedUtcOffsetMinutes.present) {
+      map['recorded_utc_offset_minutes'] = Variable<int>(
+        recordedUtcOffsetMinutes.value,
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HabitDayRecordsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('habitId: $habitId, ')
+          ..write('localDate: $localDate, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('earnedWhileDue: $earnedWhileDue, ')
+          ..write('earnedAgainstRevisionId: $earnedAgainstRevisionId, ')
+          ..write('recordedUtcOffsetMinutes: $recordedUtcOffsetMinutes, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$FoundationDatabase extends GeneratedDatabase {
   _$FoundationDatabase(QueryExecutor e) : super(e);
   $FoundationDatabaseManager get managers => $FoundationDatabaseManager(this);
@@ -4240,6 +5342,10 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
       $FoundationAuditLogTable(this);
   late final $TaskRecordsTable taskRecords = $TaskRecordsTable(this);
   late final $XpAwardsTable xpAwards = $XpAwardsTable(this);
+  late final $HabitRecordsTable habitRecords = $HabitRecordsTable(this);
+  late final $HabitDayRecordsTable habitDayRecords = $HabitDayRecordsTable(
+    this,
+  );
   late final Index taskRecordsAccountDate = Index(
     'task_records_account_date',
     'CREATE INDEX task_records_account_date ON task_records (account_id, scheduled_date)',
@@ -4264,6 +5370,22 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     'task_records_account_deleted',
     'CREATE INDEX task_records_account_deleted ON task_records (account_id, deleted_at)',
   );
+  late final Index habitRecordsAccountDeleted = Index(
+    'habit_records_account_deleted',
+    'CREATE INDEX habit_records_account_deleted ON habit_records (account_id, deleted_at)',
+  );
+  late final Index habitRecordsAccountUpdated = Index(
+    'habit_records_account_updated',
+    'CREATE INDEX habit_records_account_updated ON habit_records (account_id, updated_at)',
+  );
+  late final Index habitDayRecordsAccountHabitDate = Index(
+    'habit_day_records_account_habit_date',
+    'CREATE INDEX habit_day_records_account_habit_date ON habit_day_records (account_id, habit_id, local_date)',
+  );
+  late final Index habitDayRecordsAccountUpdated = Index(
+    'habit_day_records_account_updated',
+    'CREATE INDEX habit_day_records_account_updated ON habit_day_records (account_id, updated_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4277,12 +5399,18 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     foundationAuditLog,
     taskRecords,
     xpAwards,
+    habitRecords,
+    habitDayRecords,
     taskRecordsAccountDate,
     taskRecordsAccountCategory,
     taskRecordsAccountQuadrant,
     taskRecordsAccountCompletion,
     taskRecordsAccountUpdated,
     taskRecordsAccountDeleted,
+    habitRecordsAccountDeleted,
+    habitRecordsAccountUpdated,
+    habitDayRecordsAccountHabitDate,
+    habitDayRecordsAccountUpdated,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -6440,6 +7568,548 @@ typedef $$XpAwardsTableProcessedTableManager =
       XpAward,
       PrefetchHooks Function()
     >;
+typedef $$HabitRecordsTableCreateCompanionBuilder =
+    HabitRecordsCompanion Function({
+      required String accountId,
+      required String habitId,
+      required String name,
+      required String scheduleRevisionsJson,
+      Value<int?> reminderMinuteOfDay,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$HabitRecordsTableUpdateCompanionBuilder =
+    HabitRecordsCompanion Function({
+      Value<String> accountId,
+      Value<String> habitId,
+      Value<String> name,
+      Value<String> scheduleRevisionsJson,
+      Value<int?> reminderMinuteOfDay,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$HabitRecordsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $HabitRecordsTable> {
+  $$HabitRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scheduleRevisionsJson => $composableBuilder(
+    column: $table.scheduleRevisionsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reminderMinuteOfDay => $composableBuilder(
+    column: $table.reminderMinuteOfDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HabitRecordsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $HabitRecordsTable> {
+  $$HabitRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scheduleRevisionsJson => $composableBuilder(
+    column: $table.scheduleRevisionsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reminderMinuteOfDay => $composableBuilder(
+    column: $table.reminderMinuteOfDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HabitRecordsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $HabitRecordsTable> {
+  $$HabitRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get habitId =>
+      $composableBuilder(column: $table.habitId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get scheduleRevisionsJson => $composableBuilder(
+    column: $table.scheduleRevisionsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get reminderMinuteOfDay => $composableBuilder(
+    column: $table.reminderMinuteOfDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$HabitRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $HabitRecordsTable,
+          HabitRecord,
+          $$HabitRecordsTableFilterComposer,
+          $$HabitRecordsTableOrderingComposer,
+          $$HabitRecordsTableAnnotationComposer,
+          $$HabitRecordsTableCreateCompanionBuilder,
+          $$HabitRecordsTableUpdateCompanionBuilder,
+          (
+            HabitRecord,
+            BaseReferences<
+              _$FoundationDatabase,
+              $HabitRecordsTable,
+              HabitRecord
+            >,
+          ),
+          HabitRecord,
+          PrefetchHooks Function()
+        > {
+  $$HabitRecordsTableTableManager(
+    _$FoundationDatabase db,
+    $HabitRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HabitRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HabitRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HabitRecordsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> habitId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> scheduleRevisionsJson = const Value.absent(),
+                Value<int?> reminderMinuteOfDay = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HabitRecordsCompanion(
+                accountId: accountId,
+                habitId: habitId,
+                name: name,
+                scheduleRevisionsJson: scheduleRevisionsJson,
+                reminderMinuteOfDay: reminderMinuteOfDay,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String habitId,
+                required String name,
+                required String scheduleRevisionsJson,
+                Value<int?> reminderMinuteOfDay = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HabitRecordsCompanion.insert(
+                accountId: accountId,
+                habitId: habitId,
+                name: name,
+                scheduleRevisionsJson: scheduleRevisionsJson,
+                reminderMinuteOfDay: reminderMinuteOfDay,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HabitRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $HabitRecordsTable,
+      HabitRecord,
+      $$HabitRecordsTableFilterComposer,
+      $$HabitRecordsTableOrderingComposer,
+      $$HabitRecordsTableAnnotationComposer,
+      $$HabitRecordsTableCreateCompanionBuilder,
+      $$HabitRecordsTableUpdateCompanionBuilder,
+      (
+        HabitRecord,
+        BaseReferences<_$FoundationDatabase, $HabitRecordsTable, HabitRecord>,
+      ),
+      HabitRecord,
+      PrefetchHooks Function()
+    >;
+typedef $$HabitDayRecordsTableCreateCompanionBuilder =
+    HabitDayRecordsCompanion Function({
+      required String accountId,
+      required String habitId,
+      required String localDate,
+      Value<DateTime?> completedAt,
+      required bool earnedWhileDue,
+      Value<String?> earnedAgainstRevisionId,
+      required int recordedUtcOffsetMinutes,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$HabitDayRecordsTableUpdateCompanionBuilder =
+    HabitDayRecordsCompanion Function({
+      Value<String> accountId,
+      Value<String> habitId,
+      Value<String> localDate,
+      Value<DateTime?> completedAt,
+      Value<bool> earnedWhileDue,
+      Value<String?> earnedAgainstRevisionId,
+      Value<int> recordedUtcOffsetMinutes,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$HabitDayRecordsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $HabitDayRecordsTable> {
+  $$HabitDayRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localDate => $composableBuilder(
+    column: $table.localDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get earnedWhileDue => $composableBuilder(
+    column: $table.earnedWhileDue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get earnedAgainstRevisionId => $composableBuilder(
+    column: $table.earnedAgainstRevisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get recordedUtcOffsetMinutes => $composableBuilder(
+    column: $table.recordedUtcOffsetMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HabitDayRecordsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $HabitDayRecordsTable> {
+  $$HabitDayRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localDate => $composableBuilder(
+    column: $table.localDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get earnedWhileDue => $composableBuilder(
+    column: $table.earnedWhileDue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get earnedAgainstRevisionId => $composableBuilder(
+    column: $table.earnedAgainstRevisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get recordedUtcOffsetMinutes => $composableBuilder(
+    column: $table.recordedUtcOffsetMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HabitDayRecordsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $HabitDayRecordsTable> {
+  $$HabitDayRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get habitId =>
+      $composableBuilder(column: $table.habitId, builder: (column) => column);
+
+  GeneratedColumn<String> get localDate =>
+      $composableBuilder(column: $table.localDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get earnedWhileDue => $composableBuilder(
+    column: $table.earnedWhileDue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get earnedAgainstRevisionId => $composableBuilder(
+    column: $table.earnedAgainstRevisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get recordedUtcOffsetMinutes => $composableBuilder(
+    column: $table.recordedUtcOffsetMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$HabitDayRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $HabitDayRecordsTable,
+          HabitDayRecord,
+          $$HabitDayRecordsTableFilterComposer,
+          $$HabitDayRecordsTableOrderingComposer,
+          $$HabitDayRecordsTableAnnotationComposer,
+          $$HabitDayRecordsTableCreateCompanionBuilder,
+          $$HabitDayRecordsTableUpdateCompanionBuilder,
+          (
+            HabitDayRecord,
+            BaseReferences<
+              _$FoundationDatabase,
+              $HabitDayRecordsTable,
+              HabitDayRecord
+            >,
+          ),
+          HabitDayRecord,
+          PrefetchHooks Function()
+        > {
+  $$HabitDayRecordsTableTableManager(
+    _$FoundationDatabase db,
+    $HabitDayRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HabitDayRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HabitDayRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HabitDayRecordsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> habitId = const Value.absent(),
+                Value<String> localDate = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> earnedWhileDue = const Value.absent(),
+                Value<String?> earnedAgainstRevisionId = const Value.absent(),
+                Value<int> recordedUtcOffsetMinutes = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HabitDayRecordsCompanion(
+                accountId: accountId,
+                habitId: habitId,
+                localDate: localDate,
+                completedAt: completedAt,
+                earnedWhileDue: earnedWhileDue,
+                earnedAgainstRevisionId: earnedAgainstRevisionId,
+                recordedUtcOffsetMinutes: recordedUtcOffsetMinutes,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String habitId,
+                required String localDate,
+                Value<DateTime?> completedAt = const Value.absent(),
+                required bool earnedWhileDue,
+                Value<String?> earnedAgainstRevisionId = const Value.absent(),
+                required int recordedUtcOffsetMinutes,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => HabitDayRecordsCompanion.insert(
+                accountId: accountId,
+                habitId: habitId,
+                localDate: localDate,
+                completedAt: completedAt,
+                earnedWhileDue: earnedWhileDue,
+                earnedAgainstRevisionId: earnedAgainstRevisionId,
+                recordedUtcOffsetMinutes: recordedUtcOffsetMinutes,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HabitDayRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $HabitDayRecordsTable,
+      HabitDayRecord,
+      $$HabitDayRecordsTableFilterComposer,
+      $$HabitDayRecordsTableOrderingComposer,
+      $$HabitDayRecordsTableAnnotationComposer,
+      $$HabitDayRecordsTableCreateCompanionBuilder,
+      $$HabitDayRecordsTableUpdateCompanionBuilder,
+      (
+        HabitDayRecord,
+        BaseReferences<
+          _$FoundationDatabase,
+          $HabitDayRecordsTable,
+          HabitDayRecord
+        >,
+      ),
+      HabitDayRecord,
+      PrefetchHooks Function()
+    >;
 
 class $FoundationDatabaseManager {
   final _$FoundationDatabase _db;
@@ -6460,4 +8130,8 @@ class $FoundationDatabaseManager {
       $$TaskRecordsTableTableManager(_db, _db.taskRecords);
   $$XpAwardsTableTableManager get xpAwards =>
       $$XpAwardsTableTableManager(_db, _db.xpAwards);
+  $$HabitRecordsTableTableManager get habitRecords =>
+      $$HabitRecordsTableTableManager(_db, _db.habitRecords);
+  $$HabitDayRecordsTableTableManager get habitDayRecords =>
+      $$HabitDayRecordsTableTableManager(_db, _db.habitDayRecords);
 }

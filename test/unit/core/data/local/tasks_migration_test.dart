@@ -27,7 +27,9 @@ void main() {
     final path = database.resolvedPath;
 
     // The generated schema always represents the newest application version.
-    // Remove the v3-only tables to reproduce an installed v2 database.
+    // Remove post-v2 tables to reproduce an installed v2 database.
+    await database.rawExecute('DROP TABLE IF EXISTS habit_day_records');
+    await database.rawExecute('DROP TABLE IF EXISTS habit_records');
     await database.rawExecute('DROP TABLE IF EXISTS task_records');
     await database.rawExecute('DROP TABLE IF EXISTS xp_awards');
     return (path, database);
@@ -59,9 +61,10 @@ void main() {
     final v3 = await FoundationDatabase.openEncrypted(
       path: path,
       key: _testKey,
+      schemaVersion: 3,
     );
 
-    expect(kFoundationSchemaVersion, 3);
+    expect(v3.schemaVersion, 3);
     expect(
       await v3.rawScalar(
         "SELECT value FROM foundation_preferences WHERE \"key\" = 'locale'",
@@ -155,6 +158,7 @@ void main() {
         FoundationDatabase.openEncrypted(
           path: path,
           key: _testKey,
+          schemaVersion: 3,
           testMigrationHook: (migrator, from, to) async {
             throw Exception('injected v3 migration failure');
           },
@@ -206,6 +210,7 @@ void main() {
       final recoveredV3 = await FoundationDatabase.openEncrypted(
         path: path,
         key: _testKey,
+        schemaVersion: 3,
       );
       expect(await recoveredV3.journalStatusFor(3), 'recovered');
       expect(

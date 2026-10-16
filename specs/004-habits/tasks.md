@@ -29,9 +29,9 @@ description: "Dependency-ordered implementation tasks for Namaa Habits 004"
 
 **Purpose**: Add protected, account-keyed Habit and HabitDay storage before any story writes data.
 
-- [ ] T003 Add encrypted v3→v4 migration tests in test/unit/core/data/local/habits_migration_test.dart covering retained Foundation, Task, XP, preferences and outbox rows; new composite keys/indexes; failed migration recovery without reset.
-- [ ] T004 Add HabitRecords and HabitDayRecords with account-scoped composite keys and indexes plus an additive v3→v4 migration in lib/core/data/local/foundation_database.dart; retain the existing encryption and migration journal.
-- [ ] T005 Regenerate Drift schema code in lib/core/data/local/foundation_database.g.dart and make test/unit/core/data/local/habits_migration_test.dart pass.
+- [X] T003 Add encrypted v3→v4 migration tests in test/unit/core/data/local/habits_migration_test.dart covering retained Foundation, Task, XP, preferences and outbox rows; new composite keys/indexes; failed migration recovery without reset.
+- [X] T004 Add HabitRecords and HabitDayRecords with account-scoped composite keys and indexes plus an additive v3→v4 migration in lib/core/data/local/foundation_database.dart; retain the existing encryption and migration journal.
+- [X] T005 Regenerate Drift schema code in lib/core/data/local/foundation_database.g.dart and make test/unit/core/data/local/habits_migration_test.dart pass.
 
 **Checkpoint**: Existing encrypted accounts upgrade safely; no Habit data can share a local key across accounts.
 
