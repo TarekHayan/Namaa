@@ -142,6 +142,17 @@ class _HabitsScreenState extends State<HabitsScreen>
                                   history: today[index].history,
                                   strings: strings,
                                 ),
+                                onEdit: () => HabitEditor.show(
+                                  context,
+                                  cubit: widget.cubit,
+                                  stringsResolver: widget.stringsResolver,
+                                  habit: today[index].habit,
+                                ),
+                                onDelete: () => _confirmDelete(
+                                  context,
+                                  today[index].habit.id,
+                                  strings,
+                                ),
                               ),
                             ),
                     ),
@@ -154,6 +165,35 @@ class _HabitsScreenState extends State<HabitsScreen>
       ),
     );
   }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    String habitId,
+    HabitsStrings strings,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const Key('habit_delete_confirmation'),
+        title: Text(strings.delete),
+        content: Text(strings.deleteConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(strings.cancel),
+          ),
+          FilledButton(
+            key: const Key('habit_confirm_delete'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(strings.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await widget.cubit.deleteHabit(habitId, confirmed: true);
+    }
+  }
 }
 
 class _HabitCard extends StatelessWidget {
@@ -163,12 +203,16 @@ class _HabitCard extends StatelessWidget {
     required this.onComplete,
     required this.onUndo,
     required this.onHistory,
+    required this.onEdit,
+    required this.onDelete,
   });
   final HabitToday value;
   final HabitsStrings strings;
   final VoidCallback onComplete;
   final VoidCallback onUndo;
   final VoidCallback onHistory;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -204,6 +248,23 @@ class _HabitCard extends StatelessWidget {
                       icon: const Icon(Icons.history),
                       label: Text(strings.history),
                     ),
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      TextButton.icon(
+                        key: ValueKey('habit-edit-${habit.id}'),
+                        onPressed: onEdit,
+                        icon: const Icon(Icons.edit_outlined),
+                        label: Text(strings.edit),
+                      ),
+                      TextButton.icon(
+                        key: ValueKey('habit-delete-${habit.id}'),
+                        onPressed: onDelete,
+                        icon: const Icon(Icons.delete_outline),
+                        label: Text(strings.delete),
+                      ),
+                    ],
                   ),
                 ],
               ),

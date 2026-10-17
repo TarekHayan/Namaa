@@ -167,6 +167,65 @@ final class Habit {
   bool get isDeleted => deletedAt != null;
   HabitScheduleRevision get currentRevision => scheduleRevisions.last;
 
+  Habit edit({
+    required String name,
+    required Iterable<int> weekdays,
+    required int? reminderMinuteOfDay,
+    required String revisionId,
+    required DateTime editedAt,
+    required String effectiveLocalDate,
+    required int utcOffsetMinutes,
+  }) {
+    if (isDeleted) throw StateError('Cannot edit a deleted habit');
+    validateHabitUtc(editedAt, 'editedAt');
+    parseHabitLocalDate(effectiveLocalDate);
+    validateHabitOffset(utcOffsetMinutes);
+    final selected = weekdays.toSet();
+    final scheduleChanged =
+        selected.length != currentRevision.weekdays.length ||
+        !selected.containsAll(currentRevision.weekdays);
+    final version = editedAt.isAfter(updatedAt)
+        ? editedAt
+        : updatedAt.add(const Duration(microseconds: 1));
+    return Habit.restore(
+      id: id,
+      accountId: accountId,
+      name: name,
+      scheduleRevisions: [
+        ...scheduleRevisions,
+        if (scheduleChanged)
+          HabitScheduleRevision(
+            revisionId: revisionId,
+            effectiveAt: editedAt,
+            effectiveLocalDate: effectiveLocalDate,
+            utcOffsetMinutes: utcOffsetMinutes,
+            weekdays: selected,
+          ),
+      ],
+      reminderMinuteOfDay: reminderMinuteOfDay,
+      createdAt: createdAt,
+      updatedAt: version,
+    );
+  }
+
+  Habit delete(DateTime deletedAt) {
+    if (isDeleted) throw StateError('Habit already deleted');
+    validateHabitUtc(deletedAt, 'deletedAt');
+    final version = deletedAt.isAfter(updatedAt)
+        ? deletedAt
+        : updatedAt.add(const Duration(microseconds: 1));
+    return Habit.restore(
+      id: id,
+      accountId: accountId,
+      name: name,
+      scheduleRevisions: scheduleRevisions,
+      reminderMinuteOfDay: reminderMinuteOfDay,
+      createdAt: createdAt,
+      updatedAt: version,
+      deletedAt: version,
+    );
+  }
+
   HabitScheduleRevision? revisionOn(String localDate) {
     parseHabitLocalDate(localDate);
     for (final revision in scheduleRevisions.reversed) {

@@ -16,6 +16,18 @@ final class _AppHabitsStrings implements HabitsStrings {
   @override
   String get create => _l10n.habitsCreate;
   @override
+  String get edit => _l10n.habitEdit;
+  @override
+  String get delete => _l10n.habitDelete;
+  @override
+  String get deleteConfirmation => _l10n.habitDeleteConfirmation;
+  @override
+  String get reminderTime => _l10n.habitReminderTime;
+  @override
+  String get reminderClear => _l10n.habitReminderClear;
+  @override
+  String get reminderInactive => _l10n.habitReminderInactive;
+  @override
   String get nameLabel => _l10n.habitNameLabel;
   @override
   String get nameRequired => _l10n.habitNameRequired;

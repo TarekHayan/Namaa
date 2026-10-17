@@ -563,6 +563,42 @@ abstract class FoundationLocalizations {
   /// **'New habit'**
   String get habitsCreate;
 
+  /// No description provided for @habitEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit habit'**
+  String get habitEdit;
+
+  /// No description provided for @habitDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete habit'**
+  String get habitDelete;
+
+  /// No description provided for @habitDeleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this habit? Its history will be kept for recovery, but it will disappear from your habits.'**
+  String get habitDeleteConfirmation;
+
+  /// No description provided for @habitReminderTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder time'**
+  String get habitReminderTime;
+
+  /// No description provided for @habitReminderClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear time'**
+  String get habitReminderClear;
+
+  /// No description provided for @habitReminderInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are not active yet. A chosen time is saved for later.'**
+  String get habitReminderInactive;
+
   /// No description provided for @habitNameLabel.
   ///
   /// In en, this message translates to:

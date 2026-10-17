@@ -55,6 +55,20 @@ final class HabitsCubit extends Cubit<HabitsState> {
   Future<AppResult<Habit>> createHabit(CreateHabitInput input) =>
       _capture(_commands.createHabit(input, expectedAccountId: _accountId));
 
+  Future<AppResult<Habit>> editHabit(EditHabitInput input) =>
+      _capture(_commands.editHabit(input, expectedAccountId: _accountId));
+
+  Future<AppResult<Habit>> deleteHabit(
+    String habitId, {
+    required bool confirmed,
+  }) => _capture(
+    _commands.deleteHabit(
+      habitId,
+      confirmed: confirmed,
+      expectedAccountId: _accountId,
+    ),
+  );
+
   Future<AppResult<HabitDay>> completeToday(String habitId) => _capture(
     _commands.completeHabitToday(habitId, expectedAccountId: _accountId),
   );
@@ -64,7 +78,9 @@ final class HabitsCubit extends Cubit<HabitsState> {
   );
 
   Future<AppResult<T>> _capture<T>(Future<AppResult<T>> action) async {
+    final accountAtStart = _accountId;
     final result = await action;
+    if (isClosed || _accountId != accountAtStart) return result;
     _lastFailure = result.failureOrNull;
     _emitProjection();
     return result;

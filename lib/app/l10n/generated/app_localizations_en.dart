@@ -248,6 +248,26 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get habitsCreate => 'New habit';
 
   @override
+  String get habitEdit => 'Edit habit';
+
+  @override
+  String get habitDelete => 'Delete habit';
+
+  @override
+  String get habitDeleteConfirmation =>
+      'Delete this habit? Its history will be kept for recovery, but it will disappear from your habits.';
+
+  @override
+  String get habitReminderTime => 'Reminder time';
+
+  @override
+  String get habitReminderClear => 'Clear time';
+
+  @override
+  String get habitReminderInactive =>
+      'Notifications are not active yet. A chosen time is saved for later.';
+
+  @override
   String get habitNameLabel => 'Name';
 
   @override

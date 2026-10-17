@@ -22,6 +22,19 @@ final class CreateHabitInput {
   final int? reminderMinuteOfDay;
 }
 
+final class EditHabitInput {
+  const EditHabitInput({
+    required this.habitId,
+    required this.name,
+    required this.weekdays,
+    required this.reminderMinuteOfDay,
+  });
+  final String habitId;
+  final String name;
+  final Set<int> weekdays;
+  final int? reminderMinuteOfDay;
+}
+
 /// Local-first commands. The session supplies the owner for every read/write.
 final class HabitCommands {
   HabitCommands({
@@ -110,6 +123,147 @@ final class HabitCommands {
         _error(AppFailureCategory.validation, 'habits.validation.invalid'),
       );
     }
+  }
+
+  Future<AppResult<Habit>> editHabit(
+    EditHabitInput input, {
+    String? expectedAccountId,
+  }) async {
+    final validation = _validateFields(
+      input.name,
+      input.weekdays,
+      input.reminderMinuteOfDay,
+    );
+    if (validation != null) return AppResult.failure(validation);
+    final account = await _account(expectedAccountId);
+    if (account.failureOrNull case final failure?) {
+      return AppResult.failure(failure);
+    }
+    final owner = account.valueOrNull!;
+    final existing = await _repository.readHabit(
+      accountId: owner,
+      habitId: input.habitId,
+    );
+    if (existing.failureOrNull case final failure?) {
+      return AppResult.failure(failure);
+    }
+    final current = existing.valueOrNull;
+    if (current == null || current.isDeleted) {
+      return AppResult.failure(
+        _error(AppFailureCategory.notFound, 'habits.error.not_found'),
+      );
+    }
+    try {
+      final requested = _nowUtc();
+      final calendar = _localCalendar();
+      final updated = current.edit(
+        name: input.name,
+        weekdays: input.weekdays,
+        reminderMinuteOfDay: input.reminderMinuteOfDay,
+        revisionId: _nextRevisionId(),
+        editedAt: requested,
+        effectiveLocalDate: calendar.localDate,
+        utcOffsetMinutes: calendar.utcOffsetMinutes,
+      );
+      final checked = await _account(expectedAccountId);
+      if (checked.valueOrNull != owner) {
+        return AppResult.failure(
+          _error(AppFailureCategory.authorization, 'habits.error.account'),
+        );
+      }
+      final commit = await _repository.commitHabit(
+        HabitWriteRequest(
+          habit: updated,
+          operationId: _nextOperationId(),
+          kind: ChangeKind.update,
+          queuedAt: updated.updatedAt,
+        ),
+      );
+      final failure = commit.failureOrNull;
+      return failure == null
+          ? AppResult.success(updated)
+          : AppResult.failure(failure);
+    } on ArgumentError {
+      return AppResult.failure(
+        _error(AppFailureCategory.validation, 'habits.validation.invalid'),
+      );
+    }
+  }
+
+  Future<AppResult<Habit>> deleteHabit(
+    String habitId, {
+    required bool confirmed,
+    String? expectedAccountId,
+  }) async {
+    if (!confirmed) {
+      return AppResult.failure(
+        _error(
+          AppFailureCategory.validation,
+          'habits.validation.confirm_delete',
+        ),
+      );
+    }
+    final account = await _account(expectedAccountId);
+    if (account.failureOrNull case final failure?) {
+      return AppResult.failure(failure);
+    }
+    final owner = account.valueOrNull!;
+    final existing = await _repository.readHabit(
+      accountId: owner,
+      habitId: habitId,
+    );
+    if (existing.failureOrNull case final failure?) {
+      return AppResult.failure(failure);
+    }
+    final current = existing.valueOrNull;
+    if (current == null || current.isDeleted) {
+      return AppResult.failure(
+        _error(AppFailureCategory.notFound, 'habits.error.not_found'),
+      );
+    }
+    final deleted = current.delete(_nowUtc());
+    final checked = await _account(expectedAccountId);
+    if (checked.valueOrNull != owner) {
+      return AppResult.failure(
+        _error(AppFailureCategory.authorization, 'habits.error.account'),
+      );
+    }
+    final commit = await _repository.commitHabit(
+      HabitWriteRequest(
+        habit: deleted,
+        operationId: _nextOperationId(),
+        kind: ChangeKind.delete,
+        queuedAt: deleted.updatedAt,
+      ),
+    );
+    final failure = commit.failureOrNull;
+    return failure == null
+        ? AppResult.success(deleted)
+        : AppResult.failure(failure);
+  }
+
+  AppFailure? _validateFields(
+    String name,
+    Set<int> weekdays,
+    int? reminderMinuteOfDay,
+  ) {
+    if (name.trim().isEmpty) {
+      return _error(AppFailureCategory.validation, 'habits.validation.name');
+    }
+    if (weekdays.isEmpty || weekdays.any((day) => day < 1 || day > 7)) {
+      return _error(
+        AppFailureCategory.validation,
+        'habits.validation.weekdays',
+      );
+    }
+    if (reminderMinuteOfDay != null &&
+        (reminderMinuteOfDay < 0 || reminderMinuteOfDay > 1439)) {
+      return _error(
+        AppFailureCategory.validation,
+        'habits.validation.reminder',
+      );
+    }
+    return null;
   }
 
   Future<AppResult<HabitDay>> completeHabitToday(

@@ -4,6 +4,12 @@ abstract interface class HabitsStrings {
   String get title;
   String get empty;
   String get create;
+  String get edit;
+  String get delete;
+  String get deleteConfirmation;
+  String get reminderTime;
+  String get reminderClear;
+  String get reminderInactive;
   String get nameLabel;
   String get nameRequired;
   String get weekdaysRequired;

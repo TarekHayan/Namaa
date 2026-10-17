@@ -100,6 +100,21 @@ final class DriftHabitRepository implements HabitRepository {
         )) {
           return;
         }
+        final existing =
+            await (_database.select(_database.habitRecords)..where(
+                  (table) =>
+                      table.accountId.equals(habit.accountId) &
+                      table.habitId.equals(habit.id),
+                ))
+                .getSingleOrNull();
+        if (request.kind == ChangeKind.create && existing != null ||
+            request.kind != ChangeKind.create && existing == null ||
+            existing != null && !habit.updatedAt.isAfter(existing.updatedAt) ||
+            existing?.deletedAt != null ||
+            request.kind == ChangeKind.delete && !habit.isDeleted ||
+            request.kind != ChangeKind.delete && habit.isDeleted) {
+          throw StateError('Invalid habit version or change kind');
+        }
         await _database
             .into(_database.habitRecords)
             .insertOnConflictUpdate(

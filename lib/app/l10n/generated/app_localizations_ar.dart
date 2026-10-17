@@ -244,6 +244,26 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get habitsCreate => 'عادة جديدة';
 
   @override
+  String get habitEdit => 'تعديل العادة';
+
+  @override
+  String get habitDelete => 'حذف العادة';
+
+  @override
+  String get habitDeleteConfirmation =>
+      'هل تريد حذف هذه العادة؟ سيُحتفظ بسجلها للاسترجاع، لكنها ستختفي من قائمة العادات.';
+
+  @override
+  String get habitReminderTime => 'وقت التذكير';
+
+  @override
+  String get habitReminderClear => 'مسح الوقت';
+
+  @override
+  String get habitReminderInactive =>
+      'الإشعارات غير مفعّلة بعد. سيُحفظ الوقت المختار لتفعيلها لاحقًا.';
+
+  @override
   String get habitNameLabel => 'اسم العادة';
 
   @override

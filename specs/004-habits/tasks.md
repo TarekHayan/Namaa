@@ -108,22 +108,22 @@ description: "Dependency-ordered implementation tasks for Namaa Habits 004"
 
 ### Tests for User Story 3 — write first
 
-- [ ] T037 [P] [US3] Test ordered same-day schedule revisions, effective historical schedule, earned-while-due preservation and local-date/offset stability in test/unit/features/habits/domain/habit_schedule_revision_test.dart.
-- [ ] T038 [P] [US3] Test edit/reminder/delete commands, today-immediate due changes, undo after removal, no re-complete while unscheduled, and confirmation boundary in test/unit/features/habits/application/habit_edit_delete_test.dart.
-- [ ] T039 [P] [US3] Test atomic edit/delete tombstone and outbox writes, retained child day rows, and rollback after failed local save in test/unit/features/habits/data/drift_habit_edit_delete_test.dart.
-- [ ] T040 [P] [US3] Test editor updates, inactive reminder wording, deletion confirmation, localized save failure, and unaffected other Habits in test/widget/features/habits/habit_edit_delete_test.dart.
-- [ ] T041 [P] [US3] Add same-day edit, historical streak and delete/restart journey in integration_test/habits_edit_delete_test.dart.
+- [X] T037 [P] [US3] Test ordered same-day schedule revisions, effective historical schedule, earned-while-due preservation and local-date/offset stability in test/unit/features/habits/domain/habit_schedule_revision_test.dart.
+- [X] T038 [P] [US3] Test edit/reminder/delete commands, today-immediate due changes, undo after removal, no re-complete while unscheduled, and confirmation boundary in test/unit/features/habits/application/habit_edit_delete_test.dart.
+- [X] T039 [P] [US3] Test atomic edit/delete tombstone and outbox writes, retained child day rows, and rollback after failed local save in test/unit/features/habits/data/drift_habit_edit_delete_test.dart.
+- [X] T040 [P] [US3] Test editor updates, inactive reminder wording, deletion confirmation, localized save failure, and unaffected other Habits in test/widget/features/habits/habit_edit_delete_test.dart.
+- [X] T041 [P] [US3] Add same-day edit, historical streak and delete/restart journey in integration_test/habits_edit_delete_test.dart.
 
 ### Implementation for User Story 3
 
-- [ ] T042 [US3] Append ordered schedule revisions with UTC edit instant, acting-device effective local date/offset and stable revision ID in lib/features/habits/domain/habit.dart; retain earlier revisions.
-- [ ] T043 [US3] Apply the revision effective at each date's close while preserving an earned-while-due completion after same-day removal in lib/features/habits/domain/habit_streak_rules.dart.
-- [ ] T044 [US3] Implement edit name/weekdays/reminder and explicit delete commands with typed validation and current-account checks in lib/features/habits/application/habit_commands.dart.
-- [ ] T045 [US3] Persist edit versions and deletion tombstones atomically with outbox operations; keep child days for replay/conflict recovery in lib/features/habits/data/drift_habit_repository.dart.
-- [ ] T046 [US3] Add Arabic/English edit, delete confirmation and inactive reminder messages in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb, then regenerate lib/app/l10n/generated/app_localizations.dart.
-- [ ] T047 [US3] Extend the editor with current values, optional wall-clock reminder save/clear, and visibly inactive delivery status in lib/features/habits/presentation/habit_editor.dart.
-- [ ] T048 [US3] Add delete confirmation and hide tombstoned Habit/history from active views in lib/features/habits/presentation/habits_screen.dart and lib/features/habits/presentation/habit_history_view.dart.
-- [ ] T049 [US3] Update Cubit transitions for immediate due changes, retained completion, edit/delete failures, and last confirmed state in lib/features/habits/presentation/habits_cubit.dart.
+- [X] T042 [US3] Append ordered schedule revisions with UTC edit instant, acting-device effective local date/offset and stable revision ID in lib/features/habits/domain/habit.dart; retain earlier revisions.
+- [X] T043 [US3] Apply the revision effective at each date's close while preserving an earned-while-due completion after same-day removal in lib/features/habits/domain/habit_streak_rules.dart.
+- [X] T044 [US3] Implement edit name/weekdays/reminder and explicit delete commands with typed validation and current-account checks in lib/features/habits/application/habit_commands.dart.
+- [X] T045 [US3] Persist edit versions and deletion tombstones atomically with outbox operations; keep child days for replay/conflict recovery in lib/features/habits/data/drift_habit_repository.dart.
+- [X] T046 [US3] Add Arabic/English edit, delete confirmation and inactive reminder messages in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb, then regenerate lib/app/l10n/generated/app_localizations.dart.
+- [X] T047 [US3] Extend the editor with current values, optional wall-clock reminder save/clear, and visibly inactive delivery status in lib/features/habits/presentation/habit_editor.dart.
+- [X] T048 [US3] Add delete confirmation and hide tombstoned Habit/history from active views in lib/features/habits/presentation/habits_screen.dart and lib/features/habits/presentation/habit_history_view.dart.
+- [X] T049 [US3] Update Cubit transitions for immediate due changes, retained completion, edit/delete failures, and last confirmed state in lib/features/habits/presentation/habits_cubit.dart.
 
 **Checkpoint**: US3 passes edit/delete tests offline and after restart; no notification permission or delivery is invoked.
 
