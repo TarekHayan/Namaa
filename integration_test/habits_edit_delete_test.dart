@@ -10,6 +10,7 @@ import 'package:namma_project/features/habits/data/drift_habit_repository.dart';
 import 'package:namma_project/features/habits/data/habit_payload_codec.dart';
 import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
+import 'package:namma_project/features/habits/presentation/habits_state.dart';
 
 import '../test/support/foundation_test_support.dart';
 import '../test/support/habits_test_support.dart';
@@ -74,8 +75,16 @@ void main() {
         commands: commands,
         localCalendar: clock.captureLocalCalendar,
       );
+      await cubit.load(kHabitsPreviewAccountId);
+      if (cubit.state is! HabitsReady) {
+        await cubit.stream
+            .firstWhere((state) => state is HabitsReady)
+            .timeout(const Duration(seconds: 10));
+      }
+      expect((cubit.state as HabitsReady).today.single.currentStreak, 1);
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('en'),
           localizationsDelegates:
               FoundationLocalizations.localizationsDelegates,
           supportedLocales: FoundationLocalizations.supportedLocales,
@@ -87,8 +96,23 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Books'), findsOneWidget);
-      expect(find.text('Current streak (days): 1'), findsOneWidget);
+      final card = find.byKey(ValueKey('habit-${habit.id}'));
+      await tester.scrollUntilVisible(
+        card,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Books')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text('Current streak (days): 1'),
+        ),
+        findsOneWidget,
+      );
       await tester.tap(find.byKey(ValueKey('habit-delete-${habit.id}')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('habit_confirm_delete')));
