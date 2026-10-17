@@ -10,6 +10,7 @@ import 'package:namma_project/features/habits/data/drift_habit_repository.dart';
 import 'package:namma_project/features/habits/data/habit_payload_codec.dart';
 import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
+import 'package:namma_project/features/habits/presentation/habits_state.dart';
 
 import '../test/support/foundation_test_support.dart';
 import '../test/support/habits_test_support.dart';
@@ -89,6 +90,12 @@ void main() {
         localCalendar: clock.captureLocalCalendar,
       );
       addTearDown(cubit.close);
+      await cubit.load(kHabitsPreviewAccountId);
+      if (cubit.state is! HabitsReady) {
+        await cubit.stream
+            .firstWhere((state) => state is HabitsReady)
+            .timeout(const Duration(seconds: 10));
+      }
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates:
