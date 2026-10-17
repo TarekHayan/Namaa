@@ -92,6 +92,10 @@ void main() {
       await tester.tap(find.byKey(ValueKey('habit-delete-${habit.id}')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('habit_confirm_delete')));
+      await repository
+          .watchHabits(kHabitsPreviewAccountId)
+          .firstWhere((habits) => habits.isEmpty)
+          .timeout(const Duration(seconds: 10));
       await tester.pumpAndSettle();
       expect(find.text('Books'), findsNothing);
       await cubit.close();
