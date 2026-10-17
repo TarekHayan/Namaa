@@ -96,8 +96,22 @@ void main() {
             .firstWhere((state) => state is HabitsReady)
             .timeout(const Duration(seconds: 10));
       }
+      final today = (cubit.state as HabitsReady).today;
+      expect(
+        today
+            .singleWhere((value) => value.habit.id == reading.id)
+            .currentStreak,
+        2,
+      );
+      expect(
+        today
+            .singleWhere((value) => value.habit.id == walking.id)
+            .currentStreak,
+        0,
+      );
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('en'),
           localizationsDelegates:
               FoundationLocalizations.localizationsDelegates,
           supportedLocales: FoundationLocalizations.supportedLocales,
@@ -109,9 +123,27 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Current streak (days): 2'), findsOneWidget);
-      expect(find.text('Current streak (days): 0'), findsOneWidget);
+      final list = find.byType(Scrollable).last;
+      final readingCard = find.byKey(ValueKey('habit-${reading.id}'));
+      final walkingCard = find.byKey(ValueKey('habit-${walking.id}'));
+      await tester.scrollUntilVisible(readingCard, 200, scrollable: list);
+      expect(
+        find.descendant(
+          of: readingCard,
+          matching: find.text('Current streak (days): 2'),
+        ),
+        findsOneWidget,
+      );
+      await tester.scrollUntilVisible(walkingCard, 200, scrollable: list);
+      expect(
+        find.descendant(
+          of: walkingCard,
+          matching: find.text('Current streak (days): 0'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Today is still in progress'), findsOneWidget);
+      await tester.scrollUntilVisible(readingCard, -200, scrollable: list);
       await tester.tap(find.byKey(ValueKey('habit-history-${reading.id}')));
       await tester.pumpAndSettle();
       expect(
