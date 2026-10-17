@@ -55,6 +55,48 @@ void main() {
     },
   );
 
+  test('account switch after outbound skips every inbound read', () async {
+    final log = <String>[];
+    final session = _Session(kHabitsTestAccountA);
+    final outbound = _Outbound(log)
+      ..onSync = () => session.account = kHabitsTestAccountB;
+    final service = HabitSyncService(
+      session: session,
+      connectivity: const _Connectivity(),
+      outbound: outbound,
+      remoteReader: _Reader(log),
+      reconciler: _Reconciler(log),
+    );
+    addTearDown(service.dispose);
+    expect(
+      (await service.synchronize()).failureOrNull?.category,
+      AppFailureCategory.authorization,
+    );
+    expect(log, ['outbound']);
+    expect(service.snapshot.status, HabitSyncStatus.failed);
+  });
+
+  test('account switch after reconciliation cannot report ready', () async {
+    final log = <String>[];
+    final session = _Session(kHabitsTestAccountA);
+    final reconciler = _Reconciler(log)
+      ..onReconcile = () => session.account = kHabitsTestAccountB;
+    final service = HabitSyncService(
+      session: session,
+      connectivity: const _Connectivity(),
+      outbound: _Outbound(log),
+      remoteReader: _Reader(log),
+      reconciler: reconciler,
+    );
+    addTearDown(service.dispose);
+    expect(
+      (await service.synchronize()).failureOrNull?.category,
+      AppFailureCategory.authorization,
+    );
+    expect(log, ['outbound', 'read', 'reconcile']);
+    expect(service.snapshot.status, HabitSyncStatus.failed);
+  });
+
   test('failed page cannot apply a partial snapshot or report ready', () async {
     final log = <String>[];
     final reader = _Reader(log)..fail = true;
@@ -95,9 +137,11 @@ final class _Connectivity implements ConnectivityPort {
 final class _Outbound implements PendingSynchronizationEngine {
   _Outbound(this.log);
   final List<String> log;
+  void Function()? onSync;
   @override
   Future<AppResult<SyncSummary>> synchronize() async {
     log.add('outbound');
+    onSync?.call();
     return const AppResult.success(
       SyncSummary(
         acknowledged: 1,
@@ -135,6 +179,7 @@ final class _Reconciler implements HabitReconciliationPort {
   _Reconciler(this.log);
   final List<String> log;
   String? account;
+  void Function()? onReconcile;
   @override
   Future<AppResult<HabitReconciliationSummary>> reconcile({
     required String accountId,
@@ -142,6 +187,7 @@ final class _Reconciler implements HabitReconciliationPort {
   }) async {
     log.add('reconcile');
     account = accountId;
+    onReconcile?.call();
     return const AppResult.success(
       HabitReconciliationSummary(
         imported: 0,
