@@ -335,9 +335,11 @@ void main() {
     await tester.tap(find.byKey(kHabitAddButtonKey));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(kHabitNameFieldKey), 'Preview reading');
-    await tester.tap(
-      find.byKey(Key('habit-weekday-${DateTime.now().weekday}')),
-    );
+    for (var weekday = 1; weekday <= 7; weekday++) {
+      final chip = find.byKey(Key('habit-weekday-$weekday'));
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+    }
     await tester.tap(find.byKey(kHabitSaveButtonKey));
     await tester.pumpAndSettle();
     expect(find.text('Preview reading'), findsOneWidget);
