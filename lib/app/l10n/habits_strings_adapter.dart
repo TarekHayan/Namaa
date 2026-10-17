@@ -28,6 +28,20 @@ final class _AppHabitsStrings implements HabitsStrings {
   @override
   String get reminderInactive => _l10n.habitReminderInactive;
   @override
+  String get syncing => _l10n.habitsSyncing;
+  @override
+  String get syncFailed => _l10n.habitsSyncFailed;
+  @override
+  String get syncRetry => _l10n.habitsSyncRetry;
+  @override
+  String get conflict => _l10n.habitsConflict;
+  @override
+  String get activeVersion => _l10n.habitsActiveVersion;
+  @override
+  String get retainedVersion => _l10n.habitsRetainedVersion;
+  @override
+  String get unresolvedConflict => _l10n.habitsUnresolvedConflict;
+  @override
   String get nameLabel => _l10n.habitNameLabel;
   @override
   String get nameRequired => _l10n.habitNameRequired;

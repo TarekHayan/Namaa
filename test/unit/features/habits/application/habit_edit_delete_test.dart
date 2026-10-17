@@ -64,7 +64,7 @@ void main() {
       expect(edited.reminderMinuteOfDay, 480);
       expect(edited.isDueOn(clock.localDate), isFalse);
       expect(edited.scheduleRevisions, hasLength(2));
-    expect(edited.currentRevision.effectiveAt, clock.utcNow());
+      expect(edited.currentRevision.effectiveAt, clock.utcNow());
       expect((await commands.undoHabitToday(habit.id)).failureOrNull, isNull);
       expect(
         (await commands.completeHabitToday(habit.id)).failureOrNull?.category,

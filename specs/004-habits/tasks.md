@@ -137,30 +137,30 @@ description: "Dependency-ordered implementation tasks for Namaa Habits 004"
 
 ### Tests for User Story 4 — write first
 
-- [ ] T050 [P] [US4] Test owner-only Habit/Day/conflict reads, foreign-account denial, anonymous denial, direct-write denial and receipt-read denial in supabase/tests/habits_account_isolation_test.sql.
-- [ ] T051 [P] [US4] Test atomic owner-derived mutation/receipt replay ten times, payload/date/parent validation, same-date uniqueness and tombstone retry in supabase/tests/habits_operation_integrity_test.sql.
-- [ ] T052 [P] [US4] Test newest-version winner/visible loser, equal-time unresolved state, edit/delete race, day/delete race and different-date retention in supabase/tests/habits_conflict_integrity_test.sql.
-- [ ] T053 [P] [US4] Test Habit and HabitDay dispatch, stable operation IDs, rejected unknown types, retry and acknowledgement only after commit in test/unit/core/data/sync/entity_dispatch_router_test.dart.
-- [ ] T054 [P] [US4] Test outbound payloads/receipts and fully paginated owner reads including final page and tombstones in test/unit/features/habits/data/supabase_habit_adapter_test.dart.
-- [ ] T055 [P] [US4] Test atomic local winner application, visible loser, equal-time recovery, day identity merge and parent tombstone handling in test/unit/features/habits/data/habit_reconciler_test.dart.
-- [ ] T056 [P] [US4] Test outbound-before-inbound ordering, changed-account guards after each await, incomplete-page failure, and ready state only after full pass in test/unit/features/habits/application/habit_sync_service_test.dart.
-- [ ] T057 [P] [US4] Test signed-out/unresolved/switching account route gates and preview-only access in test/widget/app/habits_route_test.dart.
-- [ ] T058 [P] [US4] Extend integration_test/habits_offline_sync_test.dart with two-account/two-device reconnect, independent dates, same-date replay, conflicts, local failure and ten restart/reconnect trials.
-- [ ] T059 [P] [US4] Add localized Arabic/English, RTL, keyboard/focus, and mobile/desktop route checks in integration_test/habits_localized_route_test.dart.
+- [X] T050 [P] [US4] Test owner-only Habit/Day/conflict reads, foreign-account denial, anonymous denial, direct-write denial and receipt-read denial in supabase/tests/habits_account_isolation_test.sql.
+- [X] T051 [P] [US4] Test atomic owner-derived mutation/receipt replay ten times, payload/date/parent validation, same-date uniqueness and tombstone retry in supabase/tests/habits_operation_integrity_test.sql.
+- [X] T052 [P] [US4] Test newest-version winner/visible loser, equal-time unresolved state, edit/delete race, day/delete race and different-date retention in supabase/tests/habits_conflict_integrity_test.sql.
+- [X] T053 [P] [US4] Test Habit and HabitDay dispatch, stable operation IDs, rejected unknown types, retry and acknowledgement only after commit in test/unit/core/data/sync/entity_dispatch_router_test.dart.
+- [X] T054 [P] [US4] Test outbound payloads/receipts and fully paginated owner reads including final page and tombstones in test/unit/features/habits/data/supabase_habit_adapter_test.dart.
+- [X] T055 [P] [US4] Test atomic local winner application, visible loser, equal-time recovery, day identity merge and parent tombstone handling in test/unit/features/habits/data/habit_reconciler_test.dart.
+- [X] T056 [P] [US4] Test outbound-before-inbound ordering, changed-account guards after each await, incomplete-page failure, and ready state only after full pass in test/unit/features/habits/application/habit_sync_service_test.dart.
+- [X] T057 [P] [US4] Test signed-out/unresolved/switching account route gates and preview-only access in test/widget/app/habits_route_test.dart.
+- [X] T058 [P] [US4] Extend integration_test/habits_offline_sync_test.dart with two-account/two-device reconnect, independent dates, same-date replay, conflicts, local failure and ten restart/reconnect trials.
+- [X] T059 [P] [US4] Add localized Arabic/English, RTL, keyboard/focus, and mobile/desktop route checks in integration_test/habits_localized_route_test.dart.
 
 ### Implementation for User Story 4
 
-- [ ] T060 [US4] Create owner-keyed public.habits, public.habit_days and durable operation receipts with foreign keys, SELECT RLS and least-privilege grants in supabase/migrations/0006_habits_tables.sql.
-- [ ] T061 [US4] Add authenticated owner-derived Habit/HabitDay mutation RPCs with payload validation, atomic receipts, newest-timestamp conflicts, equal-time recovery, and parent tombstone/day-race evidence in supabase/migrations/0007_habit_sync_api.sql.
-- [ ] T062 [US4] Implement receipt-aware outbound Habit/HabitDay cloud mutations in lib/features/habits/data/supabase_habit_sync_adapter.dart.
-- [ ] T063 [US4] Implement owner-scoped, paginated Habit/tombstone/Day reads and a complete-pass cursor in lib/features/habits/data/supabase_habit_reader.dart and lib/features/habits/application/habit_remote_reader.dart.
-- [ ] T064 [US4] Define Habit synchronization and reconciliation ports with per-entity version identity in lib/features/habits/application/habit_reconciliation.dart.
-- [ ] T065 [US4] Apply active winners atomically with Foundation ConflictRecords, preserve pending changes and equal-time/parent-race evidence, and merge days by account/habit/localDate in lib/features/habits/data/habit_reconciler.dart.
-- [ ] T066 [US4] Implement account-checked outbound then full inbound sync, page-failure recovery and truthful ready state in lib/features/habits/application/habit_sync_service.dart.
-- [ ] T067 [US4] Route habit and habit_day PendingChanges through their cloud adapters while retaining unknown types in lib/core/data/sync/entity_dispatch_router.dart.
-- [ ] T068 [US4] Register cloud reader/adapter/reconciler/sync service only for a resolved authenticated account; keep preview isolated in lib/app/composition/configure_dependencies.dart.
-- [ ] T069 [US4] Add Arabic/English syncing, conflict and recoverable failure messages in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb, then regenerate lib/app/l10n/generated/app_localizations.dart.
-- [ ] T070 [US4] Show syncing, recoverable failure and visible Habit/Day conflict states with localized recovery details in lib/features/habits/presentation/habits_cubit.dart and lib/features/habits/presentation/habits_screen.dart.
+- [X] T060 [US4] Create owner-keyed public.habits, public.habit_days and durable operation receipts with foreign keys, SELECT RLS and least-privilege grants in supabase/migrations/0006_habits_tables.sql.
+- [X] T061 [US4] Add authenticated owner-derived Habit/HabitDay mutation RPCs with payload validation, atomic receipts, newest-timestamp conflicts, equal-time recovery, and parent tombstone/day-race evidence in supabase/migrations/0007_habit_sync_api.sql.
+- [X] T062 [US4] Implement receipt-aware outbound Habit/HabitDay cloud mutations in lib/features/habits/data/supabase_habit_sync_adapter.dart.
+- [X] T063 [US4] Implement owner-scoped, paginated Habit/tombstone/Day reads and a complete-pass cursor in lib/features/habits/data/supabase_habit_reader.dart and lib/features/habits/application/habit_remote_reader.dart.
+- [X] T064 [US4] Define Habit synchronization and reconciliation ports with per-entity version identity in lib/features/habits/application/habit_reconciliation.dart.
+- [X] T065 [US4] Apply active winners atomically with Foundation ConflictRecords, preserve pending changes and equal-time/parent-race evidence, and merge days by account/habit/localDate in lib/features/habits/data/habit_reconciler.dart.
+- [X] T066 [US4] Implement account-checked outbound then full inbound sync, page-failure recovery and truthful ready state in lib/features/habits/application/habit_sync_service.dart.
+- [X] T067 [US4] Route habit and habit_day PendingChanges through their cloud adapters while retaining unknown types in lib/core/data/sync/entity_dispatch_router.dart.
+- [X] T068 [US4] Register cloud reader/adapter/reconciler/sync service only for a resolved authenticated account; keep preview isolated in lib/app/composition/configure_dependencies.dart.
+- [X] T069 [US4] Add Arabic/English syncing, conflict and recoverable failure messages in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb, then regenerate lib/app/l10n/generated/app_localizations.dart.
+- [X] T070 [US4] Show syncing, recoverable failure and visible Habit/Day conflict states with localized recovery details in lib/features/habits/presentation/habits_cubit.dart and lib/features/habits/presentation/habits_screen.dart.
 
 **Checkpoint**: US4 passes local and Supabase security/replay tests; no partial page or account switch can report ready or expose another account.
 

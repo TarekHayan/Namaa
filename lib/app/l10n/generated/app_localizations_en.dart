@@ -268,6 +268,29 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
       'Notifications are not active yet. A chosen time is saved for later.';
 
   @override
+  String get habitsSyncing => 'Syncing habits…';
+
+  @override
+  String get habitsSyncFailed =>
+      'Habits could not finish syncing. Your saved changes remain on this device.';
+
+  @override
+  String get habitsSyncRetry => 'Retry sync';
+
+  @override
+  String get habitsConflict => 'A habit change needs review';
+
+  @override
+  String get habitsActiveVersion => 'Current version';
+
+  @override
+  String get habitsRetainedVersion => 'Retained version';
+
+  @override
+  String get habitsUnresolvedConflict =>
+      'The versions have the same time and need review.';
+
+  @override
   String get habitNameLabel => 'Name';
 
   @override

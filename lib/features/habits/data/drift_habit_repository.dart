@@ -3,19 +3,22 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/features/habits/application/habit_reconciliation.dart';
 import 'package:namma_project/features/habits/application/habit_repository.dart';
 import 'package:namma_project/features/habits/data/habit_payload_codec.dart';
 import 'package:namma_project/features/habits/domain/habit.dart';
 import 'package:namma_project/features/habits/domain/habit_day.dart';
 
-const String kHabitEntityType = 'habit';
-const String kHabitDayEntityType = 'habit_day';
-
 /// One encrypted account partition. Every mutation and its outbox entry commit
 /// in the same Drift transaction.
-final class DriftHabitRepository implements HabitRepository {
+final class DriftHabitRepository
+    implements
+        HabitRepository,
+        HabitReconciliationStorePort,
+        HabitConflictReaderPort {
   DriftHabitRepository({
     required FoundationDatabase database,
     required HabitPayloadCodec codec,
@@ -24,6 +27,144 @@ final class DriftHabitRepository implements HabitRepository {
 
   final FoundationDatabase _database;
   final HabitPayloadCodec _codec;
+
+  @override
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  ) async {
+    try {
+      return await _database.transaction(() async {
+        final result = await action();
+        if (result.failureOrNull case final failure?) {
+          throw _HabitTransactionFailure(failure);
+        }
+        return result;
+      });
+    } on _HabitTransactionFailure catch (error) {
+      return AppResult.failure(error.failure);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  @override
+  Future<AppResult<bool>> hasPendingChange({
+    required String accountId,
+    required String entityType,
+    required String entityId,
+  }) async {
+    try {
+      final rows =
+          await (_database.select(_database.pendingChanges)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.entityType.equals(entityType) &
+                    table.entityId.equals(entityId) &
+                    table.state.equals(PendingChangeState.pending.index),
+              ))
+              .get();
+      return AppResult.success(rows.isNotEmpty);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  @override
+  Future<AppResult<void>> applyInboundHabit(Habit habit) async {
+    try {
+      await _database
+          .into(_database.habitRecords)
+          .insertOnConflictUpdate(
+            HabitRecordsCompanion.insert(
+              accountId: habit.accountId,
+              habitId: habit.id,
+              name: habit.name,
+              scheduleRevisionsJson: _codec.encodeRevisions(
+                habit.scheduleRevisions,
+              ),
+              reminderMinuteOfDay: Value(habit.reminderMinuteOfDay),
+              createdAt: habit.createdAt,
+              updatedAt: habit.updatedAt,
+              deletedAt: Value(habit.deletedAt),
+            ),
+          );
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  @override
+  Future<AppResult<void>> applyInboundDay(HabitDay day) async {
+    try {
+      await _database
+          .into(_database.habitDayRecords)
+          .insertOnConflictUpdate(
+            HabitDayRecordsCompanion.insert(
+              accountId: day.accountId,
+              habitId: day.habitId,
+              localDate: day.localDate,
+              completedAt: Value(day.completedAt),
+              earnedWhileDue: day.earnedWhileDue,
+              earnedAgainstRevisionId: Value(day.earnedAgainstRevisionId),
+              recordedUtcOffsetMinutes: day.recordedUtcOffsetMinutes,
+              updatedAt: day.updatedAt,
+            ),
+          );
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  @override
+  Stream<List<HabitConflictView>> watchConflicts(String accountId) =>
+      (_database.select(_database.conflictRecords)
+            ..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  (table.entityType.equals(kHabitEntityType) |
+                      table.entityType.equals(kHabitDayEntityType)),
+            )
+            ..orderBy([(table) => OrderingTerm.desc(table.detectedAt)]))
+          .watch()
+          .map(
+            (rows) => List.unmodifiable(
+              rows.map(
+                (row) => HabitConflictView(
+                  id: row.conflictId,
+                  entityType: row.entityType,
+                  entityId: row.entityId,
+                  activeLabel: _conflictLabel(
+                    row.entityType,
+                    row.activePayload,
+                  ),
+                  retainedLabel: _conflictLabel(
+                    row.entityType,
+                    row.retainedPayload,
+                  ),
+                  unresolved: row.activeTimestamp == row.retainedTimestamp,
+                ),
+              ),
+            ),
+          );
+
+  String _conflictLabel(String entityType, String payload) {
+    try {
+      return entityType == kHabitEntityType
+          ? _codec.decodeHabit(payload).name
+          : _codec.decodeDay(payload).localDate;
+    } catch (_) {
+      if (entityType == kHabitDayEntityType) {
+        try {
+          return _codec.decodeHabit(payload).name;
+        } catch (_) {
+          // A malformed retained version remains visible as a conflict.
+        }
+      }
+      return '';
+    }
+  }
 
   @override
   Future<AppResult<Habit?>> readHabit({
@@ -286,4 +427,9 @@ final class DriftHabitRepository implements HabitRepository {
     occurredAt: DateTime.now().toUtc(),
     technicalCause: error.runtimeType.toString(),
   );
+}
+
+final class _HabitTransactionFailure implements Exception {
+  const _HabitTransactionFailure(this.failure);
+  final AppFailure failure;
 }

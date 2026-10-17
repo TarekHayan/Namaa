@@ -264,6 +264,29 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
       'الإشعارات غير مفعّلة بعد. سيُحفظ الوقت المختار لتفعيلها لاحقًا.';
 
   @override
+  String get habitsSyncing => 'جارٍ مزامنة العادات…';
+
+  @override
+  String get habitsSyncFailed =>
+      'تعذر إكمال مزامنة العادات. تغييراتك المحفوظة ما زالت على هذا الجهاز.';
+
+  @override
+  String get habitsSyncRetry => 'إعادة المزامنة';
+
+  @override
+  String get habitsConflict => 'تغيير في العادة يحتاج للمراجعة';
+
+  @override
+  String get habitsActiveVersion => 'النسخة الحالية';
+
+  @override
+  String get habitsRetainedVersion => 'النسخة المحفوظة';
+
+  @override
+  String get habitsUnresolvedConflict =>
+      'للنسختين التوقيت نفسه وتحتاجان للمراجعة.';
+
+  @override
   String get habitNameLabel => 'اسم العادة';
 
   @override

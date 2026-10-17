@@ -599,6 +599,48 @@ abstract class FoundationLocalizations {
   /// **'Notifications are not active yet. A chosen time is saved for later.'**
   String get habitReminderInactive;
 
+  /// No description provided for @habitsSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing habits…'**
+  String get habitsSyncing;
+
+  /// No description provided for @habitsSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits could not finish syncing. Your saved changes remain on this device.'**
+  String get habitsSyncFailed;
+
+  /// No description provided for @habitsSyncRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry sync'**
+  String get habitsSyncRetry;
+
+  /// No description provided for @habitsConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'A habit change needs review'**
+  String get habitsConflict;
+
+  /// No description provided for @habitsActiveVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version'**
+  String get habitsActiveVersion;
+
+  /// No description provided for @habitsRetainedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Retained version'**
+  String get habitsRetainedVersion;
+
+  /// No description provided for @habitsUnresolvedConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'The versions have the same time and need review.'**
+  String get habitsUnresolvedConflict;
+
   /// No description provided for @habitNameLabel.
   ///
   /// In en, this message translates to:

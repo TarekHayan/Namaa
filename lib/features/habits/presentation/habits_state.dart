@@ -1,5 +1,7 @@
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/features/habits/application/habit_queries.dart';
+import 'package:namma_project/features/habits/application/habit_reconciliation.dart';
+import 'package:namma_project/features/habits/application/habit_sync_service.dart';
 
 sealed class HabitsState {
   const HabitsState();
@@ -23,9 +25,13 @@ final class HabitsReady extends HabitsState {
     required this.accountId,
     required Iterable<HabitToday> today,
     this.lastFailure,
+    this.syncSnapshot = const HabitSyncSnapshot(status: HabitSyncStatus.idle),
+    this.conflicts = const [],
   }) : today = List.unmodifiable(today);
 
   final String accountId;
   final List<HabitToday> today;
   final AppFailure? lastFailure;
+  final HabitSyncSnapshot syncSnapshot;
+  final List<HabitConflictView> conflicts;
 }

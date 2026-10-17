@@ -113,6 +113,7 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
   StreamSubscription<CloudSessionSnapshot>? _subscription;
   CloudSessionStatus _status = CloudSessionStatus.unknown;
   String? _accountId;
+  int _sessionRevision = 0;
 
   @override
   void initState() {
@@ -125,8 +126,9 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
   }
 
   Future<void> _resolveInitialSession() async {
+    final revision = _sessionRevision;
     final result = await widget.cloudSession.obtainSyncContext();
-    if (!mounted) {
+    if (!mounted || revision != _sessionRevision) {
       return;
     }
     final accountId = result.valueOrNull?.accountId;
@@ -144,6 +146,7 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
     if (!mounted) {
       return;
     }
+    _sessionRevision++;
     final accountId = snapshot.accountId;
     if (snapshot.status != CloudSessionStatus.signedIn ||
         accountId == null ||

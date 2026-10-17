@@ -15,6 +15,7 @@ on:
       - 'pubspec.lock'
       - 'pubspec.yaml'
       - 'specs/003-namaa-tasks/**'
+      - 'specs/004-habits/**'
       - 'supabase/**'
       - 'test/**'
       - 'test_driver/**'
@@ -24,6 +25,7 @@ on:
       - main
       - 'feature/**'
       - 'namaa/003-tasks'
+      - 'namaa/004-habits'
     paths:
       - '.github/workflows/foundation-ci.yml'
       - '.github/scripts/**'
@@ -36,6 +38,7 @@ on:
       - 'pubspec.lock'
       - 'pubspec.yaml'
       - 'specs/003-namaa-tasks/**'
+      - 'specs/004-habits/**'
       - 'supabase/**'
       - 'test/**'
       - 'test_driver/**'

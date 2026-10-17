@@ -10,6 +10,13 @@ abstract interface class HabitsStrings {
   String get reminderTime;
   String get reminderClear;
   String get reminderInactive;
+  String get syncing;
+  String get syncFailed;
+  String get syncRetry;
+  String get conflict;
+  String get activeVersion;
+  String get retainedVersion;
+  String get unresolvedConflict;
   String get nameLabel;
   String get nameRequired;
   String get weekdaysRequired;
