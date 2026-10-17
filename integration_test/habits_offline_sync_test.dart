@@ -18,6 +18,7 @@ import 'package:namma_project/features/habits/data/habit_reconciler.dart';
 import 'package:namma_project/features/habits/domain/habit.dart';
 import 'package:namma_project/features/habits/domain/habit_day.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
+import 'package:namma_project/features/habits/presentation/habits_state.dart';
 
 import '../test/support/foundation_test_support.dart';
 import '../test/support/habits_test_support.dart';
@@ -311,6 +312,26 @@ void main() {
   testWidgets('debug preview navigation completes and restores one due habit', (
     tester,
   ) async {
+    Future<void> waitForPreviewHabit({required bool completed}) async {
+      final cubit = tester
+          .widget<HabitsScreen>(find.byType(HabitsScreen))
+          .cubit;
+      bool matches(HabitsState state) =>
+          state is HabitsReady &&
+          state.today.any(
+            (value) =>
+                value.habit.name == 'Preview reading' &&
+                value.isDue &&
+                value.isCompleted == completed,
+          );
+      if (!matches(cubit.state)) {
+        await cubit.stream
+            .firstWhere(matches)
+            .timeout(const Duration(seconds: 10));
+      }
+      await tester.pumpAndSettle();
+    }
+
     final path = TemporaryDatabasePath();
     final file = path.allocate();
     final vault = InMemorySecureKeyValueStore();
@@ -341,10 +362,10 @@ void main() {
       await tester.tap(chip);
     }
     await tester.tap(find.byKey(kHabitSaveButtonKey));
-    await tester.pumpAndSettle();
+    await waitForPreviewHabit(completed: false);
     expect(find.text('Preview reading'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.check_circle_outline));
-    await tester.pumpAndSettle();
+    await waitForPreviewHabit(completed: true);
     expect(find.byIcon(Icons.undo), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -354,10 +375,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(kFoundationHabitsNavigationKey));
     await tester.pumpAndSettle();
+    await waitForPreviewHabit(completed: true);
     expect(find.text('Preview reading'), findsOneWidget);
     expect(find.byIcon(Icons.undo), findsOneWidget);
     await tester.tap(find.byIcon(Icons.undo));
-    await tester.pumpAndSettle();
+    await waitForPreviewHabit(completed: false);
     expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
   });
 }
