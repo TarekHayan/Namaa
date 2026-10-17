@@ -238,6 +238,8 @@ jobs:
               integration_test/tasks_checklist_history_test.dart
               integration_test/tasks_localized_route_test.dart
               integration_test/habits_offline_sync_test.dart
+              integration_test/habits_streak_history_test.dart
+              integration_test/habits_edit_delete_test.dart
               integration_test/habits_localized_route_test.dart
             )
             for test_file in "${tests[@]}"; do
@@ -306,6 +308,8 @@ jobs:
             'integration_test/tasks_checklist_history_test.dart',
             'integration_test/tasks_localized_route_test.dart',
             'integration_test/habits_offline_sync_test.dart',
+            'integration_test/habits_streak_history_test.dart',
+            'integration_test/habits_edit_delete_test.dart',
             'integration_test/habits_localized_route_test.dart'
           )
           foreach ($test in $tests) {
@@ -369,6 +373,8 @@ jobs:
             integration_test/tasks_checklist_history_test.dart
             integration_test/tasks_localized_route_test.dart
             integration_test/habits_offline_sync_test.dart
+            integration_test/habits_streak_history_test.dart
+            integration_test/habits_edit_delete_test.dart
             integration_test/habits_localized_route_test.dart
           )
           for test_file in "${tests[@]}"; do
@@ -415,6 +421,10 @@ jobs:
             test_file: integration_test/tasks_localized_route_test.dart
           - suite: habits-offline-sync
             test_file: integration_test/habits_offline_sync_test.dart
+          - suite: habits-streak-history
+            test_file: integration_test/habits_streak_history_test.dart
+          - suite: habits-edit-delete
+            test_file: integration_test/habits_edit_delete_test.dart
           - suite: habits-localized-route
             test_file: integration_test/habits_localized_route_test.dart
     steps:
