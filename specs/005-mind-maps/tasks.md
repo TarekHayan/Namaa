@@ -30,12 +30,12 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 
 **Purpose**: Add protected, independently addressable graph records before any story writes them. This phase blocks US1–US5.
 
-- [ ] T003 Test additive encrypted v4→v5 upgrade, owner-qualified graph keys/indexes, the Tasks completion-transition baseline, retained Foundation/Task/Habit/XP/outbox data and recoverable migration failure in test/unit/core/data/local/mind_maps_migration_test.dart.
-- [ ] T004 Add map, node, parent-slot and side-link tables with owner-qualified identities/indexes plus the Tasks-owned completion-transition column and additive v4→v5 migration in lib/core/data/local/foundation_database.dart.
-- [ ] T005 Regenerate Drift schema output in lib/core/data/local/foundation_database.g.dart and make test/unit/core/data/local/mind_maps_migration_test.dart pass without resetting old account data.
-- [ ] T006 [P] Define immutable MindMap/settings and MindMapNode identities, validation, versions and tombstones in lib/features/mind_maps/domain/mind_map.dart and lib/features/mind_maps/domain/mind_map_node.dart.
-- [ ] T007 [P] Define one ParentSlot per child and canonical unordered SideLink identities, appearance, versions and tombstones in lib/features/mind_maps/domain/map_connection.dart.
-- [ ] T008 Encode/decode all four graph record types with stable IDs, settings, Task references, versions and tombstones in lib/features/mind_maps/data/map_payload_codec.dart.
+- [X] T003 Test additive encrypted v4→v5 upgrade, owner-qualified graph keys/indexes, the Tasks completion-transition baseline, retained Foundation/Task/Habit/XP/outbox data and recoverable migration failure in test/unit/core/data/local/mind_maps_migration_test.dart.
+- [X] T004 Add map, node, parent-slot and side-link tables with owner-qualified identities/indexes plus the Tasks-owned completion-transition column and additive v4→v5 migration in lib/core/data/local/foundation_database.dart.
+- [X] T005 Regenerate Drift schema output in lib/core/data/local/foundation_database.g.dart and make test/unit/core/data/local/mind_maps_migration_test.dart pass without resetting old account data.
+- [X] T006 [P] Define immutable MindMap/settings and MindMapNode identities, validation, versions and tombstones in lib/features/mind_maps/domain/mind_map.dart and lib/features/mind_maps/domain/mind_map_node.dart.
+- [X] T007 [P] Define one ParentSlot per child and canonical unordered SideLink identities, appearance, versions and tombstones in lib/features/mind_maps/domain/map_connection.dart.
+- [X] T008 Encode/decode all four graph record types with stable IDs, settings, Task references, versions and tombstones in lib/features/mind_maps/data/map_payload_codec.dart.
 
 **Checkpoint**: Existing encrypted installations migrate safely; every map element has an independent owner-scoped sync identity.
 

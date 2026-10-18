@@ -2976,6 +2976,17 @@ class $TaskRecordsTable extends TaskRecords
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _completionChangedAtMeta =
+      const VerificationMeta('completionChangedAt');
+  @override
+  late final GeneratedColumn<DateTime> completionChangedAt =
+      GeneratedColumn<DateTime>(
+        'completion_changed_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _completionXpMeta = const VerificationMeta(
     'completionXp',
   );
@@ -3035,6 +3046,7 @@ class $TaskRecordsTable extends TaskRecords
     estimatedDurationMinutes,
     checklistJson,
     completedAt,
+    completionChangedAt,
     completionXp,
     createdAt,
     updatedAt,
@@ -3166,6 +3178,15 @@ class $TaskRecordsTable extends TaskRecords
         ),
       );
     }
+    if (data.containsKey('completion_changed_at')) {
+      context.handle(
+        _completionChangedAtMeta,
+        completionChangedAt.isAcceptableOrUnknown(
+          data['completion_changed_at']!,
+          _completionChangedAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('completion_xp')) {
       context.handle(
         _completionXpMeta,
@@ -3260,6 +3281,10 @@ class $TaskRecordsTable extends TaskRecords
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       ),
+      completionChangedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completion_changed_at'],
+      ),
       completionXp: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}completion_xp'],
@@ -3299,6 +3324,9 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
   final int? estimatedDurationMinutes;
   final String checklistJson;
   final DateTime? completedAt;
+
+  /// Tasks owns this transition revision; map status projections only read it.
+  final DateTime? completionChangedAt;
   final int completionXp;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -3317,6 +3345,7 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     this.estimatedDurationMinutes,
     required this.checklistJson,
     this.completedAt,
+    this.completionChangedAt,
     required this.completionXp,
     required this.createdAt,
     required this.updatedAt,
@@ -3353,6 +3382,9 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     map['checklist_json'] = Variable<String>(checklistJson);
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    if (!nullToAbsent || completionChangedAt != null) {
+      map['completion_changed_at'] = Variable<DateTime>(completionChangedAt);
     }
     map['completion_xp'] = Variable<int>(completionXp);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -3391,6 +3423,9 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      completionChangedAt: completionChangedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completionChangedAt),
       completionXp: Value(completionXp),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -3423,6 +3458,9 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
       ),
       checklistJson: serializer.fromJson<String>(json['checklistJson']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      completionChangedAt: serializer.fromJson<DateTime?>(
+        json['completionChangedAt'],
+      ),
       completionXp: serializer.fromJson<int>(json['completionXp']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -3450,6 +3488,7 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
       ),
       'checklistJson': serializer.toJson<String>(checklistJson),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'completionChangedAt': serializer.toJson<DateTime?>(completionChangedAt),
       'completionXp': serializer.toJson<int>(completionXp),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -3471,6 +3510,7 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     Value<int?> estimatedDurationMinutes = const Value.absent(),
     String? checklistJson,
     Value<DateTime?> completedAt = const Value.absent(),
+    Value<DateTime?> completionChangedAt = const Value.absent(),
     int? completionXp,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -3497,6 +3537,9 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
         : this.estimatedDurationMinutes,
     checklistJson: checklistJson ?? this.checklistJson,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    completionChangedAt: completionChangedAt.present
+        ? completionChangedAt.value
+        : this.completionChangedAt,
     completionXp: completionXp ?? this.completionXp,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -3534,6 +3577,9 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      completionChangedAt: data.completionChangedAt.present
+          ? data.completionChangedAt.value
+          : this.completionChangedAt,
       completionXp: data.completionXp.present
           ? data.completionXp.value
           : this.completionXp,
@@ -3561,6 +3607,7 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
           ..write('estimatedDurationMinutes: $estimatedDurationMinutes, ')
           ..write('checklistJson: $checklistJson, ')
           ..write('completedAt: $completedAt, ')
+          ..write('completionChangedAt: $completionChangedAt, ')
           ..write('completionXp: $completionXp, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3584,6 +3631,7 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     estimatedDurationMinutes,
     checklistJson,
     completedAt,
+    completionChangedAt,
     completionXp,
     createdAt,
     updatedAt,
@@ -3607,6 +3655,7 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
           other.estimatedDurationMinutes == this.estimatedDurationMinutes &&
           other.checklistJson == this.checklistJson &&
           other.completedAt == this.completedAt &&
+          other.completionChangedAt == this.completionChangedAt &&
           other.completionXp == this.completionXp &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -3627,6 +3676,7 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
   final Value<int?> estimatedDurationMinutes;
   final Value<String> checklistJson;
   final Value<DateTime?> completedAt;
+  final Value<DateTime?> completionChangedAt;
   final Value<int> completionXp;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -3646,6 +3696,7 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     this.estimatedDurationMinutes = const Value.absent(),
     this.checklistJson = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.completionChangedAt = const Value.absent(),
     this.completionXp = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3666,6 +3717,7 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     this.estimatedDurationMinutes = const Value.absent(),
     this.checklistJson = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.completionChangedAt = const Value.absent(),
     required int completionXp,
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -3694,6 +3746,7 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     Expression<int>? estimatedDurationMinutes,
     Expression<String>? checklistJson,
     Expression<DateTime>? completedAt,
+    Expression<DateTime>? completionChangedAt,
     Expression<int>? completionXp,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -3716,6 +3769,8 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
         'estimated_duration_minutes': estimatedDurationMinutes,
       if (checklistJson != null) 'checklist_json': checklistJson,
       if (completedAt != null) 'completed_at': completedAt,
+      if (completionChangedAt != null)
+        'completion_changed_at': completionChangedAt,
       if (completionXp != null) 'completion_xp': completionXp,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3738,6 +3793,7 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     Value<int?>? estimatedDurationMinutes,
     Value<String>? checklistJson,
     Value<DateTime?>? completedAt,
+    Value<DateTime?>? completionChangedAt,
     Value<int>? completionXp,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -3760,6 +3816,7 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
           estimatedDurationMinutes ?? this.estimatedDurationMinutes,
       checklistJson: checklistJson ?? this.checklistJson,
       completedAt: completedAt ?? this.completedAt,
+      completionChangedAt: completionChangedAt ?? this.completionChangedAt,
       completionXp: completionXp ?? this.completionXp,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3814,6 +3871,11 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
+    if (completionChangedAt.present) {
+      map['completion_changed_at'] = Variable<DateTime>(
+        completionChangedAt.value,
+      );
+    }
     if (completionXp.present) {
       map['completion_xp'] = Variable<int>(completionXp.value);
     }
@@ -3850,6 +3912,7 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
           ..write('estimatedDurationMinutes: $estimatedDurationMinutes, ')
           ..write('checklistJson: $checklistJson, ')
           ..write('completedAt: $completedAt, ')
+          ..write('completionChangedAt: $completionChangedAt, ')
           ..write('completionXp: $completionXp, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -5325,6 +5388,2658 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
   }
 }
 
+class $MindMapRecordsTable extends MindMapRecords
+    with TableInfo<$MindMapRecordsTable, MindMapRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MindMapRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mapIdMeta = const VerificationMeta('mapId');
+  @override
+  late final GeneratedColumn<String> mapId = GeneratedColumn<String>(
+    'map_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _centralNodeIdMeta = const VerificationMeta(
+    'centralNodeId',
+  );
+  @override
+  late final GeneratedColumn<String> centralNodeId = GeneratedColumn<String>(
+    'central_node_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _settingsJsonMeta = const VerificationMeta(
+    'settingsJson',
+  );
+  @override
+  late final GeneratedColumn<String> settingsJson = GeneratedColumn<String>(
+    'settings_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revisionIdMeta = const VerificationMeta(
+    'revisionId',
+  );
+  @override
+  late final GeneratedColumn<String> revisionId = GeneratedColumn<String>(
+    'revision_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    mapId,
+    title,
+    description,
+    centralNodeId,
+    settingsJson,
+    revisionId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'mind_map_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MindMapRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('map_id')) {
+      context.handle(
+        _mapIdMeta,
+        mapId.isAcceptableOrUnknown(data['map_id']!, _mapIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mapIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('central_node_id')) {
+      context.handle(
+        _centralNodeIdMeta,
+        centralNodeId.isAcceptableOrUnknown(
+          data['central_node_id']!,
+          _centralNodeIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_centralNodeIdMeta);
+    }
+    if (data.containsKey('settings_json')) {
+      context.handle(
+        _settingsJsonMeta,
+        settingsJson.isAcceptableOrUnknown(
+          data['settings_json']!,
+          _settingsJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_settingsJsonMeta);
+    }
+    if (data.containsKey('revision_id')) {
+      context.handle(
+        _revisionIdMeta,
+        revisionId.isAcceptableOrUnknown(data['revision_id']!, _revisionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revisionIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, mapId};
+  @override
+  MindMapRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MindMapRecord(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      mapId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}map_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      centralNodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}central_node_id'],
+      )!,
+      settingsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}settings_json'],
+      )!,
+      revisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}revision_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $MindMapRecordsTable createAlias(String alias) {
+    return $MindMapRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class MindMapRecord extends DataClass implements Insertable<MindMapRecord> {
+  final String accountId;
+  final String mapId;
+  final String title;
+  final String? description;
+  final String centralNodeId;
+  final String settingsJson;
+  final String revisionId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const MindMapRecord({
+    required this.accountId,
+    required this.mapId,
+    required this.title,
+    this.description,
+    required this.centralNodeId,
+    required this.settingsJson,
+    required this.revisionId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['map_id'] = Variable<String>(mapId);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['central_node_id'] = Variable<String>(centralNodeId);
+    map['settings_json'] = Variable<String>(settingsJson);
+    map['revision_id'] = Variable<String>(revisionId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  MindMapRecordsCompanion toCompanion(bool nullToAbsent) {
+    return MindMapRecordsCompanion(
+      accountId: Value(accountId),
+      mapId: Value(mapId),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      centralNodeId: Value(centralNodeId),
+      settingsJson: Value(settingsJson),
+      revisionId: Value(revisionId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory MindMapRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MindMapRecord(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      mapId: serializer.fromJson<String>(json['mapId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      centralNodeId: serializer.fromJson<String>(json['centralNodeId']),
+      settingsJson: serializer.fromJson<String>(json['settingsJson']),
+      revisionId: serializer.fromJson<String>(json['revisionId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'mapId': serializer.toJson<String>(mapId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'centralNodeId': serializer.toJson<String>(centralNodeId),
+      'settingsJson': serializer.toJson<String>(settingsJson),
+      'revisionId': serializer.toJson<String>(revisionId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  MindMapRecord copyWith({
+    String? accountId,
+    String? mapId,
+    String? title,
+    Value<String?> description = const Value.absent(),
+    String? centralNodeId,
+    String? settingsJson,
+    String? revisionId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => MindMapRecord(
+    accountId: accountId ?? this.accountId,
+    mapId: mapId ?? this.mapId,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    centralNodeId: centralNodeId ?? this.centralNodeId,
+    settingsJson: settingsJson ?? this.settingsJson,
+    revisionId: revisionId ?? this.revisionId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  MindMapRecord copyWithCompanion(MindMapRecordsCompanion data) {
+    return MindMapRecord(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      mapId: data.mapId.present ? data.mapId.value : this.mapId,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      centralNodeId: data.centralNodeId.present
+          ? data.centralNodeId.value
+          : this.centralNodeId,
+      settingsJson: data.settingsJson.present
+          ? data.settingsJson.value
+          : this.settingsJson,
+      revisionId: data.revisionId.present
+          ? data.revisionId.value
+          : this.revisionId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindMapRecord(')
+          ..write('accountId: $accountId, ')
+          ..write('mapId: $mapId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('centralNodeId: $centralNodeId, ')
+          ..write('settingsJson: $settingsJson, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    mapId,
+    title,
+    description,
+    centralNodeId,
+    settingsJson,
+    revisionId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MindMapRecord &&
+          other.accountId == this.accountId &&
+          other.mapId == this.mapId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.centralNodeId == this.centralNodeId &&
+          other.settingsJson == this.settingsJson &&
+          other.revisionId == this.revisionId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class MindMapRecordsCompanion extends UpdateCompanion<MindMapRecord> {
+  final Value<String> accountId;
+  final Value<String> mapId;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<String> centralNodeId;
+  final Value<String> settingsJson;
+  final Value<String> revisionId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const MindMapRecordsCompanion({
+    this.accountId = const Value.absent(),
+    this.mapId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.centralNodeId = const Value.absent(),
+    this.settingsJson = const Value.absent(),
+    this.revisionId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MindMapRecordsCompanion.insert({
+    required String accountId,
+    required String mapId,
+    required String title,
+    this.description = const Value.absent(),
+    required String centralNodeId,
+    required String settingsJson,
+    required String revisionId,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       mapId = Value(mapId),
+       title = Value(title),
+       centralNodeId = Value(centralNodeId),
+       settingsJson = Value(settingsJson),
+       revisionId = Value(revisionId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<MindMapRecord> custom({
+    Expression<String>? accountId,
+    Expression<String>? mapId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? centralNodeId,
+    Expression<String>? settingsJson,
+    Expression<String>? revisionId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (mapId != null) 'map_id': mapId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (centralNodeId != null) 'central_node_id': centralNodeId,
+      if (settingsJson != null) 'settings_json': settingsJson,
+      if (revisionId != null) 'revision_id': revisionId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MindMapRecordsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? mapId,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<String>? centralNodeId,
+    Value<String>? settingsJson,
+    Value<String>? revisionId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return MindMapRecordsCompanion(
+      accountId: accountId ?? this.accountId,
+      mapId: mapId ?? this.mapId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      centralNodeId: centralNodeId ?? this.centralNodeId,
+      settingsJson: settingsJson ?? this.settingsJson,
+      revisionId: revisionId ?? this.revisionId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (mapId.present) {
+      map['map_id'] = Variable<String>(mapId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (centralNodeId.present) {
+      map['central_node_id'] = Variable<String>(centralNodeId.value);
+    }
+    if (settingsJson.present) {
+      map['settings_json'] = Variable<String>(settingsJson.value);
+    }
+    if (revisionId.present) {
+      map['revision_id'] = Variable<String>(revisionId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindMapRecordsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('mapId: $mapId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('centralNodeId: $centralNodeId, ')
+          ..write('settingsJson: $settingsJson, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MindMapNodeRecordsTable extends MindMapNodeRecords
+    with TableInfo<$MindMapNodeRecordsTable, MindMapNodeRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MindMapNodeRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mapIdMeta = const VerificationMeta('mapId');
+  @override
+  late final GeneratedColumn<String> mapId = GeneratedColumn<String>(
+    'map_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nodeIdMeta = const VerificationMeta('nodeId');
+  @override
+  late final GeneratedColumn<String> nodeId = GeneratedColumn<String>(
+    'node_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _xMeta = const VerificationMeta('x');
+  @override
+  late final GeneratedColumn<double> x = GeneratedColumn<double>(
+    'x',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _yMeta = const VerificationMeta('y');
+  @override
+  late final GeneratedColumn<double> y = GeneratedColumn<double>(
+    'y',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusChangedAtMeta = const VerificationMeta(
+    'statusChangedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> statusChangedAt =
+      GeneratedColumn<DateTime>(
+        'status_changed_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _appearanceJsonMeta = const VerificationMeta(
+    'appearanceJson',
+  );
+  @override
+  late final GeneratedColumn<String> appearanceJson = GeneratedColumn<String>(
+    'appearance_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _revisionIdMeta = const VerificationMeta(
+    'revisionId',
+  );
+  @override
+  late final GeneratedColumn<String> revisionId = GeneratedColumn<String>(
+    'revision_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    mapId,
+    nodeId,
+    kind,
+    title,
+    description,
+    x,
+    y,
+    status,
+    statusChangedAt,
+    priority,
+    appearanceJson,
+    taskId,
+    revisionId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'mind_map_node_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MindMapNodeRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('map_id')) {
+      context.handle(
+        _mapIdMeta,
+        mapId.isAcceptableOrUnknown(data['map_id']!, _mapIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mapIdMeta);
+    }
+    if (data.containsKey('node_id')) {
+      context.handle(
+        _nodeIdMeta,
+        nodeId.isAcceptableOrUnknown(data['node_id']!, _nodeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nodeIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('x')) {
+      context.handle(_xMeta, x.isAcceptableOrUnknown(data['x']!, _xMeta));
+    } else if (isInserting) {
+      context.missing(_xMeta);
+    }
+    if (data.containsKey('y')) {
+      context.handle(_yMeta, y.isAcceptableOrUnknown(data['y']!, _yMeta));
+    } else if (isInserting) {
+      context.missing(_yMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('status_changed_at')) {
+      context.handle(
+        _statusChangedAtMeta,
+        statusChangedAt.isAcceptableOrUnknown(
+          data['status_changed_at']!,
+          _statusChangedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_priorityMeta);
+    }
+    if (data.containsKey('appearance_json')) {
+      context.handle(
+        _appearanceJsonMeta,
+        appearanceJson.isAcceptableOrUnknown(
+          data['appearance_json']!,
+          _appearanceJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_appearanceJsonMeta);
+    }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    }
+    if (data.containsKey('revision_id')) {
+      context.handle(
+        _revisionIdMeta,
+        revisionId.isAcceptableOrUnknown(data['revision_id']!, _revisionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revisionIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, mapId, nodeId};
+  @override
+  MindMapNodeRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MindMapNodeRecord(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      mapId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}map_id'],
+      )!,
+      nodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}node_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      x: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}x'],
+      )!,
+      y: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}y'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      statusChangedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}status_changed_at'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      appearanceJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}appearance_json'],
+      )!,
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      ),
+      revisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}revision_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $MindMapNodeRecordsTable createAlias(String alias) {
+    return $MindMapNodeRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class MindMapNodeRecord extends DataClass
+    implements Insertable<MindMapNodeRecord> {
+  final String accountId;
+  final String mapId;
+  final String nodeId;
+  final String kind;
+  final String title;
+  final String? description;
+  final double x;
+  final double y;
+  final String status;
+  final DateTime? statusChangedAt;
+  final String priority;
+  final String appearanceJson;
+  final String? taskId;
+  final String revisionId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const MindMapNodeRecord({
+    required this.accountId,
+    required this.mapId,
+    required this.nodeId,
+    required this.kind,
+    required this.title,
+    this.description,
+    required this.x,
+    required this.y,
+    required this.status,
+    this.statusChangedAt,
+    required this.priority,
+    required this.appearanceJson,
+    this.taskId,
+    required this.revisionId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['map_id'] = Variable<String>(mapId);
+    map['node_id'] = Variable<String>(nodeId);
+    map['kind'] = Variable<String>(kind);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['x'] = Variable<double>(x);
+    map['y'] = Variable<double>(y);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || statusChangedAt != null) {
+      map['status_changed_at'] = Variable<DateTime>(statusChangedAt);
+    }
+    map['priority'] = Variable<String>(priority);
+    map['appearance_json'] = Variable<String>(appearanceJson);
+    if (!nullToAbsent || taskId != null) {
+      map['task_id'] = Variable<String>(taskId);
+    }
+    map['revision_id'] = Variable<String>(revisionId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  MindMapNodeRecordsCompanion toCompanion(bool nullToAbsent) {
+    return MindMapNodeRecordsCompanion(
+      accountId: Value(accountId),
+      mapId: Value(mapId),
+      nodeId: Value(nodeId),
+      kind: Value(kind),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      x: Value(x),
+      y: Value(y),
+      status: Value(status),
+      statusChangedAt: statusChangedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statusChangedAt),
+      priority: Value(priority),
+      appearanceJson: Value(appearanceJson),
+      taskId: taskId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(taskId),
+      revisionId: Value(revisionId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory MindMapNodeRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MindMapNodeRecord(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      mapId: serializer.fromJson<String>(json['mapId']),
+      nodeId: serializer.fromJson<String>(json['nodeId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      x: serializer.fromJson<double>(json['x']),
+      y: serializer.fromJson<double>(json['y']),
+      status: serializer.fromJson<String>(json['status']),
+      statusChangedAt: serializer.fromJson<DateTime?>(json['statusChangedAt']),
+      priority: serializer.fromJson<String>(json['priority']),
+      appearanceJson: serializer.fromJson<String>(json['appearanceJson']),
+      taskId: serializer.fromJson<String?>(json['taskId']),
+      revisionId: serializer.fromJson<String>(json['revisionId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'mapId': serializer.toJson<String>(mapId),
+      'nodeId': serializer.toJson<String>(nodeId),
+      'kind': serializer.toJson<String>(kind),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'x': serializer.toJson<double>(x),
+      'y': serializer.toJson<double>(y),
+      'status': serializer.toJson<String>(status),
+      'statusChangedAt': serializer.toJson<DateTime?>(statusChangedAt),
+      'priority': serializer.toJson<String>(priority),
+      'appearanceJson': serializer.toJson<String>(appearanceJson),
+      'taskId': serializer.toJson<String?>(taskId),
+      'revisionId': serializer.toJson<String>(revisionId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  MindMapNodeRecord copyWith({
+    String? accountId,
+    String? mapId,
+    String? nodeId,
+    String? kind,
+    String? title,
+    Value<String?> description = const Value.absent(),
+    double? x,
+    double? y,
+    String? status,
+    Value<DateTime?> statusChangedAt = const Value.absent(),
+    String? priority,
+    String? appearanceJson,
+    Value<String?> taskId = const Value.absent(),
+    String? revisionId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => MindMapNodeRecord(
+    accountId: accountId ?? this.accountId,
+    mapId: mapId ?? this.mapId,
+    nodeId: nodeId ?? this.nodeId,
+    kind: kind ?? this.kind,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    x: x ?? this.x,
+    y: y ?? this.y,
+    status: status ?? this.status,
+    statusChangedAt: statusChangedAt.present
+        ? statusChangedAt.value
+        : this.statusChangedAt,
+    priority: priority ?? this.priority,
+    appearanceJson: appearanceJson ?? this.appearanceJson,
+    taskId: taskId.present ? taskId.value : this.taskId,
+    revisionId: revisionId ?? this.revisionId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  MindMapNodeRecord copyWithCompanion(MindMapNodeRecordsCompanion data) {
+    return MindMapNodeRecord(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      mapId: data.mapId.present ? data.mapId.value : this.mapId,
+      nodeId: data.nodeId.present ? data.nodeId.value : this.nodeId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      x: data.x.present ? data.x.value : this.x,
+      y: data.y.present ? data.y.value : this.y,
+      status: data.status.present ? data.status.value : this.status,
+      statusChangedAt: data.statusChangedAt.present
+          ? data.statusChangedAt.value
+          : this.statusChangedAt,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      appearanceJson: data.appearanceJson.present
+          ? data.appearanceJson.value
+          : this.appearanceJson,
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
+      revisionId: data.revisionId.present
+          ? data.revisionId.value
+          : this.revisionId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindMapNodeRecord(')
+          ..write('accountId: $accountId, ')
+          ..write('mapId: $mapId, ')
+          ..write('nodeId: $nodeId, ')
+          ..write('kind: $kind, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('x: $x, ')
+          ..write('y: $y, ')
+          ..write('status: $status, ')
+          ..write('statusChangedAt: $statusChangedAt, ')
+          ..write('priority: $priority, ')
+          ..write('appearanceJson: $appearanceJson, ')
+          ..write('taskId: $taskId, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    mapId,
+    nodeId,
+    kind,
+    title,
+    description,
+    x,
+    y,
+    status,
+    statusChangedAt,
+    priority,
+    appearanceJson,
+    taskId,
+    revisionId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MindMapNodeRecord &&
+          other.accountId == this.accountId &&
+          other.mapId == this.mapId &&
+          other.nodeId == this.nodeId &&
+          other.kind == this.kind &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.x == this.x &&
+          other.y == this.y &&
+          other.status == this.status &&
+          other.statusChangedAt == this.statusChangedAt &&
+          other.priority == this.priority &&
+          other.appearanceJson == this.appearanceJson &&
+          other.taskId == this.taskId &&
+          other.revisionId == this.revisionId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class MindMapNodeRecordsCompanion extends UpdateCompanion<MindMapNodeRecord> {
+  final Value<String> accountId;
+  final Value<String> mapId;
+  final Value<String> nodeId;
+  final Value<String> kind;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<double> x;
+  final Value<double> y;
+  final Value<String> status;
+  final Value<DateTime?> statusChangedAt;
+  final Value<String> priority;
+  final Value<String> appearanceJson;
+  final Value<String?> taskId;
+  final Value<String> revisionId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const MindMapNodeRecordsCompanion({
+    this.accountId = const Value.absent(),
+    this.mapId = const Value.absent(),
+    this.nodeId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.x = const Value.absent(),
+    this.y = const Value.absent(),
+    this.status = const Value.absent(),
+    this.statusChangedAt = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.appearanceJson = const Value.absent(),
+    this.taskId = const Value.absent(),
+    this.revisionId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MindMapNodeRecordsCompanion.insert({
+    required String accountId,
+    required String mapId,
+    required String nodeId,
+    required String kind,
+    required String title,
+    this.description = const Value.absent(),
+    required double x,
+    required double y,
+    required String status,
+    this.statusChangedAt = const Value.absent(),
+    required String priority,
+    required String appearanceJson,
+    this.taskId = const Value.absent(),
+    required String revisionId,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       mapId = Value(mapId),
+       nodeId = Value(nodeId),
+       kind = Value(kind),
+       title = Value(title),
+       x = Value(x),
+       y = Value(y),
+       status = Value(status),
+       priority = Value(priority),
+       appearanceJson = Value(appearanceJson),
+       revisionId = Value(revisionId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<MindMapNodeRecord> custom({
+    Expression<String>? accountId,
+    Expression<String>? mapId,
+    Expression<String>? nodeId,
+    Expression<String>? kind,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<double>? x,
+    Expression<double>? y,
+    Expression<String>? status,
+    Expression<DateTime>? statusChangedAt,
+    Expression<String>? priority,
+    Expression<String>? appearanceJson,
+    Expression<String>? taskId,
+    Expression<String>? revisionId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (mapId != null) 'map_id': mapId,
+      if (nodeId != null) 'node_id': nodeId,
+      if (kind != null) 'kind': kind,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (x != null) 'x': x,
+      if (y != null) 'y': y,
+      if (status != null) 'status': status,
+      if (statusChangedAt != null) 'status_changed_at': statusChangedAt,
+      if (priority != null) 'priority': priority,
+      if (appearanceJson != null) 'appearance_json': appearanceJson,
+      if (taskId != null) 'task_id': taskId,
+      if (revisionId != null) 'revision_id': revisionId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MindMapNodeRecordsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? mapId,
+    Value<String>? nodeId,
+    Value<String>? kind,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<double>? x,
+    Value<double>? y,
+    Value<String>? status,
+    Value<DateTime?>? statusChangedAt,
+    Value<String>? priority,
+    Value<String>? appearanceJson,
+    Value<String?>? taskId,
+    Value<String>? revisionId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return MindMapNodeRecordsCompanion(
+      accountId: accountId ?? this.accountId,
+      mapId: mapId ?? this.mapId,
+      nodeId: nodeId ?? this.nodeId,
+      kind: kind ?? this.kind,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      x: x ?? this.x,
+      y: y ?? this.y,
+      status: status ?? this.status,
+      statusChangedAt: statusChangedAt ?? this.statusChangedAt,
+      priority: priority ?? this.priority,
+      appearanceJson: appearanceJson ?? this.appearanceJson,
+      taskId: taskId ?? this.taskId,
+      revisionId: revisionId ?? this.revisionId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (mapId.present) {
+      map['map_id'] = Variable<String>(mapId.value);
+    }
+    if (nodeId.present) {
+      map['node_id'] = Variable<String>(nodeId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (x.present) {
+      map['x'] = Variable<double>(x.value);
+    }
+    if (y.present) {
+      map['y'] = Variable<double>(y.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (statusChangedAt.present) {
+      map['status_changed_at'] = Variable<DateTime>(statusChangedAt.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (appearanceJson.present) {
+      map['appearance_json'] = Variable<String>(appearanceJson.value);
+    }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
+    }
+    if (revisionId.present) {
+      map['revision_id'] = Variable<String>(revisionId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindMapNodeRecordsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('mapId: $mapId, ')
+          ..write('nodeId: $nodeId, ')
+          ..write('kind: $kind, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('x: $x, ')
+          ..write('y: $y, ')
+          ..write('status: $status, ')
+          ..write('statusChangedAt: $statusChangedAt, ')
+          ..write('priority: $priority, ')
+          ..write('appearanceJson: $appearanceJson, ')
+          ..write('taskId: $taskId, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MindMapParentSlotsTable extends MindMapParentSlots
+    with TableInfo<$MindMapParentSlotsTable, MindMapParentSlot> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MindMapParentSlotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mapIdMeta = const VerificationMeta('mapId');
+  @override
+  late final GeneratedColumn<String> mapId = GeneratedColumn<String>(
+    'map_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _childNodeIdMeta = const VerificationMeta(
+    'childNodeId',
+  );
+  @override
+  late final GeneratedColumn<String> childNodeId = GeneratedColumn<String>(
+    'child_node_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _parentNodeIdMeta = const VerificationMeta(
+    'parentNodeId',
+  );
+  @override
+  late final GeneratedColumn<String> parentNodeId = GeneratedColumn<String>(
+    'parent_node_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _appearanceJsonMeta = const VerificationMeta(
+    'appearanceJson',
+  );
+  @override
+  late final GeneratedColumn<String> appearanceJson = GeneratedColumn<String>(
+    'appearance_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revisionIdMeta = const VerificationMeta(
+    'revisionId',
+  );
+  @override
+  late final GeneratedColumn<String> revisionId = GeneratedColumn<String>(
+    'revision_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    mapId,
+    childNodeId,
+    parentNodeId,
+    appearanceJson,
+    revisionId,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'mind_map_parent_slots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MindMapParentSlot> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('map_id')) {
+      context.handle(
+        _mapIdMeta,
+        mapId.isAcceptableOrUnknown(data['map_id']!, _mapIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mapIdMeta);
+    }
+    if (data.containsKey('child_node_id')) {
+      context.handle(
+        _childNodeIdMeta,
+        childNodeId.isAcceptableOrUnknown(
+          data['child_node_id']!,
+          _childNodeIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_childNodeIdMeta);
+    }
+    if (data.containsKey('parent_node_id')) {
+      context.handle(
+        _parentNodeIdMeta,
+        parentNodeId.isAcceptableOrUnknown(
+          data['parent_node_id']!,
+          _parentNodeIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_parentNodeIdMeta);
+    }
+    if (data.containsKey('appearance_json')) {
+      context.handle(
+        _appearanceJsonMeta,
+        appearanceJson.isAcceptableOrUnknown(
+          data['appearance_json']!,
+          _appearanceJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_appearanceJsonMeta);
+    }
+    if (data.containsKey('revision_id')) {
+      context.handle(
+        _revisionIdMeta,
+        revisionId.isAcceptableOrUnknown(data['revision_id']!, _revisionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revisionIdMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, mapId, childNodeId};
+  @override
+  MindMapParentSlot map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MindMapParentSlot(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      mapId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}map_id'],
+      )!,
+      childNodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}child_node_id'],
+      )!,
+      parentNodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_node_id'],
+      )!,
+      appearanceJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}appearance_json'],
+      )!,
+      revisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}revision_id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $MindMapParentSlotsTable createAlias(String alias) {
+    return $MindMapParentSlotsTable(attachedDatabase, alias);
+  }
+}
+
+class MindMapParentSlot extends DataClass
+    implements Insertable<MindMapParentSlot> {
+  final String accountId;
+  final String mapId;
+  final String childNodeId;
+  final String parentNodeId;
+  final String appearanceJson;
+  final String revisionId;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const MindMapParentSlot({
+    required this.accountId,
+    required this.mapId,
+    required this.childNodeId,
+    required this.parentNodeId,
+    required this.appearanceJson,
+    required this.revisionId,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['map_id'] = Variable<String>(mapId);
+    map['child_node_id'] = Variable<String>(childNodeId);
+    map['parent_node_id'] = Variable<String>(parentNodeId);
+    map['appearance_json'] = Variable<String>(appearanceJson);
+    map['revision_id'] = Variable<String>(revisionId);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  MindMapParentSlotsCompanion toCompanion(bool nullToAbsent) {
+    return MindMapParentSlotsCompanion(
+      accountId: Value(accountId),
+      mapId: Value(mapId),
+      childNodeId: Value(childNodeId),
+      parentNodeId: Value(parentNodeId),
+      appearanceJson: Value(appearanceJson),
+      revisionId: Value(revisionId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory MindMapParentSlot.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MindMapParentSlot(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      mapId: serializer.fromJson<String>(json['mapId']),
+      childNodeId: serializer.fromJson<String>(json['childNodeId']),
+      parentNodeId: serializer.fromJson<String>(json['parentNodeId']),
+      appearanceJson: serializer.fromJson<String>(json['appearanceJson']),
+      revisionId: serializer.fromJson<String>(json['revisionId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'mapId': serializer.toJson<String>(mapId),
+      'childNodeId': serializer.toJson<String>(childNodeId),
+      'parentNodeId': serializer.toJson<String>(parentNodeId),
+      'appearanceJson': serializer.toJson<String>(appearanceJson),
+      'revisionId': serializer.toJson<String>(revisionId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  MindMapParentSlot copyWith({
+    String? accountId,
+    String? mapId,
+    String? childNodeId,
+    String? parentNodeId,
+    String? appearanceJson,
+    String? revisionId,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => MindMapParentSlot(
+    accountId: accountId ?? this.accountId,
+    mapId: mapId ?? this.mapId,
+    childNodeId: childNodeId ?? this.childNodeId,
+    parentNodeId: parentNodeId ?? this.parentNodeId,
+    appearanceJson: appearanceJson ?? this.appearanceJson,
+    revisionId: revisionId ?? this.revisionId,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  MindMapParentSlot copyWithCompanion(MindMapParentSlotsCompanion data) {
+    return MindMapParentSlot(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      mapId: data.mapId.present ? data.mapId.value : this.mapId,
+      childNodeId: data.childNodeId.present
+          ? data.childNodeId.value
+          : this.childNodeId,
+      parentNodeId: data.parentNodeId.present
+          ? data.parentNodeId.value
+          : this.parentNodeId,
+      appearanceJson: data.appearanceJson.present
+          ? data.appearanceJson.value
+          : this.appearanceJson,
+      revisionId: data.revisionId.present
+          ? data.revisionId.value
+          : this.revisionId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindMapParentSlot(')
+          ..write('accountId: $accountId, ')
+          ..write('mapId: $mapId, ')
+          ..write('childNodeId: $childNodeId, ')
+          ..write('parentNodeId: $parentNodeId, ')
+          ..write('appearanceJson: $appearanceJson, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    mapId,
+    childNodeId,
+    parentNodeId,
+    appearanceJson,
+    revisionId,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MindMapParentSlot &&
+          other.accountId == this.accountId &&
+          other.mapId == this.mapId &&
+          other.childNodeId == this.childNodeId &&
+          other.parentNodeId == this.parentNodeId &&
+          other.appearanceJson == this.appearanceJson &&
+          other.revisionId == this.revisionId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class MindMapParentSlotsCompanion extends UpdateCompanion<MindMapParentSlot> {
+  final Value<String> accountId;
+  final Value<String> mapId;
+  final Value<String> childNodeId;
+  final Value<String> parentNodeId;
+  final Value<String> appearanceJson;
+  final Value<String> revisionId;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const MindMapParentSlotsCompanion({
+    this.accountId = const Value.absent(),
+    this.mapId = const Value.absent(),
+    this.childNodeId = const Value.absent(),
+    this.parentNodeId = const Value.absent(),
+    this.appearanceJson = const Value.absent(),
+    this.revisionId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MindMapParentSlotsCompanion.insert({
+    required String accountId,
+    required String mapId,
+    required String childNodeId,
+    required String parentNodeId,
+    required String appearanceJson,
+    required String revisionId,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       mapId = Value(mapId),
+       childNodeId = Value(childNodeId),
+       parentNodeId = Value(parentNodeId),
+       appearanceJson = Value(appearanceJson),
+       revisionId = Value(revisionId),
+       updatedAt = Value(updatedAt);
+  static Insertable<MindMapParentSlot> custom({
+    Expression<String>? accountId,
+    Expression<String>? mapId,
+    Expression<String>? childNodeId,
+    Expression<String>? parentNodeId,
+    Expression<String>? appearanceJson,
+    Expression<String>? revisionId,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (mapId != null) 'map_id': mapId,
+      if (childNodeId != null) 'child_node_id': childNodeId,
+      if (parentNodeId != null) 'parent_node_id': parentNodeId,
+      if (appearanceJson != null) 'appearance_json': appearanceJson,
+      if (revisionId != null) 'revision_id': revisionId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MindMapParentSlotsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? mapId,
+    Value<String>? childNodeId,
+    Value<String>? parentNodeId,
+    Value<String>? appearanceJson,
+    Value<String>? revisionId,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return MindMapParentSlotsCompanion(
+      accountId: accountId ?? this.accountId,
+      mapId: mapId ?? this.mapId,
+      childNodeId: childNodeId ?? this.childNodeId,
+      parentNodeId: parentNodeId ?? this.parentNodeId,
+      appearanceJson: appearanceJson ?? this.appearanceJson,
+      revisionId: revisionId ?? this.revisionId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (mapId.present) {
+      map['map_id'] = Variable<String>(mapId.value);
+    }
+    if (childNodeId.present) {
+      map['child_node_id'] = Variable<String>(childNodeId.value);
+    }
+    if (parentNodeId.present) {
+      map['parent_node_id'] = Variable<String>(parentNodeId.value);
+    }
+    if (appearanceJson.present) {
+      map['appearance_json'] = Variable<String>(appearanceJson.value);
+    }
+    if (revisionId.present) {
+      map['revision_id'] = Variable<String>(revisionId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindMapParentSlotsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('mapId: $mapId, ')
+          ..write('childNodeId: $childNodeId, ')
+          ..write('parentNodeId: $parentNodeId, ')
+          ..write('appearanceJson: $appearanceJson, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MindMapSideLinksTable extends MindMapSideLinks
+    with TableInfo<$MindMapSideLinksTable, MindMapSideLink> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MindMapSideLinksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mapIdMeta = const VerificationMeta('mapId');
+  @override
+  late final GeneratedColumn<String> mapId = GeneratedColumn<String>(
+    'map_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstNodeIdMeta = const VerificationMeta(
+    'firstNodeId',
+  );
+  @override
+  late final GeneratedColumn<String> firstNodeId = GeneratedColumn<String>(
+    'first_node_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _secondNodeIdMeta = const VerificationMeta(
+    'secondNodeId',
+  );
+  @override
+  late final GeneratedColumn<String> secondNodeId = GeneratedColumn<String>(
+    'second_node_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _appearanceJsonMeta = const VerificationMeta(
+    'appearanceJson',
+  );
+  @override
+  late final GeneratedColumn<String> appearanceJson = GeneratedColumn<String>(
+    'appearance_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revisionIdMeta = const VerificationMeta(
+    'revisionId',
+  );
+  @override
+  late final GeneratedColumn<String> revisionId = GeneratedColumn<String>(
+    'revision_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    mapId,
+    firstNodeId,
+    secondNodeId,
+    appearanceJson,
+    revisionId,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'mind_map_side_links';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MindMapSideLink> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('map_id')) {
+      context.handle(
+        _mapIdMeta,
+        mapId.isAcceptableOrUnknown(data['map_id']!, _mapIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mapIdMeta);
+    }
+    if (data.containsKey('first_node_id')) {
+      context.handle(
+        _firstNodeIdMeta,
+        firstNodeId.isAcceptableOrUnknown(
+          data['first_node_id']!,
+          _firstNodeIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_firstNodeIdMeta);
+    }
+    if (data.containsKey('second_node_id')) {
+      context.handle(
+        _secondNodeIdMeta,
+        secondNodeId.isAcceptableOrUnknown(
+          data['second_node_id']!,
+          _secondNodeIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_secondNodeIdMeta);
+    }
+    if (data.containsKey('appearance_json')) {
+      context.handle(
+        _appearanceJsonMeta,
+        appearanceJson.isAcceptableOrUnknown(
+          data['appearance_json']!,
+          _appearanceJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_appearanceJsonMeta);
+    }
+    if (data.containsKey('revision_id')) {
+      context.handle(
+        _revisionIdMeta,
+        revisionId.isAcceptableOrUnknown(data['revision_id']!, _revisionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revisionIdMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {
+    accountId,
+    mapId,
+    firstNodeId,
+    secondNodeId,
+  };
+  @override
+  MindMapSideLink map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MindMapSideLink(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      mapId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}map_id'],
+      )!,
+      firstNodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}first_node_id'],
+      )!,
+      secondNodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}second_node_id'],
+      )!,
+      appearanceJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}appearance_json'],
+      )!,
+      revisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}revision_id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $MindMapSideLinksTable createAlias(String alias) {
+    return $MindMapSideLinksTable(attachedDatabase, alias);
+  }
+}
+
+class MindMapSideLink extends DataClass implements Insertable<MindMapSideLink> {
+  final String accountId;
+  final String mapId;
+  final String firstNodeId;
+  final String secondNodeId;
+  final String appearanceJson;
+  final String revisionId;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const MindMapSideLink({
+    required this.accountId,
+    required this.mapId,
+    required this.firstNodeId,
+    required this.secondNodeId,
+    required this.appearanceJson,
+    required this.revisionId,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['map_id'] = Variable<String>(mapId);
+    map['first_node_id'] = Variable<String>(firstNodeId);
+    map['second_node_id'] = Variable<String>(secondNodeId);
+    map['appearance_json'] = Variable<String>(appearanceJson);
+    map['revision_id'] = Variable<String>(revisionId);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  MindMapSideLinksCompanion toCompanion(bool nullToAbsent) {
+    return MindMapSideLinksCompanion(
+      accountId: Value(accountId),
+      mapId: Value(mapId),
+      firstNodeId: Value(firstNodeId),
+      secondNodeId: Value(secondNodeId),
+      appearanceJson: Value(appearanceJson),
+      revisionId: Value(revisionId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory MindMapSideLink.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MindMapSideLink(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      mapId: serializer.fromJson<String>(json['mapId']),
+      firstNodeId: serializer.fromJson<String>(json['firstNodeId']),
+      secondNodeId: serializer.fromJson<String>(json['secondNodeId']),
+      appearanceJson: serializer.fromJson<String>(json['appearanceJson']),
+      revisionId: serializer.fromJson<String>(json['revisionId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'mapId': serializer.toJson<String>(mapId),
+      'firstNodeId': serializer.toJson<String>(firstNodeId),
+      'secondNodeId': serializer.toJson<String>(secondNodeId),
+      'appearanceJson': serializer.toJson<String>(appearanceJson),
+      'revisionId': serializer.toJson<String>(revisionId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  MindMapSideLink copyWith({
+    String? accountId,
+    String? mapId,
+    String? firstNodeId,
+    String? secondNodeId,
+    String? appearanceJson,
+    String? revisionId,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => MindMapSideLink(
+    accountId: accountId ?? this.accountId,
+    mapId: mapId ?? this.mapId,
+    firstNodeId: firstNodeId ?? this.firstNodeId,
+    secondNodeId: secondNodeId ?? this.secondNodeId,
+    appearanceJson: appearanceJson ?? this.appearanceJson,
+    revisionId: revisionId ?? this.revisionId,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  MindMapSideLink copyWithCompanion(MindMapSideLinksCompanion data) {
+    return MindMapSideLink(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      mapId: data.mapId.present ? data.mapId.value : this.mapId,
+      firstNodeId: data.firstNodeId.present
+          ? data.firstNodeId.value
+          : this.firstNodeId,
+      secondNodeId: data.secondNodeId.present
+          ? data.secondNodeId.value
+          : this.secondNodeId,
+      appearanceJson: data.appearanceJson.present
+          ? data.appearanceJson.value
+          : this.appearanceJson,
+      revisionId: data.revisionId.present
+          ? data.revisionId.value
+          : this.revisionId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindMapSideLink(')
+          ..write('accountId: $accountId, ')
+          ..write('mapId: $mapId, ')
+          ..write('firstNodeId: $firstNodeId, ')
+          ..write('secondNodeId: $secondNodeId, ')
+          ..write('appearanceJson: $appearanceJson, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    mapId,
+    firstNodeId,
+    secondNodeId,
+    appearanceJson,
+    revisionId,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MindMapSideLink &&
+          other.accountId == this.accountId &&
+          other.mapId == this.mapId &&
+          other.firstNodeId == this.firstNodeId &&
+          other.secondNodeId == this.secondNodeId &&
+          other.appearanceJson == this.appearanceJson &&
+          other.revisionId == this.revisionId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class MindMapSideLinksCompanion extends UpdateCompanion<MindMapSideLink> {
+  final Value<String> accountId;
+  final Value<String> mapId;
+  final Value<String> firstNodeId;
+  final Value<String> secondNodeId;
+  final Value<String> appearanceJson;
+  final Value<String> revisionId;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const MindMapSideLinksCompanion({
+    this.accountId = const Value.absent(),
+    this.mapId = const Value.absent(),
+    this.firstNodeId = const Value.absent(),
+    this.secondNodeId = const Value.absent(),
+    this.appearanceJson = const Value.absent(),
+    this.revisionId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MindMapSideLinksCompanion.insert({
+    required String accountId,
+    required String mapId,
+    required String firstNodeId,
+    required String secondNodeId,
+    required String appearanceJson,
+    required String revisionId,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       mapId = Value(mapId),
+       firstNodeId = Value(firstNodeId),
+       secondNodeId = Value(secondNodeId),
+       appearanceJson = Value(appearanceJson),
+       revisionId = Value(revisionId),
+       updatedAt = Value(updatedAt);
+  static Insertable<MindMapSideLink> custom({
+    Expression<String>? accountId,
+    Expression<String>? mapId,
+    Expression<String>? firstNodeId,
+    Expression<String>? secondNodeId,
+    Expression<String>? appearanceJson,
+    Expression<String>? revisionId,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (mapId != null) 'map_id': mapId,
+      if (firstNodeId != null) 'first_node_id': firstNodeId,
+      if (secondNodeId != null) 'second_node_id': secondNodeId,
+      if (appearanceJson != null) 'appearance_json': appearanceJson,
+      if (revisionId != null) 'revision_id': revisionId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MindMapSideLinksCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? mapId,
+    Value<String>? firstNodeId,
+    Value<String>? secondNodeId,
+    Value<String>? appearanceJson,
+    Value<String>? revisionId,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return MindMapSideLinksCompanion(
+      accountId: accountId ?? this.accountId,
+      mapId: mapId ?? this.mapId,
+      firstNodeId: firstNodeId ?? this.firstNodeId,
+      secondNodeId: secondNodeId ?? this.secondNodeId,
+      appearanceJson: appearanceJson ?? this.appearanceJson,
+      revisionId: revisionId ?? this.revisionId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (mapId.present) {
+      map['map_id'] = Variable<String>(mapId.value);
+    }
+    if (firstNodeId.present) {
+      map['first_node_id'] = Variable<String>(firstNodeId.value);
+    }
+    if (secondNodeId.present) {
+      map['second_node_id'] = Variable<String>(secondNodeId.value);
+    }
+    if (appearanceJson.present) {
+      map['appearance_json'] = Variable<String>(appearanceJson.value);
+    }
+    if (revisionId.present) {
+      map['revision_id'] = Variable<String>(revisionId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindMapSideLinksCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('mapId: $mapId, ')
+          ..write('firstNodeId: $firstNodeId, ')
+          ..write('secondNodeId: $secondNodeId, ')
+          ..write('appearanceJson: $appearanceJson, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$FoundationDatabase extends GeneratedDatabase {
   _$FoundationDatabase(QueryExecutor e) : super(e);
   $FoundationDatabaseManager get managers => $FoundationDatabaseManager(this);
@@ -5344,6 +8059,14 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
   late final $XpAwardsTable xpAwards = $XpAwardsTable(this);
   late final $HabitRecordsTable habitRecords = $HabitRecordsTable(this);
   late final $HabitDayRecordsTable habitDayRecords = $HabitDayRecordsTable(
+    this,
+  );
+  late final $MindMapRecordsTable mindMapRecords = $MindMapRecordsTable(this);
+  late final $MindMapNodeRecordsTable mindMapNodeRecords =
+      $MindMapNodeRecordsTable(this);
+  late final $MindMapParentSlotsTable mindMapParentSlots =
+      $MindMapParentSlotsTable(this);
+  late final $MindMapSideLinksTable mindMapSideLinks = $MindMapSideLinksTable(
     this,
   );
   late final Index taskRecordsAccountDate = Index(
@@ -5386,6 +8109,46 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     'habit_day_records_account_updated',
     'CREATE INDEX habit_day_records_account_updated ON habit_day_records (account_id, updated_at)',
   );
+  late final Index mindMapRecordsOwnerDeleted = Index(
+    'mind_map_records_owner_deleted',
+    'CREATE INDEX mind_map_records_owner_deleted ON mind_map_records (account_id, deleted_at)',
+  );
+  late final Index mindMapRecordsOwnerUpdated = Index(
+    'mind_map_records_owner_updated',
+    'CREATE INDEX mind_map_records_owner_updated ON mind_map_records (account_id, updated_at)',
+  );
+  late final Index mindMapNodeRecordsOwnerMapDeleted = Index(
+    'mind_map_node_records_owner_map_deleted',
+    'CREATE INDEX mind_map_node_records_owner_map_deleted ON mind_map_node_records (account_id, map_id, deleted_at)',
+  );
+  late final Index mindMapNodeRecordsOwnerUpdated = Index(
+    'mind_map_node_records_owner_updated',
+    'CREATE INDEX mind_map_node_records_owner_updated ON mind_map_node_records (account_id, updated_at)',
+  );
+  late final Index mindMapNodeRecordsOwnerTask = Index(
+    'mind_map_node_records_owner_task',
+    'CREATE INDEX mind_map_node_records_owner_task ON mind_map_node_records (account_id, task_id)',
+  );
+  late final Index mindMapParentSlotsOwnerParent = Index(
+    'mind_map_parent_slots_owner_parent',
+    'CREATE INDEX mind_map_parent_slots_owner_parent ON mind_map_parent_slots (account_id, map_id, parent_node_id)',
+  );
+  late final Index mindMapParentSlotsOwnerUpdated = Index(
+    'mind_map_parent_slots_owner_updated',
+    'CREATE INDEX mind_map_parent_slots_owner_updated ON mind_map_parent_slots (account_id, updated_at)',
+  );
+  late final Index mindMapSideLinksOwnerFirst = Index(
+    'mind_map_side_links_owner_first',
+    'CREATE INDEX mind_map_side_links_owner_first ON mind_map_side_links (account_id, map_id, first_node_id)',
+  );
+  late final Index mindMapSideLinksOwnerSecond = Index(
+    'mind_map_side_links_owner_second',
+    'CREATE INDEX mind_map_side_links_owner_second ON mind_map_side_links (account_id, map_id, second_node_id)',
+  );
+  late final Index mindMapSideLinksOwnerUpdated = Index(
+    'mind_map_side_links_owner_updated',
+    'CREATE INDEX mind_map_side_links_owner_updated ON mind_map_side_links (account_id, updated_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5401,6 +8164,10 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     xpAwards,
     habitRecords,
     habitDayRecords,
+    mindMapRecords,
+    mindMapNodeRecords,
+    mindMapParentSlots,
+    mindMapSideLinks,
     taskRecordsAccountDate,
     taskRecordsAccountCategory,
     taskRecordsAccountQuadrant,
@@ -5411,6 +8178,16 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     habitRecordsAccountUpdated,
     habitDayRecordsAccountHabitDate,
     habitDayRecordsAccountUpdated,
+    mindMapRecordsOwnerDeleted,
+    mindMapRecordsOwnerUpdated,
+    mindMapNodeRecordsOwnerMapDeleted,
+    mindMapNodeRecordsOwnerUpdated,
+    mindMapNodeRecordsOwnerTask,
+    mindMapParentSlotsOwnerParent,
+    mindMapParentSlotsOwnerUpdated,
+    mindMapSideLinksOwnerFirst,
+    mindMapSideLinksOwnerSecond,
+    mindMapSideLinksOwnerUpdated,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -6936,6 +9713,7 @@ typedef $$TaskRecordsTableCreateCompanionBuilder =
       Value<int?> estimatedDurationMinutes,
       Value<String> checklistJson,
       Value<DateTime?> completedAt,
+      Value<DateTime?> completionChangedAt,
       required int completionXp,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -6957,6 +9735,7 @@ typedef $$TaskRecordsTableUpdateCompanionBuilder =
       Value<int?> estimatedDurationMinutes,
       Value<String> checklistJson,
       Value<DateTime?> completedAt,
+      Value<DateTime?> completionChangedAt,
       Value<int> completionXp,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -7035,6 +9814,11 @@ class $$TaskRecordsTableFilterComposer
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completionChangedAt => $composableBuilder(
+    column: $table.completionChangedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7133,6 +9917,11 @@ class $$TaskRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get completionChangedAt => $composableBuilder(
+    column: $table.completionChangedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get completionXp => $composableBuilder(
     column: $table.completionXp,
     builder: (column) => ColumnOrderings(column),
@@ -7218,6 +10007,11 @@ class $$TaskRecordsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get completionChangedAt => $composableBuilder(
+    column: $table.completionChangedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get completionXp => $composableBuilder(
     column: $table.completionXp,
     builder: (column) => column,
@@ -7280,6 +10074,7 @@ class $$TaskRecordsTableTableManager
                 Value<int?> estimatedDurationMinutes = const Value.absent(),
                 Value<String> checklistJson = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<DateTime?> completionChangedAt = const Value.absent(),
                 Value<int> completionXp = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -7299,6 +10094,7 @@ class $$TaskRecordsTableTableManager
                 estimatedDurationMinutes: estimatedDurationMinutes,
                 checklistJson: checklistJson,
                 completedAt: completedAt,
+                completionChangedAt: completionChangedAt,
                 completionXp: completionXp,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -7321,6 +10117,7 @@ class $$TaskRecordsTableTableManager
                 Value<int?> estimatedDurationMinutes = const Value.absent(),
                 Value<String> checklistJson = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<DateTime?> completionChangedAt = const Value.absent(),
                 required int completionXp,
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -7340,6 +10137,7 @@ class $$TaskRecordsTableTableManager
                 estimatedDurationMinutes: estimatedDurationMinutes,
                 checklistJson: checklistJson,
                 completedAt: completedAt,
+                completionChangedAt: completionChangedAt,
                 completionXp: completionXp,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -8110,6 +10908,1321 @@ typedef $$HabitDayRecordsTableProcessedTableManager =
       HabitDayRecord,
       PrefetchHooks Function()
     >;
+typedef $$MindMapRecordsTableCreateCompanionBuilder =
+    MindMapRecordsCompanion Function({
+      required String accountId,
+      required String mapId,
+      required String title,
+      Value<String?> description,
+      required String centralNodeId,
+      required String settingsJson,
+      required String revisionId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$MindMapRecordsTableUpdateCompanionBuilder =
+    MindMapRecordsCompanion Function({
+      Value<String> accountId,
+      Value<String> mapId,
+      Value<String> title,
+      Value<String?> description,
+      Value<String> centralNodeId,
+      Value<String> settingsJson,
+      Value<String> revisionId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$MindMapRecordsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $MindMapRecordsTable> {
+  $$MindMapRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mapId => $composableBuilder(
+    column: $table.mapId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get centralNodeId => $composableBuilder(
+    column: $table.centralNodeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MindMapRecordsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $MindMapRecordsTable> {
+  $$MindMapRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mapId => $composableBuilder(
+    column: $table.mapId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get centralNodeId => $composableBuilder(
+    column: $table.centralNodeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MindMapRecordsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $MindMapRecordsTable> {
+  $$MindMapRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get mapId =>
+      $composableBuilder(column: $table.mapId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get centralNodeId => $composableBuilder(
+    column: $table.centralNodeId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$MindMapRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $MindMapRecordsTable,
+          MindMapRecord,
+          $$MindMapRecordsTableFilterComposer,
+          $$MindMapRecordsTableOrderingComposer,
+          $$MindMapRecordsTableAnnotationComposer,
+          $$MindMapRecordsTableCreateCompanionBuilder,
+          $$MindMapRecordsTableUpdateCompanionBuilder,
+          (
+            MindMapRecord,
+            BaseReferences<
+              _$FoundationDatabase,
+              $MindMapRecordsTable,
+              MindMapRecord
+            >,
+          ),
+          MindMapRecord,
+          PrefetchHooks Function()
+        > {
+  $$MindMapRecordsTableTableManager(
+    _$FoundationDatabase db,
+    $MindMapRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MindMapRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MindMapRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MindMapRecordsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> mapId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> centralNodeId = const Value.absent(),
+                Value<String> settingsJson = const Value.absent(),
+                Value<String> revisionId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindMapRecordsCompanion(
+                accountId: accountId,
+                mapId: mapId,
+                title: title,
+                description: description,
+                centralNodeId: centralNodeId,
+                settingsJson: settingsJson,
+                revisionId: revisionId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String mapId,
+                required String title,
+                Value<String?> description = const Value.absent(),
+                required String centralNodeId,
+                required String settingsJson,
+                required String revisionId,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindMapRecordsCompanion.insert(
+                accountId: accountId,
+                mapId: mapId,
+                title: title,
+                description: description,
+                centralNodeId: centralNodeId,
+                settingsJson: settingsJson,
+                revisionId: revisionId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MindMapRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $MindMapRecordsTable,
+      MindMapRecord,
+      $$MindMapRecordsTableFilterComposer,
+      $$MindMapRecordsTableOrderingComposer,
+      $$MindMapRecordsTableAnnotationComposer,
+      $$MindMapRecordsTableCreateCompanionBuilder,
+      $$MindMapRecordsTableUpdateCompanionBuilder,
+      (
+        MindMapRecord,
+        BaseReferences<
+          _$FoundationDatabase,
+          $MindMapRecordsTable,
+          MindMapRecord
+        >,
+      ),
+      MindMapRecord,
+      PrefetchHooks Function()
+    >;
+typedef $$MindMapNodeRecordsTableCreateCompanionBuilder =
+    MindMapNodeRecordsCompanion Function({
+      required String accountId,
+      required String mapId,
+      required String nodeId,
+      required String kind,
+      required String title,
+      Value<String?> description,
+      required double x,
+      required double y,
+      required String status,
+      Value<DateTime?> statusChangedAt,
+      required String priority,
+      required String appearanceJson,
+      Value<String?> taskId,
+      required String revisionId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$MindMapNodeRecordsTableUpdateCompanionBuilder =
+    MindMapNodeRecordsCompanion Function({
+      Value<String> accountId,
+      Value<String> mapId,
+      Value<String> nodeId,
+      Value<String> kind,
+      Value<String> title,
+      Value<String?> description,
+      Value<double> x,
+      Value<double> y,
+      Value<String> status,
+      Value<DateTime?> statusChangedAt,
+      Value<String> priority,
+      Value<String> appearanceJson,
+      Value<String?> taskId,
+      Value<String> revisionId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$MindMapNodeRecordsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $MindMapNodeRecordsTable> {
+  $$MindMapNodeRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mapId => $composableBuilder(
+    column: $table.mapId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nodeId => $composableBuilder(
+    column: $table.nodeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get x => $composableBuilder(
+    column: $table.x,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get y => $composableBuilder(
+    column: $table.y,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get statusChangedAt => $composableBuilder(
+    column: $table.statusChangedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MindMapNodeRecordsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $MindMapNodeRecordsTable> {
+  $$MindMapNodeRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mapId => $composableBuilder(
+    column: $table.mapId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nodeId => $composableBuilder(
+    column: $table.nodeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get x => $composableBuilder(
+    column: $table.x,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get y => $composableBuilder(
+    column: $table.y,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get statusChangedAt => $composableBuilder(
+    column: $table.statusChangedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MindMapNodeRecordsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $MindMapNodeRecordsTable> {
+  $$MindMapNodeRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get mapId =>
+      $composableBuilder(column: $table.mapId, builder: (column) => column);
+
+  GeneratedColumn<String> get nodeId =>
+      $composableBuilder(column: $table.nodeId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get x =>
+      $composableBuilder(column: $table.x, builder: (column) => column);
+
+  GeneratedColumn<double> get y =>
+      $composableBuilder(column: $table.y, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get statusChangedAt => $composableBuilder(
+    column: $table.statusChangedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taskId =>
+      $composableBuilder(column: $table.taskId, builder: (column) => column);
+
+  GeneratedColumn<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$MindMapNodeRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $MindMapNodeRecordsTable,
+          MindMapNodeRecord,
+          $$MindMapNodeRecordsTableFilterComposer,
+          $$MindMapNodeRecordsTableOrderingComposer,
+          $$MindMapNodeRecordsTableAnnotationComposer,
+          $$MindMapNodeRecordsTableCreateCompanionBuilder,
+          $$MindMapNodeRecordsTableUpdateCompanionBuilder,
+          (
+            MindMapNodeRecord,
+            BaseReferences<
+              _$FoundationDatabase,
+              $MindMapNodeRecordsTable,
+              MindMapNodeRecord
+            >,
+          ),
+          MindMapNodeRecord,
+          PrefetchHooks Function()
+        > {
+  $$MindMapNodeRecordsTableTableManager(
+    _$FoundationDatabase db,
+    $MindMapNodeRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MindMapNodeRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MindMapNodeRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MindMapNodeRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> mapId = const Value.absent(),
+                Value<String> nodeId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<double> x = const Value.absent(),
+                Value<double> y = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> statusChangedAt = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String> appearanceJson = const Value.absent(),
+                Value<String?> taskId = const Value.absent(),
+                Value<String> revisionId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindMapNodeRecordsCompanion(
+                accountId: accountId,
+                mapId: mapId,
+                nodeId: nodeId,
+                kind: kind,
+                title: title,
+                description: description,
+                x: x,
+                y: y,
+                status: status,
+                statusChangedAt: statusChangedAt,
+                priority: priority,
+                appearanceJson: appearanceJson,
+                taskId: taskId,
+                revisionId: revisionId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String mapId,
+                required String nodeId,
+                required String kind,
+                required String title,
+                Value<String?> description = const Value.absent(),
+                required double x,
+                required double y,
+                required String status,
+                Value<DateTime?> statusChangedAt = const Value.absent(),
+                required String priority,
+                required String appearanceJson,
+                Value<String?> taskId = const Value.absent(),
+                required String revisionId,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindMapNodeRecordsCompanion.insert(
+                accountId: accountId,
+                mapId: mapId,
+                nodeId: nodeId,
+                kind: kind,
+                title: title,
+                description: description,
+                x: x,
+                y: y,
+                status: status,
+                statusChangedAt: statusChangedAt,
+                priority: priority,
+                appearanceJson: appearanceJson,
+                taskId: taskId,
+                revisionId: revisionId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MindMapNodeRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $MindMapNodeRecordsTable,
+      MindMapNodeRecord,
+      $$MindMapNodeRecordsTableFilterComposer,
+      $$MindMapNodeRecordsTableOrderingComposer,
+      $$MindMapNodeRecordsTableAnnotationComposer,
+      $$MindMapNodeRecordsTableCreateCompanionBuilder,
+      $$MindMapNodeRecordsTableUpdateCompanionBuilder,
+      (
+        MindMapNodeRecord,
+        BaseReferences<
+          _$FoundationDatabase,
+          $MindMapNodeRecordsTable,
+          MindMapNodeRecord
+        >,
+      ),
+      MindMapNodeRecord,
+      PrefetchHooks Function()
+    >;
+typedef $$MindMapParentSlotsTableCreateCompanionBuilder =
+    MindMapParentSlotsCompanion Function({
+      required String accountId,
+      required String mapId,
+      required String childNodeId,
+      required String parentNodeId,
+      required String appearanceJson,
+      required String revisionId,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$MindMapParentSlotsTableUpdateCompanionBuilder =
+    MindMapParentSlotsCompanion Function({
+      Value<String> accountId,
+      Value<String> mapId,
+      Value<String> childNodeId,
+      Value<String> parentNodeId,
+      Value<String> appearanceJson,
+      Value<String> revisionId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$MindMapParentSlotsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $MindMapParentSlotsTable> {
+  $$MindMapParentSlotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mapId => $composableBuilder(
+    column: $table.mapId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get childNodeId => $composableBuilder(
+    column: $table.childNodeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get parentNodeId => $composableBuilder(
+    column: $table.parentNodeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MindMapParentSlotsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $MindMapParentSlotsTable> {
+  $$MindMapParentSlotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mapId => $composableBuilder(
+    column: $table.mapId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get childNodeId => $composableBuilder(
+    column: $table.childNodeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get parentNodeId => $composableBuilder(
+    column: $table.parentNodeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MindMapParentSlotsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $MindMapParentSlotsTable> {
+  $$MindMapParentSlotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get mapId =>
+      $composableBuilder(column: $table.mapId, builder: (column) => column);
+
+  GeneratedColumn<String> get childNodeId => $composableBuilder(
+    column: $table.childNodeId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get parentNodeId => $composableBuilder(
+    column: $table.parentNodeId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$MindMapParentSlotsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $MindMapParentSlotsTable,
+          MindMapParentSlot,
+          $$MindMapParentSlotsTableFilterComposer,
+          $$MindMapParentSlotsTableOrderingComposer,
+          $$MindMapParentSlotsTableAnnotationComposer,
+          $$MindMapParentSlotsTableCreateCompanionBuilder,
+          $$MindMapParentSlotsTableUpdateCompanionBuilder,
+          (
+            MindMapParentSlot,
+            BaseReferences<
+              _$FoundationDatabase,
+              $MindMapParentSlotsTable,
+              MindMapParentSlot
+            >,
+          ),
+          MindMapParentSlot,
+          PrefetchHooks Function()
+        > {
+  $$MindMapParentSlotsTableTableManager(
+    _$FoundationDatabase db,
+    $MindMapParentSlotsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MindMapParentSlotsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MindMapParentSlotsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MindMapParentSlotsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> mapId = const Value.absent(),
+                Value<String> childNodeId = const Value.absent(),
+                Value<String> parentNodeId = const Value.absent(),
+                Value<String> appearanceJson = const Value.absent(),
+                Value<String> revisionId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindMapParentSlotsCompanion(
+                accountId: accountId,
+                mapId: mapId,
+                childNodeId: childNodeId,
+                parentNodeId: parentNodeId,
+                appearanceJson: appearanceJson,
+                revisionId: revisionId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String mapId,
+                required String childNodeId,
+                required String parentNodeId,
+                required String appearanceJson,
+                required String revisionId,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindMapParentSlotsCompanion.insert(
+                accountId: accountId,
+                mapId: mapId,
+                childNodeId: childNodeId,
+                parentNodeId: parentNodeId,
+                appearanceJson: appearanceJson,
+                revisionId: revisionId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MindMapParentSlotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $MindMapParentSlotsTable,
+      MindMapParentSlot,
+      $$MindMapParentSlotsTableFilterComposer,
+      $$MindMapParentSlotsTableOrderingComposer,
+      $$MindMapParentSlotsTableAnnotationComposer,
+      $$MindMapParentSlotsTableCreateCompanionBuilder,
+      $$MindMapParentSlotsTableUpdateCompanionBuilder,
+      (
+        MindMapParentSlot,
+        BaseReferences<
+          _$FoundationDatabase,
+          $MindMapParentSlotsTable,
+          MindMapParentSlot
+        >,
+      ),
+      MindMapParentSlot,
+      PrefetchHooks Function()
+    >;
+typedef $$MindMapSideLinksTableCreateCompanionBuilder =
+    MindMapSideLinksCompanion Function({
+      required String accountId,
+      required String mapId,
+      required String firstNodeId,
+      required String secondNodeId,
+      required String appearanceJson,
+      required String revisionId,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$MindMapSideLinksTableUpdateCompanionBuilder =
+    MindMapSideLinksCompanion Function({
+      Value<String> accountId,
+      Value<String> mapId,
+      Value<String> firstNodeId,
+      Value<String> secondNodeId,
+      Value<String> appearanceJson,
+      Value<String> revisionId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$MindMapSideLinksTableFilterComposer
+    extends Composer<_$FoundationDatabase, $MindMapSideLinksTable> {
+  $$MindMapSideLinksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mapId => $composableBuilder(
+    column: $table.mapId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstNodeId => $composableBuilder(
+    column: $table.firstNodeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondNodeId => $composableBuilder(
+    column: $table.secondNodeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MindMapSideLinksTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $MindMapSideLinksTable> {
+  $$MindMapSideLinksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mapId => $composableBuilder(
+    column: $table.mapId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstNodeId => $composableBuilder(
+    column: $table.firstNodeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondNodeId => $composableBuilder(
+    column: $table.secondNodeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MindMapSideLinksTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $MindMapSideLinksTable> {
+  $$MindMapSideLinksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get mapId =>
+      $composableBuilder(column: $table.mapId, builder: (column) => column);
+
+  GeneratedColumn<String> get firstNodeId => $composableBuilder(
+    column: $table.firstNodeId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondNodeId => $composableBuilder(
+    column: $table.secondNodeId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get appearanceJson => $composableBuilder(
+    column: $table.appearanceJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$MindMapSideLinksTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $MindMapSideLinksTable,
+          MindMapSideLink,
+          $$MindMapSideLinksTableFilterComposer,
+          $$MindMapSideLinksTableOrderingComposer,
+          $$MindMapSideLinksTableAnnotationComposer,
+          $$MindMapSideLinksTableCreateCompanionBuilder,
+          $$MindMapSideLinksTableUpdateCompanionBuilder,
+          (
+            MindMapSideLink,
+            BaseReferences<
+              _$FoundationDatabase,
+              $MindMapSideLinksTable,
+              MindMapSideLink
+            >,
+          ),
+          MindMapSideLink,
+          PrefetchHooks Function()
+        > {
+  $$MindMapSideLinksTableTableManager(
+    _$FoundationDatabase db,
+    $MindMapSideLinksTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MindMapSideLinksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MindMapSideLinksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MindMapSideLinksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> mapId = const Value.absent(),
+                Value<String> firstNodeId = const Value.absent(),
+                Value<String> secondNodeId = const Value.absent(),
+                Value<String> appearanceJson = const Value.absent(),
+                Value<String> revisionId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindMapSideLinksCompanion(
+                accountId: accountId,
+                mapId: mapId,
+                firstNodeId: firstNodeId,
+                secondNodeId: secondNodeId,
+                appearanceJson: appearanceJson,
+                revisionId: revisionId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String mapId,
+                required String firstNodeId,
+                required String secondNodeId,
+                required String appearanceJson,
+                required String revisionId,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindMapSideLinksCompanion.insert(
+                accountId: accountId,
+                mapId: mapId,
+                firstNodeId: firstNodeId,
+                secondNodeId: secondNodeId,
+                appearanceJson: appearanceJson,
+                revisionId: revisionId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MindMapSideLinksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $MindMapSideLinksTable,
+      MindMapSideLink,
+      $$MindMapSideLinksTableFilterComposer,
+      $$MindMapSideLinksTableOrderingComposer,
+      $$MindMapSideLinksTableAnnotationComposer,
+      $$MindMapSideLinksTableCreateCompanionBuilder,
+      $$MindMapSideLinksTableUpdateCompanionBuilder,
+      (
+        MindMapSideLink,
+        BaseReferences<
+          _$FoundationDatabase,
+          $MindMapSideLinksTable,
+          MindMapSideLink
+        >,
+      ),
+      MindMapSideLink,
+      PrefetchHooks Function()
+    >;
 
 class $FoundationDatabaseManager {
   final _$FoundationDatabase _db;
@@ -8134,4 +12247,12 @@ class $FoundationDatabaseManager {
       $$HabitRecordsTableTableManager(_db, _db.habitRecords);
   $$HabitDayRecordsTableTableManager get habitDayRecords =>
       $$HabitDayRecordsTableTableManager(_db, _db.habitDayRecords);
+  $$MindMapRecordsTableTableManager get mindMapRecords =>
+      $$MindMapRecordsTableTableManager(_db, _db.mindMapRecords);
+  $$MindMapNodeRecordsTableTableManager get mindMapNodeRecords =>
+      $$MindMapNodeRecordsTableTableManager(_db, _db.mindMapNodeRecords);
+  $$MindMapParentSlotsTableTableManager get mindMapParentSlots =>
+      $$MindMapParentSlotsTableTableManager(_db, _db.mindMapParentSlots);
+  $$MindMapSideLinksTableTableManager get mindMapSideLinks =>
+      $$MindMapSideLinksTableTableManager(_db, _db.mindMapSideLinks);
 }
