@@ -19,8 +19,8 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 
 **Purpose**: Ground 005 in the existing Foundation, Tasks, Habits and preview seams without creating a second stack.
 
-- [ ] T001 Record the actual v4 Drift tables/migration, Tasks completion/XP APIs, preview owner identity, route gates, sync dispatch/reconciliation and current CI triggers in specs/005-mind-maps/implementation-baseline.md.
-- [ ] T002 Build deterministic owner/map/node/edge/Task IDs, UTC clocks, 50-node/60-link graphs, failing-store and switched-session fixtures in test/support/mind_maps_test_support.dart.
+- [X] T001 Record the actual v4 Drift tables/migration, Tasks completion/XP APIs, preview owner identity, route gates, sync dispatch/reconciliation and current CI triggers in specs/005-mind-maps/implementation-baseline.md.
+- [X] T002 Build deterministic owner/map/node/edge/Task IDs, UTC clocks, 50-node/60-link graphs, failing-store and switched-session fixtures in test/support/mind_maps_test_support.dart.
 
 **Checkpoint**: Implementation has reproducible graph/account fixtures and a verified reuse boundary.
 
