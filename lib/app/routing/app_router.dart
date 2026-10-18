@@ -14,6 +14,7 @@ const String kFoundationRootRoute = '/';
 /// Account-scoped Tasks entry point.
 const String kTasksRoute = '/tasks';
 const String kHabitsRoute = '/habits';
+const String kMindMapsRoute = '/mind-maps';
 
 /// Key used by tests and diagnostics to identify handled route failures.
 const Key kFoundationUnknownRouteKey = Key('foundation_unknown_route');
@@ -24,10 +25,14 @@ const Key kTasksRouteLoadingKey = Key('tasks_route_loading');
 const Key kTasksRouteSignedOutKey = Key('tasks_route_signed_out');
 const Key kHabitsRouteLoadingKey = Key('habits_route_loading');
 const Key kHabitsRouteSignedOutKey = Key('habits_route_signed_out');
+const Key kMindMapsRouteLoadingKey = Key('mind_maps_route_loading');
+const Key kMindMapsRouteSignedOutKey = Key('mind_maps_route_signed_out');
 
 typedef AuthenticatedTasksBuilder =
     Widget Function(BuildContext context, String accountId);
 typedef AuthenticatedHabitsBuilder =
+    Widget Function(BuildContext context, String accountId);
+typedef AuthenticatedMindMapsBuilder =
     Widget Function(BuildContext context, String accountId);
 
 /// Owns Foundation routing only. Future features register their own entries;
@@ -39,6 +44,8 @@ class FoundationAppRouter {
     AuthenticatedTasksBuilder? tasksBuilder,
     CloudSessionPort? habitsSession,
     AuthenticatedHabitsBuilder? habitsBuilder,
+    CloudSessionPort? mindMapsSession,
+    AuthenticatedMindMapsBuilder? mindMapsBuilder,
   }) : router = GoRouter(
          initialLocation: kFoundationRootRoute,
          routes: _routes(
@@ -47,6 +54,8 @@ class FoundationAppRouter {
            tasksBuilder,
            habitsSession,
            habitsBuilder,
+           mindMapsSession,
+           mindMapsBuilder,
          ),
          errorBuilder: (context, state) => const _UnknownRouteBoundary(),
        );
@@ -63,6 +72,8 @@ class FoundationAppRouter {
     AuthenticatedTasksBuilder? tasksBuilder,
     CloudSessionPort? habitsSession,
     AuthenticatedHabitsBuilder? habitsBuilder,
+    CloudSessionPort? mindMapsSession,
+    AuthenticatedMindMapsBuilder? mindMapsBuilder,
   ) => <RouteBase>[
     GoRoute(
       path: kFoundationRootRoute,
@@ -88,6 +99,16 @@ class FoundationAppRouter {
           habits: true,
         ),
       ),
+    if (mindMapsSession != null && mindMapsBuilder != null)
+      GoRoute(
+        path: kMindMapsRoute,
+        name: 'mind-maps',
+        builder: (context, _) => _TasksRouteGate(
+          cloudSession: mindMapsSession,
+          tasksBuilder: mindMapsBuilder,
+          mindMaps: true,
+        ),
+      ),
   ];
 }
 
@@ -99,11 +120,13 @@ class _TasksRouteGate extends StatefulWidget {
     required this.cloudSession,
     required this.tasksBuilder,
     this.habits = false,
+    this.mindMaps = false,
   });
 
   final CloudSessionPort cloudSession;
   final AuthenticatedTasksBuilder tasksBuilder;
   final bool habits;
+  final bool mindMaps;
 
   @override
   State<_TasksRouteGate> createState() => _TasksRouteGateState();
@@ -194,10 +217,16 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
     }
     if (_status == CloudSessionStatus.signedOut) {
       return Scaffold(
-        key: widget.habits ? kHabitsRouteSignedOutKey : kTasksRouteSignedOutKey,
+        key: widget.mindMaps
+            ? kMindMapsRouteSignedOutKey
+            : widget.habits
+            ? kHabitsRouteSignedOutKey
+            : kTasksRouteSignedOutKey,
         body: Center(
           child: Text(
-            widget.habits
+            widget.mindMaps
+                ? FoundationLocalizations.of(context).mindMapsSignInRequired
+                : widget.habits
                 ? FoundationLocalizations.of(context).habitsSignInRequired
                 : FoundationLocalizations.of(context).tasksSignInRequired,
             textAlign: TextAlign.center,
@@ -206,7 +235,11 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
       );
     }
     return Scaffold(
-      key: widget.habits ? kHabitsRouteLoadingKey : kTasksRouteLoadingKey,
+      key: widget.mindMaps
+          ? kMindMapsRouteLoadingKey
+          : widget.habits
+          ? kHabitsRouteLoadingKey
+          : kTasksRouteLoadingKey,
       body: const Center(child: CircularProgressIndicator()),
     );
   }

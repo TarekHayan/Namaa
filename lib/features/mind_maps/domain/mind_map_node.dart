@@ -48,6 +48,9 @@ final class MindMapNode {
       requireMapUtc(statusChangedAt!, 'statusChangedAt');
     }
     if (deletedAt != null) {
+      if (kind == MindMapNodeKind.central) {
+        throw ArgumentError('The central node cannot be deleted');
+      }
       requireMapUtc(deletedAt!, 'deletedAt');
       if (deletedAt != updatedAt) {
         throw ArgumentError.value(deletedAt, 'deletedAt', 'must match version');

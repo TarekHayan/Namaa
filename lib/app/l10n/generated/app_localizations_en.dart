@@ -374,4 +374,81 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get habitSunday => 'Sunday';
+
+  @override
+  String get mindMapsTitle => 'Mind Maps';
+
+  @override
+  String get mindMapsCreate => 'New map';
+
+  @override
+  String get mindMapsSearch => 'Search maps';
+
+  @override
+  String get mindMapsEmptyLibrary => 'No maps yet. Create your first map.';
+
+  @override
+  String get mindMapsEmptySearch => 'No maps match your search.';
+
+  @override
+  String get mindMapTitleLabel => 'Map title';
+
+  @override
+  String get mindMapDescriptionLabel => 'Description';
+
+  @override
+  String get mindMapEditTitle => 'Rename';
+
+  @override
+  String get mindMapEditDescription => 'Edit description';
+
+  @override
+  String get mindMapDuplicate => 'Duplicate';
+
+  @override
+  String get mindMapDelete => 'Delete';
+
+  @override
+  String get mindMapDeleteConfirmation =>
+      'Delete this map? It will disappear from your library. Linked tasks will remain.';
+
+  @override
+  String get mindMapSave => 'Save';
+
+  @override
+  String get mindMapCancel => 'Cancel';
+
+  @override
+  String get mindMapTitleRequired => 'Enter a map title';
+
+  @override
+  String get mindMapsLoadFailure => 'Could not load maps. Try again.';
+
+  @override
+  String get mindMapsSaveFailure =>
+      'Could not save your map change. Please try again.';
+
+  @override
+  String get mindMapsAccountFailure => 'This account cannot change that map.';
+
+  @override
+  String get mindMapsNotFound => 'This map is no longer available.';
+
+  @override
+  String get mindMapsRetry => 'Retry';
+
+  @override
+  String get mindMapNodeCount => 'Nodes';
+
+  @override
+  String get mindMapCompletedCount => 'Completed';
+
+  @override
+  String get mindMapCentralNode => 'Central idea';
+
+  @override
+  String get mindMapsSignInRequired => 'Sign in to access your mind maps.';
+
+  @override
+  String get mindMapsBack => 'Back to maps';
 }

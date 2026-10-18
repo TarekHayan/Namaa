@@ -808,6 +808,156 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Sunday'**
   String get habitSunday;
+
+  /// No description provided for @mindMapsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind Maps'**
+  String get mindMapsTitle;
+
+  /// No description provided for @mindMapsCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'New map'**
+  String get mindMapsCreate;
+
+  /// No description provided for @mindMapsSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search maps'**
+  String get mindMapsSearch;
+
+  /// No description provided for @mindMapsEmptyLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'No maps yet. Create your first map.'**
+  String get mindMapsEmptyLibrary;
+
+  /// No description provided for @mindMapsEmptySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No maps match your search.'**
+  String get mindMapsEmptySearch;
+
+  /// No description provided for @mindMapTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Map title'**
+  String get mindMapTitleLabel;
+
+  /// No description provided for @mindMapDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get mindMapDescriptionLabel;
+
+  /// No description provided for @mindMapEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get mindMapEditTitle;
+
+  /// No description provided for @mindMapEditDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit description'**
+  String get mindMapEditDescription;
+
+  /// No description provided for @mindMapDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get mindMapDuplicate;
+
+  /// No description provided for @mindMapDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get mindMapDelete;
+
+  /// No description provided for @mindMapDeleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this map? It will disappear from your library. Linked tasks will remain.'**
+  String get mindMapDeleteConfirmation;
+
+  /// No description provided for @mindMapSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get mindMapSave;
+
+  /// No description provided for @mindMapCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get mindMapCancel;
+
+  /// No description provided for @mindMapTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a map title'**
+  String get mindMapTitleRequired;
+
+  /// No description provided for @mindMapsLoadFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load maps. Try again.'**
+  String get mindMapsLoadFailure;
+
+  /// No description provided for @mindMapsSaveFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your map change. Please try again.'**
+  String get mindMapsSaveFailure;
+
+  /// No description provided for @mindMapsAccountFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'This account cannot change that map.'**
+  String get mindMapsAccountFailure;
+
+  /// No description provided for @mindMapsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This map is no longer available.'**
+  String get mindMapsNotFound;
+
+  /// No description provided for @mindMapsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get mindMapsRetry;
+
+  /// No description provided for @mindMapNodeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Nodes'**
+  String get mindMapNodeCount;
+
+  /// No description provided for @mindMapCompletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get mindMapCompletedCount;
+
+  /// No description provided for @mindMapCentralNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Central idea'**
+  String get mindMapCentralNode;
+
+  /// No description provided for @mindMapsSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to access your mind maps.'**
+  String get mindMapsSignInRequired;
+
+  /// No description provided for @mindMapsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to maps'**
+  String get mindMapsBack;
 }
 
 class _FoundationLocalizationsDelegate

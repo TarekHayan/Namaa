@@ -61,6 +61,11 @@ import 'package:namma_project/features/habits/data/supabase_habit_reader.dart';
 import 'package:namma_project/features/habits/data/supabase_habit_sync_adapter.dart';
 import 'package:namma_project/features/habits/domain/habit.dart';
 import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
+import 'package:namma_project/features/mind_maps/application/map_commands.dart';
+import 'package:namma_project/features/mind_maps/application/map_repository.dart';
+import 'package:namma_project/features/mind_maps/data/drift_map_repository.dart';
+import 'package:namma_project/features/mind_maps/data/map_payload_codec.dart';
+import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
@@ -219,6 +224,24 @@ Future<void> configureDependencies({
 
     getIt.registerLazySingleton<TaskRepository>(
       () => DriftTaskRepository(database: database, codec: taskCodec),
+    );
+    getIt.registerLazySingleton<MapRepository>(
+      () => DriftMapRepository(
+        database: database,
+        codec: const MapPayloadCodec(),
+      ),
+    );
+    getIt.registerLazySingleton<MapCommands>(
+      () => MapCommands(
+        repository: getIt<MapRepository>(),
+        session: getIt<CloudSessionPort>(),
+      ),
+    );
+    getIt.registerFactory<MapLibraryCubit>(
+      () => MapLibraryCubit(
+        repository: getIt<MapRepository>(),
+        commands: getIt<MapCommands>(),
+      ),
     );
     final habitRepository = DriftHabitRepository(
       database: database,

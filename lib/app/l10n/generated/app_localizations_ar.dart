@@ -369,4 +369,80 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get habitSunday => 'الأحد';
+
+  @override
+  String get mindMapsTitle => 'الخرائط الذهنية';
+
+  @override
+  String get mindMapsCreate => 'خريطة جديدة';
+
+  @override
+  String get mindMapsSearch => 'ابحث في الخرائط';
+
+  @override
+  String get mindMapsEmptyLibrary => 'لا توجد خرائط بعد. أنشئ خريطتك الأولى.';
+
+  @override
+  String get mindMapsEmptySearch => 'لا توجد خرائط تطابق البحث.';
+
+  @override
+  String get mindMapTitleLabel => 'عنوان الخريطة';
+
+  @override
+  String get mindMapDescriptionLabel => 'الوصف';
+
+  @override
+  String get mindMapEditTitle => 'تغيير الاسم';
+
+  @override
+  String get mindMapEditDescription => 'تعديل الوصف';
+
+  @override
+  String get mindMapDuplicate => 'نسخ الخريطة';
+
+  @override
+  String get mindMapDelete => 'حذف';
+
+  @override
+  String get mindMapDeleteConfirmation =>
+      'هل تريد حذف هذه الخريطة؟ ستختفي من القائمة، وستظل المهام المرتبطة بها محفوظة.';
+
+  @override
+  String get mindMapSave => 'حفظ';
+
+  @override
+  String get mindMapCancel => 'إلغاء';
+
+  @override
+  String get mindMapTitleRequired => 'اكتب عنوانًا للخريطة';
+
+  @override
+  String get mindMapsLoadFailure => 'تعذر تحميل الخرائط. حاول مرة أخرى.';
+
+  @override
+  String get mindMapsSaveFailure => 'تعذر حفظ تغيير الخريطة. حاول مرة أخرى.';
+
+  @override
+  String get mindMapsAccountFailure => 'لا يمكن لهذا الحساب تعديل الخريطة.';
+
+  @override
+  String get mindMapsNotFound => 'هذه الخريطة لم تعد متاحة.';
+
+  @override
+  String get mindMapsRetry => 'إعادة المحاولة';
+
+  @override
+  String get mindMapNodeCount => 'العقد';
+
+  @override
+  String get mindMapCompletedCount => 'المكتملة';
+
+  @override
+  String get mindMapCentralNode => 'الفكرة الرئيسية';
+
+  @override
+  String get mindMapsSignInRequired => 'سجّل الدخول للوصول إلى خرائطك الذهنية.';
+
+  @override
+  String get mindMapsBack => 'العودة للخرائط';
 }

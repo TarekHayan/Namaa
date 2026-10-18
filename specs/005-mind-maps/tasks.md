@@ -49,24 +49,24 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 
 ### Tests for User Story 1 — write first
 
-- [ ] T009 [P] [US1] Test title validation, central-node creation/protection, map settings defaults, copy ID remapping and Task ID preservation in test/unit/features/mind_maps/domain/mind_map_model_test.dart.
-- [ ] T010 [P] [US1] Test atomic map+central-node create, rename, duplicate full graph, confirmed tombstone, owner isolation, restart and rollback on failed local save in test/unit/features/mind_maps/data/drift_map_repository_test.dart.
-- [ ] T011 [P] [US1] Test empty library versus empty search results, case-insensitive title/description search, counts/progress, create/rename/delete confirmation and localized errors in test/widget/features/mind_maps/map_library_screen_test.dart.
-- [ ] T012 [P] [US1] Add a preview create/search/duplicate/delete/offline-restart journey in integration_test/mind_maps_library_test.dart; seed child graph and Task references until US2/US3 editor controls exist.
+- [X] T009 [P] [US1] Test title validation, central-node creation/protection, map settings defaults, copy ID remapping and Task ID preservation in test/unit/features/mind_maps/domain/mind_map_model_test.dart.
+- [X] T010 [P] [US1] Test atomic map+central-node create, rename, duplicate full graph, confirmed tombstone, owner isolation, restart and rollback on failed local save in test/unit/features/mind_maps/data/drift_map_repository_test.dart.
+- [X] T011 [P] [US1] Test empty library versus empty search results, case-insensitive title/description search, counts/progress, create/rename/delete confirmation and localized errors in test/widget/features/mind_maps/map_library_screen_test.dart.
+- [X] T012 [P] [US1] Add a preview create/search/duplicate/delete/offline-restart journey in integration_test/mind_maps_library_test.dart; seed child graph and Task references until US2/US3 editor controls exist.
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Define owner-scoped graph reads, atomic local mutation/outbox writes and watch streams in lib/features/mind_maps/application/map_repository.dart.
-- [ ] T014 [US1] Implement create, rename, describe, duplicate and delete commands with current-session checks, validation, ID remapping and typed failures in lib/features/mind_maps/application/map_commands.dart.
-- [ ] T015 [US1] Persist complete copied graphs and map/central-node commands atomically with PendingChanges and tombstones in lib/features/mind_maps/data/drift_map_repository.dart.
-- [ ] T016 [US1] Derive live map search, node/completed counts and whole-percent summaries without a second canonical counter in lib/features/mind_maps/application/map_queries.dart.
-- [ ] T017 [P] [US1] Add English map-library, search, create/rename/delete, confirmation and save-failure messages in lib/app/l10n/app_en.arb.
-- [ ] T018 [P] [US1] Add matching Arabic map-library, search, create/rename/delete, confirmation and save-failure messages in lib/app/l10n/app_ar.arb.
-- [ ] T019 [US1] Regenerate lib/app/l10n/generated/app_localizations.dart and adapt the new messages through lib/app/l10n/mind_maps_strings_adapter.dart and lib/features/mind_maps/presentation/mind_maps_strings.dart.
-- [ ] T020 [US1] Implement owner-bound library loading, search, confirmed local commands, account switching and recoverable errors in lib/features/mind_maps/presentation/map_library_cubit.dart and lib/features/mind_maps/presentation/map_library_state.dart.
-- [ ] T021 [US1] Build the responsive, accessible map library/create/edit screen and a basic central-node detail view in lib/features/mind_maps/presentation/map_library_screen.dart and lib/features/mind_maps/presentation/map_detail_screen.dart.
-- [ ] T022 [US1] Register the local map repository/Cubit using the existing Tasks preview session identity and isolate it from real accounts in lib/app/composition/configure_dependencies.dart.
-- [ ] T023 [US1] Add a session-gated /mind-maps route and visible navigation entry, with debug preview entry and release sign-in gate, in lib/app/routing/app_router.dart and lib/app/app.dart.
+- [X] T013 [US1] Define owner-scoped graph reads, atomic local mutation/outbox writes and watch streams in lib/features/mind_maps/application/map_repository.dart.
+- [X] T014 [US1] Implement create, rename, describe, duplicate and delete commands with current-session checks, validation, ID remapping and typed failures in lib/features/mind_maps/application/map_commands.dart.
+- [X] T015 [US1] Persist complete copied graphs and map/central-node commands atomically with PendingChanges and tombstones in lib/features/mind_maps/data/drift_map_repository.dart.
+- [X] T016 [US1] Derive live map search, node/completed counts and whole-percent summaries without a second canonical counter in lib/features/mind_maps/application/map_queries.dart.
+- [X] T017 [P] [US1] Add English map-library, search, create/rename/delete, confirmation and save-failure messages in lib/app/l10n/app_en.arb.
+- [X] T018 [P] [US1] Add matching Arabic map-library, search, create/rename/delete, confirmation and save-failure messages in lib/app/l10n/app_ar.arb.
+- [X] T019 [US1] Regenerate lib/app/l10n/generated/app_localizations.dart and adapt the new messages through lib/app/l10n/mind_maps_strings_adapter.dart and lib/features/mind_maps/presentation/mind_maps_strings.dart.
+- [X] T020 [US1] Implement owner-bound library loading, search, confirmed local commands, account switching and recoverable errors in lib/features/mind_maps/presentation/map_library_cubit.dart and lib/features/mind_maps/presentation/map_library_state.dart.
+- [X] T021 [US1] Build the responsive, accessible map library/create/edit screen and a basic central-node detail view in lib/features/mind_maps/presentation/map_library_screen.dart and lib/features/mind_maps/presentation/map_detail_screen.dart.
+- [X] T022 [US1] Register the local map repository/Cubit using the existing Tasks preview session identity and isolate it from real accounts in lib/app/composition/configure_dependencies.dart.
+- [X] T023 [US1] Add a session-gated /mind-maps route and visible navigation entry, with debug preview entry and release sign-in gate, in lib/app/routing/app_router.dart and lib/app/app.dart.
 
 **Checkpoint**: US1 passes local, widget and preview restart tests without a network or new Auth flow. A copied graph's map-owned IDs are independent even before the full editor is built.
 
