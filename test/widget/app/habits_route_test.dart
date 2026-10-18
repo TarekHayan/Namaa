@@ -83,6 +83,26 @@ void main() {
     expect(builds, 0);
   });
 
+  testWidgets('unknown initial session settles to signed out', (tester) async {
+    final appRouter = FoundationAppRouter(
+      rootBuilder: (_) => const Scaffold(body: Text('root')),
+      habitsSession: const _UnknownSession(),
+      habitsBuilder: (_, accountId) => Scaffold(body: Text(accountId)),
+    );
+    addTearDown(appRouter.dispose);
+    await tester.pumpWidget(
+      MaterialApp.router(
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        routerConfig: appRouter.router,
+      ),
+    );
+    appRouter.go(kHabitsRoute);
+    await tester.pumpAndSettle();
+    expect(find.byKey(kHabitsRouteSignedOutKey), findsOneWidget);
+    expect(find.byKey(kHabitsRouteLoadingKey), findsNothing);
+  });
+
   testWidgets('preview Habits route resolves its isolated account', (
     tester,
   ) async {
@@ -127,6 +147,28 @@ final class _SignedOutSession implements CloudSessionPort {
   @override
   Stream<CloudSessionSnapshot> observeSession() => Stream.value(
     const CloudSessionSnapshot(status: CloudSessionStatus.signedOut),
+  );
+
+  @override
+  Future<AppResult<CloudSyncContext>> obtainSyncContext() async =>
+      AppResult.failure(
+        AppFailure.recoverable(
+          category: AppFailureCategory.authorization,
+          messageKey: 'habits.error.account',
+          occurredAt: DateTime.utc(2026, 10, 12),
+        ),
+      );
+}
+
+final class _UnknownSession implements CloudSessionPort {
+  const _UnknownSession();
+
+  @override
+  Future<AppResult<void>> initialize() async => const AppResult.success(null);
+
+  @override
+  Stream<CloudSessionSnapshot> observeSession() => Stream.value(
+    const CloudSessionSnapshot(status: CloudSessionStatus.unknown),
   );
 
   @override

@@ -854,6 +854,13 @@ behavior and general UI structure.
 The goal of the first implementation phase is **functional and
 behavioral parity**, not redesign.
 
+Each feature should have a functional development preview that can be opened
+and exercised without public sign-in. Preview data stays local and separate
+from real accounts. Public sign-in and registration are added after the other
+product features are implemented, before an account-based release. The final
+colors, design system, screen composition, and visual polish belong to the
+later UI refinement phase; a reference template may be chosen then.
+
 After the application is working:
 
 -   Review the current UI.
@@ -1017,7 +1024,9 @@ Verify interactions between domains.
 
 ## Phase 11 --- UI Refinement
 
-Review and refine the UI after functional behavior is stable.
+Review and refine the UI after functional behavior is stable. Establish the
+final colors, design system, screen composition, typography, spacing, and
+responsive layouts using the chosen visual direction or reference template.
 
 ## Phase 12 --- Full Verification
 

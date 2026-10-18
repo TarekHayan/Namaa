@@ -174,8 +174,8 @@ description: "Dependency-ordered implementation tasks for Namaa Habits 004"
 - [X] T072 [P] Add 004 trigger paths/branch and all four Habits integration entries (habits_offline_sync_test.dart, habits_streak_history_test.dart, habits_edit_delete_test.dart, habits_localized_route_test.dart) for Linux, Windows, macOS and iOS, preserving Android discovery, in .github/workflows/foundation-ci.yml.
 - [X] T073 Run format, analyze, all Flutter tests, local Supabase SQL tests, and every quickstart integration entry; record commands, outcomes and any environment limit in specs/004-habits/verification.md.
 - [X] T074 Verify persistence, account sync and localized primary flows on Android, iOS, Windows, macOS and Linux, using an isolated non-production project for authenticated device checks; append target results to specs/004-habits/verification.md.
-- [ ] T075 Run the three-minute create/complete/streak comprehension check and compare against SC-007; record participant count, success rate and remaining issue in specs/004-habits/verification.md.
-- [ ] T076 Review specs/004-habits/verification.md against every FR/SC, document public-release dependency on later Auth/initial account sync and deferred notification delivery, and mark 004 complete only when evidence and CI are green.
+- [ ] T075 Run the three-minute create/complete/streak comprehension check and compare against SC-007; record participant count, success rate and remaining issue in specs/004-habits/verification.md. Deferred to [issue #3](https://github.com/TarekHayan/Namaa/issues/3) before release because no participants are available.
+- [X] T076 Review specs/004-habits/verification.md against every FR/SC, document public-release dependency on later Auth/initial account sync and deferred notification delivery, and close the implementation branch with SC-007 explicitly tracked as an unmet release validation in [issue #3](https://github.com/TarekHayan/Namaa/issues/3).
 
 ---
 

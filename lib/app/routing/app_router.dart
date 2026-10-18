@@ -156,6 +156,9 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
           _status = CloudSessionStatus.unknown;
           _accountId = null;
         });
+        // An initial unknown event can invalidate the first session lookup.
+        // Resolve again so a signed-out user does not remain on the spinner.
+        unawaited(_resolveInitialSession());
       } else {
         _applySignedOut();
       }

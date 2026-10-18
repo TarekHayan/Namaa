@@ -1,6 +1,6 @@
 # Habits 004 verification
 
-Checked: 2026-10-18. Branch: namaa/004-habits. Status: Phase 7 automated evidence passed; 004 remains open for SC-007.
+Checked: 2026-10-18. Branch: namaa/004-habits. Status: implementation ready to merge; SC-007 remains unmeasured and is tracked as a pre-release follow-up in [issue #3](https://github.com/TarekHayan/Namaa/issues/3).
 
 ## Local checks
 
@@ -15,6 +15,8 @@ Checked: 2026-10-18. Branch: namaa/004-habits. Status: Phase 7 automated evidenc
 | Windows Arabic/English route | Same command with habits_localized_route_test.dart | Pass: 1 test; covers RTL and mobile/desktop layout sizes. |
 | Windows authenticated Habit sync | foundation_staging_supabase_test.dart filtered to the staging Habits case, with six staging dart-defines from the ignored local secrets file | Pass: two independent sessions of one owner, encrypted local outbox, receipt replay, remote read and reconciliation to a second encrypted database, another account's isolation, then tombstone propagation and retained conflict evidence. |
 | Local SQL | supabase test db | Environment limit: local Postgres at 127.0.0.1:54322 refused the connection because Docker is not running. SQL passed in the final five-target CI run. |
+| 2026-10-18 preview route fix | flutter test --no-pub test/widget/app/habits_route_test.dart --reporter compact | Pass: 4 tests, including an initially unknown session settling instead of remaining on the loading screen. |
+| 2026-10-18 focused analysis | flutter analyze --no-pub lib/main.dart lib/app/routing/app_router.dart test/widget/app/habits_route_test.dart | Pass: no issues in the three affected Dart files. |
 
 Windows is the locally available native target. Android, iOS, macOS and Linux require their CI runners. All authenticated checks use the isolated non-production project; no production credentials were used.
 
@@ -39,7 +41,7 @@ The CI workflow lists all four Habit integration entry points on Linux, Windows,
 | SC-001–SC-003 | Restart, streak and ten-replay tests pass. |
 | SC-004–SC-005 | Ten simulated reconnect trials, real SQL owner-isolation checks and live authenticated two-device sync passed across all five targets. |
 | SC-006 | Mobile/desktop layout and Arabic/English route checks passed in the five-target CI matrix. |
-| SC-007 | Pending human validation. No participants are currently available. Participant count: 0; success rate: not measured. |
+| SC-007 | Pending human validation in [issue #3](https://github.com/TarekHayan/Namaa/issues/3). No participants are currently available. Participant count: 0; success rate: not measured. |
 
 ## Three-minute comprehension check (SC-007)
 
@@ -47,4 +49,4 @@ Give each participant an unassisted fresh preview account. Start a three-minute 
 
 ## Release boundary
 
-The final CI gate passed. Do not mark 004 complete until SC-007 is measured and satisfied. Public account-based release also depends on the later Auth feature and successful initial account synchronization. Saving a reminder time is implemented; device notification permission, scheduling and delivery belong to the later Notifications feature.
+The product owner requested closing the 004 implementation branch before participants are available. This closes the implemented feature work, not SC-007: [issue #3](https://github.com/TarekHayan/Namaa/issues/3) remains open and the criterion must be measured and passed before an account-based release. Public account-based release also depends on the later Auth feature and successful initial account synchronization. Saving a reminder time is implemented; device notification permission, scheduling and delivery belong to the later Notifications feature.

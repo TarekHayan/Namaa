@@ -7,7 +7,7 @@ import 'app/composition/configure_dependencies.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Debug launches open a local Tasks trial without an account or cloud.
+  // Debug launches open a local trial without an account or cloud.
   // Release builds always use the real session boundary.
   const previewTasks = bool.fromEnvironment(
     'NAMAA_TASKS_PREVIEW',
