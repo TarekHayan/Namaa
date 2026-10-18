@@ -237,4 +237,141 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get tasksRetainedRemote => 'Remote version';
+
+  @override
+  String get habitsTitle => 'Habits';
+
+  @override
+  String get habitsEmpty => 'No habits yet';
+
+  @override
+  String get habitsCreate => 'New habit';
+
+  @override
+  String get habitEdit => 'Edit habit';
+
+  @override
+  String get habitDelete => 'Delete habit';
+
+  @override
+  String get habitDeleteConfirmation =>
+      'Delete this habit? Its history will be kept for recovery, but it will disappear from your habits.';
+
+  @override
+  String get habitReminderTime => 'Reminder time';
+
+  @override
+  String get habitReminderClear => 'Clear time';
+
+  @override
+  String get habitReminderInactive =>
+      'Notifications are not active yet. A chosen time is saved for later.';
+
+  @override
+  String get habitsSyncing => 'Syncing habits…';
+
+  @override
+  String get habitsSyncFailed =>
+      'Habits could not finish syncing. Your saved changes remain on this device.';
+
+  @override
+  String get habitsSyncRetry => 'Retry sync';
+
+  @override
+  String get habitsConflict => 'A habit change needs review';
+
+  @override
+  String get habitsActiveVersion => 'Current version';
+
+  @override
+  String get habitsRetainedVersion => 'Retained version';
+
+  @override
+  String get habitsUnresolvedConflict =>
+      'The versions have the same time and need review.';
+
+  @override
+  String get habitNameLabel => 'Name';
+
+  @override
+  String get habitNameRequired => 'Enter a habit name';
+
+  @override
+  String get habitWeekdaysRequired => 'Choose at least one day';
+
+  @override
+  String get habitSave => 'Save habit';
+
+  @override
+  String get habitCancel => 'Cancel';
+
+  @override
+  String get habitComplete => 'Complete today';
+
+  @override
+  String get habitUndo => 'Undo today';
+
+  @override
+  String get habitDueToday => 'Due today';
+
+  @override
+  String get habitNotDueToday => 'Not due today';
+
+  @override
+  String get habitsLoadFailure => 'Could not load habits. Try again.';
+
+  @override
+  String get habitsSaveFailure =>
+      'Could not save your change. Please try again.';
+
+  @override
+  String get habitsSignInRequired => 'Sign in to access your habits.';
+
+  @override
+  String get habitHistory => 'History';
+
+  @override
+  String get habitCurrentStreak => 'Current streak (days)';
+
+  @override
+  String get habitCompletedDates => 'Completed dates';
+
+  @override
+  String get habitNoCompletedDates => 'No completed dates yet';
+
+  @override
+  String get habitPendingToday => 'Today is still in progress';
+
+  @override
+  String get habitScheduleHistory => 'Schedule history';
+
+  @override
+  String get habitEffectiveFrom => 'Effective from';
+
+  @override
+  String get habitCompletedOn => 'Completed on';
+
+  @override
+  String get habitCloseHistory => 'Close history';
+
+  @override
+  String get habitMonday => 'Monday';
+
+  @override
+  String get habitTuesday => 'Tuesday';
+
+  @override
+  String get habitWednesday => 'Wednesday';
+
+  @override
+  String get habitThursday => 'Thursday';
+
+  @override
+  String get habitFriday => 'Friday';
+
+  @override
+  String get habitSaturday => 'Saturday';
+
+  @override
+  String get habitSunday => 'Sunday';
 }

@@ -6,6 +6,17 @@ import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/cloud/supabase/supabase_environment.dart';
 import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.dart';
 import 'package:namma_project/core/data/cloud/supabase/supabase_sync_adapter.dart';
+import 'package:namma_project/core/data/local/drift_local_store.dart';
+import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/features/habits/application/habit_commands.dart';
+import 'package:namma_project/features/habits/data/drift_habit_repository.dart';
+import 'package:namma_project/features/habits/data/habit_payload_codec.dart';
+import 'package:namma_project/features/habits/data/habit_reconciler.dart';
+import 'package:namma_project/features/habits/data/supabase_habit_reader.dart';
+import 'package:namma_project/features/habits/data/supabase_habit_sync_adapter.dart';
+
+import '../test/support/foundation_test_support.dart';
+import '../test/support/habits_test_support.dart';
 
 /// End-to-end device proof against the isolated non-production Supabase
 /// project. Every value is injected by the CI operator; production endpoints
@@ -167,6 +178,253 @@ void main() {
       );
       expect(unchangedOwnerRead.failureOrNull, isNull);
       expect(unchangedOwnerRead.valueOrNull?.payload, ownerPayload);
+    },
+  );
+
+  testWidgets(
+    'staging Habits synchronize between devices and isolate accounts',
+    (tester) async {
+      const url = String.fromEnvironment('NAMAA_SUPABASE_URL');
+      const publishableKey = String.fromEnvironment(
+        'NAMAA_SUPABASE_PUBLISHABLE_KEY',
+      );
+      const ownerEmail = String.fromEnvironment(
+        'NAMAA_STAGING_TEST_USER_A_EMAIL',
+      );
+      const ownerPassword = String.fromEnvironment(
+        'NAMAA_STAGING_TEST_USER_A_PASSWORD',
+      );
+      const otherEmail = String.fromEnvironment(
+        'NAMAA_STAGING_TEST_USER_B_EMAIL',
+      );
+      const otherPassword = String.fromEnvironment(
+        'NAMAA_STAGING_TEST_USER_B_PASSWORD',
+      );
+      for (final value in [
+        url,
+        publishableKey,
+        ownerEmail,
+        ownerPassword,
+        otherEmail,
+        otherPassword,
+      ]) {
+        expect(value, isNotEmpty);
+      }
+      final stagingUri = Uri.parse(url);
+      final config = SupabaseEnvironmentConfig.isolatedNonProduction(
+        url: stagingUri,
+        publishableKey: publishableKey,
+        approvedHosts: {stagingUri.host},
+      );
+      final deviceA = createSupabaseClient(config);
+      final deviceB = createSupabaseClient(config);
+      final otherAccount = createSupabaseClient(config);
+      addTearDown(deviceA.dispose);
+      addTearDown(deviceB.dispose);
+      addTearDown(otherAccount.dispose);
+      final ownerA = await deviceA.auth.signInWithPassword(
+        email: ownerEmail,
+        password: ownerPassword,
+      );
+      final ownerB = await deviceB.auth.signInWithPassword(
+        email: ownerEmail,
+        password: ownerPassword,
+      );
+      final foreign = await otherAccount.auth.signInWithPassword(
+        email: otherEmail,
+        password: otherPassword,
+      );
+      final ownerId = ownerA.user!.id;
+      expect(ownerB.user!.id, ownerId);
+      expect(foreign.user!.id, isNot(ownerId));
+
+      final paths = [TemporaryDatabasePath(), TemporaryDatabasePath()];
+      final encryptionKey = List<int>.generate(32, (index) => index + 100);
+      final databaseA = await FoundationDatabase.openEncrypted(
+        path: paths[0].allocate(),
+        key: encryptionKey,
+      );
+      final databaseB = await FoundationDatabase.openEncrypted(
+        path: paths[1].allocate(),
+        key: encryptionKey,
+      );
+      addTearDown(() async {
+        await databaseA.close();
+        await databaseB.close();
+        for (final path in paths) {
+          path.dispose();
+        }
+      });
+      final localA = DriftHabitRepository(
+        database: databaseA,
+        codec: const HabitPayloadCodec(),
+      );
+      final localB = DriftHabitRepository(
+        database: databaseB,
+        codec: const HabitPayloadCodec(),
+      );
+      final sessionA = SupabaseSessionAdapter(
+        gateway: SupabaseAuthGatewayImpl(deviceA),
+      );
+      expect((await sessionA.initialize()).failureOrNull, isNull);
+      final commands = HabitCommands(repository: localA, session: sessionA);
+      final created = await commands.createHabit(
+        const CreateHabitInput(
+          name: 'Staging Habit',
+          weekdays: HabitsTestSchedules.daily,
+        ),
+        expectedAccountId: ownerId,
+      );
+      expect(created.failureOrNull, isNull);
+      final habit = created.valueOrNull!;
+      final completed = await commands.completeHabitToday(
+        habit.id,
+        expectedAccountId: ownerId,
+      );
+      expect(completed.failureOrNull, isNull);
+      final day = completed.valueOrNull!;
+
+      final outbox = DriftLocalStore(databaseA);
+      final pending = (await outbox.readPendingChanges(ownerId)).valueOrNull!;
+      expect(pending, hasLength(2));
+      final adapter = SupabaseHabitSyncAdapter(
+        gateway: SupabaseHabitGatewayImpl(deviceA),
+      );
+      for (final change in pending) {
+        final outbound = OutboundChange(
+          operationId: change.operationId,
+          accountId: change.accountId,
+          entityType: change.entityType,
+          entityId: change.entityId,
+          kind: change.kind,
+          payload: change.serializedChange,
+          versionTimestamp: change.versionTimestamp,
+        );
+        for (var retry = 0; retry < 2; retry++) {
+          final result = await adapter.dispatchChange(outbound);
+          expect(result.failureOrNull, isNull);
+          expect(result.valueOrNull, isA<DispatchAcknowledged>());
+        }
+        expect(
+          (await outbox.acknowledgeChange(
+            change.operationId,
+            change.operationId,
+          )).failureOrNull,
+          isNull,
+        );
+      }
+      expect((await outbox.readPendingChanges(ownerId)).valueOrNull, isEmpty);
+
+      final remoteB = await SupabaseHabitReader(
+        gateway: SupabaseHabitGatewayImpl(deviceB),
+      ).readAll(ownerId);
+      expect(remoteB.failureOrNull, isNull);
+      final snapshot = remoteB.valueOrNull!;
+      expect(
+        snapshot.habits.where((item) => item.id == habit.id),
+        hasLength(1),
+      );
+      expect(
+        snapshot.days.where(
+          (item) => item.habitId == habit.id && item.localDate == day.localDate,
+        ),
+        hasLength(1),
+      );
+      final reconciler = HabitReconciler(
+        store: localB,
+        localStore: DriftLocalStore(databaseB),
+      );
+      expect(
+        (await reconciler.reconcile(
+          accountId: ownerId,
+          remote: snapshot,
+        )).failureOrNull,
+        isNull,
+      );
+      expect(
+        (await localB.readHabit(
+          accountId: ownerId,
+          habitId: habit.id,
+        )).valueOrNull?.name,
+        habit.name,
+      );
+      expect(
+        (await localB.readDay(
+          accountId: ownerId,
+          habitId: habit.id,
+          localDate: day.localDate,
+        )).valueOrNull?.isCompleted,
+        isTrue,
+      );
+      final foreignRead = await SupabaseHabitReader(
+        gateway: SupabaseHabitGatewayImpl(otherAccount),
+      ).readAll(foreign.user!.id);
+      expect(foreignRead.failureOrNull, isNull);
+      expect(
+        foreignRead.valueOrNull!.habits.any((item) => item.id == habit.id),
+        isFalse,
+      );
+      expect(
+        foreignRead.valueOrNull!.days.any((item) => item.habitId == habit.id),
+        isFalse,
+      );
+
+      final removed = await commands.deleteHabit(
+        habit.id,
+        confirmed: true,
+        expectedAccountId: ownerId,
+      );
+      expect(removed.failureOrNull, isNull);
+      final deleteChange = (await outbox.readPendingChanges(
+        ownerId,
+      )).valueOrNull!.single;
+      final deleteResult = await adapter.dispatchChange(
+        OutboundChange(
+          operationId: deleteChange.operationId,
+          accountId: deleteChange.accountId,
+          entityType: deleteChange.entityType,
+          entityId: deleteChange.entityId,
+          kind: deleteChange.kind,
+          payload: deleteChange.serializedChange,
+          versionTimestamp: deleteChange.versionTimestamp,
+        ),
+      );
+      expect(deleteResult.failureOrNull, isNull);
+      expect(deleteResult.valueOrNull, isA<DispatchVersionConflict>());
+      final afterDelete = await SupabaseHabitReader(
+        gateway: SupabaseHabitGatewayImpl(deviceB),
+      ).readAll(ownerId);
+      expect(afterDelete.failureOrNull, isNull);
+      expect(
+        afterDelete.valueOrNull!.habits
+            .singleWhere((item) => item.id == habit.id)
+            .isDeleted,
+        isTrue,
+      );
+      expect(
+        (await reconciler.reconcile(
+          accountId: ownerId,
+          remote: afterDelete.valueOrNull!,
+        )).failureOrNull,
+        isNull,
+      );
+      expect(
+        (await localB.readHabit(
+          accountId: ownerId,
+          habitId: habit.id,
+        )).valueOrNull?.isDeleted,
+        isTrue,
+      );
+      expect(
+        (await localB.watchHabits(ownerId).first).any(
+          (item) => item.id == habit.id,
+        ),
+        isFalse,
+      );
+      expect(
+        await databaseB.rawScalar('SELECT count(*) FROM conflict_records'),
+        greaterThan(0),
+      );
     },
   );
 }

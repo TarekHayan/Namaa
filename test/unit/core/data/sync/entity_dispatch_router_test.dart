@@ -7,14 +7,20 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 void main() {
   late _RecordingCloudSync foundationAdapter;
   late _RecordingCloudSync taskAdapter;
+  late _RecordingCloudSync habitAdapter;
+  late _RecordingCloudSync habitDayAdapter;
   late EntityDispatchRouter router;
 
   setUp(() {
     foundationAdapter = _RecordingCloudSync('foundation-ack');
     taskAdapter = _RecordingCloudSync('task-ack');
+    habitAdapter = _RecordingCloudSync('habit-ack');
+    habitDayAdapter = _RecordingCloudSync('day-ack');
     router = EntityDispatchRouter(
       foundationAdapter: foundationAdapter,
       taskAdapter: taskAdapter,
+      habitAdapter: habitAdapter,
+      habitDayAdapter: habitDayAdapter,
     );
   });
 
@@ -57,6 +63,27 @@ void main() {
     expect(foundationAdapter.lookups, isEmpty);
     expect(result.failureOrNull, isNull);
   });
+
+  test(
+    'Habit and HabitDay retain stable IDs and reach separate routes',
+    () async {
+      final habit = _change(entityType: kHabitEntityType);
+      final day = _change(entityType: kHabitDayEntityType);
+      expect((await router.dispatchChange(habit)).failureOrNull, isNull);
+      expect((await router.dispatchChange(day)).failureOrNull, isNull);
+      expect(habitAdapter.dispatched.single.operationId, habit.operationId);
+      expect(habitDayAdapter.dispatched.single.operationId, day.operationId);
+      expect(taskAdapter.dispatched, isEmpty);
+      await router.obtainRemoteVersion(
+        entityType: kHabitDayEntityType,
+        entityId: 'habit-1:2026-10-12',
+      );
+      expect(habitDayAdapter.lookups.single, (
+        'habit_day',
+        'habit-1:2026-10-12',
+      ));
+    },
+  );
 
   test(
     'unknown entity types fail recoverably without acknowledgement',

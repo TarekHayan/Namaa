@@ -19,7 +19,9 @@ library;
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:get_it/get_it.dart';
+import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
@@ -47,6 +49,18 @@ import 'package:namma_project/features/foundation/presentation/state/foundation_
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
+import 'package:namma_project/features/habits/application/habit_commands.dart';
+import 'package:namma_project/features/habits/application/habit_reconciliation.dart';
+import 'package:namma_project/features/habits/application/habit_remote_reader.dart';
+import 'package:namma_project/features/habits/application/habit_repository.dart';
+import 'package:namma_project/features/habits/application/habit_sync_service.dart';
+import 'package:namma_project/features/habits/data/drift_habit_repository.dart';
+import 'package:namma_project/features/habits/data/habit_payload_codec.dart';
+import 'package:namma_project/features/habits/data/habit_reconciler.dart';
+import 'package:namma_project/features/habits/data/supabase_habit_reader.dart';
+import 'package:namma_project/features/habits/data/supabase_habit_sync_adapter.dart';
+import 'package:namma_project/features/habits/domain/habit.dart';
+import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
@@ -83,7 +97,8 @@ Future<void> configureDependencies({
   final getIt = GetIt.instance;
   await getIt.reset();
 
-  if (environment == FoundationEnvironment.unconfigured) {
+  if (environment == FoundationEnvironment.unconfigured ||
+      (environment == FoundationEnvironment.tasksPreview && kReleaseMode)) {
     _registerSafeFail(getIt);
     _registerUseCasesAndCubits(getIt);
     return;
@@ -113,6 +128,7 @@ Future<void> configureDependencies({
     final localStore = DriftLocalStore(database);
     getIt.registerLazySingleton<LocalStorePort>(() => localStore);
     const taskCodec = TaskPayloadCodec();
+    const habitCodec = HabitPayloadCodec();
     getIt.registerLazySingleton<TaskPayloadCodec>(() => taskCodec);
 
     final preview = environment == FoundationEnvironment.tasksPreview;
@@ -121,6 +137,11 @@ Future<void> configureDependencies({
         : await _cloudSessionFor(environment, secureStore: secureStore);
     final session = preview ? const TasksPreviewSession() : cloud!.adapter;
     getIt.registerLazySingleton<CloudSessionPort>(() => session);
+    if (preview) {
+      getIt.registerLazySingleton<HabitsPreviewSession>(
+        () => const HabitsPreviewSession(),
+      );
+    }
     if (preview) {
       getIt.registerLazySingleton<CloudSyncPort>(() => UnconfiguredCloudSync());
       getIt.registerLazySingleton<TaskRemoteReaderPort>(
@@ -135,11 +156,16 @@ Future<void> configureDependencies({
       );
       final taskGateway = SupabaseTaskGatewayImpl(cloud.client);
       final taskSyncAdapter = SupabaseTaskSyncAdapter(gateway: taskGateway);
+      final habitGateway = SupabaseHabitGatewayImpl(cloud.client);
+      final habitAdapter = SupabaseHabitSyncAdapter(gateway: habitGateway);
       getIt.registerLazySingleton<SupabaseTaskGateway>(() => taskGateway);
+      getIt.registerLazySingleton<SupabaseHabitGateway>(() => habitGateway);
       getIt.registerLazySingleton<CloudSyncPort>(
         () => EntityDispatchRouter(
           foundationAdapter: foundationSync,
           taskAdapter: taskSyncAdapter,
+          habitAdapter: habitAdapter,
+          habitDayAdapter: habitAdapter,
         ),
       );
       final taskReader = SupabaseTaskReader(
@@ -148,6 +174,9 @@ Future<void> configureDependencies({
       );
       getIt.registerLazySingleton<TaskRemoteReaderPort>(() => taskReader);
       getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(() => taskReader);
+      getIt.registerLazySingleton<HabitRemoteReaderPort>(
+        () => SupabaseHabitReader(gateway: habitGateway),
+      );
     }
 
     getIt.registerLazySingleton<ConnectivityPort>(
@@ -191,6 +220,38 @@ Future<void> configureDependencies({
     getIt.registerLazySingleton<TaskRepository>(
       () => DriftTaskRepository(database: database, codec: taskCodec),
     );
+    final habitRepository = DriftHabitRepository(
+      database: database,
+      codec: habitCodec,
+    );
+    getIt.registerLazySingleton<HabitRepository>(() => habitRepository);
+    getIt.registerLazySingleton<HabitReconciliationStorePort>(
+      () => habitRepository,
+    );
+    getIt.registerLazySingleton<HabitConflictReaderPort>(() => habitRepository);
+    getIt.registerLazySingleton<HabitCommands>(
+      () => HabitCommands(
+        repository: getIt<HabitRepository>(),
+        session: preview
+            ? getIt<HabitsPreviewSession>()
+            : getIt<CloudSessionPort>(),
+      ),
+    );
+    getIt.registerFactory<HabitsCubit>(
+      () => HabitsCubit(
+        repository: getIt<HabitRepository>(),
+        commands: getIt<HabitCommands>(),
+        syncService: preview ? null : getIt<HabitSyncService>(),
+        conflictReader: getIt<HabitConflictReaderPort>(),
+        localCalendar: () {
+          final now = DateTime.now();
+          return (
+            localDate: habitLocalDate(now),
+            utcOffsetMinutes: now.timeZoneOffset.inMinutes,
+          );
+        },
+      ),
+    );
     getIt.registerLazySingleton<AwardLedgerPort>(
       () => DriftAwardLedger(database),
     );
@@ -208,6 +269,24 @@ Future<void> configureDependencies({
         codec: taskCodec,
       ),
     );
+    if (!preview) {
+      getIt.registerLazySingleton<HabitReconciliationPort>(
+        () => HabitReconciler(
+          store: getIt<HabitReconciliationStorePort>(),
+          localStore: localStore,
+        ),
+      );
+      getIt.registerLazySingleton<HabitSyncService>(
+        () => HabitSyncService(
+          session: session,
+          connectivity: getIt<ConnectivityPort>(),
+          outbound: getIt<PendingSynchronizationEngine>(),
+          remoteReader: getIt<HabitRemoteReaderPort>(),
+          reconciler: getIt<HabitReconciliationPort>(),
+        ),
+        dispose: (service) => service.dispose(),
+      );
+    }
     if (!preview) {
       getIt.registerLazySingleton<TaskSyncService>(
         () => TaskSyncService(

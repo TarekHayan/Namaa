@@ -65,3 +65,8 @@ node_modules/
 # Never commit the populated file.
 .secrets/*.env
 !.secrets/*.env.example
+
+# Local environment files and credentials.
+.env
+.env.*
+!.env.example

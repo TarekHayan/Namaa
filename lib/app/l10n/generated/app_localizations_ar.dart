@@ -233,4 +233,140 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get tasksRetainedRemote => 'النسخة البعيدة';
+
+  @override
+  String get habitsTitle => 'العادات';
+
+  @override
+  String get habitsEmpty => 'لا توجد عادات بعد';
+
+  @override
+  String get habitsCreate => 'عادة جديدة';
+
+  @override
+  String get habitEdit => 'تعديل العادة';
+
+  @override
+  String get habitDelete => 'حذف العادة';
+
+  @override
+  String get habitDeleteConfirmation =>
+      'هل تريد حذف هذه العادة؟ سيُحتفظ بسجلها للاسترجاع، لكنها ستختفي من قائمة العادات.';
+
+  @override
+  String get habitReminderTime => 'وقت التذكير';
+
+  @override
+  String get habitReminderClear => 'مسح الوقت';
+
+  @override
+  String get habitReminderInactive =>
+      'الإشعارات غير مفعّلة بعد. سيُحفظ الوقت المختار لتفعيلها لاحقًا.';
+
+  @override
+  String get habitsSyncing => 'جارٍ مزامنة العادات…';
+
+  @override
+  String get habitsSyncFailed =>
+      'تعذر إكمال مزامنة العادات. تغييراتك المحفوظة ما زالت على هذا الجهاز.';
+
+  @override
+  String get habitsSyncRetry => 'إعادة المزامنة';
+
+  @override
+  String get habitsConflict => 'تغيير في العادة يحتاج للمراجعة';
+
+  @override
+  String get habitsActiveVersion => 'النسخة الحالية';
+
+  @override
+  String get habitsRetainedVersion => 'النسخة المحفوظة';
+
+  @override
+  String get habitsUnresolvedConflict =>
+      'للنسختين التوقيت نفسه وتحتاجان للمراجعة.';
+
+  @override
+  String get habitNameLabel => 'اسم العادة';
+
+  @override
+  String get habitNameRequired => 'اكتب اسم العادة';
+
+  @override
+  String get habitWeekdaysRequired => 'اختر يومًا واحدًا على الأقل';
+
+  @override
+  String get habitSave => 'حفظ العادة';
+
+  @override
+  String get habitCancel => 'إلغاء';
+
+  @override
+  String get habitComplete => 'إنجاز اليوم';
+
+  @override
+  String get habitUndo => 'التراجع عن إنجاز اليوم';
+
+  @override
+  String get habitDueToday => 'مطلوبة اليوم';
+
+  @override
+  String get habitNotDueToday => 'غير مطلوبة اليوم';
+
+  @override
+  String get habitsLoadFailure => 'تعذر تحميل العادات. حاول مرة أخرى.';
+
+  @override
+  String get habitsSaveFailure => 'تعذر حفظ التغيير. حاول مرة أخرى.';
+
+  @override
+  String get habitsSignInRequired => 'سجّل الدخول للوصول إلى عاداتك.';
+
+  @override
+  String get habitHistory => 'السجل';
+
+  @override
+  String get habitCurrentStreak => 'السلسلة الحالية (أيام)';
+
+  @override
+  String get habitCompletedDates => 'تواريخ الإنجاز';
+
+  @override
+  String get habitNoCompletedDates => 'لا توجد أيام مكتملة بعد';
+
+  @override
+  String get habitPendingToday => 'اليوم لم ينته بعد';
+
+  @override
+  String get habitScheduleHistory => 'سجل الجدول';
+
+  @override
+  String get habitEffectiveFrom => 'سارٍ من';
+
+  @override
+  String get habitCompletedOn => 'أُنجزت في';
+
+  @override
+  String get habitCloseHistory => 'إغلاق السجل';
+
+  @override
+  String get habitMonday => 'الاثنين';
+
+  @override
+  String get habitTuesday => 'الثلاثاء';
+
+  @override
+  String get habitWednesday => 'الأربعاء';
+
+  @override
+  String get habitThursday => 'الخميس';
+
+  @override
+  String get habitFriday => 'الجمعة';
+
+  @override
+  String get habitSaturday => 'السبت';
+
+  @override
+  String get habitSunday => 'الأحد';
 }

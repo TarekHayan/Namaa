@@ -12,7 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/l10n/habits_strings_adapter.dart';
 import 'package:namma_project/app/l10n/tasks_strings_adapter.dart';
 import 'package:namma_project/app/routing/app_router.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
@@ -22,6 +24,8 @@ import 'package:namma_project/features/foundation/presentation/state/foundation_
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/synchronization_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
+import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
+import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
 
@@ -32,6 +36,7 @@ const Key kFoundationRootStartupKey = Key('foundation_root_startup');
 const Key kFoundationRootReadyKey = Key('foundation_root_ready');
 const Key kFoundationRootFailureKey = Key('foundation_root_failure');
 const Key kFoundationTasksNavigationKey = Key('foundation_tasks_navigation');
+const Key kFoundationHabitsNavigationKey = Key('foundation_habits_navigation');
 
 class FoundationApp extends StatefulWidget {
   const FoundationApp({
@@ -292,11 +297,25 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
     final tasksAvailable =
         getIt.isRegistered<CloudSessionPort>() &&
         getIt.isRegistered<TasksCubit>();
+    final habitsAvailable =
+        getIt.isRegistered<HabitsCubit>() &&
+        getIt.isRegistered<CloudSessionPort>();
     _router = FoundationAppRouter(
       rootBuilder: (_) => widget.home,
       cloudSession: tasksAvailable ? getIt<CloudSessionPort>() : null,
       tasksBuilder: tasksAvailable
           ? (_, accountId) => _TasksRouteScope(accountId: accountId)
+          : null,
+      habitsSession: habitsAvailable
+          ? (getIt.isRegistered<HabitsPreviewSession>()
+                ? getIt<HabitsPreviewSession>()
+                : getIt<CloudSessionPort>())
+          : null,
+      habitsBuilder: habitsAvailable
+          ? (_, accountId) => _HabitsRouteScope(
+              key: ValueKey(accountId),
+              accountId: accountId,
+            )
           : null,
     );
   }
@@ -361,6 +380,15 @@ class _ReadyShell extends StatelessWidget {
             icon: const Icon(Icons.task_alt),
             label: Text(FoundationLocalizations.of(context).tasksTitle),
           ),
+          if (GetIt.instance.isRegistered<HabitsCubit>()) ...[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              key: kFoundationHabitsNavigationKey,
+              onPressed: () => GoRouter.of(context).go(kHabitsRoute),
+              icon: const Icon(Icons.repeat),
+              label: Text(FoundationLocalizations.of(context).habitsTitle),
+            ),
+          ],
         ],
       ),
     ),
@@ -394,6 +422,32 @@ class _TasksRouteScopeState extends State<_TasksRouteScope> {
     accountId: widget.accountId,
     stringsResolver: resolveTasksStrings,
     session: GetIt.instance<CloudSessionPort>(),
+  );
+}
+
+/// Creates an account-scoped controller only after the router resolves the
+/// active Habits owner. A route visit owns and closes its controller.
+class _HabitsRouteScope extends StatefulWidget {
+  const _HabitsRouteScope({super.key, required this.accountId});
+  final String accountId;
+  @override
+  State<_HabitsRouteScope> createState() => _HabitsRouteScopeState();
+}
+
+class _HabitsRouteScopeState extends State<_HabitsRouteScope> {
+  late final HabitsCubit _cubit = GetIt.instance<HabitsCubit>();
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => HabitsScreen(
+    cubit: _cubit,
+    accountId: widget.accountId,
+    stringsResolver: resolveHabitsStrings,
   );
 }
 

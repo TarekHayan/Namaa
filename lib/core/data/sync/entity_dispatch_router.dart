@@ -8,6 +8,8 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 
 const String kFoundationRecordEntityType = 'foundation_record';
 const String kTaskEntityType = 'task';
+const String kHabitEntityType = 'habit';
+const String kHabitDayEntityType = 'habit_day';
 const String _unsupportedEntityMessageKey = 'foundation.cloud.recoverable';
 
 /// Routes each durable outbox entity to the adapter that owns its remote
@@ -19,9 +21,13 @@ final class EntityDispatchRouter implements CloudSyncPort {
   EntityDispatchRouter({
     required CloudSyncPort foundationAdapter,
     required CloudSyncPort taskAdapter,
+    CloudSyncPort? habitAdapter,
+    CloudSyncPort? habitDayAdapter,
   }) : _adapters = {
          kFoundationRecordEntityType: foundationAdapter,
          kTaskEntityType: taskAdapter,
+         kHabitEntityType: ?habitAdapter,
+         kHabitDayEntityType: ?habitDayAdapter,
        };
 
   final Map<String, CloudSyncPort> _adapters;

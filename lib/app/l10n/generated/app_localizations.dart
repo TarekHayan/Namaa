@@ -544,6 +544,270 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Remote version'**
   String get tasksRetainedRemote;
+
+  /// No description provided for @habitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits'**
+  String get habitsTitle;
+
+  /// No description provided for @habitsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No habits yet'**
+  String get habitsEmpty;
+
+  /// No description provided for @habitsCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'New habit'**
+  String get habitsCreate;
+
+  /// No description provided for @habitEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit habit'**
+  String get habitEdit;
+
+  /// No description provided for @habitDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete habit'**
+  String get habitDelete;
+
+  /// No description provided for @habitDeleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this habit? Its history will be kept for recovery, but it will disappear from your habits.'**
+  String get habitDeleteConfirmation;
+
+  /// No description provided for @habitReminderTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder time'**
+  String get habitReminderTime;
+
+  /// No description provided for @habitReminderClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear time'**
+  String get habitReminderClear;
+
+  /// No description provided for @habitReminderInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are not active yet. A chosen time is saved for later.'**
+  String get habitReminderInactive;
+
+  /// No description provided for @habitsSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing habits…'**
+  String get habitsSyncing;
+
+  /// No description provided for @habitsSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits could not finish syncing. Your saved changes remain on this device.'**
+  String get habitsSyncFailed;
+
+  /// No description provided for @habitsSyncRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry sync'**
+  String get habitsSyncRetry;
+
+  /// No description provided for @habitsConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'A habit change needs review'**
+  String get habitsConflict;
+
+  /// No description provided for @habitsActiveVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version'**
+  String get habitsActiveVersion;
+
+  /// No description provided for @habitsRetainedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Retained version'**
+  String get habitsRetainedVersion;
+
+  /// No description provided for @habitsUnresolvedConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'The versions have the same time and need review.'**
+  String get habitsUnresolvedConflict;
+
+  /// No description provided for @habitNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get habitNameLabel;
+
+  /// No description provided for @habitNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a habit name'**
+  String get habitNameRequired;
+
+  /// No description provided for @habitWeekdaysRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one day'**
+  String get habitWeekdaysRequired;
+
+  /// No description provided for @habitSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save habit'**
+  String get habitSave;
+
+  /// No description provided for @habitCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get habitCancel;
+
+  /// No description provided for @habitComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete today'**
+  String get habitComplete;
+
+  /// No description provided for @habitUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo today'**
+  String get habitUndo;
+
+  /// No description provided for @habitDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get habitDueToday;
+
+  /// No description provided for @habitNotDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Not due today'**
+  String get habitNotDueToday;
+
+  /// No description provided for @habitsLoadFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load habits. Try again.'**
+  String get habitsLoadFailure;
+
+  /// No description provided for @habitsSaveFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your change. Please try again.'**
+  String get habitsSaveFailure;
+
+  /// No description provided for @habitsSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to access your habits.'**
+  String get habitsSignInRequired;
+
+  /// No description provided for @habitHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get habitHistory;
+
+  /// No description provided for @habitCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak (days)'**
+  String get habitCurrentStreak;
+
+  /// No description provided for @habitCompletedDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed dates'**
+  String get habitCompletedDates;
+
+  /// No description provided for @habitNoCompletedDates.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed dates yet'**
+  String get habitNoCompletedDates;
+
+  /// No description provided for @habitPendingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today is still in progress'**
+  String get habitPendingToday;
+
+  /// No description provided for @habitScheduleHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule history'**
+  String get habitScheduleHistory;
+
+  /// No description provided for @habitEffectiveFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective from'**
+  String get habitEffectiveFrom;
+
+  /// No description provided for @habitCompletedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed on'**
+  String get habitCompletedOn;
+
+  /// No description provided for @habitCloseHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Close history'**
+  String get habitCloseHistory;
+
+  /// No description provided for @habitMonday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get habitMonday;
+
+  /// No description provided for @habitTuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get habitTuesday;
+
+  /// No description provided for @habitWednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get habitWednesday;
+
+  /// No description provided for @habitThursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get habitThursday;
+
+  /// No description provided for @habitFriday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get habitFriday;
+
+  /// No description provided for @habitSaturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get habitSaturday;
+
+  /// No description provided for @habitSunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get habitSunday;
 }
 
 class _FoundationLocalizationsDelegate

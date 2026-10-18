@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 3;
+const int kFoundationSchemaVersion = 4;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -188,6 +188,54 @@ class XpAwards extends Table {
   Set<Column> get primaryKey => {accountId, source, sourceId};
 }
 
+/// Account-scoped Habit metadata and schedule history, introduced in v4.
+///
+/// A tombstone remains so queued operations and child days retain identity.
+@TableIndex(
+  name: 'habit_records_account_deleted',
+  columns: {#accountId, #deletedAt},
+)
+@TableIndex(
+  name: 'habit_records_account_updated',
+  columns: {#accountId, #updatedAt},
+)
+class HabitRecords extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get habitId => text()();
+  TextColumn get name => text()();
+  TextColumn get scheduleRevisionsJson => text()();
+  IntColumn get reminderMinuteOfDay => integer().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, habitId};
+}
+
+/// Independently versioned action for one immutable local calendar date.
+@TableIndex(
+  name: 'habit_day_records_account_habit_date',
+  columns: {#accountId, #habitId, #localDate},
+)
+@TableIndex(
+  name: 'habit_day_records_account_updated',
+  columns: {#accountId, #updatedAt},
+)
+class HabitDayRecords extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get habitId => text()();
+  TextColumn get localDate => text()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  BoolColumn get earnedWhileDue => boolean()();
+  TextColumn get earnedAgainstRevisionId => text().nullable()();
+  IntColumn get recordedUtcOffsetMinutes => integer()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, habitId, localDate};
+}
+
 @DriftDatabase(
   tables: [
     FoundationPreferences,
@@ -198,6 +246,8 @@ class XpAwards extends Table {
     FoundationAuditLog,
     TaskRecords,
     XpAwards,
+    HabitRecords,
+    HabitDayRecords,
   ],
 )
 class FoundationDatabase extends _$FoundationDatabase {
@@ -309,7 +359,9 @@ class FoundationDatabase extends _$FoundationDatabase {
     onUpgrade: (migrator, from, to) async {
       _migrationAttemptedFor = to;
       await _recordJournalStart(to);
-      if ((to >= 2 && from < 2) || (to >= 3 && from < 3)) {
+      if ((to >= 2 && from < 2) ||
+          (to >= 3 && from < 3) ||
+          (to >= 4 && from < 4)) {
         await testMigrationHook?.call(migrator, from, to);
       }
       if (to >= 2 && from < 2) {
@@ -325,6 +377,18 @@ class FoundationDatabase extends _$FoundationDatabase {
           taskRecordsAccountCompletion,
           taskRecordsAccountUpdated,
           taskRecordsAccountDeleted,
+        ]) {
+          await _createIndexIfMissing(migrator, index);
+        }
+      }
+      if (to >= 4 && from < 4) {
+        await migrator.createTable(habitRecords);
+        await migrator.createTable(habitDayRecords);
+        for (final index in <Index>[
+          habitRecordsAccountDeleted,
+          habitRecordsAccountUpdated,
+          habitDayRecordsAccountHabitDate,
+          habitDayRecordsAccountUpdated,
         ]) {
           await _createIndexIfMissing(migrator, index);
         }
