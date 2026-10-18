@@ -26,6 +26,39 @@ abstract interface class MindMapsStrings {
   String get centralNode;
   String get signInRequired;
   String get back;
+  String get editMap;
+  String get addNode;
+  String get editNode;
+  String get nodeTitle;
+  String get nodeDescription;
+  String get nodeKind;
+  String get nodePriority;
+  String get nodeStatus;
+  String get kindCentral;
+  String get kindMainIdea;
+  String get kindBranch;
+  String get kindTask;
+  String get kindNote;
+  String get statusNotStarted;
+  String get statusInProgress;
+  String get statusCompleted;
+  String get priorityLow;
+  String get priorityMedium;
+  String get priorityHigh;
+  String get nodeTitleRequired;
+  String get deleteNode;
+  String get deleteNodeConfirmation;
+  String get parent;
+  String get detach;
+  String get sideLink;
+  String get connect;
+  String get disconnect;
+  String get moveNode;
+  String get undo;
+  String get redo;
+  String get graphError;
+  String get noParent;
+  String get progress;
 }
 
 typedef MindMapsStringsResolver =

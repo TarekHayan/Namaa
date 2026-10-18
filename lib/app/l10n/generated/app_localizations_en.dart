@@ -451,4 +451,105 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get mindMapsBack => 'Back to maps';
+
+  @override
+  String get mindMapEditMap => 'Edit map';
+
+  @override
+  String get mindMapAddNode => 'Add node';
+
+  @override
+  String get mindMapEditNode => 'Edit node';
+
+  @override
+  String get mindMapNodeTitle => 'Node title';
+
+  @override
+  String get mindMapNodeDescription => 'Node description';
+
+  @override
+  String get mindMapNodeKind => 'Type';
+
+  @override
+  String get mindMapNodePriority => 'Priority';
+
+  @override
+  String get mindMapNodeStatus => 'Status';
+
+  @override
+  String get mindMapKindCentral => 'Central idea';
+
+  @override
+  String get mindMapKindMainIdea => 'Main idea';
+
+  @override
+  String get mindMapKindBranch => 'Branch';
+
+  @override
+  String get mindMapKindTask => 'Task idea';
+
+  @override
+  String get mindMapKindNote => 'Note';
+
+  @override
+  String get mindMapStatusNotStarted => 'Not started';
+
+  @override
+  String get mindMapStatusInProgress => 'In progress';
+
+  @override
+  String get mindMapStatusCompleted => 'Completed';
+
+  @override
+  String get mindMapPriorityLow => 'Low';
+
+  @override
+  String get mindMapPriorityMedium => 'Medium';
+
+  @override
+  String get mindMapPriorityHigh => 'High';
+
+  @override
+  String get mindMapNodeTitleRequired => 'Enter a node title';
+
+  @override
+  String get mindMapDeleteNode => 'Delete node';
+
+  @override
+  String get mindMapDeleteNodeConfirmation =>
+      'Delete this node? Its children will remain as independent nodes.';
+
+  @override
+  String get mindMapParent => 'Parent branch';
+
+  @override
+  String get mindMapDetach => 'Detach from parent';
+
+  @override
+  String get mindMapSideLink => 'Visual link';
+
+  @override
+  String get mindMapConnect => 'Connect';
+
+  @override
+  String get mindMapDisconnect => 'Disconnect';
+
+  @override
+  String get mindMapMoveNode => 'Move node';
+
+  @override
+  String get mindMapUndo => 'Undo';
+
+  @override
+  String get mindMapRedo => 'Redo';
+
+  @override
+  String get mindMapGraphError =>
+      'Could not save this graph change. Check the connection and try again.';
+
+  @override
+  String get mindMapNoParent => 'Independent';
+
+  @override
+  String get mindMapProgress => 'Progress';
 }

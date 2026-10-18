@@ -59,4 +59,70 @@ final class _AppMindMapsStrings implements MindMapsStrings {
   String get signInRequired => _l10n.mindMapsSignInRequired;
   @override
   String get back => _l10n.mindMapsBack;
+  @override
+  String get editMap => _l10n.mindMapEditMap;
+  @override
+  String get addNode => _l10n.mindMapAddNode;
+  @override
+  String get editNode => _l10n.mindMapEditNode;
+  @override
+  String get nodeTitle => _l10n.mindMapNodeTitle;
+  @override
+  String get nodeDescription => _l10n.mindMapNodeDescription;
+  @override
+  String get nodeKind => _l10n.mindMapNodeKind;
+  @override
+  String get nodePriority => _l10n.mindMapNodePriority;
+  @override
+  String get nodeStatus => _l10n.mindMapNodeStatus;
+  @override
+  String get kindCentral => _l10n.mindMapKindCentral;
+  @override
+  String get kindMainIdea => _l10n.mindMapKindMainIdea;
+  @override
+  String get kindBranch => _l10n.mindMapKindBranch;
+  @override
+  String get kindTask => _l10n.mindMapKindTask;
+  @override
+  String get kindNote => _l10n.mindMapKindNote;
+  @override
+  String get statusNotStarted => _l10n.mindMapStatusNotStarted;
+  @override
+  String get statusInProgress => _l10n.mindMapStatusInProgress;
+  @override
+  String get statusCompleted => _l10n.mindMapStatusCompleted;
+  @override
+  String get priorityLow => _l10n.mindMapPriorityLow;
+  @override
+  String get priorityMedium => _l10n.mindMapPriorityMedium;
+  @override
+  String get priorityHigh => _l10n.mindMapPriorityHigh;
+  @override
+  String get nodeTitleRequired => _l10n.mindMapNodeTitleRequired;
+  @override
+  String get deleteNode => _l10n.mindMapDeleteNode;
+  @override
+  String get deleteNodeConfirmation => _l10n.mindMapDeleteNodeConfirmation;
+  @override
+  String get parent => _l10n.mindMapParent;
+  @override
+  String get detach => _l10n.mindMapDetach;
+  @override
+  String get sideLink => _l10n.mindMapSideLink;
+  @override
+  String get connect => _l10n.mindMapConnect;
+  @override
+  String get disconnect => _l10n.mindMapDisconnect;
+  @override
+  String get moveNode => _l10n.mindMapMoveNode;
+  @override
+  String get undo => _l10n.mindMapUndo;
+  @override
+  String get redo => _l10n.mindMapRedo;
+  @override
+  String get graphError => _l10n.mindMapGraphError;
+  @override
+  String get noParent => _l10n.mindMapNoParent;
+  @override
+  String get progress => _l10n.mindMapProgress;
 }

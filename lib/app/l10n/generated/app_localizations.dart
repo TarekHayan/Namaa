@@ -958,6 +958,204 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Back to maps'**
   String get mindMapsBack;
+
+  /// No description provided for @mindMapEditMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit map'**
+  String get mindMapEditMap;
+
+  /// No description provided for @mindMapAddNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Add node'**
+  String get mindMapAddNode;
+
+  /// No description provided for @mindMapEditNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit node'**
+  String get mindMapEditNode;
+
+  /// No description provided for @mindMapNodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Node title'**
+  String get mindMapNodeTitle;
+
+  /// No description provided for @mindMapNodeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Node description'**
+  String get mindMapNodeDescription;
+
+  /// No description provided for @mindMapNodeKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get mindMapNodeKind;
+
+  /// No description provided for @mindMapNodePriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get mindMapNodePriority;
+
+  /// No description provided for @mindMapNodeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get mindMapNodeStatus;
+
+  /// No description provided for @mindMapKindCentral.
+  ///
+  /// In en, this message translates to:
+  /// **'Central idea'**
+  String get mindMapKindCentral;
+
+  /// No description provided for @mindMapKindMainIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Main idea'**
+  String get mindMapKindMainIdea;
+
+  /// No description provided for @mindMapKindBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get mindMapKindBranch;
+
+  /// No description provided for @mindMapKindTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Task idea'**
+  String get mindMapKindTask;
+
+  /// No description provided for @mindMapKindNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get mindMapKindNote;
+
+  /// No description provided for @mindMapStatusNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started'**
+  String get mindMapStatusNotStarted;
+
+  /// No description provided for @mindMapStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get mindMapStatusInProgress;
+
+  /// No description provided for @mindMapStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get mindMapStatusCompleted;
+
+  /// No description provided for @mindMapPriorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get mindMapPriorityLow;
+
+  /// No description provided for @mindMapPriorityMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get mindMapPriorityMedium;
+
+  /// No description provided for @mindMapPriorityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get mindMapPriorityHigh;
+
+  /// No description provided for @mindMapNodeTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a node title'**
+  String get mindMapNodeTitleRequired;
+
+  /// No description provided for @mindMapDeleteNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete node'**
+  String get mindMapDeleteNode;
+
+  /// No description provided for @mindMapDeleteNodeConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this node? Its children will remain as independent nodes.'**
+  String get mindMapDeleteNodeConfirmation;
+
+  /// No description provided for @mindMapParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent branch'**
+  String get mindMapParent;
+
+  /// No description provided for @mindMapDetach.
+  ///
+  /// In en, this message translates to:
+  /// **'Detach from parent'**
+  String get mindMapDetach;
+
+  /// No description provided for @mindMapSideLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual link'**
+  String get mindMapSideLink;
+
+  /// No description provided for @mindMapConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get mindMapConnect;
+
+  /// No description provided for @mindMapDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get mindMapDisconnect;
+
+  /// No description provided for @mindMapMoveNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Move node'**
+  String get mindMapMoveNode;
+
+  /// No description provided for @mindMapUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get mindMapUndo;
+
+  /// No description provided for @mindMapRedo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get mindMapRedo;
+
+  /// No description provided for @mindMapGraphError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this graph change. Check the connection and try again.'**
+  String get mindMapGraphError;
+
+  /// No description provided for @mindMapNoParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent'**
+  String get mindMapNoParent;
+
+  /// No description provided for @mindMapProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get mindMapProgress;
 }
 
 class _FoundationLocalizationsDelegate

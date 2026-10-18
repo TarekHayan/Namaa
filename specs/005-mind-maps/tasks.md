@@ -80,25 +80,25 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 
 ### Tests for User Story 2 — write first
 
-- [ ] T024 [P] [US2] Test one-parent, self/cycle, canonical side-pair, cross-map and parent/side duplicate rejection plus detach/reparent/delete invariants in test/unit/features/mind_maps/domain/map_graph_rules_test.dart.
-- [ ] T025 [P] [US2] Test add/edit/move/delete/reparent/side-link connect/disconnect graph commands, blank node names, central protection, owner checks and failed-save rollback in test/unit/features/mind_maps/application/map_graph_commands_test.dart.
-- [ ] T026 [P] [US2] Test central-inclusive counts, unlinked statuses, whole-percent rounding and live-node filtering in test/unit/features/mind_maps/application/map_progress_test.dart.
-- [ ] T027 [P] [US2] Test session undo/redo of node, relationship, position and settings commands with stale-version rejection and zero Task/XP writes in test/unit/features/mind_maps/application/map_editor_history_test.dart.
-- [ ] T028 [P] [US2] Test labeled node/connection/reparent/delete/status controls, validation and progress updates in test/widget/features/mind_maps/map_editor_screen_test.dart.
-- [ ] T029 [P] [US2] Add graph edit, detach/reparent, node delete, undo/redo and offline-restart journey in integration_test/mind_maps_editor_test.dart.
+- [X] T024 [P] [US2] Test one-parent, self/cycle, canonical side-pair, cross-map and parent/side duplicate rejection plus detach/reparent/delete invariants in test/unit/features/mind_maps/domain/map_graph_rules_test.dart.
+- [X] T025 [P] [US2] Test add/edit/move/delete/reparent/side-link connect/disconnect graph commands, blank node names, central protection, owner checks and failed-save rollback in test/unit/features/mind_maps/application/map_graph_commands_test.dart.
+- [X] T026 [P] [US2] Test central-inclusive counts, unlinked statuses, whole-percent rounding and live-node filtering in test/unit/features/mind_maps/application/map_progress_test.dart.
+- [X] T027 [P] [US2] Test session undo/redo of node, relationship, position and settings commands with stale-version rejection and zero Task/XP writes in test/unit/features/mind_maps/application/map_editor_history_test.dart.
+- [X] T028 [P] [US2] Test labeled node/connection/reparent/delete/status controls, validation and progress updates in test/widget/features/mind_maps/map_editor_screen_test.dart.
+- [X] T029 [P] [US2] Add graph edit, detach/reparent, node delete, undo/redo and offline-restart journey in integration_test/mind_maps_editor_test.dart.
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] Implement acyclic parent traversal, same-map endpoint checks, unique visible pair and child-detach rules in lib/features/mind_maps/domain/map_graph_rules.dart.
-- [ ] T031 [US2] Implement node add/edit/move/status/delete and parent/side-link connect, disconnect and reparent commands in lib/features/mind_maps/application/map_graph_commands.dart.
-- [ ] T032 [US2] Extend atomic graph mutations/outbox writes and incident-edge/child-detach tombstones in lib/features/mind_maps/data/drift_map_repository.dart.
-- [ ] T033 [US2] Add graph and progress projections, including central node and current live relationships, in lib/features/mind_maps/application/map_queries.dart.
-- [ ] T034 [US2] Implement bounded current-session reversible map commands with version checks and no Task/XP snapshots in lib/features/mind_maps/application/map_editor_history.dart.
-- [ ] T035 [US2] Add graph selection, confirmed edits, progress, undo/redo and recoverable errors to lib/features/mind_maps/presentation/map_editor_cubit.dart and lib/features/mind_maps/presentation/map_editor_state.dart.
-- [ ] T036 [P] [US2] Render nodes and role-distinct connections with selection/focus and repaint-aware edge painting in lib/features/mind_maps/presentation/map_canvas.dart.
-- [ ] T037 [P] [US2] Build localized node title/description/kind/status/priority editing and validation in lib/features/mind_maps/presentation/map_node_editor.dart.
-- [ ] T038 [US2] Add visible connect/disconnect/reparent/delete, move and undo/redo controls to lib/features/mind_maps/presentation/map_editor_screen.dart and open it from lib/features/mind_maps/presentation/map_detail_screen.dart.
-- [ ] T039 [US2] Add Arabic/English node, relationship, status, progress, undo/redo and graph-error strings in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb; regenerate lib/app/l10n/generated/app_localizations.dart and extend lib/app/l10n/mind_maps_strings_adapter.dart.
+- [X] T030 [US2] Implement acyclic parent traversal, same-map endpoint checks, unique visible pair and child-detach rules in lib/features/mind_maps/domain/map_graph_rules.dart.
+- [X] T031 [US2] Implement node add/edit/move/status/delete and parent/side-link connect, disconnect and reparent commands in lib/features/mind_maps/application/map_graph_commands.dart.
+- [X] T032 [US2] Extend atomic graph mutations/outbox writes and incident-edge/child-detach tombstones in lib/features/mind_maps/data/drift_map_repository.dart.
+- [X] T033 [US2] Add graph and progress projections, including central node and current live relationships, in lib/features/mind_maps/application/map_queries.dart.
+- [X] T034 [US2] Implement bounded current-session reversible map commands with version checks and no Task/XP snapshots in lib/features/mind_maps/application/map_editor_history.dart.
+- [X] T035 [US2] Add graph selection, confirmed edits, progress, undo/redo and recoverable errors to lib/features/mind_maps/presentation/map_editor_cubit.dart and lib/features/mind_maps/presentation/map_editor_state.dart.
+- [X] T036 [P] [US2] Render nodes and role-distinct connections with selection/focus and repaint-aware edge painting in lib/features/mind_maps/presentation/map_canvas.dart.
+- [X] T037 [P] [US2] Build localized node title/description/kind/status/priority editing and validation in lib/features/mind_maps/presentation/map_node_editor.dart.
+- [X] T038 [US2] Add visible connect/disconnect/reparent/delete, move and undo/redo controls to lib/features/mind_maps/presentation/map_editor_screen.dart and open it from lib/features/mind_maps/presentation/map_detail_screen.dart.
+- [X] T039 [US2] Add Arabic/English node, relationship, status, progress, undo/redo and graph-error strings in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb; regenerate lib/app/l10n/generated/app_localizations.dart and extend lib/app/l10n/mind_maps_strings_adapter.dart.
 
 **Checkpoint**: US2 works offline after restart, preserves child branches and shows correct progress; all required edits have visible labeled controls.
 

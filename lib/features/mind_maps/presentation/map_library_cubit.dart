@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/mind_maps/application/map_commands.dart';
@@ -14,6 +15,7 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
   MapLibraryCubit({
     required MapRepository repository,
     required MapCommands commands,
+    this.session,
   }) : _repository = repository,
        _commands = commands,
        super(const MapLibraryInitial());
@@ -21,6 +23,7 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
   final MapRepository _repository;
   final MapCommands _commands;
   MapRepository get repository => _repository;
+  final CloudSessionPort? session;
   StreamSubscription<List<MapGraph>>? _subscription;
   String? _ownerId;
   String _search = '';

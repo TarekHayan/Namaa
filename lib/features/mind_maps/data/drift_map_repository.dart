@@ -7,6 +7,7 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
 import 'package:namma_project/features/mind_maps/domain/map_connection.dart';
+import 'package:namma_project/features/mind_maps/domain/map_graph_rules.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map_node.dart';
 
@@ -150,7 +151,11 @@ final class DriftMapRepository implements MapRepository {
                         t.mapId.equals(map.id),
                   ))
                   .getSingleOrNull();
-          _checkRevision(change, current?.revisionId);
+          _checkRevision(
+            change,
+            current?.revisionId,
+            currentDeleted: current?.deletedAt != null,
+          );
           if (current != null && current.centralNodeId != map.centralNodeId) {
             throw StateError('Cannot replace a map central node');
           }
@@ -205,7 +210,11 @@ final class DriftMapRepository implements MapRepository {
                         t.nodeId.equals(node.id),
                   ))
                   .getSingleOrNull();
-          _checkRevision(change, current?.revisionId);
+          _checkRevision(
+            change,
+            current?.revisionId,
+            currentDeleted: current?.deletedAt != null,
+          );
           final owningMap =
               await (_db.select(_db.mindMapRecords)..where(
                     (t) =>
@@ -267,7 +276,11 @@ final class DriftMapRepository implements MapRepository {
                         t.childNodeId.equals(slot.childNodeId),
                   ))
                   .getSingleOrNull();
-          _checkRevision(change, current?.revisionId);
+          _checkRevision(
+            change,
+            current?.revisionId,
+            currentDeleted: current?.deletedAt != null,
+          );
           await _db
               .into(_db.mindMapParentSlots)
               .insertOnConflictUpdate(
@@ -307,7 +320,11 @@ final class DriftMapRepository implements MapRepository {
                         t.secondNodeId.equals(link.secondNodeId),
                   ))
                   .getSingleOrNull();
-          _checkRevision(change, current?.revisionId);
+          _checkRevision(
+            change,
+            current?.revisionId,
+            currentDeleted: current?.deletedAt != null,
+          );
           await _db
               .into(_db.mindMapSideLinks)
               .insertOnConflictUpdate(
@@ -334,6 +351,15 @@ final class DriftMapRepository implements MapRepository {
             version: link.updatedAt,
             queuedAt: batch.queuedAt,
           );
+        }
+        final touched = <String>{
+          ...batch.maps.map((entry) => entry.value.id),
+          ...batch.nodes.map((entry) => entry.value.mapId),
+          ...batch.parentSlots.map((entry) => entry.value.mapId),
+          ...batch.sideLinks.map((entry) => entry.value.mapId),
+        };
+        for (final mapId in touched) {
+          await _validateSavedGraph(batch.ownerId, mapId);
         }
       });
       return const AppResult.success(null);
@@ -362,13 +388,68 @@ final class DriftMapRepository implements MapRepository {
     if (actual != expected) throw const _OwnerChanged();
   }
 
-  void _checkRevision<T>(MapChange<T> change, String? existing) {
-    if (change.kind == ChangeKind.create && existing != null) {
+  void _checkRevision<T>(
+    MapChange<T> change,
+    String? existing, {
+    bool currentDeleted = false,
+  }) {
+    if (change.kind == ChangeKind.create &&
+        existing != null &&
+        !currentDeleted) {
       throw const _StaleRevision();
     }
     if (change.kind != ChangeKind.create &&
         (existing == null || existing != change.expectedRevisionId)) {
       throw const _StaleRevision();
+    }
+  }
+
+  Future<void> _validateSavedGraph(String ownerId, String mapId) async {
+    final row =
+        await (_db.select(_db.mindMapRecords)..where(
+              (t) => t.accountId.equals(ownerId) & t.mapId.equals(mapId),
+            ))
+            .getSingleOrNull();
+    if (row == null) throw StateError('Graph map missing');
+    if (row.deletedAt != null) return;
+    final graph = await _graphFor(_mapFromRow(row));
+    final rules = MapGraphRules(graph);
+    if (rules.node(row.centralNodeId)?.kind != MindMapNodeKind.central) {
+      throw StateError('Graph central node missing');
+    }
+    final rawSlots =
+        await (_db.select(_db.mindMapParentSlots)..where(
+              (t) =>
+                  t.accountId.equals(ownerId) &
+                  t.mapId.equals(mapId) &
+                  t.deletedAt.isNull(),
+            ))
+            .get();
+    final rawLinks =
+        await (_db.select(_db.mindMapSideLinks)..where(
+              (t) =>
+                  t.accountId.equals(ownerId) &
+                  t.mapId.equals(mapId) &
+                  t.deletedAt.isNull(),
+            ))
+            .get();
+    if (rawSlots.length != graph.parentSlots.length ||
+        rawLinks.length != graph.sideLinks.length) {
+      throw StateError('Dangling graph relationship');
+    }
+    final pairs = <String>{};
+    String pair(String a, String b) =>
+        a.compareTo(b) < 0 ? '$a\u0000$b' : '$b\u0000$a';
+    for (final slot in graph.parentSlots) {
+      if (!rules.canParent(slot.childNodeId, slot.parentNodeId) ||
+          !pairs.add(pair(slot.childNodeId, slot.parentNodeId))) {
+        throw StateError('Invalid parent relationship');
+      }
+    }
+    for (final link in graph.sideLinks) {
+      if (!pairs.add(pair(link.firstNodeId, link.secondNodeId))) {
+        throw StateError('Duplicate graph pair');
+      }
     }
   }
 

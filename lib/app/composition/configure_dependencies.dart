@@ -241,6 +241,7 @@ Future<void> configureDependencies({
       () => MapLibraryCubit(
         repository: getIt<MapRepository>(),
         commands: getIt<MapCommands>(),
+        session: getIt<CloudSessionPort>(),
       ),
     );
     final habitRepository = DriftHabitRepository(

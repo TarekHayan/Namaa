@@ -159,6 +159,7 @@ class _MapLibraryScreenState extends State<MapLibraryScreen> {
                 MaterialPageRoute<void>(
                   builder: (_) => MapDetailScreen(
                     repository: widget.cubit.repository,
+                    session: widget.cubit.session,
                     ownerId: widget.ownerId,
                     mapId: map.id,
                     stringsResolver: widget.stringsResolver,

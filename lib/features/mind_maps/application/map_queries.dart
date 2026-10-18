@@ -1,3 +1,4 @@
+import '../domain/map_connection.dart';
 import '../domain/mind_map.dart';
 import '../domain/mind_map_node.dart';
 import 'map_repository.dart';
@@ -15,9 +16,64 @@ final class MapSummary {
   final int progressPercent;
 }
 
+final class MapGraphView {
+  factory MapGraphView(MapGraph source) {
+    final nodes = List<MindMapNode>.unmodifiable(
+      source.nodes.where((node) => !node.isDeleted),
+    );
+    final ids = nodes.map((node) => node.id).toSet();
+    return MapGraphView._(
+      nodes,
+      List<ParentSlot>.unmodifiable(
+        source.parentSlots.where(
+          (slot) =>
+              !slot.isDeleted &&
+              ids.contains(slot.childNodeId) &&
+              ids.contains(slot.parentNodeId),
+        ),
+      ),
+      List<SideLink>.unmodifiable(
+        source.sideLinks.where(
+          (link) =>
+              !link.isDeleted &&
+              ids.contains(link.firstNodeId) &&
+              ids.contains(link.secondNodeId),
+        ),
+      ),
+    );
+  }
+
+  const MapGraphView._(this.nodes, this.parentSlots, this.sideLinks);
+
+  final List<MindMapNode> nodes;
+  final List<ParentSlot> parentSlots;
+  final List<SideLink> sideLinks;
+
+  ParentSlot? parentOf(String childId) {
+    for (final slot in parentSlots) {
+      if (slot.childNodeId == childId) {
+        return slot;
+      }
+    }
+    return null;
+  }
+
+  SideLink? sideBetween(String a, String b) {
+    for (final link in sideLinks) {
+      if ((link.firstNodeId == a && link.secondNodeId == b) ||
+          (link.firstNodeId == b && link.secondNodeId == a)) {
+        return link;
+      }
+    }
+    return null;
+  }
+}
+
 abstract final class MapQueries {
+  static MapGraphView graph(MapGraph source) => MapGraphView(source);
+
   static MapSummary summary(MapGraph graph) {
-    final liveNodes = graph.nodes.where((node) => !node.isDeleted).toList();
+    final liveNodes = MapGraphView(graph).nodes;
     // Linked Task state is projected through the Task bridge in US3. Until
     // then, a linked node cannot claim completion from map-owned status.
     final completed = liveNodes

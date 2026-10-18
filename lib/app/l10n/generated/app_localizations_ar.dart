@@ -445,4 +445,105 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get mindMapsBack => 'العودة للخرائط';
+
+  @override
+  String get mindMapEditMap => 'تعديل الخريطة';
+
+  @override
+  String get mindMapAddNode => 'إضافة عقدة';
+
+  @override
+  String get mindMapEditNode => 'تعديل العقدة';
+
+  @override
+  String get mindMapNodeTitle => 'عنوان العقدة';
+
+  @override
+  String get mindMapNodeDescription => 'وصف العقدة';
+
+  @override
+  String get mindMapNodeKind => 'النوع';
+
+  @override
+  String get mindMapNodePriority => 'الأولوية';
+
+  @override
+  String get mindMapNodeStatus => 'الحالة';
+
+  @override
+  String get mindMapKindCentral => 'الفكرة المركزية';
+
+  @override
+  String get mindMapKindMainIdea => 'فكرة رئيسية';
+
+  @override
+  String get mindMapKindBranch => 'فرع';
+
+  @override
+  String get mindMapKindTask => 'فكرة مهمة';
+
+  @override
+  String get mindMapKindNote => 'ملاحظة';
+
+  @override
+  String get mindMapStatusNotStarted => 'لم تبدأ';
+
+  @override
+  String get mindMapStatusInProgress => 'قيد التنفيذ';
+
+  @override
+  String get mindMapStatusCompleted => 'مكتملة';
+
+  @override
+  String get mindMapPriorityLow => 'منخفضة';
+
+  @override
+  String get mindMapPriorityMedium => 'متوسطة';
+
+  @override
+  String get mindMapPriorityHigh => 'مرتفعة';
+
+  @override
+  String get mindMapNodeTitleRequired => 'اكتب عنوان العقدة';
+
+  @override
+  String get mindMapDeleteNode => 'حذف العقدة';
+
+  @override
+  String get mindMapDeleteNodeConfirmation =>
+      'حذف هذه العقدة؟ سيبقى أبناؤها عقدًا مستقلة.';
+
+  @override
+  String get mindMapParent => 'العقدة الأم';
+
+  @override
+  String get mindMapDetach => 'فصل عن الأم';
+
+  @override
+  String get mindMapSideLink => 'رابط مرئي';
+
+  @override
+  String get mindMapConnect => 'توصيل';
+
+  @override
+  String get mindMapDisconnect => 'فصل الرابط';
+
+  @override
+  String get mindMapMoveNode => 'تحريك العقدة';
+
+  @override
+  String get mindMapUndo => 'تراجع';
+
+  @override
+  String get mindMapRedo => 'إعادة';
+
+  @override
+  String get mindMapGraphError =>
+      'تعذر حفظ التعديل في الخريطة. راجع الرابط وحاول مرة أخرى.';
+
+  @override
+  String get mindMapNoParent => 'مستقلة';
+
+  @override
+  String get mindMapProgress => 'التقدم';
 }

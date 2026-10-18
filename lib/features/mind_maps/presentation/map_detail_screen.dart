@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/features/mind_maps/application/map_editor_history.dart';
+import 'package:namma_project/features/mind_maps/application/map_graph_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_queries.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map_node.dart';
 
+import 'map_editor_cubit.dart';
+import 'map_editor_screen.dart';
 import 'mind_maps_strings.dart';
 
 const Key kMindMapDetailKey = Key('mind_map_detail');
 const Key kMindMapCentralNodeKey = Key('mind_map_central_node');
 
-/// A read-only graph preview until the full editor arrives in Phase 4.
+/// A quick graph summary with an entry to the full editor.
 class MapDetailScreen extends StatelessWidget {
   const MapDetailScreen({
     super.key,
@@ -16,12 +21,14 @@ class MapDetailScreen extends StatelessWidget {
     required this.ownerId,
     required this.mapId,
     required this.stringsResolver,
+    this.session,
   });
 
   final MapRepository repository;
   final String ownerId;
   final String mapId;
   final MindMapsStringsResolver stringsResolver;
+  final CloudSessionPort? session;
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +86,33 @@ class MapDetailScreen extends StatelessWidget {
                   for (final node in graph.nodes)
                     if (node.id != graph.map.centralNodeId)
                       Card(child: ListTile(title: Text(node.title))),
+                  if (session != null)
+                    FilledButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => MapEditorScreen(
+                            cubit: MapEditorCubit(
+                              repository: repository,
+                              commands: MapGraphCommands(
+                                repository: repository,
+                                session: session!,
+                              ),
+                              history: MapEditorHistory(
+                                repository: repository,
+                                session: session!,
+                                ownerId: ownerId,
+                                mapId: mapId,
+                              ),
+                              ownerId: ownerId,
+                              mapId: mapId,
+                            ),
+                            stringsResolver: stringsResolver,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.edit_note),
+                      label: Text(strings.editMap),
+                    ),
                   const SizedBox(height: 12),
                   TextButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
