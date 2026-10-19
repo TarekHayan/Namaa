@@ -180,5 +180,17 @@
   "mindMapRedo": "Redo",
   "mindMapGraphError": "Could not save this graph change. Check the connection and try again.",
   "mindMapNoParent": "Independent",
-  "mindMapProgress": "Progress"
+  "mindMapProgress": "Progress",
+  "mindMapChooseTask": "Choose a task",
+  "mindMapLinkTask": "Link task",
+  "mindMapChangeTask": "Change linked task",
+  "mindMapUnlinkTask": "Unlink task",
+  "mindMapLinkedTask": "Linked task",
+  "mindMapTaskUnavailable": "Linked task unavailable",
+  "mindMapCompleteTask": "Complete task",
+  "mindMapReopenTask": "Reopen task",
+  "mindMapLoadingTasks": "Loading tasks…",
+  "mindMapRetryTasks": "Retry loading tasks",
+  "mindMapNoTasks": "No accessible tasks found",
+  "mindMapTaskLinkFailure": "Could not load or link this task. Try again."
 }

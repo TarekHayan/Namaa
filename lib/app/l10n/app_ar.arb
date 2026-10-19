@@ -180,5 +180,17 @@
   "mindMapRedo": "إعادة",
   "mindMapGraphError": "تعذر حفظ التعديل في الخريطة. راجع الرابط وحاول مرة أخرى.",
   "mindMapNoParent": "مستقلة",
-  "mindMapProgress": "التقدم"
+  "mindMapProgress": "التقدم",
+  "mindMapChooseTask": "اختر مهمة",
+  "mindMapLinkTask": "ربط مهمة",
+  "mindMapChangeTask": "تغيير المهمة المرتبطة",
+  "mindMapUnlinkTask": "فصل المهمة",
+  "mindMapLinkedTask": "مهمة مرتبطة",
+  "mindMapTaskUnavailable": "المهمة المرتبطة غير متاحة",
+  "mindMapCompleteTask": "إكمال المهمة",
+  "mindMapReopenTask": "إعادة فتح المهمة",
+  "mindMapLoadingTasks": "جارٍ تحميل المهام…",
+  "mindMapRetryTasks": "إعادة تحميل المهام",
+  "mindMapNoTasks": "لا توجد مهام متاحة",
+  "mindMapTaskLinkFailure": "تعذر تحميل المهمة أو ربطها. حاول مرة أخرى."
 }

@@ -59,6 +59,18 @@ abstract interface class MindMapsStrings {
   String get graphError;
   String get noParent;
   String get progress;
+  String get chooseTask;
+  String get linkTask;
+  String get changeTask;
+  String get unlinkTask;
+  String get linkedTask;
+  String get taskUnavailable;
+  String get completeTask;
+  String get reopenTask;
+  String get loadingTasks;
+  String get retryTasks;
+  String get noTasks;
+  String get taskLinkFailure;
 }
 
 typedef MindMapsStringsResolver =

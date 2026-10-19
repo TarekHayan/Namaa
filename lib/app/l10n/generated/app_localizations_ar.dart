@@ -546,4 +546,41 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get mindMapProgress => 'التقدم';
+
+  @override
+  String get mindMapChooseTask => 'اختر مهمة';
+
+  @override
+  String get mindMapLinkTask => 'ربط مهمة';
+
+  @override
+  String get mindMapChangeTask => 'تغيير المهمة المرتبطة';
+
+  @override
+  String get mindMapUnlinkTask => 'فصل المهمة';
+
+  @override
+  String get mindMapLinkedTask => 'مهمة مرتبطة';
+
+  @override
+  String get mindMapTaskUnavailable => 'المهمة المرتبطة غير متاحة';
+
+  @override
+  String get mindMapCompleteTask => 'إكمال المهمة';
+
+  @override
+  String get mindMapReopenTask => 'إعادة فتح المهمة';
+
+  @override
+  String get mindMapLoadingTasks => 'جارٍ تحميل المهام…';
+
+  @override
+  String get mindMapRetryTasks => 'إعادة تحميل المهام';
+
+  @override
+  String get mindMapNoTasks => 'لا توجد مهام متاحة';
+
+  @override
+  String get mindMapTaskLinkFailure =>
+      'تعذر تحميل المهمة أو ربطها. حاول مرة أخرى.';
 }

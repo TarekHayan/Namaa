@@ -135,7 +135,7 @@ void main() {
       await v5.rawScalar(
         "SELECT completion_changed_at FROM task_records WHERE task_id = 'open-task-before-maps'",
       ),
-      '2026-10-17T10:30:00.000Z',
+      '2026-10-17T08:00:00.000Z',
     );
     expect(
       await v5.rawScalar(

@@ -1156,6 +1156,78 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Progress'**
   String get mindMapProgress;
+
+  /// No description provided for @mindMapChooseTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a task'**
+  String get mindMapChooseTask;
+
+  /// No description provided for @mindMapLinkTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Link task'**
+  String get mindMapLinkTask;
+
+  /// No description provided for @mindMapChangeTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Change linked task'**
+  String get mindMapChangeTask;
+
+  /// No description provided for @mindMapUnlinkTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink task'**
+  String get mindMapUnlinkTask;
+
+  /// No description provided for @mindMapLinkedTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked task'**
+  String get mindMapLinkedTask;
+
+  /// No description provided for @mindMapTaskUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked task unavailable'**
+  String get mindMapTaskUnavailable;
+
+  /// No description provided for @mindMapCompleteTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete task'**
+  String get mindMapCompleteTask;
+
+  /// No description provided for @mindMapReopenTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen task'**
+  String get mindMapReopenTask;
+
+  /// No description provided for @mindMapLoadingTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading tasks…'**
+  String get mindMapLoadingTasks;
+
+  /// No description provided for @mindMapRetryTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry loading tasks'**
+  String get mindMapRetryTasks;
+
+  /// No description provided for @mindMapNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No accessible tasks found'**
+  String get mindMapNoTasks;
+
+  /// No description provided for @mindMapTaskLinkFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load or link this task. Try again.'**
+  String get mindMapTaskLinkFailure;
 }
 
 class _FoundationLocalizationsDelegate

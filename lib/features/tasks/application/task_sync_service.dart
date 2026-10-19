@@ -89,6 +89,11 @@ final class TaskSyncService {
   TaskSyncSnapshot get snapshot => _snapshot;
   Stream<TaskSyncSnapshot> get snapshots => _snapshots.stream;
 
+  /// A picker may rely on cached local Tasks only after this owner's first
+  /// complete inbound pass, not a ready snapshot left by another account.
+  bool isReadyForAccount(String accountId) =>
+      _readyAccountId == accountId && _snapshot.initialSyncComplete;
+
   Future<AppResult<TaskSyncSummary>> synchronizeOnTasksEntry() => synchronize();
 
   Future<AppResult<TaskSyncSummary>> synchronize() {

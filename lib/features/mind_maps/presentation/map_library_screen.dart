@@ -160,6 +160,7 @@ class _MapLibraryScreenState extends State<MapLibraryScreen> {
                   builder: (_) => MapDetailScreen(
                     repository: widget.cubit.repository,
                     session: widget.cubit.session,
+                    tasks: widget.cubit.tasks,
                     ownerId: widget.ownerId,
                     mapId: map.id,
                     stringsResolver: widget.stringsResolver,

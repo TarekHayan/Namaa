@@ -258,6 +258,13 @@ final class SupabaseTaskSyncAdapter implements CloudSyncPort {
       );
     }
     final completionXp = payload['completionXp'];
+    final transition = payload['completionChangedAt'];
+    if (transition != null &&
+        (transition is! String || DateTime.tryParse(transition) == null)) {
+      throw const FormatException(
+        'completionChangedAt must be an ISO-8601 date-time',
+      );
+    }
     if (completionXp is! int || completionXp < 0) {
       throw const FormatException(
         'completionXp must be a non-negative integer',

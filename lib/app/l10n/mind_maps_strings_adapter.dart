@@ -125,4 +125,28 @@ final class _AppMindMapsStrings implements MindMapsStrings {
   String get noParent => _l10n.mindMapNoParent;
   @override
   String get progress => _l10n.mindMapProgress;
+  @override
+  String get chooseTask => _l10n.mindMapChooseTask;
+  @override
+  String get linkTask => _l10n.mindMapLinkTask;
+  @override
+  String get changeTask => _l10n.mindMapChangeTask;
+  @override
+  String get unlinkTask => _l10n.mindMapUnlinkTask;
+  @override
+  String get linkedTask => _l10n.mindMapLinkedTask;
+  @override
+  String get taskUnavailable => _l10n.mindMapTaskUnavailable;
+  @override
+  String get completeTask => _l10n.mindMapCompleteTask;
+  @override
+  String get reopenTask => _l10n.mindMapReopenTask;
+  @override
+  String get loadingTasks => _l10n.mindMapLoadingTasks;
+  @override
+  String get retryTasks => _l10n.mindMapRetryTasks;
+  @override
+  String get noTasks => _l10n.mindMapNoTasks;
+  @override
+  String get taskLinkFailure => _l10n.mindMapTaskLinkFailure;
 }

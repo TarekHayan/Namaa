@@ -2,6 +2,7 @@ import '../domain/map_connection.dart';
 import '../domain/mind_map.dart';
 import '../domain/mind_map_node.dart';
 import 'map_repository.dart';
+import 'map_task_link_port.dart';
 
 final class MapSummary {
   const MapSummary({
@@ -72,14 +73,33 @@ final class MapGraphView {
 abstract final class MapQueries {
   static MapGraphView graph(MapGraph source) => MapGraphView(source);
 
-  static MapSummary summary(MapGraph graph) {
+  static MindMapNodeStatus? visibleStatus(
+    MindMapNode node,
+    Map<String, MapLinkedTask> tasks,
+  ) {
+    final taskId = node.taskId;
+    if (taskId == null) return node.status;
+    final task = tasks[taskId];
+    if (task == null || !task.available) return null;
+    if (task.completed) return MindMapNodeStatus.completed;
+    final changed = node.statusChangedAt;
+    final transition = task.completionChangedAt;
+    return node.status == MindMapNodeStatus.inProgress &&
+            changed != null &&
+            transition != null &&
+            changed.isAfter(transition)
+        ? MindMapNodeStatus.inProgress
+        : MindMapNodeStatus.notStarted;
+  }
+
+  static MapSummary summary(
+    MapGraph graph, {
+    Map<String, MapLinkedTask> tasks = const {},
+  }) {
     final liveNodes = MapGraphView(graph).nodes;
-    // Linked Task state is projected through the Task bridge in US3. Until
-    // then, a linked node cannot claim completion from map-owned status.
     final completed = liveNodes
         .where(
-          (node) =>
-              node.taskId == null && node.status == MindMapNodeStatus.completed,
+          (node) => visibleStatus(node, tasks) == MindMapNodeStatus.completed,
         )
         .length;
     final count = liveNodes.length;
@@ -97,6 +117,7 @@ abstract final class MapQueries {
     required String ownerId,
     required Iterable<MapGraph> graphs,
     required String text,
+    Map<String, MapLinkedTask> tasks = const {},
   }) {
     final query = text.trim().toLowerCase();
     final result = [
@@ -106,7 +127,7 @@ abstract final class MapQueries {
             (query.isEmpty ||
                 graph.map.title.toLowerCase().contains(query) ||
                 (graph.map.description ?? '').toLowerCase().contains(query)))
-          summary(graph),
+          summary(graph, tasks: tasks),
     ];
     result.sort((a, b) {
       final time = b.map.updatedAt.compareTo(a.map.updatedAt);

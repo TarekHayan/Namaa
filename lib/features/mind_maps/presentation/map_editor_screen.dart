@@ -7,6 +7,7 @@ import 'map_canvas.dart';
 import 'map_editor_cubit.dart';
 import 'map_editor_state.dart';
 import 'map_node_editor.dart';
+import 'map_task_picker.dart';
 import 'mind_maps_strings.dart';
 
 const Key kMindMapEditorKey = Key('mind_map_editor');
@@ -14,6 +15,8 @@ const Key kMindMapAddNodeKey = Key('mind_map_add_node');
 const Key kMindMapUndoKey = Key('mind_map_undo');
 const Key kMindMapRedoKey = Key('mind_map_redo');
 const Key kMindMapDeleteNodeKey = Key('mind_map_delete_node');
+const Key kMindMapLinkTaskKey = Key('mind_map_link_task');
+const Key kMindMapCompleteTaskKey = Key('mind_map_complete_task');
 
 class MapEditorScreen extends StatefulWidget {
   const MapEditorScreen({
@@ -98,6 +101,20 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
     if (confirmed == true) await widget.cubit.deleteNode(node.id);
   }
 
+  Future<void> _chooseTask(MindMapNode node, MindMapsStrings strings) async {
+    final port = widget.cubit.taskPort;
+    if (port == null) return;
+    final taskId = await showMapTaskPicker(
+      context: context,
+      tasks: port,
+      ownerId: widget.cubit.ownerId,
+      strings: strings,
+    );
+    if (taskId != null && mounted) {
+      await widget.cubit.setTaskLink(node.id, taskId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = widget.stringsResolver(context);
@@ -125,6 +142,13 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
         final selected = view.nodes.firstWhere(
           (node) => node.id == ready.selectedId,
           orElse: () => view.nodes.first,
+        );
+        final linked = selected.taskId == null
+            ? null
+            : ready.linkedTasks[selected.taskId];
+        final visibleStatus = MapQueries.visibleStatus(
+          selected,
+          ready.linkedTasks,
         );
         final parent = view.parentOf(selected.id);
         final candidates = view.nodes
@@ -179,7 +203,10 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
                     color: Theme.of(context).colorScheme.error,
                   ),
                   title: Text(
-                    ready.failure!.category.name == 'validation'
+                    ready.failure!.messageKey == 'mind_maps.error.task_link' ||
+                            ready.failure!.messageKey.startsWith('tasks.')
+                        ? strings.taskLinkFailure
+                        : ready.failure!.category.name == 'validation'
                         ? strings.graphError
                         : strings.saveFailure,
                   ),
@@ -222,8 +249,79 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
               if (selected.description?.isNotEmpty ?? false)
                 Text(selected.description!),
               Text(
-                '${strings.nodeStatus}: ${_statusLabel(selected.status, strings)}',
+                '${strings.nodeStatus}: ${visibleStatus == null ? strings.taskUnavailable : _statusLabel(visibleStatus, strings)}',
               ),
+              if (selected.taskId != null)
+                ListTile(
+                  leading: Icon(
+                    linked?.available == true ? Icons.task_alt : Icons.link_off,
+                  ),
+                  title: Text(
+                    linked?.available == true
+                        ? linked!.title!
+                        : strings.taskUnavailable,
+                  ),
+                  subtitle: Text(strings.linkedTask),
+                ),
+              if (widget.cubit.taskPort != null) ...[
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      key: kMindMapLinkTaskKey,
+                      onPressed: ready.busy
+                          ? null
+                          : () => _chooseTask(selected, strings),
+                      icon: const Icon(Icons.add_link),
+                      label: Text(
+                        selected.taskId == null
+                            ? strings.linkTask
+                            : strings.changeTask,
+                      ),
+                    ),
+                    if (selected.taskId != null)
+                      OutlinedButton.icon(
+                        onPressed: ready.busy
+                            ? null
+                            : () => widget.cubit.setTaskLink(selected.id, null),
+                        icon: const Icon(Icons.link_off),
+                        label: Text(strings.unlinkTask),
+                      ),
+                  ],
+                ),
+                if (linked?.available == true)
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        key: kMindMapCompleteTaskKey,
+                        onPressed: ready.busy
+                            ? null
+                            : () => linked!.completed
+                                  ? widget.cubit.reopenLinkedTask(linked.id)
+                                  : widget.cubit.completeLinkedTask(linked.id),
+                        icon: Icon(
+                          linked!.completed ? Icons.restart_alt : Icons.check,
+                        ),
+                        label: Text(
+                          linked.completed
+                              ? strings.reopenTask
+                              : strings.completeTask,
+                        ),
+                      ),
+                      if (!linked.completed)
+                        OutlinedButton.icon(
+                          onPressed: ready.busy
+                              ? null
+                              : () => widget.cubit.setLinkedInProgress(
+                                  selected.id,
+                                ),
+                          icon: const Icon(Icons.pending_actions),
+                          label: Text(strings.statusInProgress),
+                        ),
+                    ],
+                  ),
+              ],
               Wrap(
                 spacing: 8,
                 children: [

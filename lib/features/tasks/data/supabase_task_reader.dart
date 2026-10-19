@@ -108,6 +108,8 @@ final class SupabaseTaskReader
     payload['accountId'] = accountId;
     payload['updatedAt'] = row['updated_at'];
     payload['deletedAt'] = row['deleted_at'];
+    payload['completionChangedAt'] =
+        row['completion_changed_at'] ?? payload['completionChangedAt'];
     return _codec.decode(jsonEncode(payload));
   }
 

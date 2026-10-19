@@ -2,6 +2,7 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 
 import '../application/map_queries.dart';
 import '../application/map_repository.dart';
+import '../application/map_task_link_port.dart';
 
 sealed class MapEditorState {
   const MapEditorState();
@@ -24,7 +25,8 @@ final class MapEditorReady extends MapEditorState {
     required this.canRedo,
     required this.busy,
     this.failure,
-  }) : summary = MapQueries.summary(graph);
+    this.linkedTasks = const {},
+  }) : summary = MapQueries.summary(graph, tasks: linkedTasks);
 
   final MapGraph graph;
   final MapSummary summary;
@@ -33,4 +35,5 @@ final class MapEditorReady extends MapEditorState {
   final bool canRedo;
   final bool busy;
   final AppFailure? failure;
+  final Map<String, MapLinkedTask> linkedTasks;
 }

@@ -7,6 +7,7 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/mind_maps/application/map_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_queries.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
+import 'package:namma_project/features/mind_maps/application/map_task_link_port.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map.dart';
 
 import 'map_library_state.dart';
@@ -16,6 +17,7 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
     required MapRepository repository,
     required MapCommands commands,
     this.session,
+    this.tasks,
   }) : _repository = repository,
        _commands = commands,
        super(const MapLibraryInitial());
@@ -24,7 +26,10 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
   final MapCommands _commands;
   MapRepository get repository => _repository;
   final CloudSessionPort? session;
+  final MapTaskLinkPort? tasks;
   StreamSubscription<List<MapGraph>>? _subscription;
+  StreamSubscription<List<MapLinkedTask>>? _taskSubscription;
+  Map<String, MapLinkedTask> _linkedTasks = {};
   String? _ownerId;
   String _search = '';
   List<MapGraph>? _graphs;
@@ -33,11 +38,20 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
   Future<void> load(String ownerId) async {
     if (_ownerId == ownerId && _subscription != null) return;
     await _subscription?.cancel();
+    await _taskSubscription?.cancel();
     _ownerId = ownerId;
     _graphs = null;
     _search = '';
     _lastFailure = null;
+    _linkedTasks = {};
     emit(const MapLibraryLoading());
+    if (tasks != null) {
+      _taskSubscription = tasks!.watchAccessibleTasks(ownerId).listen((items) {
+        if (isClosed || _ownerId != ownerId) return;
+        _linkedTasks = {for (final item in items) item.id: item};
+        _emitReady();
+      });
+    }
     _subscription = _repository
         .watchGraphs(ownerId)
         .listen(
@@ -121,6 +135,7 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
       ownerId: _ownerId!,
       graphs: _graphs!,
       text: '',
+      tasks: _linkedTasks,
     );
     emit(
       MapLibraryReady(
@@ -130,6 +145,7 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
           ownerId: _ownerId!,
           graphs: _graphs!,
           text: _search,
+          tasks: _linkedTasks,
         ),
         searchText: _search,
         lastFailure: _lastFailure,
@@ -146,6 +162,7 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
   @override
   Future<void> close() async {
     await _subscription?.cancel();
+    await _taskSubscription?.cancel();
     await super.close();
   }
 }

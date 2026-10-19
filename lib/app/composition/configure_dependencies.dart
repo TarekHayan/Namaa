@@ -63,8 +63,10 @@ import 'package:namma_project/features/habits/domain/habit.dart';
 import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/mind_maps/application/map_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
+import 'package:namma_project/features/mind_maps/application/map_task_link_port.dart';
 import 'package:namma_project/features/mind_maps/data/drift_map_repository.dart';
 import 'package:namma_project/features/mind_maps/data/map_payload_codec.dart';
+import 'package:namma_project/features/mind_maps/data/tasks_map_link_adapter.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
@@ -242,6 +244,7 @@ Future<void> configureDependencies({
         repository: getIt<MapRepository>(),
         commands: getIt<MapCommands>(),
         session: getIt<CloudSessionPort>(),
+        tasks: getIt<MapTaskLinkPort>(),
       ),
     );
     final habitRepository = DriftHabitRepository(
@@ -423,6 +426,16 @@ void _registerUseCasesAndCubits(
       session: getIt<CloudSessionPort>(),
     ),
   );
+  if (getIt.isRegistered<MapRepository>()) {
+    getIt.registerLazySingleton<MapTaskLinkPort>(
+      () => TasksMapLinkAdapter(
+        repository: getIt<TaskRepository>(),
+        completionService: getIt<TaskCompletionService>(),
+        session: getIt<CloudSessionPort>(),
+        syncService: enableTaskSync ? getIt<TaskSyncService>() : null,
+      ),
+    );
+  }
   getIt.registerLazySingleton<BootstrapUseCase>(
     () => BootstrapUseCase(
       cloudSession: getIt<CloudSessionPort>(),

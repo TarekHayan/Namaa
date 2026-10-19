@@ -522,7 +522,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
         await customUpdate(
           'UPDATE task_records SET completion_changed_at = '
-          'COALESCE(completed_at, updated_at) '
+          'COALESCE(completed_at, created_at) '
           'WHERE completion_changed_at IS NULL',
         );
         await migrator.createTable(mindMapRecords);

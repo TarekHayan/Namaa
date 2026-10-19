@@ -7,6 +7,8 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 import '../application/map_editor_history.dart';
 import '../application/map_graph_commands.dart';
 import '../application/map_repository.dart';
+import '../application/map_task_link_commands.dart';
+import '../application/map_task_link_port.dart';
 import '../domain/mind_map.dart';
 import '../domain/mind_map_node.dart';
 import 'map_editor_state.dart';
@@ -18,10 +20,29 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
     required MapEditorHistory history,
     required this.ownerId,
     required this.mapId,
+    MapTaskLinkPort? tasks,
+    MapTaskLinkCommands? taskLinks,
   }) : _repository = repository,
        _commands = commands,
        _history = history,
+       _tasks = tasks,
+       _taskLinks = taskLinks,
        super(const MapEditorLoading()) {
+    if (tasks != null) {
+      _taskSubscription = tasks
+          .watchAccessibleTasks(ownerId)
+          .listen(
+            (items) {
+              _linkedTasks = {for (final item in items) item.id: item};
+              _emitReady();
+            },
+            onError: (_, _) {
+              _linkedTasks = {};
+              _lastFailure = _failure();
+              _emitReady();
+            },
+          );
+    }
     _subscription = _repository
         .watchGraph(ownerId: ownerId, mapId: mapId)
         .listen(
@@ -46,9 +67,13 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
   final MapRepository _repository;
   final MapGraphCommands _commands;
   final MapEditorHistory _history;
+  final MapTaskLinkPort? _tasks;
+  final MapTaskLinkCommands? _taskLinks;
   final String ownerId;
   final String mapId;
   StreamSubscription<MapGraph?>? _subscription;
+  StreamSubscription<List<MapLinkedTask>>? _taskSubscription;
+  Map<String, MapLinkedTask> _linkedTasks = {};
   MapGraph? _graph;
   String? _selectedId;
   AppFailure? _lastFailure;
@@ -144,6 +169,47 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
     ),
   );
 
+  MapTaskLinkPort? get taskPort => _tasks;
+
+  Future<bool> setTaskLink(String nodeId, String? taskId) {
+    final commands = _taskLinks;
+    if (commands == null) return Future.value(false);
+    return _perform(
+      () => commands.setLink(
+        ownerId: ownerId,
+        mapId: mapId,
+        nodeId: nodeId,
+        taskId: taskId,
+      ),
+    );
+  }
+
+  Future<bool> setLinkedInProgress(String nodeId) =>
+      editNode(nodeId: nodeId, status: MindMapNodeStatus.inProgress);
+
+  Future<bool> completeLinkedTask(String taskId) => _taskAction(taskId, true);
+  Future<bool> reopenLinkedTask(String taskId) => _taskAction(taskId, false);
+
+  Future<bool> _taskAction(String taskId, bool complete) async {
+    final tasks = _tasks;
+    if (tasks == null || _busy) return false;
+    _busy = true;
+    _emitReady();
+    final result = complete
+        ? await tasks.complete(ownerId, taskId)
+        : await tasks.reopen(ownerId, taskId);
+    _busy = false;
+    _lastFailure = result.failureOrNull;
+    if (result.failureOrNull == null) {
+      final refreshed = await tasks.readLinkedTask(ownerId, taskId);
+      if (refreshed.valueOrNull case final task?) {
+        _linkedTasks = {..._linkedTasks, taskId: task};
+      }
+    }
+    _emitReady();
+    return result.failureOrNull == null;
+  }
+
   Future<bool> undo() => _historyAction(_history.undo);
   Future<bool> redo() => _historyAction(_history.redo);
 
@@ -210,6 +276,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
         canRedo: _history.canRedo,
         busy: _busy,
         failure: _lastFailure,
+        linkedTasks: _linkedTasks,
       ),
     );
   }
@@ -223,6 +290,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
   @override
   Future<void> close() async {
     await _subscription?.cancel();
+    await _taskSubscription?.cancel();
     await super.close();
   }
 }

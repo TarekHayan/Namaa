@@ -121,7 +121,7 @@ final class MapGraphCommands {
         (title != null && title.trim().isEmpty) ||
         (x != null && !x.isFinite) ||
         (y != null && !y.isFinite) ||
-        (old.taskId != null && status != null)) {
+        (old.taskId != null && status == MindMapNodeStatus.completed)) {
       throw const _InvalidGraph();
     }
     final updated = copyMapNode(
@@ -419,6 +419,7 @@ MindMapNode copyMapNode(
   double? y,
   DateTime? deletedAt,
   bool restore = false,
+  Object? taskId = _unchangedTaskId,
 }) => MindMapNode(
   ownerId: old.ownerId,
   mapId: old.mapId,
@@ -432,12 +433,14 @@ MindMapNode copyMapNode(
   statusChangedAt: status == null ? old.statusChangedAt : updatedAt,
   priority: priority ?? old.priority,
   appearance: old.appearance,
-  taskId: old.taskId,
+  taskId: identical(taskId, _unchangedTaskId) ? old.taskId : taskId as String?,
   revisionId: revisionId,
   createdAt: old.createdAt,
   updatedAt: updatedAt,
   deletedAt: restore ? null : deletedAt ?? old.deletedAt,
 );
+
+const Object _unchangedTaskId = Object();
 
 ParentSlot copyParentSlot(
   ParentSlot old, {

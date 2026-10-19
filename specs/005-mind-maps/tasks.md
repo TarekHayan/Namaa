@@ -112,26 +112,26 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 
 ### Tests for User Story 3 — write first
 
-- [ ] T040 [P] [US3] Test Tasks-owned completion-transition revision migration and changes only on complete/reopen, not title edits, in test/unit/features/tasks/domain/task_completion_test.dart.
-- [ ] T041 [P] [US3] Test Task-link bridge account checks, initial-sync picker gate, multi-node projection, unavailable links, repeated completion/reopening and one lifetime XP award in test/unit/features/mind_maps/application/map_task_link_test.dart.
-- [ ] T042 [P] [US3] Test linked completed/open/in-progress/reopened progress, missing/deleted/foreign Task privacy and unlinked task-kind nodes in test/unit/features/mind_maps/application/map_task_progress_test.dart.
-- [ ] T043 [P] [US3] Test accessible Task chooser, link/unlink/relink, unavailable badge and complete/reopen states in test/widget/features/mind_maps/map_task_link_test.dart.
-- [ ] T044 [P] [US3] Add two-map/one-Task completion, Tasks-area reopening, repeated completion, preview restart and XP ledger journey in integration_test/mind_maps_task_link_test.dart.
-- [ ] T045 [P] [US3] Test cloud Task completion-transition field migration, owner isolation and replay with no extra XP in supabase/tests/mind_maps_task_transition_test.sql.
+- [X] T040 [P] [US3] Test Tasks-owned completion-transition revision migration and changes only on complete/reopen, not title edits, in test/unit/features/tasks/domain/task_completion_test.dart.
+- [X] T041 [P] [US3] Test Task-link bridge account checks, initial-sync picker gate, multi-node projection, unavailable links, repeated completion/reopening and one lifetime XP award in test/unit/features/mind_maps/application/map_task_link_test.dart.
+- [X] T042 [P] [US3] Test linked completed/open/in-progress/reopened progress, missing/deleted/foreign Task privacy and unlinked task-kind nodes in test/unit/features/mind_maps/application/map_task_progress_test.dart.
+- [X] T043 [P] [US3] Test accessible Task chooser, link/unlink/relink, unavailable badge and complete/reopen states in test/widget/features/mind_maps/map_task_link_test.dart.
+- [X] T044 [P] [US3] Add two-map/one-Task completion, Tasks-area reopening, repeated completion, preview restart and XP ledger journey in integration_test/mind_maps_task_link_test.dart.
+- [X] T045 [P] [US3] Test cloud Task completion-transition field migration, owner isolation and replay with no extra XP in supabase/tests/mind_maps_task_transition_test.sql.
 
 ### Implementation for User Story 3
 
-- [ ] T046 [US3] Add Tasks-owned completionChangedAt to Task restore/copy/complete/reopen behavior in lib/features/tasks/domain/task.dart and update lib/features/tasks/application/task_completion_service.dart without changing one-time XP authority.
-- [ ] T047 [US3] Persist and restore completionChangedAt through the existing Task local repository in lib/features/tasks/data/drift_task_repository.dart and its Task payload codec in lib/features/tasks/data/task_payload_codec.dart.
-- [ ] T048 [US3] Add a nullable/defaulted Tasks completion-transition column and owner-safe Task sync compatibility in supabase/migrations/0008_task_completion_transition.sql.
-- [ ] T049 [US3] Carry the Tasks-owned transition revision through outbound/inbound Task sync in lib/features/tasks/data/supabase_task_sync_adapter.dart and lib/features/tasks/data/supabase_task_reader.dart.
-- [ ] T050 [US3] Define accessible Task projections and complete/reopen operations behind MapTaskLinkPort in lib/features/mind_maps/application/map_task_link_port.dart.
-- [ ] T051 [US3] Implement the bridge with TaskRepository, TaskCompletionService and TaskSyncService, rechecking the owner and gating authenticated picker on initial Task sync, in lib/features/mind_maps/data/tasks_map_link_adapter.dart.
-- [ ] T052 [US3] Implement link/unlink/relink commands that validate a new accessible Task but preserve an existing unavailable ID on unrelated map edits in lib/features/mind_maps/application/map_task_link_commands.dart.
-- [ ] T053 [US3] Combine live Task streams with map nodes for linked status/progress and generic unavailable projections in lib/features/mind_maps/application/map_queries.dart.
-- [ ] T054 [US3] Add accessible Task chooser, unavailable-link repair and complete/reopen actions in lib/features/mind_maps/presentation/map_task_picker.dart and lib/features/mind_maps/presentation/map_editor_screen.dart.
-- [ ] T055 [US3] Add Arabic/English linked Task, loading/retry, unavailable, complete/reopen and privacy-safe errors in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb; regenerate lib/app/l10n/generated/app_localizations.dart and extend lib/app/l10n/mind_maps_strings_adapter.dart.
-- [ ] T056 [US3] Register Task bridge and preview/real-account sync behavior in lib/app/composition/configure_dependencies.dart and refresh linked views in lib/features/mind_maps/presentation/map_editor_cubit.dart.
+- [X] T046 [US3] Add Tasks-owned completionChangedAt to Task restore/copy/complete/reopen behavior in lib/features/tasks/domain/task.dart and update lib/features/tasks/application/task_completion_service.dart without changing one-time XP authority.
+- [X] T047 [US3] Persist and restore completionChangedAt through the existing Task local repository in lib/features/tasks/data/drift_task_repository.dart and its Task payload codec in lib/features/tasks/data/task_payload_codec.dart.
+- [X] T048 [US3] Add a nullable/defaulted Tasks completion-transition column and owner-safe Task sync compatibility in supabase/migrations/0008_task_completion_transition.sql.
+- [X] T049 [US3] Carry the Tasks-owned transition revision through outbound/inbound Task sync in lib/features/tasks/data/supabase_task_sync_adapter.dart and lib/features/tasks/data/supabase_task_reader.dart.
+- [X] T050 [US3] Define accessible Task projections and complete/reopen operations behind MapTaskLinkPort in lib/features/mind_maps/application/map_task_link_port.dart.
+- [X] T051 [US3] Implement the bridge with TaskRepository, TaskCompletionService and TaskSyncService, rechecking the owner and gating authenticated picker on initial Task sync, in lib/features/mind_maps/data/tasks_map_link_adapter.dart.
+- [X] T052 [US3] Implement link/unlink/relink commands that validate a new accessible Task but preserve an existing unavailable ID on unrelated map edits in lib/features/mind_maps/application/map_task_link_commands.dart.
+- [X] T053 [US3] Combine live Task streams with map nodes for linked status/progress and generic unavailable projections in lib/features/mind_maps/application/map_queries.dart.
+- [X] T054 [US3] Add accessible Task chooser, unavailable-link repair and complete/reopen actions in lib/features/mind_maps/presentation/map_task_picker.dart and lib/features/mind_maps/presentation/map_editor_screen.dart.
+- [X] T055 [US3] Add Arabic/English linked Task, loading/retry, unavailable, complete/reopen and privacy-safe errors in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb; regenerate lib/app/l10n/generated/app_localizations.dart and extend lib/app/l10n/mind_maps_strings_adapter.dart.
+- [X] T056 [US3] Register Task bridge and preview/real-account sync behavior in lib/app/composition/configure_dependencies.dart and refresh linked views in lib/features/mind_maps/presentation/map_editor_cubit.dart.
 
 **Checkpoint**: US3 passes Task/XP tests and preview journey; map commands never write a Task or XP directly.
 

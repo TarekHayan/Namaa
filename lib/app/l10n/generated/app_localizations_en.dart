@@ -552,4 +552,41 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get mindMapProgress => 'Progress';
+
+  @override
+  String get mindMapChooseTask => 'Choose a task';
+
+  @override
+  String get mindMapLinkTask => 'Link task';
+
+  @override
+  String get mindMapChangeTask => 'Change linked task';
+
+  @override
+  String get mindMapUnlinkTask => 'Unlink task';
+
+  @override
+  String get mindMapLinkedTask => 'Linked task';
+
+  @override
+  String get mindMapTaskUnavailable => 'Linked task unavailable';
+
+  @override
+  String get mindMapCompleteTask => 'Complete task';
+
+  @override
+  String get mindMapReopenTask => 'Reopen task';
+
+  @override
+  String get mindMapLoadingTasks => 'Loading tasks…';
+
+  @override
+  String get mindMapRetryTasks => 'Retry loading tasks';
+
+  @override
+  String get mindMapNoTasks => 'No accessible tasks found';
+
+  @override
+  String get mindMapTaskLinkFailure =>
+      'Could not load or link this task. Try again.';
 }
