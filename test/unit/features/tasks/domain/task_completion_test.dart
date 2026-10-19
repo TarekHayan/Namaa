@@ -66,10 +66,7 @@ void main() {
 
   test('title edits do not advance completion transition', () {
     final completed = openTask().complete(firstCompletion);
-    final renamed = completed.copyWith(
-      title: 'Renamed',
-      updatedAt: reopenedAt,
-    );
+    final renamed = completed.copyWith(title: 'Renamed', updatedAt: reopenedAt);
     expect(renamed.completionChangedAt, firstCompletion);
     final reopened = renamed.reopen(secondCompletion);
     expect(reopened.completionChangedAt, secondCompletion);

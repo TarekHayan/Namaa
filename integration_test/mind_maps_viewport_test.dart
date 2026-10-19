@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -171,23 +173,33 @@ void main() {
       tester.view.devicePixelRatio = 1;
       await tester.pumpWidget(view());
       await tester.pump();
-      Future<void> check(Future<void> Function() action) async {
+      Future<void> check(
+        String actionName,
+        Future<void> Function() action,
+      ) async {
         final watch = Stopwatch()..start();
         await action();
         await tester.pump();
+        watch.stop();
+        debugPrint(
+          'SC005 platform=${Platform.operatingSystem} '
+          'viewport=${size.width.toInt()}x${size.height.toInt()} '
+          'action=$actionName elapsed_ms=${watch.elapsedMilliseconds}',
+        );
         expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
       }
 
-      await check(() => tester.tap(find.byKey(kMindMapZoomInKey)));
-      await check(() => tester.tap(find.byKey(kMindMapFitKey)));
+      await check('zoom', () => tester.tap(find.byKey(kMindMapZoomInKey)));
+      await check('fit', () => tester.tap(find.byKey(kMindMapFitKey)));
       await check(
+        'select',
         () => tester.tap(
           find.byKey(ValueKey('mind-map-canvas-node-${map.centralNodeId}')),
         ),
       );
       expect(selected, map.centralNodeId);
-      await check(() => tester.tap(find.byTooltip('Pan left')));
-      await check(() async {
+      await check('pan', () => tester.tap(find.byTooltip('Pan left')));
+      await check('edit', () async {
         final result = await MapGraphCommands(
           repository: repo(),
           session: session,
@@ -202,6 +214,7 @@ void main() {
         await tester.pumpWidget(view());
       });
       expect(find.byKey(kMindMapCanvasKey), findsOneWidget);
+      expect(find.text('Edited offline'), findsWidgets);
     }
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();

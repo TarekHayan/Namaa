@@ -205,13 +205,13 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 
 **Purpose**: Close quality, security, localization, platform and success-criteria evidence for the complete 005 feature.
 
-- [ ] T089 [P] Add architecture checks that Mind Maps never imports Tasks presentation/storage, writes Task/XP directly or bypasses the Task bridge in test/architecture/mind_maps_boundaries_test.dart.
-- [ ] T090 [P] Extend PR-to-develop/manual workflow path filters for specs/005-mind-maps and affected integration entries on Android, iOS, Windows, macOS and Linux without adding a feature-push trigger in .github/workflows/foundation-ci.yml.
-- [ ] T091 [P] Test Arabic/English primary flows, RTL/mixed-direction labels, touch/keyboard controls and route behavior on one mobile and one desktop target in integration_test/mind_maps_localized_route_test.dart.
-- [ ] T092 Run format, analyze, relevant Flutter/widget/integration suites and local Supabase SQL tests; record exact commands/results and any environment limits in specs/005-mind-maps/verification.md.
+- [X] T089 [P] Add architecture checks that Mind Maps never imports Tasks presentation/storage, writes Task/XP directly or bypasses the Task bridge in test/architecture/mind_maps_boundaries_test.dart.
+- [X] T090 [P] Extend PR-to-develop/manual workflow path filters for specs/005-mind-maps and affected integration entries on Android, iOS, Windows, macOS and Linux without adding a feature-push trigger in .github/workflows/foundation-ci.yml.
+- [X] T091 [P] Test Arabic/English primary flows, RTL/mixed-direction labels, touch/keyboard controls and route behavior on one mobile and one desktop target in integration_test/mind_maps_localized_route_test.dart.
+- [X] T092 Run format, analyze, relevant Flutter/widget/integration suites and local Supabase SQL tests; record exact commands/results and any environment limits in specs/005-mind-maps/verification.md.
 - [ ] T093 Run persistence, account sync and Task-link checks across Android, iOS, Windows, macOS and Linux with an isolated nonproduction Supabase project; append actual target results to specs/005-mind-maps/verification.md.
-- [ ] T094 Record SC-005's 50-node/60-link offline response timings and SC-007's visible-control touch/keyboard walkthrough results in specs/005-mind-maps/verification.md.
-- [ ] T095 Review every FR-001–FR-015 and SC-001–SC-007 against tests/results, document later Auth/public-release and UI Refinement dependencies, and record any unmet criterion in specs/005-mind-maps/verification.md.
+- [X] T094 Record SC-005's 50-node/60-link offline response timings and SC-007's visible-control touch/keyboard walkthrough results in specs/005-mind-maps/verification.md.
+- [X] T095 Review every FR-001–FR-015 and SC-001–SC-007 against tests/results, document later Auth/public-release and UI Refinement dependencies, and record any unmet criterion in specs/005-mind-maps/verification.md.
 
 **Checkpoint**: Every specification criterion has implementation evidence or an explicit remaining issue. The full device CI matrix runs only at the agreed PR/manual gate.
 

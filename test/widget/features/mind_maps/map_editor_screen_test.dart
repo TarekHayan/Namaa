@@ -78,9 +78,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(kMindMapEditorKey), findsOneWidget);
     final centerId = (cubit.state as MapEditorReady).graph.map.centralNodeId;
-    final center = tester.getCenter(find.byKey(
-      ValueKey('mind-map-canvas-node-$centerId')));
-    expect(tester.getRect(find.byKey(kMindMapCanvasKey)).contains(center), true);
+    final center = tester.getCenter(
+      find.byKey(ValueKey('mind-map-canvas-node-$centerId')),
+    );
+    expect(
+      tester.getRect(find.byKey(kMindMapCanvasKey)).contains(center),
+      true,
+    );
     expect(find.textContaining('Completed: 0/1'), findsOneWidget);
     await tester.tap(find.byKey(kMindMapAddNodeKey));
     await tester.pumpAndSettle();

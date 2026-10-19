@@ -172,7 +172,10 @@ void main() {
     tasks.publish();
     await tester.pump();
     await tester.pump();
-    expect((cubit.state as MapEditorReady).linkedTasks['task']!.available, false);
+    expect(
+      (cubit.state as MapEditorReady).linkedTasks['task']!.available,
+      false,
+    );
     await tester.scrollUntilVisible(
       find.text('Linked task unavailable').first,
       200,
@@ -280,6 +283,7 @@ final class _LiveTasks implements MapTaskLinkPort {
     );
     return controller.stream;
   }
+
   @override
   Future<AppResult<MapLinkedTask>> readLinkedTask(
     String owner,

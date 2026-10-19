@@ -84,17 +84,18 @@ void main() {
         kind: MindMapNodeKind.task,
         title: 'Second reference',
       )).valueOrNull!.nodes.single.after.id;
+      TaskCompletionService taskService() => TaskCompletionService(
+        repository: tasks(),
+        unitOfWork: DriftTaskCompletionUnitOfWork(
+          database: db,
+          codec: const TaskPayloadCodec(),
+          awardLedger: DriftAwardLedger(db),
+        ),
+        session: session,
+      );
       TasksMapLinkAdapter bridge() => TasksMapLinkAdapter(
         repository: tasks(),
-        completionService: TaskCompletionService(
-          repository: tasks(),
-          unitOfWork: DriftTaskCompletionUnitOfWork(
-            database: db,
-            codec: const TaskPayloadCodec(),
-            awardLedger: DriftAwardLedger(db),
-          ),
-          session: session,
-        ),
+        completionService: taskService(),
         session: session,
       );
       final links = MapTaskLinkCommands(
@@ -122,17 +123,52 @@ void main() {
         )).failureOrNull,
         isNull,
       );
-      expect(
-        (await bridge().complete(
+      Future<void> verifyLinkedViews(bool completed) async {
+        final projection = (await bridge().readLinkedTask(
           kTasksPreviewAccountId,
           task.id,
-        )).failureOrNull,
-        isNull,
-      );
-      expect(
-        (await bridge().reopen(kTasksPreviewAccountId, task.id)).failureOrNull,
-        isNull,
-      );
+        )).valueOrNull!;
+        expect(projection.completed, completed);
+        for (final mapId in [first.id, second.id]) {
+          final graph = (await maps().readGraph(
+            ownerId: kTasksPreviewAccountId,
+            mapId: mapId,
+          )).valueOrNull!;
+          expect(
+            MapQueries.summary(
+              graph,
+              tasks: {task.id: projection},
+            ).completedCount,
+            completed ? 1 : 0,
+          );
+        }
+        final awards = await DriftAwardLedger(
+          db,
+        ).watchAwards(kTasksPreviewAccountId).first;
+        expect(awards, hasLength(1));
+      }
+
+      // Ten alternating map/Tasks completion and reopening journeys. Both
+      // linked maps must agree after every transition, with one lifetime XP.
+      for (var scenario = 0; scenario < 10; scenario++) {
+        final fromMap = scenario.isEven;
+        final completed = fromMap
+            ? await bridge().complete(kTasksPreviewAccountId, task.id)
+            : await taskService().completeTask(
+                task.id,
+                expectedAccountId: kTasksPreviewAccountId,
+              );
+        expect(completed.failureOrNull, isNull, reason: 'scenario $scenario');
+        await verifyLinkedViews(true);
+        final reopened = fromMap
+            ? await taskService().reopenTask(
+                task.id,
+                expectedAccountId: kTasksPreviewAccountId,
+              )
+            : await bridge().reopen(kTasksPreviewAccountId, task.id);
+        expect(reopened.failureOrNull, isNull, reason: 'scenario $scenario');
+        await verifyLinkedViews(false);
+      }
       expect(
         (await bridge().complete(
           kTasksPreviewAccountId,
