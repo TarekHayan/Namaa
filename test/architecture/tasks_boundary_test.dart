@@ -79,7 +79,12 @@ void main() {
 
     final violations = <String>[];
     final forbiddenOwnership = RegExp(
-      r'\b(?:TaskRepository|TaskRecords|TasksCubit|class\s+Task)\b',
+      r'\b(?:class|mixin|enum|typedef)\s+'
+      r'(?:TaskRepository|TaskRecords|TasksCubit|Task)\b',
+    );
+    final forbiddenTaskLayers = RegExp(
+      r'''(?:import|export)\s+['"](?:package:namma_project/)?'''
+      r'''features/tasks/(?:data|presentation)/''',
     );
 
     for (final entity in featureRoot.listSync(recursive: true)) {
@@ -90,7 +95,9 @@ void main() {
       if (normalized.contains('/features/tasks/')) {
         continue;
       }
-      if (forbiddenOwnership.hasMatch(entity.readAsStringSync())) {
+      final source = entity.readAsStringSync();
+      if (forbiddenOwnership.hasMatch(source) ||
+          forbiddenTaskLayers.hasMatch(source)) {
         violations.add(normalized);
       }
     }

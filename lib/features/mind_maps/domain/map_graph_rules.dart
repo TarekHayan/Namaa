@@ -1,5 +1,5 @@
-import '../application/map_repository.dart';
 import 'map_connection.dart';
+import 'map_graph.dart';
 import 'mind_map_node.dart';
 
 /// Checks the visible graph. Side links never participate in ancestry.
