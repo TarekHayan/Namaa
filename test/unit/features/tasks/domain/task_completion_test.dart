@@ -26,6 +26,7 @@ void main() {
     expect(completed.id, task.id);
     expect(completed.completedAt, firstCompletion);
     expect(completed.updatedAt, firstCompletion);
+    expect(completed.completionChangedAt, firstCompletion);
     expect(completed.isCompleted, isTrue);
     expect(completed.completionXp, 35);
   });
@@ -37,6 +38,7 @@ void main() {
 
     expect(reopened.completedAt, isNull);
     expect(reopened.updatedAt, reopenedAt);
+    expect(reopened.completionChangedAt, reopenedAt);
     expect(reopened.completionXp, completed.completionXp);
     expect(reopened.id, completed.id);
   });
@@ -48,6 +50,7 @@ void main() {
 
     expect(completedAgain.completedAt, secondCompletion);
     expect(completedAgain.updatedAt, secondCompletion);
+    expect(completedAgain.completionChangedAt, secondCompletion);
   });
 
   test('repeating complete while already complete is not a new event', () {
@@ -58,6 +61,15 @@ void main() {
     expect(repeated, same(completed));
     expect(repeated.completedAt, firstCompletion);
     expect(repeated.updatedAt, firstCompletion);
+    expect(repeated.completionChangedAt, firstCompletion);
+  });
+
+  test('title edits do not advance completion transition', () {
+    final completed = openTask().complete(firstCompletion);
+    final renamed = completed.copyWith(title: 'Renamed', updatedAt: reopenedAt);
+    expect(renamed.completionChangedAt, firstCompletion);
+    final reopened = renamed.reopen(secondCompletion);
+    expect(reopened.completionChangedAt, secondCompletion);
   });
 
   test('an incomplete checklist does not block explicit completion', () {

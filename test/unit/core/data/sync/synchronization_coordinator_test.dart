@@ -306,6 +306,20 @@ void main() {
     expect(sync.dispatchedOperationIds, ['op-1']);
   });
 
+  test('concurrent feature sync requests share one outbox pass', () async {
+    final store = FakeLocalStore();
+    store.outbox['op-1'] = _pendingRecord('op-1', t);
+    final sync = FakeCloudSync(const []);
+    final coordinator = buildCoordinator(store, sync);
+
+    final first = coordinator.synchronize();
+    final second = coordinator.synchronize();
+    expect(identical(first, second), isTrue);
+    await Future.wait([first, second]);
+    expect(sync.dispatchedOperationIds, ['op-1']);
+    expect(store.outbox['op-1']!.state, PendingChangeState.acknowledged);
+  });
+
   test(
     'remote conflict: newest timestamp becomes active, loser is retained',
     () async {

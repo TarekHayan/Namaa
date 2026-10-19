@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 4;
+const int kFoundationSchemaVersion = 5;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -163,6 +163,9 @@ class TaskRecords extends Table {
   TextColumn get checklistJson =>
       text().withDefault(const Constant<String>('[]'))();
   DateTimeColumn get completedAt => dateTime().nullable()();
+
+  /// Tasks owns this transition revision; map status projections only read it.
+  DateTimeColumn get completionChangedAt => dateTime().nullable()();
   IntColumn get completionXp => integer()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -236,6 +239,117 @@ class HabitDayRecords extends Table {
   Set<Column> get primaryKey => {accountId, habitId, localDate};
 }
 
+/// Independently synchronized map metadata. All graph keys include the owner.
+@TableIndex(
+  name: 'mind_map_records_owner_deleted',
+  columns: {#accountId, #deletedAt},
+)
+@TableIndex(
+  name: 'mind_map_records_owner_updated',
+  columns: {#accountId, #updatedAt},
+)
+class MindMapRecords extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get mapId => text()();
+  TextColumn get title => text()();
+  TextColumn get description => text().nullable()();
+  TextColumn get centralNodeId => text()();
+  TextColumn get settingsJson => text()();
+  TextColumn get revisionId => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, mapId};
+}
+
+/// Node content has its own revision so edits to distinct nodes can merge.
+@TableIndex(
+  name: 'mind_map_node_records_owner_map_deleted',
+  columns: {#accountId, #mapId, #deletedAt},
+)
+@TableIndex(
+  name: 'mind_map_node_records_owner_updated',
+  columns: {#accountId, #updatedAt},
+)
+@TableIndex(
+  name: 'mind_map_node_records_owner_task',
+  columns: {#accountId, #taskId},
+)
+class MindMapNodeRecords extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get mapId => text()();
+  TextColumn get nodeId => text()();
+  TextColumn get kind => text()();
+  TextColumn get title => text()();
+  TextColumn get description => text().nullable()();
+  RealColumn get x => real()();
+  RealColumn get y => real()();
+  TextColumn get status => text()();
+  DateTimeColumn get statusChangedAt => dateTime().nullable()();
+  TextColumn get priority => text()();
+  TextColumn get appearanceJson => text()();
+  TextColumn get taskId => text().nullable()();
+  TextColumn get revisionId => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, mapId, nodeId};
+}
+
+/// One stable parent slot per child. Detaching tombstones this row.
+@TableIndex(
+  name: 'mind_map_parent_slots_owner_parent',
+  columns: {#accountId, #mapId, #parentNodeId},
+)
+@TableIndex(
+  name: 'mind_map_parent_slots_owner_updated',
+  columns: {#accountId, #updatedAt},
+)
+class MindMapParentSlots extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get mapId => text()();
+  TextColumn get childNodeId => text()();
+  TextColumn get parentNodeId => text()();
+  TextColumn get appearanceJson => text()();
+  TextColumn get revisionId => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, mapId, childNodeId};
+}
+
+/// Visual links use sorted endpoint IDs, independent of parent slots.
+@TableIndex(
+  name: 'mind_map_side_links_owner_first',
+  columns: {#accountId, #mapId, #firstNodeId},
+)
+@TableIndex(
+  name: 'mind_map_side_links_owner_second',
+  columns: {#accountId, #mapId, #secondNodeId},
+)
+@TableIndex(
+  name: 'mind_map_side_links_owner_updated',
+  columns: {#accountId, #updatedAt},
+)
+class MindMapSideLinks extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get mapId => text()();
+  TextColumn get firstNodeId => text()();
+  TextColumn get secondNodeId => text()();
+  TextColumn get appearanceJson => text()();
+  TextColumn get revisionId => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, mapId, firstNodeId, secondNodeId};
+}
+
 @DriftDatabase(
   tables: [
     FoundationPreferences,
@@ -248,6 +362,10 @@ class HabitDayRecords extends Table {
     XpAwards,
     HabitRecords,
     HabitDayRecords,
+    MindMapRecords,
+    MindMapNodeRecords,
+    MindMapParentSlots,
+    MindMapSideLinks,
   ],
 )
 class FoundationDatabase extends _$FoundationDatabase {
@@ -361,7 +479,8 @@ class FoundationDatabase extends _$FoundationDatabase {
       await _recordJournalStart(to);
       if ((to >= 2 && from < 2) ||
           (to >= 3 && from < 3) ||
-          (to >= 4 && from < 4)) {
+          (to >= 4 && from < 4) ||
+          (to >= 5 && from < 5)) {
         await testMigrationHook?.call(migrator, from, to);
       }
       if (to >= 2 && from < 2) {
@@ -389,6 +508,38 @@ class FoundationDatabase extends _$FoundationDatabase {
           habitRecordsAccountUpdated,
           habitDayRecordsAccountHabitDate,
           habitDayRecordsAccountUpdated,
+        ]) {
+          await _createIndexIfMissing(migrator, index);
+        }
+      }
+      if (to >= 5 && from < 5) {
+        // A v1/v2 upgrade creates TaskRecords from the latest table shape.
+        if (from >= 3) {
+          await migrator.addColumn(
+            taskRecords,
+            taskRecords.completionChangedAt,
+          );
+        }
+        await customUpdate(
+          'UPDATE task_records SET completion_changed_at = '
+          'COALESCE(completed_at, created_at) '
+          'WHERE completion_changed_at IS NULL',
+        );
+        await migrator.createTable(mindMapRecords);
+        await migrator.createTable(mindMapNodeRecords);
+        await migrator.createTable(mindMapParentSlots);
+        await migrator.createTable(mindMapSideLinks);
+        for (final index in <Index>[
+          mindMapRecordsOwnerDeleted,
+          mindMapRecordsOwnerUpdated,
+          mindMapNodeRecordsOwnerMapDeleted,
+          mindMapNodeRecordsOwnerUpdated,
+          mindMapNodeRecordsOwnerTask,
+          mindMapParentSlotsOwnerParent,
+          mindMapParentSlotsOwnerUpdated,
+          mindMapSideLinksOwnerFirst,
+          mindMapSideLinksOwnerSecond,
+          mindMapSideLinksOwnerUpdated,
         ]) {
           await _createIndexIfMissing(migrator, index);
         }

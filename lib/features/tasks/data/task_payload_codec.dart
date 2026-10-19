@@ -29,6 +29,7 @@ final class TaskPayloadCodec {
         },
     ],
     'completedAt': task.completedAt?.toUtc().toIso8601String(),
+    'completionChangedAt': task.completionChangedAt.toIso8601String(),
     'completionXp': task.completionXp,
     'createdAt': task.createdAt.toUtc().toIso8601String(),
     'updatedAt': task.updatedAt.toUtc().toIso8601String(),
@@ -61,6 +62,10 @@ final class TaskPayloadCodec {
         ),
         checklistItems: _checklist(decoded['checklistItems']),
         completedAt: _nullableUtcDateTime(decoded, 'completedAt'),
+        completionChangedAt: _nullableUtcDateTime(
+          decoded,
+          'completionChangedAt',
+        ),
         completionXp: _integer(decoded, 'completionXp'),
         createdAt: _utcDateTime(decoded, 'createdAt'),
         updatedAt: _utcDateTime(decoded, 'updatedAt'),

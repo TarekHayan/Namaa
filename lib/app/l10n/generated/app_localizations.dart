@@ -808,6 +808,762 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Sunday'**
   String get habitSunday;
+
+  /// No description provided for @mindMapsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind Maps'**
+  String get mindMapsTitle;
+
+  /// No description provided for @mindMapsCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'New map'**
+  String get mindMapsCreate;
+
+  /// No description provided for @mindMapsSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search maps'**
+  String get mindMapsSearch;
+
+  /// No description provided for @mindMapsEmptyLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'No maps yet. Create your first map.'**
+  String get mindMapsEmptyLibrary;
+
+  /// No description provided for @mindMapsEmptySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No maps match your search.'**
+  String get mindMapsEmptySearch;
+
+  /// No description provided for @mindMapTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Map title'**
+  String get mindMapTitleLabel;
+
+  /// No description provided for @mindMapDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get mindMapDescriptionLabel;
+
+  /// No description provided for @mindMapEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get mindMapEditTitle;
+
+  /// No description provided for @mindMapEditDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit description'**
+  String get mindMapEditDescription;
+
+  /// No description provided for @mindMapDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get mindMapDuplicate;
+
+  /// No description provided for @mindMapDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get mindMapDelete;
+
+  /// No description provided for @mindMapDeleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this map? It will disappear from your library. Linked tasks will remain.'**
+  String get mindMapDeleteConfirmation;
+
+  /// No description provided for @mindMapSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get mindMapSave;
+
+  /// No description provided for @mindMapCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get mindMapCancel;
+
+  /// No description provided for @mindMapTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a map title'**
+  String get mindMapTitleRequired;
+
+  /// No description provided for @mindMapsLoadFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load maps. Try again.'**
+  String get mindMapsLoadFailure;
+
+  /// No description provided for @mindMapsSaveFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your map change. Please try again.'**
+  String get mindMapsSaveFailure;
+
+  /// No description provided for @mindMapsAccountFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'This account cannot change that map.'**
+  String get mindMapsAccountFailure;
+
+  /// No description provided for @mindMapsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This map is no longer available.'**
+  String get mindMapsNotFound;
+
+  /// No description provided for @mindMapsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get mindMapsRetry;
+
+  /// No description provided for @mindMapSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing mind maps…'**
+  String get mindMapSyncing;
+
+  /// No description provided for @mindMapSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind maps could not sync. Local changes are saved.'**
+  String get mindMapSyncFailed;
+
+  /// No description provided for @mindMapSyncRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry sync'**
+  String get mindMapSyncRetry;
+
+  /// No description provided for @mindMapConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Review other versions'**
+  String get mindMapConflicts;
+
+  /// No description provided for @mindMapConflictActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version'**
+  String get mindMapConflictActive;
+
+  /// No description provided for @mindMapConflictRetained.
+  ///
+  /// In en, this message translates to:
+  /// **'Other version'**
+  String get mindMapConflictRetained;
+
+  /// No description provided for @mindMapConflictUnresolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs review'**
+  String get mindMapConflictUnresolved;
+
+  /// No description provided for @mindMapNodeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Nodes'**
+  String get mindMapNodeCount;
+
+  /// No description provided for @mindMapCompletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get mindMapCompletedCount;
+
+  /// No description provided for @mindMapCentralNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Central idea'**
+  String get mindMapCentralNode;
+
+  /// No description provided for @mindMapsSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to access your mind maps.'**
+  String get mindMapsSignInRequired;
+
+  /// No description provided for @mindMapsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to maps'**
+  String get mindMapsBack;
+
+  /// No description provided for @mindMapEditMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit map'**
+  String get mindMapEditMap;
+
+  /// No description provided for @mindMapAddNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Add node'**
+  String get mindMapAddNode;
+
+  /// No description provided for @mindMapEditNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit node'**
+  String get mindMapEditNode;
+
+  /// No description provided for @mindMapNodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Node title'**
+  String get mindMapNodeTitle;
+
+  /// No description provided for @mindMapNodeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Node description'**
+  String get mindMapNodeDescription;
+
+  /// No description provided for @mindMapNodeKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get mindMapNodeKind;
+
+  /// No description provided for @mindMapNodePriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get mindMapNodePriority;
+
+  /// No description provided for @mindMapNodeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get mindMapNodeStatus;
+
+  /// No description provided for @mindMapKindCentral.
+  ///
+  /// In en, this message translates to:
+  /// **'Central idea'**
+  String get mindMapKindCentral;
+
+  /// No description provided for @mindMapKindMainIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Main idea'**
+  String get mindMapKindMainIdea;
+
+  /// No description provided for @mindMapKindBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get mindMapKindBranch;
+
+  /// No description provided for @mindMapKindTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Task idea'**
+  String get mindMapKindTask;
+
+  /// No description provided for @mindMapKindNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get mindMapKindNote;
+
+  /// No description provided for @mindMapStatusNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started'**
+  String get mindMapStatusNotStarted;
+
+  /// No description provided for @mindMapStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get mindMapStatusInProgress;
+
+  /// No description provided for @mindMapStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get mindMapStatusCompleted;
+
+  /// No description provided for @mindMapPriorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get mindMapPriorityLow;
+
+  /// No description provided for @mindMapPriorityMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get mindMapPriorityMedium;
+
+  /// No description provided for @mindMapPriorityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get mindMapPriorityHigh;
+
+  /// No description provided for @mindMapNodeTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a node title'**
+  String get mindMapNodeTitleRequired;
+
+  /// No description provided for @mindMapDeleteNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete node'**
+  String get mindMapDeleteNode;
+
+  /// No description provided for @mindMapDeleteNodeConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this node? Its children will remain as independent nodes.'**
+  String get mindMapDeleteNodeConfirmation;
+
+  /// No description provided for @mindMapParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent branch'**
+  String get mindMapParent;
+
+  /// No description provided for @mindMapDetach.
+  ///
+  /// In en, this message translates to:
+  /// **'Detach from parent'**
+  String get mindMapDetach;
+
+  /// No description provided for @mindMapSideLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual link'**
+  String get mindMapSideLink;
+
+  /// No description provided for @mindMapConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get mindMapConnect;
+
+  /// No description provided for @mindMapDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get mindMapDisconnect;
+
+  /// No description provided for @mindMapMoveNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Move node'**
+  String get mindMapMoveNode;
+
+  /// No description provided for @mindMapUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get mindMapUndo;
+
+  /// No description provided for @mindMapRedo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get mindMapRedo;
+
+  /// No description provided for @mindMapGraphError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this graph change. Check the connection and try again.'**
+  String get mindMapGraphError;
+
+  /// No description provided for @mindMapNoParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent'**
+  String get mindMapNoParent;
+
+  /// No description provided for @mindMapProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get mindMapProgress;
+
+  /// No description provided for @mindMapChooseTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a task'**
+  String get mindMapChooseTask;
+
+  /// No description provided for @mindMapLinkTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Link task'**
+  String get mindMapLinkTask;
+
+  /// No description provided for @mindMapChangeTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Change linked task'**
+  String get mindMapChangeTask;
+
+  /// No description provided for @mindMapUnlinkTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink task'**
+  String get mindMapUnlinkTask;
+
+  /// No description provided for @mindMapLinkedTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked task'**
+  String get mindMapLinkedTask;
+
+  /// No description provided for @mindMapTaskUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked task unavailable'**
+  String get mindMapTaskUnavailable;
+
+  /// No description provided for @mindMapCompleteTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete task'**
+  String get mindMapCompleteTask;
+
+  /// No description provided for @mindMapReopenTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen task'**
+  String get mindMapReopenTask;
+
+  /// No description provided for @mindMapLoadingTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading tasks…'**
+  String get mindMapLoadingTasks;
+
+  /// No description provided for @mindMapRetryTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry loading tasks'**
+  String get mindMapRetryTasks;
+
+  /// No description provided for @mindMapNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No accessible tasks found'**
+  String get mindMapNoTasks;
+
+  /// No description provided for @mindMapTaskLinkFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load or link this task. Try again.'**
+  String get mindMapTaskLinkFailure;
+
+  /// No description provided for @mindMapSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Map settings'**
+  String get mindMapSettings;
+
+  /// No description provided for @mindMapLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout'**
+  String get mindMapLayout;
+
+  /// No description provided for @mindMapApplyLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply layout'**
+  String get mindMapApplyLayout;
+
+  /// No description provided for @mindMapLayoutRadial.
+  ///
+  /// In en, this message translates to:
+  /// **'Radial'**
+  String get mindMapLayoutRadial;
+
+  /// No description provided for @mindMapLayoutTree.
+  ///
+  /// In en, this message translates to:
+  /// **'Tree'**
+  String get mindMapLayoutTree;
+
+  /// No description provided for @mindMapLayoutHorizontal.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal'**
+  String get mindMapLayoutHorizontal;
+
+  /// No description provided for @mindMapLayoutVertical.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical'**
+  String get mindMapLayoutVertical;
+
+  /// No description provided for @mindMapLayoutFreeform.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeform'**
+  String get mindMapLayoutFreeform;
+
+  /// No description provided for @mindMapBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas background'**
+  String get mindMapBackground;
+
+  /// No description provided for @mindMapDefaultNode.
+  ///
+  /// In en, this message translates to:
+  /// **'New node default'**
+  String get mindMapDefaultNode;
+
+  /// No description provided for @mindMapConnectionStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'New connection default'**
+  String get mindMapConnectionStyle;
+
+  /// No description provided for @mindMapSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Spacing'**
+  String get mindMapSpacing;
+
+  /// No description provided for @mindMapNodeColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Node color'**
+  String get mindMapNodeColor;
+
+  /// No description provided for @mindMapConnectionColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection color'**
+  String get mindMapConnectionColor;
+
+  /// No description provided for @mindMapConnectionWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection width'**
+  String get mindMapConnectionWidth;
+
+  /// No description provided for @mindMapNodeIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Node icon'**
+  String get mindMapNodeIcon;
+
+  /// No description provided for @mindMapNodeShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Node shape'**
+  String get mindMapNodeShape;
+
+  /// No description provided for @mindMapNodeSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Node size'**
+  String get mindMapNodeSize;
+
+  /// No description provided for @mindMapTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get mindMapTextSize;
+
+  /// No description provided for @mindMapShapeRectangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get mindMapShapeRectangle;
+
+  /// No description provided for @mindMapShapeRounded.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded'**
+  String get mindMapShapeRounded;
+
+  /// No description provided for @mindMapShapeCircle.
+  ///
+  /// In en, this message translates to:
+  /// **'Circle'**
+  String get mindMapShapeCircle;
+
+  /// No description provided for @mindMapShapePill.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill'**
+  String get mindMapShapePill;
+
+  /// No description provided for @mindMapShapeGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass'**
+  String get mindMapShapeGlass;
+
+  /// No description provided for @mindMapSizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get mindMapSizeSmall;
+
+  /// No description provided for @mindMapSizeMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get mindMapSizeMedium;
+
+  /// No description provided for @mindMapSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get mindMapSizeLarge;
+
+  /// No description provided for @mindMapIconIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Idea'**
+  String get mindMapIconIdea;
+
+  /// No description provided for @mindMapIconTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get mindMapIconTask;
+
+  /// No description provided for @mindMapIconNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get mindMapIconNote;
+
+  /// No description provided for @mindMapIconStar.
+  ///
+  /// In en, this message translates to:
+  /// **'Star'**
+  String get mindMapIconStar;
+
+  /// No description provided for @mindMapIconFlag.
+  ///
+  /// In en, this message translates to:
+  /// **'Flag'**
+  String get mindMapIconFlag;
+
+  /// No description provided for @mindMapColorWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get mindMapColorWhite;
+
+  /// No description provided for @mindMapColorBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get mindMapColorBlue;
+
+  /// No description provided for @mindMapColorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get mindMapColorGreen;
+
+  /// No description provided for @mindMapColorAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get mindMapColorAmber;
+
+  /// No description provided for @mindMapColorPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get mindMapColorPurple;
+
+  /// No description provided for @mindMapColorDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get mindMapColorDark;
+
+  /// No description provided for @mindMapColorCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current color'**
+  String get mindMapColorCurrent;
+
+  /// No description provided for @mindMapFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit map'**
+  String get mindMapFit;
+
+  /// No description provided for @mindMapCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center map'**
+  String get mindMapCenter;
+
+  /// No description provided for @mindMapZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get mindMapZoomIn;
+
+  /// No description provided for @mindMapZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get mindMapZoomOut;
+
+  /// No description provided for @mindMapPanLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan left'**
+  String get mindMapPanLeft;
+
+  /// No description provided for @mindMapPanRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan right'**
+  String get mindMapPanRight;
+
+  /// No description provided for @mindMapPanUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan up'**
+  String get mindMapPanUp;
+
+  /// No description provided for @mindMapPanDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan down'**
+  String get mindMapPanDown;
+
+  /// No description provided for @mindMapDragNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag node to move'**
+  String get mindMapDragNode;
+
+  /// No description provided for @mindMapKeyboardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers'**
+  String get mindMapKeyboardHelp;
 }
 
 class _FoundationLocalizationsDelegate

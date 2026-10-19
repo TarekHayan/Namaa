@@ -18,6 +18,7 @@ on:
       - 'pubspec.yaml'
       - 'specs/003-namaa-tasks/**'
       - 'specs/004-habits/**'
+      - 'specs/005-mind-maps/**'
       - 'supabase/**'
       - 'test/**'
       - 'test_driver/**'
@@ -220,6 +221,12 @@ jobs:
               integration_test/habits_streak_history_test.dart
               integration_test/habits_edit_delete_test.dart
               integration_test/habits_localized_route_test.dart
+              integration_test/mind_maps_library_test.dart
+              integration_test/mind_maps_editor_test.dart
+              integration_test/mind_maps_task_link_test.dart
+              integration_test/mind_maps_viewport_test.dart
+              integration_test/mind_maps_offline_sync_test.dart
+              integration_test/mind_maps_localized_route_test.dart
             )
             for test_file in "${tests[@]}"; do
               flutter test --no-pub \
@@ -239,6 +246,15 @@ jobs:
               --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
               --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
               -d linux integration_test/foundation_staging_supabase_test.dart \
+              --reporter expanded
+            flutter test --no-pub \
+              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+              -d linux integration_test/mind_maps_staging_sync_test.dart \
               --reporter expanded
           '
 
@@ -289,7 +305,13 @@ jobs:
             'integration_test/habits_offline_sync_test.dart',
             'integration_test/habits_streak_history_test.dart',
             'integration_test/habits_edit_delete_test.dart',
-            'integration_test/habits_localized_route_test.dart'
+            'integration_test/habits_localized_route_test.dart',
+            'integration_test/mind_maps_library_test.dart',
+            'integration_test/mind_maps_editor_test.dart',
+            'integration_test/mind_maps_task_link_test.dart',
+            'integration_test/mind_maps_viewport_test.dart',
+            'integration_test/mind_maps_offline_sync_test.dart',
+            'integration_test/mind_maps_localized_route_test.dart'
           )
           foreach ($test in $tests) {
             flutter test --no-pub -d windows $test --reporter expanded
@@ -306,6 +328,15 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD" `
             -d windows integration_test/foundation_staging_supabase_test.dart --reporter expanded
           if ($LASTEXITCODE -ne 0) { throw 'Staging Supabase integration failed on Windows' }
+          flutter test --no-pub `
+            --dart-define="NAMAA_SUPABASE_URL=$env:NAMAA_STAGING_SUPABASE_URL" `
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$env:NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$env:NAMAA_STAGING_TEST_USER_A_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$env:NAMAA_STAGING_TEST_USER_A_PASSWORD" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$env:NAMAA_STAGING_TEST_USER_B_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD" `
+            -d windows integration_test/mind_maps_staging_sync_test.dart --reporter expanded
+          if ($LASTEXITCODE -ne 0) { throw 'Mind Maps staging sync failed on Windows' }
 
   macos:
     name: macOS integration
@@ -355,6 +386,12 @@ jobs:
             integration_test/habits_streak_history_test.dart
             integration_test/habits_edit_delete_test.dart
             integration_test/habits_localized_route_test.dart
+            integration_test/mind_maps_library_test.dart
+            integration_test/mind_maps_editor_test.dart
+            integration_test/mind_maps_task_link_test.dart
+            integration_test/mind_maps_viewport_test.dart
+            integration_test/mind_maps_offline_sync_test.dart
+            integration_test/mind_maps_localized_route_test.dart
           )
           for test_file in "${tests[@]}"; do
             flutter test --no-pub -d macos "$test_file" --reporter expanded
@@ -369,6 +406,15 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
             -d macos integration_test/foundation_staging_supabase_test.dart \
+            --reporter expanded
+          flutter test --no-pub \
+            --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+            -d macos integration_test/mind_maps_staging_sync_test.dart \
             --reporter expanded
 
   ios:
@@ -406,6 +452,20 @@ jobs:
             test_file: integration_test/habits_edit_delete_test.dart
           - suite: habits-localized-route
             test_file: integration_test/habits_localized_route_test.dart
+          - suite: mind-maps-library
+            test_file: integration_test/mind_maps_library_test.dart
+          - suite: mind-maps-editor
+            test_file: integration_test/mind_maps_editor_test.dart
+          - suite: mind-maps-task-link
+            test_file: integration_test/mind_maps_task_link_test.dart
+          - suite: mind-maps-viewport
+            test_file: integration_test/mind_maps_viewport_test.dart
+          - suite: mind-maps-offline-sync
+            test_file: integration_test/mind_maps_offline_sync_test.dart
+          - suite: mind-maps-localized-route
+            test_file: integration_test/mind_maps_localized_route_test.dart
+          - suite: mind-maps-staging-sync
+            test_file: integration_test/mind_maps_staging_sync_test.dart
     steps:
       - name: Check out repository
         uses: actions/checkout@v6

@@ -13,15 +13,35 @@ void main() {
   });
   tearDown(() => tempPath.dispose());
 
+  Future<FoundationDatabase> createInstalledV1() async {
+    final db = await FoundationDatabase.openEncrypted(
+      path: tempPath.allocate(),
+      key: _testKey,
+      schemaVersion: 1,
+    );
+    // createAll reflects the current schema even when a test requests v1.
+    // Reconstruct the actual installed v1 tables before exercising upgrades.
+    for (final table in [
+      'mind_map_side_links',
+      'mind_map_parent_slots',
+      'mind_map_node_records',
+      'mind_map_records',
+      'habit_day_records',
+      'habit_records',
+      'xp_awards',
+      'task_records',
+      'foundation_audit_log',
+    ]) {
+      await db.rawExecute('DROP TABLE IF EXISTS $table');
+    }
+    return db;
+  }
+
   test(
     'a successful upgrade preserves prior data and completes the journal',
     () async {
       // Create the database at v1 and store data.
-      final v1 = await FoundationDatabase.openEncrypted(
-        path: tempPath.allocate(),
-        key: _testKey,
-        schemaVersion: 1,
-      );
+      final v1 = await createInstalledV1();
       await v1.rawExecute(
         '''INSERT INTO foundation_preferences ("key", value, updated_at)
       VALUES ('locale', 'ar', '2026-09-06T00:00:00.000Z')''',
@@ -52,11 +72,7 @@ void main() {
   test(
     'an injected migration failure retains prior data and records the failure',
     () async {
-      final v1 = await FoundationDatabase.openEncrypted(
-        path: tempPath.allocate(),
-        key: _testKey,
-        schemaVersion: 1,
-      );
+      final v1 = await createInstalledV1();
       await v1.rawExecute(
         '''INSERT INTO foundation_preferences ("key", value, updated_at)
       VALUES ('locale', 'en', '2026-09-06T00:00:00.000Z')''',

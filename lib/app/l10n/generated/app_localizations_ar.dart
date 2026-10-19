@@ -369,4 +369,388 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get habitSunday => 'الأحد';
+
+  @override
+  String get mindMapsTitle => 'الخرائط الذهنية';
+
+  @override
+  String get mindMapsCreate => 'خريطة جديدة';
+
+  @override
+  String get mindMapsSearch => 'ابحث في الخرائط';
+
+  @override
+  String get mindMapsEmptyLibrary => 'لا توجد خرائط بعد. أنشئ خريطتك الأولى.';
+
+  @override
+  String get mindMapsEmptySearch => 'لا توجد خرائط تطابق البحث.';
+
+  @override
+  String get mindMapTitleLabel => 'عنوان الخريطة';
+
+  @override
+  String get mindMapDescriptionLabel => 'الوصف';
+
+  @override
+  String get mindMapEditTitle => 'تغيير الاسم';
+
+  @override
+  String get mindMapEditDescription => 'تعديل الوصف';
+
+  @override
+  String get mindMapDuplicate => 'نسخ الخريطة';
+
+  @override
+  String get mindMapDelete => 'حذف';
+
+  @override
+  String get mindMapDeleteConfirmation =>
+      'هل تريد حذف هذه الخريطة؟ ستختفي من القائمة، وستظل المهام المرتبطة بها محفوظة.';
+
+  @override
+  String get mindMapSave => 'حفظ';
+
+  @override
+  String get mindMapCancel => 'إلغاء';
+
+  @override
+  String get mindMapTitleRequired => 'اكتب عنوانًا للخريطة';
+
+  @override
+  String get mindMapsLoadFailure => 'تعذر تحميل الخرائط. حاول مرة أخرى.';
+
+  @override
+  String get mindMapsSaveFailure => 'تعذر حفظ تغيير الخريطة. حاول مرة أخرى.';
+
+  @override
+  String get mindMapsAccountFailure => 'لا يمكن لهذا الحساب تعديل الخريطة.';
+
+  @override
+  String get mindMapsNotFound => 'هذه الخريطة لم تعد متاحة.';
+
+  @override
+  String get mindMapsRetry => 'إعادة المحاولة';
+
+  @override
+  String get mindMapSyncing => 'جارٍ مزامنة الخرائط الذهنية…';
+
+  @override
+  String get mindMapSyncFailed =>
+      'تعذرت مزامنة الخرائط الذهنية. التغييرات المحلية محفوظة.';
+
+  @override
+  String get mindMapSyncRetry => 'إعادة المزامنة';
+
+  @override
+  String get mindMapConflicts => 'مراجعة النسخ الأخرى';
+
+  @override
+  String get mindMapConflictActive => 'النسخة الحالية';
+
+  @override
+  String get mindMapConflictRetained => 'النسخة الأخرى';
+
+  @override
+  String get mindMapConflictUnresolved => 'تحتاج مراجعة';
+
+  @override
+  String get mindMapNodeCount => 'العقد';
+
+  @override
+  String get mindMapCompletedCount => 'المكتملة';
+
+  @override
+  String get mindMapCentralNode => 'الفكرة الرئيسية';
+
+  @override
+  String get mindMapsSignInRequired => 'سجّل الدخول للوصول إلى خرائطك الذهنية.';
+
+  @override
+  String get mindMapsBack => 'العودة للخرائط';
+
+  @override
+  String get mindMapEditMap => 'تعديل الخريطة';
+
+  @override
+  String get mindMapAddNode => 'إضافة عقدة';
+
+  @override
+  String get mindMapEditNode => 'تعديل العقدة';
+
+  @override
+  String get mindMapNodeTitle => 'عنوان العقدة';
+
+  @override
+  String get mindMapNodeDescription => 'وصف العقدة';
+
+  @override
+  String get mindMapNodeKind => 'النوع';
+
+  @override
+  String get mindMapNodePriority => 'الأولوية';
+
+  @override
+  String get mindMapNodeStatus => 'الحالة';
+
+  @override
+  String get mindMapKindCentral => 'الفكرة المركزية';
+
+  @override
+  String get mindMapKindMainIdea => 'فكرة رئيسية';
+
+  @override
+  String get mindMapKindBranch => 'فرع';
+
+  @override
+  String get mindMapKindTask => 'فكرة مهمة';
+
+  @override
+  String get mindMapKindNote => 'ملاحظة';
+
+  @override
+  String get mindMapStatusNotStarted => 'لم تبدأ';
+
+  @override
+  String get mindMapStatusInProgress => 'قيد التنفيذ';
+
+  @override
+  String get mindMapStatusCompleted => 'مكتملة';
+
+  @override
+  String get mindMapPriorityLow => 'منخفضة';
+
+  @override
+  String get mindMapPriorityMedium => 'متوسطة';
+
+  @override
+  String get mindMapPriorityHigh => 'مرتفعة';
+
+  @override
+  String get mindMapNodeTitleRequired => 'اكتب عنوان العقدة';
+
+  @override
+  String get mindMapDeleteNode => 'حذف العقدة';
+
+  @override
+  String get mindMapDeleteNodeConfirmation =>
+      'حذف هذه العقدة؟ سيبقى أبناؤها عقدًا مستقلة.';
+
+  @override
+  String get mindMapParent => 'العقدة الأم';
+
+  @override
+  String get mindMapDetach => 'فصل عن الأم';
+
+  @override
+  String get mindMapSideLink => 'رابط مرئي';
+
+  @override
+  String get mindMapConnect => 'توصيل';
+
+  @override
+  String get mindMapDisconnect => 'فصل الرابط';
+
+  @override
+  String get mindMapMoveNode => 'تحريك العقدة';
+
+  @override
+  String get mindMapUndo => 'تراجع';
+
+  @override
+  String get mindMapRedo => 'إعادة';
+
+  @override
+  String get mindMapGraphError =>
+      'تعذر حفظ التعديل في الخريطة. راجع الرابط وحاول مرة أخرى.';
+
+  @override
+  String get mindMapNoParent => 'مستقلة';
+
+  @override
+  String get mindMapProgress => 'التقدم';
+
+  @override
+  String get mindMapChooseTask => 'اختر مهمة';
+
+  @override
+  String get mindMapLinkTask => 'ربط مهمة';
+
+  @override
+  String get mindMapChangeTask => 'تغيير المهمة المرتبطة';
+
+  @override
+  String get mindMapUnlinkTask => 'فصل المهمة';
+
+  @override
+  String get mindMapLinkedTask => 'مهمة مرتبطة';
+
+  @override
+  String get mindMapTaskUnavailable => 'المهمة المرتبطة غير متاحة';
+
+  @override
+  String get mindMapCompleteTask => 'إكمال المهمة';
+
+  @override
+  String get mindMapReopenTask => 'إعادة فتح المهمة';
+
+  @override
+  String get mindMapLoadingTasks => 'جارٍ تحميل المهام…';
+
+  @override
+  String get mindMapRetryTasks => 'إعادة تحميل المهام';
+
+  @override
+  String get mindMapNoTasks => 'لا توجد مهام متاحة';
+
+  @override
+  String get mindMapTaskLinkFailure =>
+      'تعذر تحميل المهمة أو ربطها. حاول مرة أخرى.';
+
+  @override
+  String get mindMapSettings => 'إعدادات الخريطة';
+
+  @override
+  String get mindMapLayout => 'التخطيط';
+
+  @override
+  String get mindMapApplyLayout => 'تطبيق التخطيط';
+
+  @override
+  String get mindMapLayoutRadial => 'دائري';
+
+  @override
+  String get mindMapLayoutTree => 'شجري';
+
+  @override
+  String get mindMapLayoutHorizontal => 'أفقي';
+
+  @override
+  String get mindMapLayoutVertical => 'رأسي';
+
+  @override
+  String get mindMapLayoutFreeform => 'حر';
+
+  @override
+  String get mindMapBackground => 'خلفية مساحة الرسم';
+
+  @override
+  String get mindMapDefaultNode => 'مظهر العقد الجديدة';
+
+  @override
+  String get mindMapConnectionStyle => 'مظهر الروابط الجديدة';
+
+  @override
+  String get mindMapSpacing => 'المسافة بين العقد';
+
+  @override
+  String get mindMapNodeColor => 'لون العقدة';
+
+  @override
+  String get mindMapConnectionColor => 'لون الرابط';
+
+  @override
+  String get mindMapConnectionWidth => 'سُمك الرابط';
+
+  @override
+  String get mindMapNodeIcon => 'رمز العقدة';
+
+  @override
+  String get mindMapNodeShape => 'شكل العقدة';
+
+  @override
+  String get mindMapNodeSize => 'حجم العقدة';
+
+  @override
+  String get mindMapTextSize => 'حجم النص';
+
+  @override
+  String get mindMapShapeRectangle => 'مستطيل';
+
+  @override
+  String get mindMapShapeRounded => 'مستدير';
+
+  @override
+  String get mindMapShapeCircle => 'دائرة';
+
+  @override
+  String get mindMapShapePill => 'كبسولة';
+
+  @override
+  String get mindMapShapeGlass => 'زجاجي';
+
+  @override
+  String get mindMapSizeSmall => 'صغير';
+
+  @override
+  String get mindMapSizeMedium => 'متوسط';
+
+  @override
+  String get mindMapSizeLarge => 'كبير';
+
+  @override
+  String get mindMapIconIdea => 'فكرة';
+
+  @override
+  String get mindMapIconTask => 'مهمة';
+
+  @override
+  String get mindMapIconNote => 'ملاحظة';
+
+  @override
+  String get mindMapIconStar => 'نجمة';
+
+  @override
+  String get mindMapIconFlag => 'علم';
+
+  @override
+  String get mindMapColorWhite => 'أبيض';
+
+  @override
+  String get mindMapColorBlue => 'أزرق';
+
+  @override
+  String get mindMapColorGreen => 'أخضر';
+
+  @override
+  String get mindMapColorAmber => 'كهرماني';
+
+  @override
+  String get mindMapColorPurple => 'بنفسجي';
+
+  @override
+  String get mindMapColorDark => 'داكن';
+
+  @override
+  String get mindMapColorCurrent => 'اللون الحالي';
+
+  @override
+  String get mindMapFit => 'احتواء الخريطة';
+
+  @override
+  String get mindMapCenter => 'توسيط الخريطة';
+
+  @override
+  String get mindMapZoomIn => 'تكبير';
+
+  @override
+  String get mindMapZoomOut => 'تصغير';
+
+  @override
+  String get mindMapPanLeft => 'تحريك لليسار';
+
+  @override
+  String get mindMapPanRight => 'تحريك لليمين';
+
+  @override
+  String get mindMapPanUp => 'تحريك لأعلى';
+
+  @override
+  String get mindMapPanDown => 'تحريك لأسفل';
+
+  @override
+  String get mindMapDragNode => 'اسحب العقدة لتحريكها';
+
+  @override
+  String get mindMapKeyboardHelp =>
+      'لوحة المفاتيح: الأسهم للتحريك، زائد وناقص للتكبير والتصغير، F لاحتواء الخريطة، C للتوسيط';
 }

@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/habits_strings_adapter.dart';
+import 'package:namma_project/app/l10n/mind_maps_strings_adapter.dart';
 import 'package:namma_project/app/l10n/tasks_strings_adapter.dart';
 import 'package:namma_project/app/routing/app_router.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
@@ -26,6 +27,8 @@ import 'package:namma_project/features/foundation/presentation/state/synchroniza
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
 import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
+import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
+import 'package:namma_project/features/mind_maps/presentation/map_library_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
 
@@ -37,6 +40,9 @@ const Key kFoundationRootReadyKey = Key('foundation_root_ready');
 const Key kFoundationRootFailureKey = Key('foundation_root_failure');
 const Key kFoundationTasksNavigationKey = Key('foundation_tasks_navigation');
 const Key kFoundationHabitsNavigationKey = Key('foundation_habits_navigation');
+const Key kFoundationMindMapsNavigationKey = Key(
+  'foundation_mind_maps_navigation',
+);
 
 class FoundationApp extends StatefulWidget {
   const FoundationApp({
@@ -300,6 +306,9 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
     final habitsAvailable =
         getIt.isRegistered<HabitsCubit>() &&
         getIt.isRegistered<CloudSessionPort>();
+    final mindMapsAvailable =
+        getIt.isRegistered<MapLibraryCubit>() &&
+        getIt.isRegistered<CloudSessionPort>();
     _router = FoundationAppRouter(
       rootBuilder: (_) => widget.home,
       cloudSession: tasksAvailable ? getIt<CloudSessionPort>() : null,
@@ -313,6 +322,13 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
           : null,
       habitsBuilder: habitsAvailable
           ? (_, accountId) => _HabitsRouteScope(
+              key: ValueKey(accountId),
+              accountId: accountId,
+            )
+          : null,
+      mindMapsSession: mindMapsAvailable ? getIt<CloudSessionPort>() : null,
+      mindMapsBuilder: mindMapsAvailable
+          ? (_, accountId) => _MindMapsRouteScope(
               key: ValueKey(accountId),
               accountId: accountId,
             )
@@ -389,6 +405,15 @@ class _ReadyShell extends StatelessWidget {
               label: Text(FoundationLocalizations.of(context).habitsTitle),
             ),
           ],
+          if (GetIt.instance.isRegistered<MapLibraryCubit>()) ...[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              key: kFoundationMindMapsNavigationKey,
+              onPressed: () => GoRouter.of(context).go(kMindMapsRoute),
+              icon: const Icon(Icons.hub_outlined),
+              label: Text(FoundationLocalizations.of(context).mindMapsTitle),
+            ),
+          ],
         ],
       ),
     ),
@@ -448,6 +473,31 @@ class _HabitsRouteScopeState extends State<_HabitsRouteScope> {
     cubit: _cubit,
     accountId: widget.accountId,
     stringsResolver: resolveHabitsStrings,
+  );
+}
+
+/// A route visit owns one map controller and cannot retain another owner.
+class _MindMapsRouteScope extends StatefulWidget {
+  const _MindMapsRouteScope({super.key, required this.accountId});
+  final String accountId;
+  @override
+  State<_MindMapsRouteScope> createState() => _MindMapsRouteScopeState();
+}
+
+class _MindMapsRouteScopeState extends State<_MindMapsRouteScope> {
+  late final MapLibraryCubit _cubit = GetIt.instance<MapLibraryCubit>();
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MapLibraryScreen(
+    cubit: _cubit,
+    ownerId: widget.accountId,
+    stringsResolver: resolveMindMapsStrings,
   );
 }
 

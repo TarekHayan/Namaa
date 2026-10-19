@@ -17,6 +17,11 @@ import 'package:namma_project/features/foundation/presentation/state/foundation_
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/theme_cubit.dart';
+import 'package:namma_project/features/mind_maps/application/map_commands.dart';
+import 'package:namma_project/features/mind_maps/application/map_repository.dart';
+import 'package:namma_project/features/mind_maps/data/drift_map_repository.dart';
+import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
+import 'package:namma_project/features/mind_maps/presentation/map_library_state.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
@@ -177,6 +182,59 @@ void main() {
       );
       expect(restored.valueOrNull?.title, 'Trial task');
     });
+
+    test(
+      'Mind Maps uses the Tasks preview owner and survives restart',
+      () async {
+        final tempDir = await Directory.systemTemp.createTemp(
+          'namaa_maps_preview_',
+        );
+        final dbPath = <String>[
+          tempDir.path,
+          'foundation_encrypted.db',
+        ].join(Platform.pathSeparator);
+        final secureStore = InMemorySecureKeyValueStore();
+        addTearDown(() async {
+          await getIt.reset();
+          await tempDir.delete(recursive: true);
+        });
+        await configureDependencies(
+          environment: FoundationEnvironment.tasksPreview,
+          secureStoreOverride: secureStore,
+          databasePathOverride: dbPath,
+        );
+        expect(getIt<MapRepository>(), isA<DriftMapRepository>());
+        final created = await getIt<MapCommands>().createMap(
+          title: 'Preview map',
+        );
+        expect(created.failureOrNull, isNull);
+        expect(created.valueOrNull!.ownerId, kTasksPreviewAccountId);
+        final cubit = getIt<MapLibraryCubit>();
+        final ready = cubit.stream.firstWhere(
+          (state) => state is MapLibraryReady,
+        );
+        await cubit.load(kTasksPreviewAccountId);
+        expect(
+          (await ready as MapLibraryReady).maps.single.map.title,
+          'Preview map',
+        );
+        await cubit.close();
+        await getIt.reset();
+        await configureDependencies(
+          environment: FoundationEnvironment.tasksPreview,
+          secureStoreOverride: secureStore,
+          databasePathOverride: dbPath,
+        );
+        final restored = await getIt<MapRepository>().readGraph(
+          ownerId: kTasksPreviewAccountId,
+          mapId: created.valueOrNull!.id,
+        );
+        expect(
+          restored.valueOrNull?.nodes.single.id,
+          created.valueOrNull!.centralNodeId,
+        );
+      },
+    );
 
     test('default launch resolves real Foundation adapters', () async {
       final tempDir = await Directory.systemTemp.createTemp(

@@ -374,4 +374,389 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get habitSunday => 'Sunday';
+
+  @override
+  String get mindMapsTitle => 'Mind Maps';
+
+  @override
+  String get mindMapsCreate => 'New map';
+
+  @override
+  String get mindMapsSearch => 'Search maps';
+
+  @override
+  String get mindMapsEmptyLibrary => 'No maps yet. Create your first map.';
+
+  @override
+  String get mindMapsEmptySearch => 'No maps match your search.';
+
+  @override
+  String get mindMapTitleLabel => 'Map title';
+
+  @override
+  String get mindMapDescriptionLabel => 'Description';
+
+  @override
+  String get mindMapEditTitle => 'Rename';
+
+  @override
+  String get mindMapEditDescription => 'Edit description';
+
+  @override
+  String get mindMapDuplicate => 'Duplicate';
+
+  @override
+  String get mindMapDelete => 'Delete';
+
+  @override
+  String get mindMapDeleteConfirmation =>
+      'Delete this map? It will disappear from your library. Linked tasks will remain.';
+
+  @override
+  String get mindMapSave => 'Save';
+
+  @override
+  String get mindMapCancel => 'Cancel';
+
+  @override
+  String get mindMapTitleRequired => 'Enter a map title';
+
+  @override
+  String get mindMapsLoadFailure => 'Could not load maps. Try again.';
+
+  @override
+  String get mindMapsSaveFailure =>
+      'Could not save your map change. Please try again.';
+
+  @override
+  String get mindMapsAccountFailure => 'This account cannot change that map.';
+
+  @override
+  String get mindMapsNotFound => 'This map is no longer available.';
+
+  @override
+  String get mindMapsRetry => 'Retry';
+
+  @override
+  String get mindMapSyncing => 'Syncing mind maps…';
+
+  @override
+  String get mindMapSyncFailed =>
+      'Mind maps could not sync. Local changes are saved.';
+
+  @override
+  String get mindMapSyncRetry => 'Retry sync';
+
+  @override
+  String get mindMapConflicts => 'Review other versions';
+
+  @override
+  String get mindMapConflictActive => 'Current version';
+
+  @override
+  String get mindMapConflictRetained => 'Other version';
+
+  @override
+  String get mindMapConflictUnresolved => 'Needs review';
+
+  @override
+  String get mindMapNodeCount => 'Nodes';
+
+  @override
+  String get mindMapCompletedCount => 'Completed';
+
+  @override
+  String get mindMapCentralNode => 'Central idea';
+
+  @override
+  String get mindMapsSignInRequired => 'Sign in to access your mind maps.';
+
+  @override
+  String get mindMapsBack => 'Back to maps';
+
+  @override
+  String get mindMapEditMap => 'Edit map';
+
+  @override
+  String get mindMapAddNode => 'Add node';
+
+  @override
+  String get mindMapEditNode => 'Edit node';
+
+  @override
+  String get mindMapNodeTitle => 'Node title';
+
+  @override
+  String get mindMapNodeDescription => 'Node description';
+
+  @override
+  String get mindMapNodeKind => 'Type';
+
+  @override
+  String get mindMapNodePriority => 'Priority';
+
+  @override
+  String get mindMapNodeStatus => 'Status';
+
+  @override
+  String get mindMapKindCentral => 'Central idea';
+
+  @override
+  String get mindMapKindMainIdea => 'Main idea';
+
+  @override
+  String get mindMapKindBranch => 'Branch';
+
+  @override
+  String get mindMapKindTask => 'Task idea';
+
+  @override
+  String get mindMapKindNote => 'Note';
+
+  @override
+  String get mindMapStatusNotStarted => 'Not started';
+
+  @override
+  String get mindMapStatusInProgress => 'In progress';
+
+  @override
+  String get mindMapStatusCompleted => 'Completed';
+
+  @override
+  String get mindMapPriorityLow => 'Low';
+
+  @override
+  String get mindMapPriorityMedium => 'Medium';
+
+  @override
+  String get mindMapPriorityHigh => 'High';
+
+  @override
+  String get mindMapNodeTitleRequired => 'Enter a node title';
+
+  @override
+  String get mindMapDeleteNode => 'Delete node';
+
+  @override
+  String get mindMapDeleteNodeConfirmation =>
+      'Delete this node? Its children will remain as independent nodes.';
+
+  @override
+  String get mindMapParent => 'Parent branch';
+
+  @override
+  String get mindMapDetach => 'Detach from parent';
+
+  @override
+  String get mindMapSideLink => 'Visual link';
+
+  @override
+  String get mindMapConnect => 'Connect';
+
+  @override
+  String get mindMapDisconnect => 'Disconnect';
+
+  @override
+  String get mindMapMoveNode => 'Move node';
+
+  @override
+  String get mindMapUndo => 'Undo';
+
+  @override
+  String get mindMapRedo => 'Redo';
+
+  @override
+  String get mindMapGraphError =>
+      'Could not save this graph change. Check the connection and try again.';
+
+  @override
+  String get mindMapNoParent => 'Independent';
+
+  @override
+  String get mindMapProgress => 'Progress';
+
+  @override
+  String get mindMapChooseTask => 'Choose a task';
+
+  @override
+  String get mindMapLinkTask => 'Link task';
+
+  @override
+  String get mindMapChangeTask => 'Change linked task';
+
+  @override
+  String get mindMapUnlinkTask => 'Unlink task';
+
+  @override
+  String get mindMapLinkedTask => 'Linked task';
+
+  @override
+  String get mindMapTaskUnavailable => 'Linked task unavailable';
+
+  @override
+  String get mindMapCompleteTask => 'Complete task';
+
+  @override
+  String get mindMapReopenTask => 'Reopen task';
+
+  @override
+  String get mindMapLoadingTasks => 'Loading tasks…';
+
+  @override
+  String get mindMapRetryTasks => 'Retry loading tasks';
+
+  @override
+  String get mindMapNoTasks => 'No accessible tasks found';
+
+  @override
+  String get mindMapTaskLinkFailure =>
+      'Could not load or link this task. Try again.';
+
+  @override
+  String get mindMapSettings => 'Map settings';
+
+  @override
+  String get mindMapLayout => 'Layout';
+
+  @override
+  String get mindMapApplyLayout => 'Apply layout';
+
+  @override
+  String get mindMapLayoutRadial => 'Radial';
+
+  @override
+  String get mindMapLayoutTree => 'Tree';
+
+  @override
+  String get mindMapLayoutHorizontal => 'Horizontal';
+
+  @override
+  String get mindMapLayoutVertical => 'Vertical';
+
+  @override
+  String get mindMapLayoutFreeform => 'Freeform';
+
+  @override
+  String get mindMapBackground => 'Canvas background';
+
+  @override
+  String get mindMapDefaultNode => 'New node default';
+
+  @override
+  String get mindMapConnectionStyle => 'New connection default';
+
+  @override
+  String get mindMapSpacing => 'Spacing';
+
+  @override
+  String get mindMapNodeColor => 'Node color';
+
+  @override
+  String get mindMapConnectionColor => 'Connection color';
+
+  @override
+  String get mindMapConnectionWidth => 'Connection width';
+
+  @override
+  String get mindMapNodeIcon => 'Node icon';
+
+  @override
+  String get mindMapNodeShape => 'Node shape';
+
+  @override
+  String get mindMapNodeSize => 'Node size';
+
+  @override
+  String get mindMapTextSize => 'Text size';
+
+  @override
+  String get mindMapShapeRectangle => 'Rectangle';
+
+  @override
+  String get mindMapShapeRounded => 'Rounded';
+
+  @override
+  String get mindMapShapeCircle => 'Circle';
+
+  @override
+  String get mindMapShapePill => 'Pill';
+
+  @override
+  String get mindMapShapeGlass => 'Glass';
+
+  @override
+  String get mindMapSizeSmall => 'Small';
+
+  @override
+  String get mindMapSizeMedium => 'Medium';
+
+  @override
+  String get mindMapSizeLarge => 'Large';
+
+  @override
+  String get mindMapIconIdea => 'Idea';
+
+  @override
+  String get mindMapIconTask => 'Task';
+
+  @override
+  String get mindMapIconNote => 'Note';
+
+  @override
+  String get mindMapIconStar => 'Star';
+
+  @override
+  String get mindMapIconFlag => 'Flag';
+
+  @override
+  String get mindMapColorWhite => 'White';
+
+  @override
+  String get mindMapColorBlue => 'Blue';
+
+  @override
+  String get mindMapColorGreen => 'Green';
+
+  @override
+  String get mindMapColorAmber => 'Amber';
+
+  @override
+  String get mindMapColorPurple => 'Purple';
+
+  @override
+  String get mindMapColorDark => 'Dark';
+
+  @override
+  String get mindMapColorCurrent => 'Current color';
+
+  @override
+  String get mindMapFit => 'Fit map';
+
+  @override
+  String get mindMapCenter => 'Center map';
+
+  @override
+  String get mindMapZoomIn => 'Zoom in';
+
+  @override
+  String get mindMapZoomOut => 'Zoom out';
+
+  @override
+  String get mindMapPanLeft => 'Pan left';
+
+  @override
+  String get mindMapPanRight => 'Pan right';
+
+  @override
+  String get mindMapPanUp => 'Pan up';
+
+  @override
+  String get mindMapPanDown => 'Pan down';
+
+  @override
+  String get mindMapDragNode => 'Drag node to move';
+
+  @override
+  String get mindMapKeyboardHelp =>
+      'Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers';
 }

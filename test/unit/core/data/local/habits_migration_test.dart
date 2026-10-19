@@ -100,8 +100,9 @@ void main() {
     final v4 = await FoundationDatabase.openEncrypted(
       path: path,
       key: _testKey,
+      schemaVersion: 4,
     );
-    expect(kFoundationSchemaVersion, 4);
+    expect(v4.schemaVersion, 4);
     await expectPreviousData(v4);
     expect(await v4.journalStatusFor(4), 'completed');
     expect(
@@ -173,6 +174,7 @@ void main() {
         FoundationDatabase.openEncrypted(
           path: path,
           key: _testKey,
+          schemaVersion: 4,
           testMigrationHook: (migrator, from, to) async {
             expect(from, 3);
             expect(to, 4);
@@ -209,6 +211,7 @@ void main() {
       final recoveredV4 = await FoundationDatabase.openEncrypted(
         path: path,
         key: _testKey,
+        schemaVersion: 4,
       );
       await expectPreviousData(recoveredV4);
       expect(await recoveredV4.journalStatusFor(4), 'recovered');

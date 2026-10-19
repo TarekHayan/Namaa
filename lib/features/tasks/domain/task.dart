@@ -28,6 +28,7 @@ final class Task {
     this.targetDeadlineUtcOffsetMinutes,
     this.estimatedDurationMinutes,
     this.completedAt,
+    required this.completionChangedAt,
     this.deletedAt,
   });
 
@@ -46,6 +47,7 @@ final class Task {
     int? estimatedDurationMinutes,
     List<ChecklistItem> checklistItems = const <ChecklistItem>[],
     DateTime? completedAt,
+    DateTime? completionChangedAt,
     int completionXp = 20,
     DateTime? updatedAt,
     DateTime? deletedAt,
@@ -63,6 +65,7 @@ final class Task {
     estimatedDurationMinutes: estimatedDurationMinutes ?? 30,
     checklistItems: checklistItems,
     completedAt: completedAt,
+    completionChangedAt: completionChangedAt,
     completionXp: completionXp,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -85,6 +88,7 @@ final class Task {
     int? estimatedDurationMinutes,
     List<ChecklistItem> checklistItems = const <ChecklistItem>[],
     DateTime? completedAt,
+    DateTime? completionChangedAt,
     int completionXp = 20,
     DateTime? updatedAt,
     DateTime? deletedAt,
@@ -128,6 +132,12 @@ final class Task {
     }
     final normalizedDeadline = targetDeadline?.toUtc();
     final normalizedCompletedAt = completedAt?.toUtc();
+    final normalizedCompletionChangedAt =
+        completionChangedAt?.toUtc() ?? normalizedCompletedAt ?? createdAt;
+    if (normalizedCompletionChangedAt.isBefore(createdAt) ||
+        normalizedCompletionChangedAt.isAfter(normalizedUpdatedAt)) {
+      throw ArgumentError.value(completionChangedAt, 'completionChangedAt');
+    }
     final normalizedDeletedAt = deletedAt?.toUtc();
     if (normalizedCompletedAt != null &&
         normalizedCompletedAt.isBefore(createdAt)) {
@@ -165,6 +175,7 @@ final class Task {
       estimatedDurationMinutes: estimatedDurationMinutes,
       checklistItems: List<ChecklistItem>.unmodifiable(checklistItems),
       completedAt: normalizedCompletedAt,
+      completionChangedAt: normalizedCompletionChangedAt,
       completionXp: completionXp,
       createdAt: createdAt,
       updatedAt: normalizedUpdatedAt,
@@ -187,6 +198,7 @@ final class Task {
   final int? estimatedDurationMinutes;
   final List<ChecklistItem> checklistItems;
   final DateTime? completedAt;
+  final DateTime completionChangedAt;
   final int completionXp;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -207,6 +219,7 @@ final class Task {
     Object? estimatedDurationMinutes = _unchanged,
     List<ChecklistItem>? checklistItems,
     Object? completedAt = _unchanged,
+    DateTime? completionChangedAt,
     int? completionXp,
     DateTime? updatedAt,
     Object? deletedAt = _unchanged,
@@ -237,6 +250,7 @@ final class Task {
     completedAt: identical(completedAt, _unchanged)
         ? this.completedAt
         : completedAt as DateTime?,
+    completionChangedAt: completionChangedAt ?? this.completionChangedAt,
     completionXp: completionXp ?? this.completionXp,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -264,7 +278,11 @@ final class Task {
       return this;
     }
     _requireNewerVersion(instant);
-    return copyWith(completedAt: instant, updatedAt: instant);
+    return copyWith(
+      completedAt: instant,
+      completionChangedAt: instant,
+      updatedAt: instant,
+    );
   }
 
   /// Clears the current completion state without touching checklist progress.
@@ -274,7 +292,11 @@ final class Task {
       return this;
     }
     _requireNewerVersion(instant);
-    return copyWith(completedAt: null, updatedAt: instant);
+    return copyWith(
+      completedAt: null,
+      completionChangedAt: instant,
+      updatedAt: instant,
+    );
   }
 
   /// Adds one simple step to this aggregate without changing completion or XP.
@@ -427,6 +449,7 @@ final class Task {
           estimatedDurationMinutes == other.estimatedDurationMinutes &&
           _listEquals(checklistItems, other.checklistItems) &&
           completedAt == other.completedAt &&
+          completionChangedAt == other.completionChangedAt &&
           completionXp == other.completionXp &&
           createdAt == other.createdAt &&
           updatedAt == other.updatedAt &&
@@ -447,6 +470,7 @@ final class Task {
     estimatedDurationMinutes,
     ...checklistItems,
     completedAt,
+    completionChangedAt,
     completionXp,
     createdAt,
     updatedAt,
