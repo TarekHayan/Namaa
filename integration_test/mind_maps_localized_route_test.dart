@@ -139,7 +139,9 @@ void main() {
       find.byKey(kMapLibraryTitleFieldKey),
       'خطة Namaa 2026',
     );
-    await tester.tap(find.text('حفظ'));
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(kMapLibrarySaveKey));
     final current = cubit.state;
     if (current is! MapLibraryReady ||
         !current.maps.any((item) => item.map.title == 'خطة Namaa 2026')) {
@@ -194,6 +196,8 @@ void main() {
     await tester.tap(find.byKey(kMindMapAddNodeKey));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(kMindMapNodeTitleFieldKey), 'فرع Alpha');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(kMindMapNodeSaveKey));
     await waitForEditor((ready) => ready.summary.nodeCount == 2);
     await tester.pumpAndSettle();
@@ -205,6 +209,8 @@ void main() {
       find.byKey(kMindMapNodeTitleFieldKey),
       'ملاحظة Beta',
     );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<MindMapNodeKind>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('ملاحظة').last);

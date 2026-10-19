@@ -15,6 +15,7 @@ const Key kMapLibraryEmptyKey = Key('mind_map_empty_library');
 const Key kMapLibraryEmptySearchKey = Key('mind_map_empty_search');
 const Key kMapLibraryConfirmDeleteKey = Key('mind_map_confirm_delete');
 const Key kMapLibraryTitleFieldKey = Key('mind_map_title_field');
+const Key kMapLibrarySaveKey = Key('mind_map_save');
 const Key kMapLibraryDescriptionFieldKey = Key('mind_map_description_field');
 
 class MapLibraryScreen extends StatefulWidget {
@@ -297,6 +298,7 @@ class _MapLibraryScreenState extends State<MapLibraryScreen> {
               child: Text(strings.cancel),
             ),
             FilledButton(
+              key: kMapLibrarySaveKey,
               onPressed: () {
                 if (!editDescription && draft.trim().isEmpty) {
                   setDialogState(() => error = strings.titleRequired);

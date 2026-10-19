@@ -21,6 +21,17 @@
 
 The Phase 7 `mind_maps_offline_sync_test.dart` also passed ten two-database Android trials before this phase. That test models the cloud boundary; it does not replace the isolated hosted Supabase trial.
 
+## PR CI follow-up
+
+The first full PR run, [39312996337](https://github.com/TarekHayan/Namaa/actions/runs/39312996337), completed on 2026-10-19 with quality, database security, macOS, and 18 iOS simulator entries successful, including Mind Maps staging sync. The run did not pass its five-target gate:
+
+- Windows and Linux reached the new hosted Mind Maps test before the staging database had migrations `0008`–`0010`; both reported missing `apply_mind_map_change`. Those migrations were then applied to the linked isolated `namaa_satging` project and confirmed in its migration history.
+- Android was cancelled at the job's 60-minute limit after its first APK installed, before reporting a test result. A prior Android gate succeeded; this run provides no Android pass.
+- The iOS Habits streak/history entry failed to establish a debug connection on two simulator startup attempts. Its test body did not start.
+- The iOS Mind Maps localized route found the Save text but its tap was blocked while the text input overlay was active. The route test now completes text input, waits for layout to settle, and taps a stable Save control key. The changed files passed direct Dart analysis and the Windows localized route integration test. iOS still requires a successful CI rerun.
+
+T093 remains open until the corrected PR run reports successful persistence, account sync, and Task-link coverage on all five targets.
+
 ## SC-005: 50 nodes and 60 links, offline response
 
 All values are elapsed milliseconds from action through the next rendered test frame. The Windows and Android runs used encrypted local storage without a network dependency. The acceptance targets are the Android `390×844` viewport and Windows `1200×800` viewport.
