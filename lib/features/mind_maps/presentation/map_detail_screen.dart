@@ -3,8 +3,10 @@ import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/mind_maps/application/map_editor_history.dart';
 import 'package:namma_project/features/mind_maps/application/map_graph_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_queries.dart';
+import 'package:namma_project/features/mind_maps/application/map_reconciliation.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
 import 'package:namma_project/features/mind_maps/application/map_settings_commands.dart';
+import 'package:namma_project/features/mind_maps/application/map_sync_service.dart';
 import 'package:namma_project/features/mind_maps/application/map_task_link_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_task_link_port.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map_node.dart';
@@ -26,6 +28,8 @@ class MapDetailScreen extends StatelessWidget {
     required this.stringsResolver,
     this.session,
     this.tasks,
+    this.syncService,
+    this.conflictReader,
   });
 
   final MapRepository repository;
@@ -34,10 +38,27 @@ class MapDetailScreen extends StatelessWidget {
   final MindMapsStringsResolver stringsResolver;
   final CloudSessionPort? session;
   final MapTaskLinkPort? tasks;
+  final MapSyncService? syncService;
+  final MapConflictReaderPort? conflictReader;
 
   @override
   Widget build(BuildContext context) {
     final strings = stringsResolver(context);
+    if (session == null) return _ownedContent(context, strings);
+    return StreamBuilder<CloudSessionSnapshot>(
+      stream: session!.observeSession(),
+      builder: (context, snapshot) {
+        final value = snapshot.data;
+        if (value?.status != CloudSessionStatus.signedIn ||
+            value?.accountId != ownerId) {
+          return Scaffold(body: Center(child: Text(strings.signInRequired)));
+        }
+        return _ownedContent(context, strings);
+      },
+    );
+  }
+
+  Widget _ownedContent(BuildContext context, MindMapsStrings strings) {
     return StreamBuilder<MapGraph?>(
       stream: repository.watchGraph(ownerId: ownerId, mapId: mapId),
       builder: (context, snapshot) {
@@ -122,6 +143,9 @@ class MapDetailScreen extends StatelessWidget {
                                     session: session!,
                                   ),
                                   tasks: tasks,
+                                  syncService: syncService,
+                                  conflictReader: conflictReader,
+                                  session: session,
                                   taskLinks: tasks == null
                                       ? null
                                       : MapTaskLinkCommands(

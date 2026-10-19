@@ -1,13 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 
 import '../application/map_editor_history.dart';
 import '../application/map_graph_commands.dart';
+import '../application/map_reconciliation.dart';
 import '../application/map_repository.dart';
 import '../application/map_settings_commands.dart';
+import '../application/map_sync_service.dart';
 import '../application/map_task_link_commands.dart';
 import '../application/map_task_link_port.dart';
 import '../domain/mind_map.dart';
@@ -24,13 +27,41 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
     MapTaskLinkPort? tasks,
     MapTaskLinkCommands? taskLinks,
     MapSettingsCommands? settingsCommands,
+    MapSyncService? syncService,
+    MapConflictReaderPort? conflictReader,
+    CloudSessionPort? session,
   }) : _repository = repository,
        _commands = commands,
        _history = history,
        _tasks = tasks,
        _taskLinks = taskLinks,
        _settingsCommands = settingsCommands,
+       _syncService = syncService,
+       _session = session,
        super(const MapEditorLoading()) {
+    if (syncService != null) {
+      _syncSubscription = syncService.snapshots.listen((_) => _emitReady());
+      unawaited(syncService.synchronize());
+    }
+    if (conflictReader != null) {
+      _conflictSubscription = conflictReader
+          .watchConflicts(ownerId, mapId)
+          .listen((items) {
+            _conflicts = items;
+            _emitReady();
+          });
+    }
+    if (session != null) {
+      _sessionSubscription = session.observeSession().listen((snapshot) {
+        if (snapshot.status != CloudSessionStatus.signedIn ||
+            snapshot.accountId != ownerId) {
+          _graph = null;
+          _linkedTasks = {};
+          _conflicts = [];
+          if (!isClosed) emit(const MapEditorUnavailable(null));
+        }
+      });
+    }
     if (tasks != null) {
       _taskSubscription = tasks
           .watchAccessibleTasks(ownerId)
@@ -73,10 +104,17 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
   final MapTaskLinkPort? _tasks;
   final MapTaskLinkCommands? _taskLinks;
   final MapSettingsCommands? _settingsCommands;
+  final MapSyncService? _syncService;
+  final CloudSessionPort? _session;
+  CloudSessionPort? get session => _session;
   final String ownerId;
   final String mapId;
   StreamSubscription<MapGraph?>? _subscription;
   StreamSubscription<List<MapLinkedTask>>? _taskSubscription;
+  StreamSubscription<MapSyncSnapshot>? _syncSubscription;
+  StreamSubscription<List<MapConflictView>>? _conflictSubscription;
+  StreamSubscription<CloudSessionSnapshot>? _sessionSubscription;
+  List<MapConflictView> _conflicts = [];
   Map<String, MapLinkedTask> _linkedTasks = {};
   MapGraph? _graph;
   String? _selectedId;
@@ -274,6 +312,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
         _selectedId = edit.nodes.first.after.id;
       }
       await _refreshConfirmedGraph();
+      if (_syncService != null) unawaited(_syncService.synchronize());
     }
     _emitReady();
     return result.failureOrNull == null;
@@ -288,6 +327,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
     _lastFailure = result.failureOrNull;
     if (result.failureOrNull == null) {
       await _refreshConfirmedGraph();
+      if (_syncService != null) unawaited(_syncService.synchronize());
     }
     _emitReady();
     return result.failureOrNull == null;
@@ -296,6 +336,10 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
   void clearFailure() {
     _lastFailure = null;
     _emitReady();
+  }
+
+  Future<void> retrySync() async {
+    await _syncService?.synchronize();
   }
 
   Future<void> _refreshConfirmedGraph() async {
@@ -322,6 +366,8 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
         busy: _busy,
         failure: _lastFailure,
         linkedTasks: _linkedTasks,
+        syncStatus: _syncService?.snapshot.status ?? MapSyncStatus.idle,
+        conflicts: _conflicts,
       ),
     );
   }
@@ -336,6 +382,9 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
   Future<void> close() async {
     await _subscription?.cancel();
     await _taskSubscription?.cancel();
+    await _syncSubscription?.cancel();
+    await _conflictSubscription?.cancel();
+    await _sessionSubscription?.cancel();
     await super.close();
   }
 }

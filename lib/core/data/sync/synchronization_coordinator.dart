@@ -33,11 +33,19 @@ class SynchronizationCoordinator implements PendingSynchronizationEngine {
   final CloudSessionPort _cloudSession;
   final CloudSyncPort _cloudSync;
   final DateTime Function() _now;
+  Future<AppResult<SyncSummary>>? _activeSync;
 
   static DateTime _defaultNow() => DateTime.now().toUtc();
 
   @override
-  Future<AppResult<SyncSummary>> synchronize() async {
+  Future<AppResult<SyncSummary>> synchronize() {
+    if (_activeSync case final active?) return active;
+    final future = _run().whenComplete(() => _activeSync = null);
+    _activeSync = future;
+    return future;
+  }
+
+  Future<AppResult<SyncSummary>> _run() async {
     final context = await _cloudSession.obtainSyncContext();
     final contextFailure = context.failureOrNull;
     if (contextFailure != null) {

@@ -173,29 +173,29 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 
 ### Tests for User Story 5 — write first
 
-- [ ] T069 [P] [US5] Test owner-only map/node/slot/link/conflict/receipt reads, anonymous denial and direct-write denial in supabase/tests/mind_maps_account_isolation_test.sql.
-- [ ] T070 [P] [US5] Test owner-derived mutation receipts/replay, cross-map/foreign endpoints, Task link validation, cycles and duplicate parent/side pairs in supabase/tests/mind_maps_operation_integrity_test.sql.
-- [ ] T071 [P] [US5] Test independent-node merge, same-record newest winner/visible loser, equal-time tie, structural collision and map/node deletion races in supabase/tests/mind_maps_conflict_integrity_test.sql.
-- [ ] T072 [P] [US5] Test four entity dispatch routes, stable operation IDs, retry/acknowledgement and rejection of unknown types in test/unit/core/data/sync/entity_dispatch_router_test.dart.
-- [ ] T073 [P] [US5] Test receipt-aware outbound and complete paginated owner reads, final-page/tombstone handling and foreign-data rejection in test/unit/features/mind_maps/data/supabase_map_adapter_test.dart.
-- [ ] T074 [P] [US5] Test per-record atomic winner/loser reconciliation, pending local changes, parent/side invariants and deletion/edit evidence in test/unit/features/mind_maps/data/map_reconciler_test.dart.
-- [ ] T075 [P] [US5] Test outbound-before-inbound, changed-session guards after awaits, partial-page failure/retry and truthful initial-ready state in test/unit/features/mind_maps/application/map_sync_service_test.dart.
-- [ ] T076 [P] [US5] Test signed-out/preview/account-switch route gates and no stale map/Task/conflict details in test/widget/app/mind_maps_route_test.dart.
-- [ ] T077 [P] [US5] Add ten two-device offline/reconnect, independent/same-node, structural/deletion race, duplicate-delivery and account-isolation trials in integration_test/mind_maps_offline_sync_test.dart.
+- [X] T069 [P] [US5] Test owner-only map/node/slot/link/conflict/receipt reads, anonymous denial and direct-write denial in supabase/tests/mind_maps_account_isolation_test.sql.
+- [X] T070 [P] [US5] Test owner-derived mutation receipts/replay, cross-map/foreign endpoints, Task link validation, cycles and duplicate parent/side pairs in supabase/tests/mind_maps_operation_integrity_test.sql.
+- [X] T071 [P] [US5] Test independent-node merge, same-record newest winner/visible loser, equal-time tie, structural collision and map/node deletion races in supabase/tests/mind_maps_conflict_integrity_test.sql.
+- [X] T072 [P] [US5] Test four entity dispatch routes, stable operation IDs, retry/acknowledgement and rejection of unknown types in test/unit/core/data/sync/entity_dispatch_router_test.dart.
+- [X] T073 [P] [US5] Test receipt-aware outbound and complete paginated owner reads, final-page/tombstone handling and foreign-data rejection in test/unit/features/mind_maps/data/supabase_map_adapter_test.dart.
+- [X] T074 [P] [US5] Test per-record atomic winner/loser reconciliation, pending local changes, parent/side invariants and deletion/edit evidence in test/unit/features/mind_maps/data/map_reconciler_test.dart.
+- [X] T075 [P] [US5] Test outbound-before-inbound, changed-session guards after awaits, partial-page failure/retry and truthful initial-ready state in test/unit/features/mind_maps/application/map_sync_service_test.dart.
+- [X] T076 [P] [US5] Test signed-out/preview/account-switch route gates and no stale map/Task/conflict details in test/widget/app/mind_maps_route_test.dart.
+- [X] T077 [P] [US5] Add ten two-device offline/reconnect, independent/same-node, structural/deletion race, duplicate-delivery and account-isolation trials in integration_test/mind_maps_offline_sync_test.dart.
 
 ### Implementation for User Story 5
 
-- [ ] T078 [US5] Create owner-keyed map/node/parent-slot/side-link tables, indexes, RLS, SELECT policies and least-privilege grants in supabase/migrations/0009_mind_maps_tables.sql.
-- [ ] T079 [US5] Add owner-derived receipt-backed graph mutation RPCs, pinned search_path, structural serialization, cycle/duplicate checks, owner validation for new Task links, preservation of existing unavailable IDs and visible conflict evidence in supabase/migrations/0010_mind_maps_sync_api.sql.
-- [ ] T080 [US5] Implement receipt-aware outbound mutation adapter for all four graph entities in lib/features/mind_maps/data/supabase_map_sync_adapter.dart.
-- [ ] T081 [US5] Implement full paginated owner map/node/parent/side/tombstone reads and an explicit complete-pass cursor in lib/features/mind_maps/data/supabase_map_reader.dart and lib/features/mind_maps/application/map_remote_reader.dart.
-- [ ] T082 [US5] Define four-entity reconciliation and visible conflict ports in lib/features/mind_maps/application/map_reconciliation.dart.
-- [ ] T083 [US5] Apply newest active records and nonwinning ConflictRecords atomically per entity, keep independent node edits and enforce map/node tombstone visibility in lib/features/mind_maps/data/map_reconciler.dart.
-- [ ] T084 [US5] Implement owner-checked outbound then complete inbound sync with retryable failures and ready only after all four streams in lib/features/mind_maps/application/map_sync_service.dart.
-- [ ] T085 [US5] Route map, node, parent-slot and side-link PendingChanges through the cloud adapter without changing Tasks/Habits routing in lib/core/data/sync/entity_dispatch_router.dart.
-- [ ] T086 [US5] Register authenticated cloud reader/adapter/reconciler/sync and keep the debug Tasks preview local-only in lib/app/composition/configure_dependencies.dart.
-- [ ] T087 [US5] Show truthful syncing, retry and owner-scoped nonwinning version review without stale Task details in lib/features/mind_maps/presentation/map_editor_cubit.dart and lib/features/mind_maps/presentation/map_conflict_view.dart.
-- [ ] T088 [US5] Add Arabic/English sync, conflict-review and recoverable failure text in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb; regenerate lib/app/l10n/generated/app_localizations.dart and extend lib/app/l10n/mind_maps_strings_adapter.dart.
+- [X] T078 [US5] Create owner-keyed map/node/parent-slot/side-link tables, indexes, RLS, SELECT policies and least-privilege grants in supabase/migrations/0009_mind_maps_tables.sql.
+- [X] T079 [US5] Add owner-derived receipt-backed graph mutation RPCs, pinned search_path, structural serialization, cycle/duplicate checks, owner validation for new Task links, preservation of existing unavailable IDs and visible conflict evidence in supabase/migrations/0010_mind_maps_sync_api.sql.
+- [X] T080 [US5] Implement receipt-aware outbound mutation adapter for all four graph entities in lib/features/mind_maps/data/supabase_map_sync_adapter.dart.
+- [X] T081 [US5] Implement full paginated owner map/node/parent/side/tombstone reads and an explicit complete-pass cursor in lib/features/mind_maps/data/supabase_map_reader.dart and lib/features/mind_maps/application/map_remote_reader.dart.
+- [X] T082 [US5] Define four-entity reconciliation and visible conflict ports in lib/features/mind_maps/application/map_reconciliation.dart.
+- [X] T083 [US5] Apply newest active records and nonwinning ConflictRecords atomically per entity, keep independent node edits and enforce map/node tombstone visibility in lib/features/mind_maps/data/map_reconciler.dart.
+- [X] T084 [US5] Implement owner-checked outbound then complete inbound sync with retryable failures and ready only after all four streams in lib/features/mind_maps/application/map_sync_service.dart.
+- [X] T085 [US5] Route map, node, parent-slot and side-link PendingChanges through the cloud adapter without changing Tasks/Habits routing in lib/core/data/sync/entity_dispatch_router.dart.
+- [X] T086 [US5] Register authenticated cloud reader/adapter/reconciler/sync and keep the debug Tasks preview local-only in lib/app/composition/configure_dependencies.dart.
+- [X] T087 [US5] Show truthful syncing, retry and owner-scoped nonwinning version review without stale Task details in lib/features/mind_maps/presentation/map_editor_cubit.dart and lib/features/mind_maps/presentation/map_conflict_view.dart.
+- [X] T088 [US5] Add Arabic/English sync, conflict-review and recoverable failure text in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb; regenerate lib/app/l10n/generated/app_localizations.dart and extend lib/app/l10n/mind_maps_strings_adapter.dart.
 
 **Checkpoint**: US5 passes local/Supabase owner, replay, conflict and two-device trials. No partial page or account switch reports ready or leaks another account's content.
 

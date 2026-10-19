@@ -62,10 +62,16 @@ import 'package:namma_project/features/habits/data/supabase_habit_sync_adapter.d
 import 'package:namma_project/features/habits/domain/habit.dart';
 import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/mind_maps/application/map_commands.dart';
+import 'package:namma_project/features/mind_maps/application/map_reconciliation.dart';
+import 'package:namma_project/features/mind_maps/application/map_remote_reader.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
+import 'package:namma_project/features/mind_maps/application/map_sync_service.dart';
 import 'package:namma_project/features/mind_maps/application/map_task_link_port.dart';
 import 'package:namma_project/features/mind_maps/data/drift_map_repository.dart';
 import 'package:namma_project/features/mind_maps/data/map_payload_codec.dart';
+import 'package:namma_project/features/mind_maps/data/map_reconciler.dart';
+import 'package:namma_project/features/mind_maps/data/supabase_map_reader.dart';
+import 'package:namma_project/features/mind_maps/data/supabase_map_sync_adapter.dart';
 import 'package:namma_project/features/mind_maps/data/tasks_map_link_adapter.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
@@ -165,14 +171,18 @@ Future<void> configureDependencies({
       final taskSyncAdapter = SupabaseTaskSyncAdapter(gateway: taskGateway);
       final habitGateway = SupabaseHabitGatewayImpl(cloud.client);
       final habitAdapter = SupabaseHabitSyncAdapter(gateway: habitGateway);
+      final mapGateway = SupabaseMapGatewayImpl(cloud.client);
+      final mapAdapter = SupabaseMapSyncAdapter(gateway: mapGateway);
       getIt.registerLazySingleton<SupabaseTaskGateway>(() => taskGateway);
       getIt.registerLazySingleton<SupabaseHabitGateway>(() => habitGateway);
+      getIt.registerLazySingleton<SupabaseMapGateway>(() => mapGateway);
       getIt.registerLazySingleton<CloudSyncPort>(
         () => EntityDispatchRouter(
           foundationAdapter: foundationSync,
           taskAdapter: taskSyncAdapter,
           habitAdapter: habitAdapter,
           habitDayAdapter: habitAdapter,
+          mapAdapter: mapAdapter,
         ),
       );
       final taskReader = SupabaseTaskReader(
@@ -183,6 +193,9 @@ Future<void> configureDependencies({
       getIt.registerLazySingleton<TaskAwardRemoteReaderPort>(() => taskReader);
       getIt.registerLazySingleton<HabitRemoteReaderPort>(
         () => SupabaseHabitReader(gateway: habitGateway),
+      );
+      getIt.registerLazySingleton<MapRemoteReaderPort>(
+        () => SupabaseMapReader(gateway: mapGateway),
       );
     }
 
@@ -227,12 +240,15 @@ Future<void> configureDependencies({
     getIt.registerLazySingleton<TaskRepository>(
       () => DriftTaskRepository(database: database, codec: taskCodec),
     );
-    getIt.registerLazySingleton<MapRepository>(
-      () => DriftMapRepository(
-        database: database,
-        codec: const MapPayloadCodec(),
-      ),
+    final mapRepository = DriftMapRepository(
+      database: database,
+      codec: const MapPayloadCodec(),
     );
+    getIt.registerLazySingleton<MapRepository>(() => mapRepository);
+    getIt.registerLazySingleton<MapReconciliationStorePort>(
+      () => mapRepository,
+    );
+    getIt.registerLazySingleton<MapConflictReaderPort>(() => mapRepository);
     getIt.registerLazySingleton<MapCommands>(
       () => MapCommands(
         repository: getIt<MapRepository>(),
@@ -245,6 +261,8 @@ Future<void> configureDependencies({
         commands: getIt<MapCommands>(),
         session: getIt<CloudSessionPort>(),
         tasks: getIt<MapTaskLinkPort>(),
+        syncService: preview ? null : getIt<MapSyncService>(),
+        conflictReader: getIt<MapConflictReaderPort>(),
       ),
     );
     final habitRepository = DriftHabitRepository(
@@ -297,6 +315,22 @@ Future<void> configureDependencies({
       ),
     );
     if (!preview) {
+      getIt.registerLazySingleton<MapReconciliationPort>(
+        () => MapReconciler(
+          store: getIt<MapReconciliationStorePort>(),
+          localStore: localStore,
+        ),
+      );
+      getIt.registerLazySingleton<MapSyncService>(
+        () => MapSyncService(
+          session: session,
+          connectivity: getIt<ConnectivityPort>(),
+          outbound: getIt<PendingSynchronizationEngine>(),
+          remoteReader: getIt<MapRemoteReaderPort>(),
+          reconciler: getIt<MapReconciliationPort>(),
+        ),
+        dispose: (service) => service.dispose(),
+      );
       getIt.registerLazySingleton<HabitReconciliationPort>(
         () => HabitReconciler(
           store: getIt<HabitReconciliationStorePort>(),

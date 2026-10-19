@@ -120,6 +120,13 @@ abstract interface class MindMapsStrings {
   String get panDown;
   String get dragNode;
   String get keyboardHelp;
+  String get syncing;
+  String get syncFailed;
+  String get syncRetry;
+  String get conflicts;
+  String get conflictActive;
+  String get conflictRetained;
+  String get conflictUnresolved;
 }
 
 typedef MindMapsStringsResolver =

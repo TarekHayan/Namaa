@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/features/mind_maps/application/map_reconciliation.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
 import 'package:namma_project/features/mind_maps/domain/map_connection.dart';
 import 'package:namma_project/features/mind_maps/domain/map_graph_rules.dart';
@@ -13,14 +15,13 @@ import 'package:namma_project/features/mind_maps/domain/mind_map_node.dart';
 
 import 'map_payload_codec.dart';
 
-const kMindMapEntityType = 'mind_map';
-const kMindMapNodeEntityType = 'mind_map_node';
-const kMindMapParentSlotEntityType = 'mind_map_parent_slot';
-const kMindMapSideLinkEntityType = 'mind_map_side_link';
-
 /// Encrypted local graph store. A batch and every pending operation commit or
 /// roll back together; the cloud dispatch path is added in Phase 7.
-final class DriftMapRepository implements MapRepository {
+final class DriftMapRepository
+    implements
+        MapRepository,
+        MapReconciliationStorePort,
+        MapConflictReaderPort {
   DriftMapRepository({
     required FoundationDatabase database,
     required MapPayloadCodec codec,
@@ -31,6 +32,258 @@ final class DriftMapRepository implements MapRepository {
   final FoundationDatabase _db;
   final MapPayloadCodec _codec;
   final Future<void> Function()? beforeOutboxWrite;
+
+  @override
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  ) async {
+    try {
+      return await _db.transaction(() async {
+        final result = await action();
+        if (result.failureOrNull case final failure?) {
+          throw _MapTransactionFailure(failure);
+        }
+        return result;
+      });
+    } on _MapTransactionFailure catch (error) {
+      return AppResult.failure(error.failure);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  @override
+  Future<AppResult<bool>> hasPendingChange({
+    required String ownerId,
+    required String entityType,
+    required String entityId,
+  }) async {
+    try {
+      final rows =
+          await (_db.select(_db.pendingChanges)..where(
+                (t) =>
+                    t.accountId.equals(ownerId) &
+                    t.entityType.equals(entityType) &
+                    t.entityId.equals(entityId) &
+                    t.state.equals(PendingChangeState.pending.index),
+              ))
+              .get();
+      return AppResult.success(rows.isNotEmpty);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  @override
+  Future<AppResult<String?>> readPayload({
+    required String ownerId,
+    required String entityType,
+    required String entityId,
+  }) async {
+    try {
+      final parts = entityId.split(':');
+      switch (entityType) {
+        case kMindMapEntityType:
+          final row =
+              await (_db.select(_db.mindMapRecords)..where(
+                    (t) =>
+                        t.accountId.equals(ownerId) & t.mapId.equals(entityId),
+                  ))
+                  .getSingleOrNull();
+          return AppResult.success(
+            row == null ? null : _codec.encodeMap(_mapFromRow(row)),
+          );
+        case kMindMapNodeEntityType:
+          if (parts.length != 2) throw const FormatException('Invalid node ID');
+          final row =
+              await (_db.select(_db.mindMapNodeRecords)..where(
+                    (t) =>
+                        t.accountId.equals(ownerId) &
+                        t.mapId.equals(parts[0]) &
+                        t.nodeId.equals(parts[1]),
+                  ))
+                  .getSingleOrNull();
+          return AppResult.success(
+            row == null ? null : _codec.encodeNode(_nodeFromRow(row)),
+          );
+        case kMindMapParentSlotEntityType:
+          if (parts.length != 3 || parts[1] != 'parent') {
+            throw const FormatException('Invalid parent ID');
+          }
+          final row =
+              await (_db.select(_db.mindMapParentSlots)..where(
+                    (t) =>
+                        t.accountId.equals(ownerId) &
+                        t.mapId.equals(parts[0]) &
+                        t.childNodeId.equals(parts[2]),
+                  ))
+                  .getSingleOrNull();
+          return AppResult.success(
+            row == null ? null : _codec.encodeParentSlot(_slotFromRow(row)),
+          );
+        case kMindMapSideLinkEntityType:
+          if (parts.length != 4 || parts[1] != 'side') {
+            throw const FormatException('Invalid side ID');
+          }
+          final row =
+              await (_db.select(_db.mindMapSideLinks)..where(
+                    (t) =>
+                        t.accountId.equals(ownerId) &
+                        t.mapId.equals(parts[0]) &
+                        t.firstNodeId.equals(parts[2]) &
+                        t.secondNodeId.equals(parts[3]),
+                  ))
+                  .getSingleOrNull();
+          return AppResult.success(
+            row == null ? null : _codec.encodeSideLink(_linkFromRow(row)),
+          );
+        default:
+          throw const FormatException('Unsupported Map entity type');
+      }
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  @override
+  Future<AppResult<void>> applyInbound({
+    required String entityType,
+    required String payload,
+  }) async {
+    try {
+      switch (entityType) {
+        case kMindMapEntityType:
+          final map = _codec.decodeMap(payload);
+          await _db
+              .into(_db.mindMapRecords)
+              .insertOnConflictUpdate(
+                MindMapRecordsCompanion.insert(
+                  accountId: map.ownerId,
+                  mapId: map.id,
+                  title: map.title,
+                  description: Value(map.description),
+                  centralNodeId: map.centralNodeId,
+                  settingsJson: jsonEncode(jsonDecode(payload)['settings']),
+                  revisionId: map.revisionId,
+                  createdAt: map.createdAt,
+                  updatedAt: map.updatedAt,
+                  deletedAt: Value(map.deletedAt),
+                ),
+              );
+        case kMindMapNodeEntityType:
+          final node = _codec.decodeNode(payload);
+          await _db
+              .into(_db.mindMapNodeRecords)
+              .insertOnConflictUpdate(
+                MindMapNodeRecordsCompanion.insert(
+                  accountId: node.ownerId,
+                  mapId: node.mapId,
+                  nodeId: node.id,
+                  kind: node.kind.name,
+                  title: node.title,
+                  description: Value(node.description),
+                  x: node.x,
+                  y: node.y,
+                  status: node.status.name,
+                  statusChangedAt: Value(node.statusChangedAt),
+                  priority: node.priority.name,
+                  appearanceJson: jsonEncode(jsonDecode(payload)['appearance']),
+                  taskId: Value(node.taskId),
+                  revisionId: node.revisionId,
+                  createdAt: node.createdAt,
+                  updatedAt: node.updatedAt,
+                  deletedAt: Value(node.deletedAt),
+                ),
+              );
+        case kMindMapParentSlotEntityType:
+          final slot = _codec.decodeParentSlot(payload);
+          await _db
+              .into(_db.mindMapParentSlots)
+              .insertOnConflictUpdate(
+                MindMapParentSlotsCompanion.insert(
+                  accountId: slot.ownerId,
+                  mapId: slot.mapId,
+                  childNodeId: slot.childNodeId,
+                  parentNodeId: slot.parentNodeId,
+                  appearanceJson: jsonEncode(jsonDecode(payload)['appearance']),
+                  revisionId: slot.revisionId,
+                  updatedAt: slot.updatedAt,
+                  deletedAt: Value(slot.deletedAt),
+                ),
+              );
+        case kMindMapSideLinkEntityType:
+          final link = _codec.decodeSideLink(payload);
+          await _db
+              .into(_db.mindMapSideLinks)
+              .insertOnConflictUpdate(
+                MindMapSideLinksCompanion.insert(
+                  accountId: link.ownerId,
+                  mapId: link.mapId,
+                  firstNodeId: link.firstNodeId,
+                  secondNodeId: link.secondNodeId,
+                  appearanceJson: jsonEncode(jsonDecode(payload)['appearance']),
+                  revisionId: link.revisionId,
+                  updatedAt: link.updatedAt,
+                  deletedAt: Value(link.deletedAt),
+                ),
+              );
+        default:
+          throw const FormatException('Unsupported Map entity type');
+      }
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  @override
+  Stream<List<MapConflictView>> watchConflicts(String ownerId, String mapId) =>
+      (_db.select(_db.conflictRecords)
+            ..where(
+              (t) =>
+                  t.accountId.equals(ownerId) &
+                  (t.entityType.equals(kMindMapEntityType) |
+                      t.entityType.equals(kMindMapNodeEntityType) |
+                      t.entityType.equals(kMindMapParentSlotEntityType) |
+                      t.entityType.equals(kMindMapSideLinkEntityType)) &
+                  (t.entityId.equals(mapId) | t.entityId.like('$mapId:%')),
+            )
+            ..orderBy([(t) => OrderingTerm.desc(t.detectedAt)]))
+          .watch()
+          .map(
+            (rows) => List.unmodifiable(
+              rows.map(
+                (row) => MapConflictView(
+                  id: row.conflictId,
+                  mapId: mapId,
+                  entityType: row.entityType,
+                  entityId: row.entityId,
+                  activeLabel: _conflictLabel(
+                    row.entityType,
+                    row.activePayload,
+                  ),
+                  retainedLabel: _conflictLabel(
+                    row.entityType,
+                    row.retainedPayload,
+                  ),
+                  unresolved: row.activeTimestamp == row.retainedTimestamp,
+                ),
+              ),
+            ),
+          );
+
+  String _conflictLabel(String type, String payload) {
+    try {
+      final value = jsonDecode(payload) as Map<String, dynamic>;
+      return (value['title'] ??
+              value['childNodeId'] ??
+              value['firstNodeId'] ??
+              '')
+          as String;
+    } catch (_) {
+      return '';
+    }
+  }
 
   @override
   Future<AppResult<MapGraph?>> readGraph({
@@ -554,4 +807,9 @@ final class _OwnerChanged implements Exception {
 
 final class _StaleRevision implements Exception {
   const _StaleRevision();
+}
+
+final class _MapTransactionFailure implements Exception {
+  const _MapTransactionFailure(this.failure);
+  final AppFailure failure;
 }

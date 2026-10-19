@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/features/mind_maps/application/map_queries.dart';
+import 'package:namma_project/features/mind_maps/application/map_sync_service.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_detail_screen.dart';
 
 import 'map_library_cubit.dart';
@@ -77,12 +78,36 @@ class _MapLibraryScreenState extends State<MapLibraryScreen> {
           ),
           MapLibraryReady(:final ownerId) when ownerId != widget.ownerId =>
             const Center(child: CircularProgressIndicator()),
-          MapLibraryReady(:final maps, :final hasMaps, :final lastFailure) =>
+          MapLibraryReady(
+            :final maps,
+            :final hasMaps,
+            :final lastFailure,
+            :final syncStatus,
+          ) =>
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 760),
                 child: Column(
                   children: [
+                    if (syncStatus == MapSyncStatus.synchronizing)
+                      ListTile(
+                        leading: const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        title: Text(strings.syncing),
+                      ),
+                    if (syncStatus == MapSyncStatus.failed)
+                      MaterialBanner(
+                        content: Text(strings.syncFailed),
+                        actions: [
+                          TextButton(
+                            onPressed: widget.cubit.retrySync,
+                            child: Text(strings.syncRetry),
+                          ),
+                        ],
+                      ),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: TextField(
@@ -161,6 +186,8 @@ class _MapLibraryScreenState extends State<MapLibraryScreen> {
                     repository: widget.cubit.repository,
                     session: widget.cubit.session,
                     tasks: widget.cubit.tasks,
+                    syncService: widget.cubit.syncService,
+                    conflictReader: widget.cubit.conflictReader,
                     ownerId: widget.ownerId,
                     mapId: map.id,
                     stringsResolver: widget.stringsResolver,

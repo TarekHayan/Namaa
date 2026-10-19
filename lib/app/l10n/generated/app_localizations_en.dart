@@ -438,6 +438,28 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get mindMapsRetry => 'Retry';
 
   @override
+  String get mindMapSyncing => 'Syncing mind maps…';
+
+  @override
+  String get mindMapSyncFailed =>
+      'Mind maps could not sync. Local changes are saved.';
+
+  @override
+  String get mindMapSyncRetry => 'Retry sync';
+
+  @override
+  String get mindMapConflicts => 'Review other versions';
+
+  @override
+  String get mindMapConflictActive => 'Current version';
+
+  @override
+  String get mindMapConflictRetained => 'Other version';
+
+  @override
+  String get mindMapConflictUnresolved => 'Needs review';
+
+  @override
   String get mindMapNodeCount => 'Nodes';
 
   @override

@@ -9,6 +9,7 @@ void main() {
   late _RecordingCloudSync taskAdapter;
   late _RecordingCloudSync habitAdapter;
   late _RecordingCloudSync habitDayAdapter;
+  late _RecordingCloudSync mapAdapter;
   late EntityDispatchRouter router;
 
   setUp(() {
@@ -16,11 +17,13 @@ void main() {
     taskAdapter = _RecordingCloudSync('task-ack');
     habitAdapter = _RecordingCloudSync('habit-ack');
     habitDayAdapter = _RecordingCloudSync('day-ack');
+    mapAdapter = _RecordingCloudSync('map-ack');
     router = EntityDispatchRouter(
       foundationAdapter: foundationAdapter,
       taskAdapter: taskAdapter,
       habitAdapter: habitAdapter,
       habitDayAdapter: habitDayAdapter,
+      mapAdapter: mapAdapter,
     );
   });
 
@@ -82,6 +85,32 @@ void main() {
         'habit_day',
         'habit-1:2026-10-12',
       ));
+    },
+  );
+
+  test(
+    'four Map records retain stable operation IDs and one Map route',
+    () async {
+      for (final type in [
+        kMindMapEntityType,
+        kMindMapNodeEntityType,
+        kMindMapParentSlotEntityType,
+        kMindMapSideLinkEntityType,
+      ]) {
+        final change = _change(entityType: type);
+        final result = await router.dispatchChange(change);
+        expect(result.valueOrNull, isA<DispatchAcknowledged>());
+        expect(mapAdapter.dispatched.last.operationId, change.operationId);
+        final lookup = await router.obtainRemoteVersion(
+          entityType: type,
+          entityId: change.entityId,
+        );
+        expect(lookup.failureOrNull, isNull);
+      }
+      expect(mapAdapter.dispatched, hasLength(4));
+      expect(mapAdapter.lookups, hasLength(4));
+      expect(taskAdapter.dispatched, isEmpty);
+      expect(habitAdapter.dispatched, isEmpty);
     },
   );
 

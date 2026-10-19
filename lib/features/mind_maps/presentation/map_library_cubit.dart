@@ -6,7 +6,9 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/mind_maps/application/map_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_queries.dart';
+import 'package:namma_project/features/mind_maps/application/map_reconciliation.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
+import 'package:namma_project/features/mind_maps/application/map_sync_service.dart';
 import 'package:namma_project/features/mind_maps/application/map_task_link_port.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map.dart';
 
@@ -18,6 +20,8 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
     required MapCommands commands,
     this.session,
     this.tasks,
+    this.syncService,
+    this.conflictReader,
   }) : _repository = repository,
        _commands = commands,
        super(const MapLibraryInitial());
@@ -27,8 +31,11 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
   MapRepository get repository => _repository;
   final CloudSessionPort? session;
   final MapTaskLinkPort? tasks;
+  final MapSyncService? syncService;
+  final MapConflictReaderPort? conflictReader;
   StreamSubscription<List<MapGraph>>? _subscription;
   StreamSubscription<List<MapLinkedTask>>? _taskSubscription;
+  StreamSubscription<MapSyncSnapshot>? _syncSubscription;
   Map<String, MapLinkedTask> _linkedTasks = {};
   String? _ownerId;
   String _search = '';
@@ -39,12 +46,19 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
     if (_ownerId == ownerId && _subscription != null) return;
     await _subscription?.cancel();
     await _taskSubscription?.cancel();
+    await _syncSubscription?.cancel();
     _ownerId = ownerId;
     _graphs = null;
     _search = '';
     _lastFailure = null;
     _linkedTasks = {};
     emit(const MapLibraryLoading());
+    if (syncService case final service?) {
+      _syncSubscription = service.snapshots.listen((_) {
+        if (!isClosed && _ownerId == ownerId) _emitReady();
+      });
+      unawaited(service.synchronizeOnMapsEntry());
+    }
     if (tasks != null) {
       _taskSubscription = tasks!.watchAccessibleTasks(ownerId).listen((items) {
         if (isClosed || _ownerId != ownerId) return;
@@ -73,6 +87,10 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
     await _subscription?.cancel();
     _subscription = null;
     await load(owner);
+  }
+
+  Future<void> retrySync() async {
+    await syncService?.synchronize();
   }
 
   void search(String text) {
@@ -120,6 +138,9 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
     if (!isClosed && owner == _ownerId) {
       _lastFailure = result.failureOrNull;
       _emitReady();
+      if (result.failureOrNull == null && syncService != null) {
+        unawaited(syncService!.synchronize());
+      }
     }
     return result;
   }
@@ -149,6 +170,7 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
         ),
         searchText: _search,
         lastFailure: _lastFailure,
+        syncStatus: syncService?.snapshot.status ?? MapSyncStatus.idle,
       ),
     );
   }
@@ -163,6 +185,7 @@ final class MapLibraryCubit extends Cubit<MapLibraryState> {
   Future<void> close() async {
     await _subscription?.cancel();
     await _taskSubscription?.cancel();
+    await _syncSubscription?.cancel();
     await super.close();
   }
 }

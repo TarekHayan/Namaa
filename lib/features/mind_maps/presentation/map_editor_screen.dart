@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../application/map_queries.dart';
+import '../application/map_sync_service.dart';
 import '../domain/mind_map.dart';
 import '../domain/mind_map_node.dart';
 import 'map_canvas.dart';
+import 'map_conflict_view.dart';
 import 'map_editor_cubit.dart';
 import 'map_editor_state.dart';
 import 'map_node_editor.dart';
@@ -215,6 +217,41 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
           body: ListView(
             padding: const EdgeInsets.all(12),
             children: [
+              if (ready.syncStatus == MapSyncStatus.synchronizing)
+                ListTile(
+                  leading: const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  title: Text(strings.syncing),
+                ),
+              if (ready.syncStatus == MapSyncStatus.failed)
+                ListTile(
+                  leading: const Icon(Icons.sync_problem),
+                  title: Text(strings.syncFailed),
+                  trailing: TextButton(
+                    onPressed: widget.cubit.retrySync,
+                    child: Text(strings.syncRetry),
+                  ),
+                ),
+              if (ready.conflicts.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.rule),
+                  title: Text(
+                    '${strings.conflicts} (${ready.conflicts.length})',
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => MapConflictViewPanel(
+                        conflicts: ready.conflicts,
+                        strings: strings,
+                        ownerId: widget.cubit.ownerId,
+                        session: widget.cubit.session,
+                      ),
+                    ),
+                  ),
+                ),
               Text(
                 '${strings.completedCount}: ${ready.summary.completedCount}'
                 '/${ready.summary.nodeCount} (${ready.summary.progressPercent}%)',

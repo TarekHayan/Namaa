@@ -57,4 +57,50 @@ void main() {
     expect(find.text('سجّل الدخول للوصول إلى خرائطك الذهنية.'), findsOneWidget);
     expect(builds, 0);
   });
+
+  testWidgets(
+    'account switch and sign-out discard prior map, Task and conflict UI',
+    (tester) async {
+      final session = MindMapsTestSession();
+      final router = FoundationAppRouter(
+        rootBuilder: (_) => const Scaffold(body: Text('root')),
+        mindMapsSession: session,
+        mindMapsBuilder: (_, owner) => Scaffold(
+          key: ValueKey('owner-$owner'),
+          body: Column(
+            children: [
+              Text('Map $owner'),
+              Text('Task $owner'),
+              Text('Conflict $owner'),
+            ],
+          ),
+        ),
+      );
+      addTearDown(() async {
+        router.dispose();
+        await session.dispose();
+      });
+      await tester.pumpWidget(
+        MaterialApp.router(
+          localizationsDelegates:
+              FoundationLocalizations.localizationsDelegates,
+          supportedLocales: FoundationLocalizations.supportedLocales,
+          routerConfig: router.router,
+        ),
+      );
+      router.go(kMindMapsRoute);
+      await tester.pumpAndSettle();
+      expect(find.text('Map $kMindMapsTestAccountA'), findsOneWidget);
+      session.switchTo(kMindMapsTestAccountB);
+      await tester.pumpAndSettle();
+      expect(find.text('Map $kMindMapsTestAccountB'), findsOneWidget);
+      expect(find.text('Map $kMindMapsTestAccountA'), findsNothing);
+      expect(find.text('Task $kMindMapsTestAccountA'), findsNothing);
+      expect(find.text('Conflict $kMindMapsTestAccountA'), findsNothing);
+      session.signOut();
+      await tester.pumpAndSettle();
+      expect(find.byKey(kMindMapsRouteSignedOutKey), findsOneWidget);
+      expect(find.text('Map $kMindMapsTestAccountB'), findsNothing);
+    },
+  );
 }

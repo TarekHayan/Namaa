@@ -929,6 +929,48 @@ abstract class FoundationLocalizations {
   /// **'Retry'**
   String get mindMapsRetry;
 
+  /// No description provided for @mindMapSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing mind maps…'**
+  String get mindMapSyncing;
+
+  /// No description provided for @mindMapSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind maps could not sync. Local changes are saved.'**
+  String get mindMapSyncFailed;
+
+  /// No description provided for @mindMapSyncRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry sync'**
+  String get mindMapSyncRetry;
+
+  /// No description provided for @mindMapConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Review other versions'**
+  String get mindMapConflicts;
+
+  /// No description provided for @mindMapConflictActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version'**
+  String get mindMapConflictActive;
+
+  /// No description provided for @mindMapConflictRetained.
+  ///
+  /// In en, this message translates to:
+  /// **'Other version'**
+  String get mindMapConflictRetained;
+
+  /// No description provided for @mindMapConflictUnresolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs review'**
+  String get mindMapConflictUnresolved;
+
   /// No description provided for @mindMapNodeCount.
   ///
   /// In en, this message translates to:

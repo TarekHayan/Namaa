@@ -432,6 +432,28 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get mindMapsRetry => 'إعادة المحاولة';
 
   @override
+  String get mindMapSyncing => 'جارٍ مزامنة الخرائط الذهنية…';
+
+  @override
+  String get mindMapSyncFailed =>
+      'تعذرت مزامنة الخرائط الذهنية. التغييرات المحلية محفوظة.';
+
+  @override
+  String get mindMapSyncRetry => 'إعادة المزامنة';
+
+  @override
+  String get mindMapConflicts => 'مراجعة النسخ الأخرى';
+
+  @override
+  String get mindMapConflictActive => 'النسخة الحالية';
+
+  @override
+  String get mindMapConflictRetained => 'النسخة الأخرى';
+
+  @override
+  String get mindMapConflictUnresolved => 'تحتاج مراجعة';
+
+  @override
   String get mindMapNodeCount => 'العقد';
 
   @override

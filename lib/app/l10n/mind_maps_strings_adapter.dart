@@ -247,4 +247,18 @@ final class _AppMindMapsStrings implements MindMapsStrings {
   String get dragNode => _l10n.mindMapDragNode;
   @override
   String get keyboardHelp => _l10n.mindMapKeyboardHelp;
+  @override
+  String get syncing => _l10n.mindMapSyncing;
+  @override
+  String get syncFailed => _l10n.mindMapSyncFailed;
+  @override
+  String get syncRetry => _l10n.mindMapSyncRetry;
+  @override
+  String get conflicts => _l10n.mindMapConflicts;
+  @override
+  String get conflictActive => _l10n.mindMapConflictActive;
+  @override
+  String get conflictRetained => _l10n.mindMapConflictRetained;
+  @override
+  String get conflictUnresolved => _l10n.mindMapConflictUnresolved;
 }
