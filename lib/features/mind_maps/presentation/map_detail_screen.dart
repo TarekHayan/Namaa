@@ -4,6 +4,7 @@ import 'package:namma_project/features/mind_maps/application/map_editor_history.
 import 'package:namma_project/features/mind_maps/application/map_graph_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_queries.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
+import 'package:namma_project/features/mind_maps/application/map_settings_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_task_link_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_task_link_port.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map_node.dart';
@@ -115,6 +116,10 @@ class MapDetailScreen extends StatelessWidget {
                                     session: session!,
                                     ownerId: ownerId,
                                     mapId: mapId,
+                                  ),
+                                  settingsCommands: MapSettingsCommands(
+                                    repository: repository,
+                                    session: session!,
                                   ),
                                   tasks: tasks,
                                   taskLinks: tasks == null

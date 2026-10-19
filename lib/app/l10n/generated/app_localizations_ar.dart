@@ -583,4 +583,152 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   @override
   String get mindMapTaskLinkFailure =>
       'تعذر تحميل المهمة أو ربطها. حاول مرة أخرى.';
+
+  @override
+  String get mindMapSettings => 'إعدادات الخريطة';
+
+  @override
+  String get mindMapLayout => 'التخطيط';
+
+  @override
+  String get mindMapApplyLayout => 'تطبيق التخطيط';
+
+  @override
+  String get mindMapLayoutRadial => 'دائري';
+
+  @override
+  String get mindMapLayoutTree => 'شجري';
+
+  @override
+  String get mindMapLayoutHorizontal => 'أفقي';
+
+  @override
+  String get mindMapLayoutVertical => 'رأسي';
+
+  @override
+  String get mindMapLayoutFreeform => 'حر';
+
+  @override
+  String get mindMapBackground => 'خلفية مساحة الرسم';
+
+  @override
+  String get mindMapDefaultNode => 'مظهر العقد الجديدة';
+
+  @override
+  String get mindMapConnectionStyle => 'مظهر الروابط الجديدة';
+
+  @override
+  String get mindMapSpacing => 'المسافة بين العقد';
+
+  @override
+  String get mindMapNodeColor => 'لون العقدة';
+
+  @override
+  String get mindMapConnectionColor => 'لون الرابط';
+
+  @override
+  String get mindMapConnectionWidth => 'سُمك الرابط';
+
+  @override
+  String get mindMapNodeIcon => 'رمز العقدة';
+
+  @override
+  String get mindMapNodeShape => 'شكل العقدة';
+
+  @override
+  String get mindMapNodeSize => 'حجم العقدة';
+
+  @override
+  String get mindMapTextSize => 'حجم النص';
+
+  @override
+  String get mindMapShapeRectangle => 'مستطيل';
+
+  @override
+  String get mindMapShapeRounded => 'مستدير';
+
+  @override
+  String get mindMapShapeCircle => 'دائرة';
+
+  @override
+  String get mindMapShapePill => 'كبسولة';
+
+  @override
+  String get mindMapShapeGlass => 'زجاجي';
+
+  @override
+  String get mindMapSizeSmall => 'صغير';
+
+  @override
+  String get mindMapSizeMedium => 'متوسط';
+
+  @override
+  String get mindMapSizeLarge => 'كبير';
+
+  @override
+  String get mindMapIconIdea => 'فكرة';
+
+  @override
+  String get mindMapIconTask => 'مهمة';
+
+  @override
+  String get mindMapIconNote => 'ملاحظة';
+
+  @override
+  String get mindMapIconStar => 'نجمة';
+
+  @override
+  String get mindMapIconFlag => 'علم';
+
+  @override
+  String get mindMapColorWhite => 'أبيض';
+
+  @override
+  String get mindMapColorBlue => 'أزرق';
+
+  @override
+  String get mindMapColorGreen => 'أخضر';
+
+  @override
+  String get mindMapColorAmber => 'كهرماني';
+
+  @override
+  String get mindMapColorPurple => 'بنفسجي';
+
+  @override
+  String get mindMapColorDark => 'داكن';
+
+  @override
+  String get mindMapColorCurrent => 'اللون الحالي';
+
+  @override
+  String get mindMapFit => 'احتواء الخريطة';
+
+  @override
+  String get mindMapCenter => 'توسيط الخريطة';
+
+  @override
+  String get mindMapZoomIn => 'تكبير';
+
+  @override
+  String get mindMapZoomOut => 'تصغير';
+
+  @override
+  String get mindMapPanLeft => 'تحريك لليسار';
+
+  @override
+  String get mindMapPanRight => 'تحريك لليمين';
+
+  @override
+  String get mindMapPanUp => 'تحريك لأعلى';
+
+  @override
+  String get mindMapPanDown => 'تحريك لأسفل';
+
+  @override
+  String get mindMapDragNode => 'اسحب العقدة لتحريكها';
+
+  @override
+  String get mindMapKeyboardHelp =>
+      'لوحة المفاتيح: الأسهم للتحريك، زائد وناقص للتكبير والتصغير، F لاحتواء الخريطة، C للتوسيط';
 }

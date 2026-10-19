@@ -589,4 +589,152 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   @override
   String get mindMapTaskLinkFailure =>
       'Could not load or link this task. Try again.';
+
+  @override
+  String get mindMapSettings => 'Map settings';
+
+  @override
+  String get mindMapLayout => 'Layout';
+
+  @override
+  String get mindMapApplyLayout => 'Apply layout';
+
+  @override
+  String get mindMapLayoutRadial => 'Radial';
+
+  @override
+  String get mindMapLayoutTree => 'Tree';
+
+  @override
+  String get mindMapLayoutHorizontal => 'Horizontal';
+
+  @override
+  String get mindMapLayoutVertical => 'Vertical';
+
+  @override
+  String get mindMapLayoutFreeform => 'Freeform';
+
+  @override
+  String get mindMapBackground => 'Canvas background';
+
+  @override
+  String get mindMapDefaultNode => 'New node default';
+
+  @override
+  String get mindMapConnectionStyle => 'New connection default';
+
+  @override
+  String get mindMapSpacing => 'Spacing';
+
+  @override
+  String get mindMapNodeColor => 'Node color';
+
+  @override
+  String get mindMapConnectionColor => 'Connection color';
+
+  @override
+  String get mindMapConnectionWidth => 'Connection width';
+
+  @override
+  String get mindMapNodeIcon => 'Node icon';
+
+  @override
+  String get mindMapNodeShape => 'Node shape';
+
+  @override
+  String get mindMapNodeSize => 'Node size';
+
+  @override
+  String get mindMapTextSize => 'Text size';
+
+  @override
+  String get mindMapShapeRectangle => 'Rectangle';
+
+  @override
+  String get mindMapShapeRounded => 'Rounded';
+
+  @override
+  String get mindMapShapeCircle => 'Circle';
+
+  @override
+  String get mindMapShapePill => 'Pill';
+
+  @override
+  String get mindMapShapeGlass => 'Glass';
+
+  @override
+  String get mindMapSizeSmall => 'Small';
+
+  @override
+  String get mindMapSizeMedium => 'Medium';
+
+  @override
+  String get mindMapSizeLarge => 'Large';
+
+  @override
+  String get mindMapIconIdea => 'Idea';
+
+  @override
+  String get mindMapIconTask => 'Task';
+
+  @override
+  String get mindMapIconNote => 'Note';
+
+  @override
+  String get mindMapIconStar => 'Star';
+
+  @override
+  String get mindMapIconFlag => 'Flag';
+
+  @override
+  String get mindMapColorWhite => 'White';
+
+  @override
+  String get mindMapColorBlue => 'Blue';
+
+  @override
+  String get mindMapColorGreen => 'Green';
+
+  @override
+  String get mindMapColorAmber => 'Amber';
+
+  @override
+  String get mindMapColorPurple => 'Purple';
+
+  @override
+  String get mindMapColorDark => 'Dark';
+
+  @override
+  String get mindMapColorCurrent => 'Current color';
+
+  @override
+  String get mindMapFit => 'Fit map';
+
+  @override
+  String get mindMapCenter => 'Center map';
+
+  @override
+  String get mindMapZoomIn => 'Zoom in';
+
+  @override
+  String get mindMapZoomOut => 'Zoom out';
+
+  @override
+  String get mindMapPanLeft => 'Pan left';
+
+  @override
+  String get mindMapPanRight => 'Pan right';
+
+  @override
+  String get mindMapPanUp => 'Pan up';
+
+  @override
+  String get mindMapPanDown => 'Pan down';
+
+  @override
+  String get mindMapDragNode => 'Drag node to move';
+
+  @override
+  String get mindMapKeyboardHelp =>
+      'Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers';
 }

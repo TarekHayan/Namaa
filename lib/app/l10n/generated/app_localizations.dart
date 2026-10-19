@@ -1228,6 +1228,300 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Could not load or link this task. Try again.'**
   String get mindMapTaskLinkFailure;
+
+  /// No description provided for @mindMapSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Map settings'**
+  String get mindMapSettings;
+
+  /// No description provided for @mindMapLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout'**
+  String get mindMapLayout;
+
+  /// No description provided for @mindMapApplyLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply layout'**
+  String get mindMapApplyLayout;
+
+  /// No description provided for @mindMapLayoutRadial.
+  ///
+  /// In en, this message translates to:
+  /// **'Radial'**
+  String get mindMapLayoutRadial;
+
+  /// No description provided for @mindMapLayoutTree.
+  ///
+  /// In en, this message translates to:
+  /// **'Tree'**
+  String get mindMapLayoutTree;
+
+  /// No description provided for @mindMapLayoutHorizontal.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal'**
+  String get mindMapLayoutHorizontal;
+
+  /// No description provided for @mindMapLayoutVertical.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical'**
+  String get mindMapLayoutVertical;
+
+  /// No description provided for @mindMapLayoutFreeform.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeform'**
+  String get mindMapLayoutFreeform;
+
+  /// No description provided for @mindMapBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas background'**
+  String get mindMapBackground;
+
+  /// No description provided for @mindMapDefaultNode.
+  ///
+  /// In en, this message translates to:
+  /// **'New node default'**
+  String get mindMapDefaultNode;
+
+  /// No description provided for @mindMapConnectionStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'New connection default'**
+  String get mindMapConnectionStyle;
+
+  /// No description provided for @mindMapSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Spacing'**
+  String get mindMapSpacing;
+
+  /// No description provided for @mindMapNodeColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Node color'**
+  String get mindMapNodeColor;
+
+  /// No description provided for @mindMapConnectionColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection color'**
+  String get mindMapConnectionColor;
+
+  /// No description provided for @mindMapConnectionWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection width'**
+  String get mindMapConnectionWidth;
+
+  /// No description provided for @mindMapNodeIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Node icon'**
+  String get mindMapNodeIcon;
+
+  /// No description provided for @mindMapNodeShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Node shape'**
+  String get mindMapNodeShape;
+
+  /// No description provided for @mindMapNodeSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Node size'**
+  String get mindMapNodeSize;
+
+  /// No description provided for @mindMapTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get mindMapTextSize;
+
+  /// No description provided for @mindMapShapeRectangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get mindMapShapeRectangle;
+
+  /// No description provided for @mindMapShapeRounded.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded'**
+  String get mindMapShapeRounded;
+
+  /// No description provided for @mindMapShapeCircle.
+  ///
+  /// In en, this message translates to:
+  /// **'Circle'**
+  String get mindMapShapeCircle;
+
+  /// No description provided for @mindMapShapePill.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill'**
+  String get mindMapShapePill;
+
+  /// No description provided for @mindMapShapeGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass'**
+  String get mindMapShapeGlass;
+
+  /// No description provided for @mindMapSizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get mindMapSizeSmall;
+
+  /// No description provided for @mindMapSizeMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get mindMapSizeMedium;
+
+  /// No description provided for @mindMapSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get mindMapSizeLarge;
+
+  /// No description provided for @mindMapIconIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Idea'**
+  String get mindMapIconIdea;
+
+  /// No description provided for @mindMapIconTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get mindMapIconTask;
+
+  /// No description provided for @mindMapIconNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get mindMapIconNote;
+
+  /// No description provided for @mindMapIconStar.
+  ///
+  /// In en, this message translates to:
+  /// **'Star'**
+  String get mindMapIconStar;
+
+  /// No description provided for @mindMapIconFlag.
+  ///
+  /// In en, this message translates to:
+  /// **'Flag'**
+  String get mindMapIconFlag;
+
+  /// No description provided for @mindMapColorWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get mindMapColorWhite;
+
+  /// No description provided for @mindMapColorBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get mindMapColorBlue;
+
+  /// No description provided for @mindMapColorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get mindMapColorGreen;
+
+  /// No description provided for @mindMapColorAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get mindMapColorAmber;
+
+  /// No description provided for @mindMapColorPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get mindMapColorPurple;
+
+  /// No description provided for @mindMapColorDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get mindMapColorDark;
+
+  /// No description provided for @mindMapColorCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current color'**
+  String get mindMapColorCurrent;
+
+  /// No description provided for @mindMapFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit map'**
+  String get mindMapFit;
+
+  /// No description provided for @mindMapCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center map'**
+  String get mindMapCenter;
+
+  /// No description provided for @mindMapZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get mindMapZoomIn;
+
+  /// No description provided for @mindMapZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get mindMapZoomOut;
+
+  /// No description provided for @mindMapPanLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan left'**
+  String get mindMapPanLeft;
+
+  /// No description provided for @mindMapPanRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan right'**
+  String get mindMapPanRight;
+
+  /// No description provided for @mindMapPanUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan up'**
+  String get mindMapPanUp;
+
+  /// No description provided for @mindMapPanDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan down'**
+  String get mindMapPanDown;
+
+  /// No description provided for @mindMapDragNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag node to move'**
+  String get mindMapDragNode;
+
+  /// No description provided for @mindMapKeyboardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers'**
+  String get mindMapKeyboardHelp;
 }
 
 class _FoundationLocalizationsDelegate

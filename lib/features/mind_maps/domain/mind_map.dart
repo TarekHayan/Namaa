@@ -3,7 +3,17 @@ library;
 
 enum MapLayout { radial, tree, horizontal, vertical, freeform }
 
-enum MapNodeShape { rectangle, roundedRectangle, ellipse, diamond, hexagon }
+// The last three values retain already persisted Phase 2 payloads.
+enum MapNodeShape {
+  rectangle,
+  roundedRectangle,
+  circle,
+  pill,
+  glass,
+  ellipse,
+  diamond,
+  hexagon,
+}
 
 enum MapSize { small, medium, large }
 

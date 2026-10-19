@@ -145,21 +145,21 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 
 ### Tests for User Story 4 — write first
 
-- [ ] T057 [P] [US4] Test deterministic five-layout placement, forest roots, side-link exclusion, no content loss and RTL horizontal direction in test/unit/features/mind_maps/domain/map_layout_test.dart.
-- [ ] T058 [P] [US4] Test map default settings versus existing element styles, node appearance choices and restart persistence in test/unit/features/mind_maps/application/map_settings_test.dart.
-- [ ] T059 [P] [US4] Test all five choices, node/settings editors, keyboard focus, visible touch controls, RTL and mixed-direction labels in test/widget/features/mind_maps/map_layout_settings_test.dart.
-- [ ] T060 [P] [US4] Add mobile/desktop 50-node/60-link pan/zoom/fit/select/edit timing and offline-restart validation in integration_test/mind_maps_viewport_test.dart.
+- [X] T057 [P] [US4] Test deterministic five-layout placement, forest roots, side-link exclusion, no content loss and RTL horizontal direction in test/unit/features/mind_maps/domain/map_layout_test.dart.
+- [X] T058 [P] [US4] Test map default settings versus existing element styles, node appearance choices and restart persistence in test/unit/features/mind_maps/application/map_settings_test.dart.
+- [X] T059 [P] [US4] Test all five choices, node/settings editors, keyboard focus, visible touch controls, RTL and mixed-direction labels in test/widget/features/mind_maps/map_layout_settings_test.dart.
+- [X] T060 [P] [US4] Add mobile/desktop 50-node/60-link pan/zoom/fit/select/edit timing and offline-restart validation in integration_test/mind_maps_viewport_test.dart.
 
 ### Implementation for User Story 4
 
-- [ ] T061 [US4] Implement radial, tree, horizontal, vertical and freeform layout rules over parent slots only, including independent roots and RTL horizontal ordering, in lib/features/mind_maps/domain/map_layout.dart.
-- [ ] T062 [US4] Validate and apply map settings/defaults and node appearance without restyling old elements in lib/features/mind_maps/application/map_settings_commands.dart.
-- [ ] T063 [US4] Persist layout positions, settings and explicit element styles as map/node/connection mutations with outbox entries in lib/features/mind_maps/data/drift_map_repository.dart.
-- [ ] T064 [US4] Add pan/zoom/fit/center controller and visible viewport controls while keeping content coordinates stable in lib/features/mind_maps/presentation/map_canvas.dart.
-- [ ] T065 [P] [US4] Build five-layout and map background/default node/connection/spacing controls in lib/features/mind_maps/presentation/map_settings_panel.dart.
-- [ ] T066 [US4] Add color, icon, five shape choices and small/medium/large node/text sizing to lib/features/mind_maps/presentation/map_node_editor.dart.
-- [ ] T067 [US4] Wire layouts, saved positions, settings and undo/redo through lib/features/mind_maps/presentation/map_editor_cubit.dart and lib/features/mind_maps/presentation/map_editor_screen.dart.
-- [ ] T068 [US4] Add Arabic/English layout, appearance, viewport and keyboard semantics strings in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb; regenerate lib/app/l10n/generated/app_localizations.dart and extend lib/app/l10n/mind_maps_strings_adapter.dart.
+- [X] T061 [US4] Implement radial, tree, horizontal, vertical and freeform layout rules over parent slots only, including independent roots and RTL horizontal ordering, in lib/features/mind_maps/domain/map_layout.dart.
+- [X] T062 [US4] Validate and apply map settings/defaults and node appearance without restyling old elements in lib/features/mind_maps/application/map_settings_commands.dart.
+- [X] T063 [US4] Persist layout positions, settings and explicit element styles as map/node/connection mutations with outbox entries in lib/features/mind_maps/data/drift_map_repository.dart.
+- [X] T064 [US4] Add pan/zoom/fit/center controller and visible viewport controls while keeping content coordinates stable in lib/features/mind_maps/presentation/map_canvas.dart.
+- [X] T065 [P] [US4] Build five-layout and map background/default node/connection/spacing controls in lib/features/mind_maps/presentation/map_settings_panel.dart.
+- [X] T066 [US4] Add color, icon, five shape choices and small/medium/large node/text sizing to lib/features/mind_maps/presentation/map_node_editor.dart.
+- [X] T067 [US4] Wire layouts, saved positions, settings and undo/redo through lib/features/mind_maps/presentation/map_editor_cubit.dart and lib/features/mind_maps/presentation/map_editor_screen.dart.
+- [X] T068 [US4] Add Arabic/English layout, appearance, viewport and keyboard semantics strings in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb; regenerate lib/app/l10n/generated/app_localizations.dart and extend lib/app/l10n/mind_maps_strings_adapter.dart.
 
 **Checkpoint**: US4 passes five-layout/appearance/navigation checks on mobile and desktop; SC-005's 50/60 graph remains usable within its two-second visible-response target.
 

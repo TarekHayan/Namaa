@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../application/map_queries.dart';
+import '../domain/mind_map.dart';
 import '../domain/mind_map_node.dart';
 import 'map_canvas.dart';
 import 'map_editor_cubit.dart';
 import 'map_editor_state.dart';
 import 'map_node_editor.dart';
+import 'map_settings_panel.dart';
 import 'map_task_picker.dart';
 import 'mind_maps_strings.dart';
 
@@ -17,6 +19,8 @@ const Key kMindMapRedoKey = Key('mind_map_redo');
 const Key kMindMapDeleteNodeKey = Key('mind_map_delete_node');
 const Key kMindMapLinkTaskKey = Key('mind_map_link_task');
 const Key kMindMapCompleteTaskKey = Key('mind_map_complete_task');
+const Key kMindMapSettingsKey = Key('mind_map_settings');
+const Key kMindMapApplyLayoutKey = Key('mind_map_apply_layout');
 
 class MapEditorScreen extends StatefulWidget {
   const MapEditorScreen({
@@ -35,6 +39,15 @@ class MapEditorScreen extends StatefulWidget {
 class _MapEditorScreenState extends State<MapEditorScreen> {
   String? _sideTargetId;
 
+  String _layoutLabel(MapLayout layout, MindMapsStrings strings) =>
+      switch (layout) {
+        MapLayout.radial => strings.layoutRadial,
+        MapLayout.tree => strings.layoutTree,
+        MapLayout.horizontal => strings.layoutHorizontal,
+        MapLayout.vertical => strings.layoutVertical,
+        MapLayout.freeform => strings.layoutFreeform,
+      };
+
   @override
   void dispose() {
     widget.cubit.close();
@@ -46,6 +59,7 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
       context: context,
       builder: (_) => MapNodeEditor(
         strings: strings,
+        defaultAppearance: state.graph.map.settings.defaultNode,
         onSave: (draft) {
           final index = state.graph.nodes.length - 1;
           return widget.cubit.addNode(
@@ -53,6 +67,7 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
             title: draft.title,
             description: draft.description,
             priority: draft.priority,
+            appearance: draft.appearance,
             parentId: state.selectedId,
             x: ((index + 1) % 3 - 1) * 190.0,
             y: (index ~/ 3) * 120.0 + 140,
@@ -74,11 +89,25 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
           description: draft.description,
           editDescription: true,
           priority: draft.priority,
+          appearance: draft.appearance,
           status: node.taskId == null ? draft.status : null,
         ),
       ),
     );
   }
+
+  Future<void> _settings(MapEditorReady state, MindMapsStrings strings) =>
+      showDialog<void>(
+        context: context,
+        builder: (_) => MapSettingsPanel(
+          initial: state.graph.map.settings,
+          strings: strings,
+          onSave: (settings) => widget.cubit.saveSettings(
+            settings,
+            rtl: Directionality.of(context) == TextDirection.rtl,
+          ),
+        ),
+      );
 
   Future<void> _delete(MindMapNode node, MindMapsStrings strings) async {
     final confirmed = await showDialog<bool>(
@@ -216,17 +245,61 @@ class _MapEditorScreenState extends State<MapEditorScreen> {
                   ),
                 ),
               const SizedBox(height: 8),
-              FilledButton.icon(
-                key: kMindMapAddNodeKey,
-                onPressed: ready.busy ? null : () => _add(ready, strings),
-                icon: const Icon(Icons.add),
-                label: Text(strings.addNode),
+              Wrap(
+                spacing: 8,
+                children: [
+                  FilledButton.icon(
+                    key: kMindMapAddNodeKey,
+                    onPressed: ready.busy ? null : () => _add(ready, strings),
+                    icon: const Icon(Icons.add),
+                    label: Text(strings.addNode),
+                  ),
+                  OutlinedButton.icon(
+                    key: kMindMapSettingsKey,
+                    onPressed: ready.busy
+                        ? null
+                        : () => _settings(ready, strings),
+                    icon: const Icon(Icons.tune),
+                    label: Text(strings.settings),
+                  ),
+                  PopupMenuButton<MapLayout>(
+                    key: kMindMapApplyLayoutKey,
+                    tooltip: strings.applyLayout,
+                    enabled: !ready.busy,
+                    onSelected: (layout) => widget.cubit.applyLayout(
+                      layout,
+                      rtl: Directionality.of(context) == TextDirection.rtl,
+                    ),
+                    itemBuilder: (_) => [
+                      for (final layout in MapLayout.values)
+                        PopupMenuItem(
+                          value: layout,
+                          child: Text(_layoutLabel(layout, strings)),
+                        ),
+                    ],
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.account_tree_outlined),
+                          const SizedBox(width: 8),
+                          Text(strings.applyLayout),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               MapCanvas(
                 graph: graph,
                 selectedId: selected.id,
                 onSelect: widget.cubit.select,
+                strings: strings,
+                linkedTasks: ready.linkedTasks,
+                onMove: (nodeId, x, y) =>
+                    widget.cubit.editNode(nodeId: nodeId, x: x, y: y),
               ),
               const SizedBox(height: 12),
               Wrap(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../domain/mind_map.dart';
 import '../domain/mind_map_node.dart';
+import 'map_appearance_fields.dart';
 import 'mind_maps_strings.dart';
 
 const Key kMindMapNodeTitleFieldKey = Key('mind_map_node_title_field');
@@ -13,12 +15,14 @@ final class MapNodeDraft {
     required this.kind,
     required this.priority,
     required this.status,
+    required this.appearance,
   });
   final String title;
   final String? description;
   final MindMapNodeKind kind;
   final MindMapNodePriority priority;
   final MindMapNodeStatus status;
+  final MapNodeAppearance appearance;
 }
 
 class MapNodeEditor extends StatefulWidget {
@@ -27,10 +31,12 @@ class MapNodeEditor extends StatefulWidget {
     required this.strings,
     required this.onSave,
     this.node,
+    this.defaultAppearance,
   });
 
   final MindMapsStrings strings;
   final MindMapNode? node;
+  final MapNodeAppearance? defaultAppearance;
   final Future<bool> Function(MapNodeDraft) onSave;
 
   @override
@@ -49,6 +55,10 @@ class _MapNodeEditorState extends State<MapNodeEditor> {
       widget.node?.priority ?? MindMapNodePriority.medium;
   late MindMapNodeStatus _status =
       widget.node?.status ?? MindMapNodeStatus.notStarted;
+  late MapNodeAppearance _appearance =
+      widget.node?.appearance ??
+      widget.defaultAppearance ??
+      const MapNodeAppearance();
   String? _error;
   bool _saving = false;
 
@@ -96,6 +106,7 @@ class _MapNodeEditorState extends State<MapNodeEditor> {
         kind: _kind,
         priority: _priority,
         status: _status,
+        appearance: _appearance,
       ),
     );
     if (!mounted) return;
@@ -192,6 +203,12 @@ class _MapNodeEditorState extends State<MapNodeEditor> {
                   if (value != null) setState(() => _status = value);
                 },
               ),
+            const SizedBox(height: 12),
+            MapAppearanceFields(
+              appearance: _appearance,
+              strings: widget.strings,
+              onChanged: (value) => setState(() => _appearance = value),
+            ),
             if (_error != null && _error != widget.strings.nodeTitleRequired)
               Text(
                 _error!,

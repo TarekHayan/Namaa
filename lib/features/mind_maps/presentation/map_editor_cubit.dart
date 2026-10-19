@@ -7,6 +7,7 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 import '../application/map_editor_history.dart';
 import '../application/map_graph_commands.dart';
 import '../application/map_repository.dart';
+import '../application/map_settings_commands.dart';
 import '../application/map_task_link_commands.dart';
 import '../application/map_task_link_port.dart';
 import '../domain/mind_map.dart';
@@ -22,11 +23,13 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
     required this.mapId,
     MapTaskLinkPort? tasks,
     MapTaskLinkCommands? taskLinks,
+    MapSettingsCommands? settingsCommands,
   }) : _repository = repository,
        _commands = commands,
        _history = history,
        _tasks = tasks,
        _taskLinks = taskLinks,
+       _settingsCommands = settingsCommands,
        super(const MapEditorLoading()) {
     if (tasks != null) {
       _taskSubscription = tasks
@@ -69,6 +72,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
   final MapEditorHistory _history;
   final MapTaskLinkPort? _tasks;
   final MapTaskLinkCommands? _taskLinks;
+  final MapSettingsCommands? _settingsCommands;
   final String ownerId;
   final String mapId;
   StreamSubscription<MapGraph?>? _subscription;
@@ -91,6 +95,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
     required String title,
     String? description,
     MindMapNodePriority priority = MindMapNodePriority.medium,
+    MapNodeAppearance? appearance,
     String? parentId,
     double x = 0,
     double y = 0,
@@ -101,6 +106,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
       title: title,
       description: description,
       priority: priority,
+      appearance: appearance,
       parentId: parentId,
       x: x,
       y: y,
@@ -115,6 +121,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
     String? description,
     bool editDescription = false,
     MindMapNodePriority? priority,
+    MapNodeAppearance? appearance,
     MindMapNodeStatus? status,
     double? x,
     double? y,
@@ -126,6 +133,7 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
       description: description,
       editDescription: editDescription,
       priority: priority,
+      appearance: appearance,
       status: status,
       x: x,
       y: y,
@@ -168,6 +176,43 @@ final class MapEditorCubit extends Cubit<MapEditorState> {
       expectedOwnerId: ownerId,
     ),
   );
+
+  Future<bool> saveSettings(MindMapSettings settings, {required bool rtl}) {
+    final commands = _settingsCommands;
+    final graph = _graph;
+    if (commands == null || graph == null) return Future.value(false);
+    final layoutChanged =
+        settings.layout != graph.map.settings.layout ||
+        settings.spacing != graph.map.settings.spacing;
+    return _perform(
+      () => layoutChanged && settings.layout != MapLayout.freeform
+          ? commands.applyLayout(
+              mapId: mapId,
+              layout: settings.layout,
+              rtl: rtl,
+              settings: settings,
+              expectedOwnerId: ownerId,
+            )
+          : commands.saveSettings(
+              mapId: mapId,
+              settings: settings,
+              expectedOwnerId: ownerId,
+            ),
+    );
+  }
+
+  Future<bool> applyLayout(MapLayout layout, {required bool rtl}) {
+    final commands = _settingsCommands;
+    if (commands == null) return Future.value(false);
+    return _perform(
+      () => commands.applyLayout(
+        mapId: mapId,
+        layout: layout,
+        rtl: rtl,
+        expectedOwnerId: ownerId,
+      ),
+    );
+  }
 
   MapTaskLinkPort? get taskPort => _tasks;
 

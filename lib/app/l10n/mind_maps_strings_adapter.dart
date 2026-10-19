@@ -149,4 +149,102 @@ final class _AppMindMapsStrings implements MindMapsStrings {
   String get noTasks => _l10n.mindMapNoTasks;
   @override
   String get taskLinkFailure => _l10n.mindMapTaskLinkFailure;
+  @override
+  String get settings => _l10n.mindMapSettings;
+  @override
+  String get layout => _l10n.mindMapLayout;
+  @override
+  String get applyLayout => _l10n.mindMapApplyLayout;
+  @override
+  String get layoutRadial => _l10n.mindMapLayoutRadial;
+  @override
+  String get layoutTree => _l10n.mindMapLayoutTree;
+  @override
+  String get layoutHorizontal => _l10n.mindMapLayoutHorizontal;
+  @override
+  String get layoutVertical => _l10n.mindMapLayoutVertical;
+  @override
+  String get layoutFreeform => _l10n.mindMapLayoutFreeform;
+  @override
+  String get background => _l10n.mindMapBackground;
+  @override
+  String get defaultNode => _l10n.mindMapDefaultNode;
+  @override
+  String get connectionStyle => _l10n.mindMapConnectionStyle;
+  @override
+  String get spacing => _l10n.mindMapSpacing;
+  @override
+  String get nodeColor => _l10n.mindMapNodeColor;
+  @override
+  String get connectionColor => _l10n.mindMapConnectionColor;
+  @override
+  String get connectionWidth => _l10n.mindMapConnectionWidth;
+  @override
+  String get nodeIcon => _l10n.mindMapNodeIcon;
+  @override
+  String get nodeShape => _l10n.mindMapNodeShape;
+  @override
+  String get nodeSize => _l10n.mindMapNodeSize;
+  @override
+  String get textSize => _l10n.mindMapTextSize;
+  @override
+  String get shapeRectangle => _l10n.mindMapShapeRectangle;
+  @override
+  String get shapeRounded => _l10n.mindMapShapeRounded;
+  @override
+  String get shapeCircle => _l10n.mindMapShapeCircle;
+  @override
+  String get shapePill => _l10n.mindMapShapePill;
+  @override
+  String get shapeGlass => _l10n.mindMapShapeGlass;
+  @override
+  String get sizeSmall => _l10n.mindMapSizeSmall;
+  @override
+  String get sizeMedium => _l10n.mindMapSizeMedium;
+  @override
+  String get sizeLarge => _l10n.mindMapSizeLarge;
+  @override
+  String get iconIdea => _l10n.mindMapIconIdea;
+  @override
+  String get iconTask => _l10n.mindMapIconTask;
+  @override
+  String get iconNote => _l10n.mindMapIconNote;
+  @override
+  String get iconStar => _l10n.mindMapIconStar;
+  @override
+  String get iconFlag => _l10n.mindMapIconFlag;
+  @override
+  String get colorWhite => _l10n.mindMapColorWhite;
+  @override
+  String get colorBlue => _l10n.mindMapColorBlue;
+  @override
+  String get colorGreen => _l10n.mindMapColorGreen;
+  @override
+  String get colorAmber => _l10n.mindMapColorAmber;
+  @override
+  String get colorPurple => _l10n.mindMapColorPurple;
+  @override
+  String get colorDark => _l10n.mindMapColorDark;
+  @override
+  String get colorCurrent => _l10n.mindMapColorCurrent;
+  @override
+  String get fit => _l10n.mindMapFit;
+  @override
+  String get center => _l10n.mindMapCenter;
+  @override
+  String get zoomIn => _l10n.mindMapZoomIn;
+  @override
+  String get zoomOut => _l10n.mindMapZoomOut;
+  @override
+  String get panLeft => _l10n.mindMapPanLeft;
+  @override
+  String get panRight => _l10n.mindMapPanRight;
+  @override
+  String get panUp => _l10n.mindMapPanUp;
+  @override
+  String get panDown => _l10n.mindMapPanDown;
+  @override
+  String get dragNode => _l10n.mindMapDragNode;
+  @override
+  String get keyboardHelp => _l10n.mindMapKeyboardHelp;
 }
