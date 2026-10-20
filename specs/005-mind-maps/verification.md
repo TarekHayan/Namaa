@@ -32,6 +32,8 @@ The first full PR run, [39312996337](https://github.com/TarekHayan/Namaa/actions
 
 T093 remains open until the corrected PR run reports successful persistence, account sync, and Task-link coverage on all five targets.
 
+The second full run, [39330762994](https://github.com/TarekHayan/Namaa/actions/runs/39330762994), passed quality, database security, Windows, Linux, macOS, and 19 of 20 iOS simulator entries. The iOS Mind Maps localized route failed with two layout overflows while the native keyboard was open: the test had forced a `390×844` physical view and pixel ratio 1 on the simulator. The test now keeps the device's native dimensions on iOS/Android and explicitly unfocuses after text entry; its Windows integration rerun passed. Android again reached the first APK installation but produced no test result before the 60-minute job limit. Its CI suite is now split into two feature groups, uses the device integration driver, and bounds each attempt so a startup stall is diagnosed and retried once. These changes still need CI confirmation.
+
 ## SC-005: 50 nodes and 60 links, offline response
 
 All values are elapsed milliseconds from action through the next rendered test frame. The Windows and Android runs used encrypted local storage without a network dependency. The acceptance targets are the Android `390×844` viewport and Windows `1200×800` viewport.
@@ -81,6 +83,6 @@ All recorded actions were below the two-second threshold. These are emulator/des
 
 ## Remaining gate and later features
 
-- **T093 remains open.** The new `mind_maps_staging_sync_test.dart` and local persistence/Task-link entries are wired into Android, iOS, Windows, macOS and Linux CI. The workflow still runs only on a PR to `develop` or manual dispatch. Results cannot be claimed until this branch's Phase 8 changes are available to CI, migrations `0009` and `0010` are deployed to the isolated nonproduction project, and the five-target gate actually runs. Local host access here provides Android and Windows only.
+- **T093 remains open.** The new `mind_maps_staging_sync_test.dart` and local persistence/Task-link entries are wired into Android, iOS, Windows, macOS and Linux CI. Migrations `0008`–`0010` are deployed to the isolated nonproduction project. The workflow runs on PRs to `develop` or manual dispatch. The five-target gate needs a clean rerun after the iOS and Android CI fixes above; local host access here provides Android and Windows only.
 - SC-001's exhaustive restart walkthrough, SC-003/004 hosted-device evidence, SC-006 five-target evidence and SC-007's complete keyboard-only walkthrough are not yet acceptance-complete.
 - Public account entry/initial sync depends on the later **Auth** feature. Final colors, typography and screen composition depend on **UI Refinement**. Neither dependency is implemented by 005.

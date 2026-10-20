@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -123,8 +124,13 @@ void main() {
       routerConfig: router.router,
     );
 
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(390, 844);
+    final mobile =
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.android;
+    if (!mobile) {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 844);
+    }
     await tester.pumpWidget(app(const Locale('ar')));
     router.go(kMindMapsRoute);
     await tester.pumpAndSettle();
@@ -140,6 +146,7 @@ void main() {
       'خطة Namaa 2026',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
+    FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(kMapLibrarySaveKey));
     final current = cubit.state;
@@ -197,6 +204,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(kMindMapNodeTitleFieldKey), 'فرع Alpha');
     await tester.testTextInput.receiveAction(TextInputAction.done);
+    FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(kMindMapNodeSaveKey));
     await waitForEditor((ready) => ready.summary.nodeCount == 2);
@@ -210,6 +218,7 @@ void main() {
       'ملاحظة Beta',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
+    FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<MindMapNodeKind>));
     await tester.pumpAndSettle();
@@ -239,7 +248,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Review Namaa خطة'), findsWidgets);
 
-    tester.view.physicalSize = const Size(1200, 800);
+    if (!mobile) tester.view.physicalSize = const Size(1200, 800);
     await tester.pumpWidget(app(const Locale('en')));
     await tester.pumpAndSettle();
     expect(find.byKey(kMindMapEditorKey), findsOneWidget);
