@@ -186,6 +186,7 @@ void main() {
       expect(find.text('Second map'), findsOneWidget);
       expect(find.text('First map'), findsNothing);
       await tester.enterText(find.byKey(kMapLibrarySearchKey), '');
+      FocusManager.instance.primaryFocus?.unfocus();
       await tester.pumpAndSettle();
       final duplicateButton = find.byKey(
         ValueKey('mind-map-duplicate-${second.id}'),
@@ -227,6 +228,7 @@ void main() {
       );
       final deleteButton = find.byKey(ValueKey('mind-map-delete-${second.id}'));
       await tester.ensureVisible(deleteButton);
+      await tester.pumpAndSettle();
       await tester.tap(deleteButton);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(kMapLibraryConfirmDeleteKey));

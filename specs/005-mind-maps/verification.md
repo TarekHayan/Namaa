@@ -34,6 +34,8 @@ T093 remains open until the corrected PR run reports successful persistence, acc
 
 The second full run, [39330762994](https://github.com/TarekHayan/Namaa/actions/runs/39330762994), passed quality, database security, Windows, Linux, macOS, and 19 of 20 iOS simulator entries. The iOS Mind Maps localized route failed with two layout overflows while the native keyboard was open: the test had forced a `390×844` physical view and pixel ratio 1 on the simulator. The test now keeps the device's native dimensions on iOS/Android and explicitly unfocuses after text entry; its Windows integration rerun passed. Android again reached the first APK installation but produced no test result before the 60-minute job limit. Its CI suite is now split into two feature groups, uses the device integration driver, and bounds each attempt so a startup stall is diagnosed and retried once. These changes still need CI confirmation.
 
+The third run, [39413071704](https://github.com/TarekHayan/Namaa/actions/runs/39413071704), confirmed both Android shards now start and execute tests. The Habits/Mind Maps shard reached the library deletion flow, where an active search keyboard covered the Delete control and the follow-up confirmation dialog never appeared. The test now unfocuses after clearing search and settles scrolling before tapping Delete; its focused Windows integration rerun passed. Other entries in this run were still running when this result was recorded.
+
 ## SC-005: 50 nodes and 60 links, offline response
 
 All values are elapsed milliseconds from action through the next rendered test frame. The Windows and Android runs used encrypted local storage without a network dependency. The acceptance targets are the Android `390×844` viewport and Windows `1200×800` viewport.
