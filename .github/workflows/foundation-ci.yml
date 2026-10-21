@@ -455,7 +455,8 @@ jobs:
   ios:
     if: ${{ !inputs.mobile_only || inputs.ios_suites != '[]' }}
     name: iOS simulator (${{ matrix.suite }})
-    runs-on: macos-latest
+    # Use the separate Intel pool while ARM runners have capacity delays.
+    runs-on: macos-26-intel
     timeout-minutes: 60
     strategy:
       fail-fast: false
