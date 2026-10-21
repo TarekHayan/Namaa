@@ -1,4 +1,6 @@
 import importlib.util
+from contextlib import redirect_stdout
+import io
 from pathlib import Path
 import subprocess
 import tempfile
@@ -38,6 +40,7 @@ class AndroidPreparationTest(unittest.TestCase):
         self.assertEqual(run.call_count, 3)
         self.assertEqual(run.call_args_list[0], run.call_args_list[1])
         self.assertEqual(run.call_args_list[2].args[0][-1], "-version")
+        self.assertIn("-no-window", run.call_args_list[2].args[0])
 
     def test_persistent_install_failure_stops_after_three_attempts(self):
         with (
@@ -65,11 +68,26 @@ class AndroidPreparationTest(unittest.TestCase):
         with (
             patch.object(preparation.subprocess, "run", side_effect=[
                 subprocess.CompletedProcess([], 0), subprocess.CompletedProcess([], 0, "", ""),
-            ] * 3),
+            ]) as run,
             patch.object(preparation.time, "sleep"),
         ):
             with self.assertRaisesRegex(ValueError, "valid version"):
                 preparation.prepare(self.sdk)
+        self.assertEqual(run.call_count, 2)
+
+    def test_binary_error_is_visible_and_does_not_repeat_installation(self):
+        output = io.StringIO()
+        with (
+            patch.object(preparation.subprocess, "run", side_effect=[
+                subprocess.CompletedProcess([], 0),
+                subprocess.CompletedProcess([], 127, "", "Missing runtime library"),
+            ]) as run,
+            redirect_stdout(output),
+        ):
+            with self.assertRaises(subprocess.CalledProcessError):
+                preparation.prepare(self.sdk)
+        self.assertEqual(run.call_count, 2)
+        self.assertIn("Missing runtime library", output.getvalue())
 
 
 if __name__ == "__main__":
