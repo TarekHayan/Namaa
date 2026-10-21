@@ -61,6 +61,8 @@ Android now connects directly to the VM service without DDS or a paused startup,
 
 Manual `mobile_only` workflow runs can select Android/iOS suite arrays for focused verification. Other platforms and the final gate are skipped in that mode; only a complete run can satisfy SC-006.
 
+Focused run [39608159074](https://github.com/TarekHayan/Namaa/actions/runs/39608159074) on `186bd0e` passed the entire Android Foundation/Tasks shard. All three iOS native builds and launches worked; their entry points completed their user journeys but failed Flutter's end-of-test semantics-handle check when native accessibility became active during the first test. The native bootstrap now enables the platform semantics fixture before testWidgets records its baseline, while retaining the normal per-test handle disposal checks. A focused widget test confirmed that a native accessibility callback does not change the baseline and that an explicitly created test handle is still counted until disposal. Native builds now target only the active simulator architecture. The remaining iOS confirmation is pending; no final gate is claimed for the focused run.
+
 ## SC-005: 50 nodes and 60 links, offline response
 
 All values are elapsed milliseconds from action through the next rendered test frame. The Windows and Android runs used encrypted local storage without a network dependency. The acceptance targets are the Android `390×844` viewport and Windows `1200×800` viewport.

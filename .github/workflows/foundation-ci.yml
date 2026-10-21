@@ -102,6 +102,7 @@ jobs:
         run: supabase test db
 
   android:
+    if: ${{ !inputs.mobile_only || inputs.android_suites != '[]' }}
     name: Android integration (${{ matrix.suite }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -452,6 +453,7 @@ jobs:
             --reporter expanded
 
   ios:
+    if: ${{ !inputs.mobile_only || inputs.ios_suites != '[]' }}
     name: iOS simulator (${{ matrix.suite }})
     runs-on: macos-latest
     timeout-minutes: 60
@@ -525,19 +527,34 @@ jobs:
               value = argument.removeprefix('--dart-define=')
               print('::add-mask::' + base64.b64encode(value.encode()).decode())
           PY
+          mkdir -p build/ios_integration
+          # XCTest can activate native accessibility after the first test begins.
+          # Establish it before testWidgets records its semantics-handle baseline.
+          cat > build/ios_integration/entrypoint.dart <<DART
+          import 'package:integration_test/integration_test.dart';
+
+          import '../../$test_file' as scenario;
+          import '../../test/support/native_ios_test_binding.dart';
+
+          void main() {
+            final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+            stabilizeNativeIosSemantics(binding);
+            scenario.main();
+          }
+          DART
           flutter build ios --simulator --debug --no-codesign --no-pub --config-only \
-            "${staging_defines[@]}" --target="$test_file"
+            "${staging_defines[@]}" --target=build/ios_integration/entrypoint.dart
           result_bundle="$PWD/build/ios_integration/results.xcresult"
           # Native XCTest receives Dart results through the integration_test plugin;
           # it does not wait for discovery of a debugger VM-service URI.
           python3 .github/scripts/run-ios-integration.py "$result_bundle" -- \
-            xcodebuild test -workspace ios/Runner.xcworkspace -scheme Runner \
+            xcodebuild -quiet test -workspace ios/Runner.xcworkspace -scheme Runner \
             -configuration Debug -sdk iphonesimulator \
             -destination "id=$IOS_DEVICE_ID" -parallel-testing-enabled NO \
             -only-testing:RunnerTests/RunnerTests/testFlutterIntegration \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -maximum-test-execution-time-allowance 600 \
-            -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=NO
+            -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=YES
 
   foundation-gate:
     name: Foundation and Task five-target gate
