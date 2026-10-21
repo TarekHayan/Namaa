@@ -280,4 +280,195 @@ void main() {
     await tester.pump();
     expect(find.byKey(kMindMapFitKey), findsOneWidget);
   });
+
+  testWidgets('English keyboard walkthrough uses visible map controls', (
+    tester,
+  ) async {
+    if (defaultTargetPlatform != TargetPlatform.windows) return;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1200, 800);
+    final temp = TemporaryDatabasePath();
+    final database = await FoundationDatabase.openEncrypted(
+      path: temp.allocate(),
+      key: List<int>.generate(32, (index) => 0x90 + index),
+    );
+    const session = TasksPreviewSession();
+    final ids = MindMapsTestIds();
+    final clock = MindMapsTestClock();
+    final maps = DriftMapRepository(
+      database: database,
+      codec: const MapPayloadCodec(),
+    );
+    final tasks = DriftTaskRepository(
+      database: database,
+      codec: const TaskPayloadCodec(),
+    );
+    final task = Task.create(
+      id: kMindMapsTestTaskId,
+      accountId: kTasksPreviewAccountId,
+      title: 'Keyboard Task',
+      scheduledDate: DateTime(2026, 10, 19),
+      createdAt: DateTime.utc(2026, 10, 19),
+      completionXp: 25,
+    );
+    expect(
+      (await tasks.commitTask(
+        TaskWriteRequest(
+          task: task,
+          operationId: 'keyboard-walkthrough-task',
+          kind: ChangeKind.create,
+          queuedAt: task.createdAt,
+        ),
+      )).failureOrNull,
+      isNull,
+    );
+    final bridge = TasksMapLinkAdapter(
+      repository: tasks,
+      completionService: TaskCompletionService(
+        repository: tasks,
+        unitOfWork: DriftTaskCompletionUnitOfWork(
+          database: database,
+          codec: const TaskPayloadCodec(),
+          awardLedger: DriftAwardLedger(database),
+        ),
+        session: session,
+      ),
+      session: session,
+    );
+    final cubit = MapLibraryCubit(
+      repository: maps,
+      commands: MapCommands(
+        repository: maps,
+        session: session,
+        nextId: ids.nextOperationId,
+        nowUtc: clock.nextVersion,
+      ),
+      session: session,
+      tasks: bridge,
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await cubit.close();
+      await database.close();
+      temp.dispose();
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        home: MapLibraryScreen(
+          cubit: cubit,
+          ownerId: kTasksPreviewAccountId,
+          stringsResolver: resolveMindMapsStrings,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    bool focusWithin(Finder target) {
+      final focused = FocusManager.instance.primaryFocus?.context;
+      if (focused == null) return false;
+      final targetElement = tester.element(target);
+      if (identical(focused, targetElement)) return true;
+      var found = false;
+      focused.visitAncestorElements((ancestor) {
+        if (identical(ancestor, targetElement)) found = true;
+        return !found;
+      });
+      return found;
+    }
+
+    Future<void> tabTo(Finder target) async {
+      expect(target, findsOneWidget);
+      for (var step = 0; step < 120; step++) {
+        if (focusWithin(target)) return;
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+      }
+      fail('Tab could not reach $target');
+    }
+
+    Future<void> enter(Finder target) async {
+      await tabTo(target);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+    }
+
+    await enter(find.byKey(kMapLibraryCreateKey));
+    await tabTo(find.byKey(kMapLibraryTitleFieldKey));
+    await tester.enterText(
+      find.byKey(kMapLibraryTitleFieldKey),
+      'Keyboard map',
+    );
+    await enter(find.byKey(kMapLibrarySaveKey));
+    final libraryState = cubit.state;
+    if (libraryState is! MapLibraryReady ||
+        !libraryState.maps.any((item) => item.map.title == 'Keyboard map')) {
+      await cubit.stream
+          .where((state) => state is MapLibraryReady)
+          .cast<MapLibraryReady>()
+          .firstWhere(
+            (ready) =>
+                ready.maps.any((item) => item.map.title == 'Keyboard map'),
+          )
+          .timeout(const Duration(seconds: 10));
+    }
+    await tester.pumpAndSettle();
+    final graph = (await maps.watchGraphs(kTasksPreviewAccountId).first).single;
+    final card = find.byKey(ValueKey('mind-map-${graph.map.id}'));
+    await enter(
+      find.descendant(of: card, matching: find.byType(ListTile)).first,
+    );
+    await enter(
+      find
+          .ancestor(
+            of: find.text('Edit map'),
+            matching: find.byType(FilledButton),
+          )
+          .first,
+    );
+    expect(find.byKey(kMindMapEditorKey), findsOneWidget);
+
+    await enter(find.byKey(kMindMapAddNodeKey));
+    await tabTo(find.byKey(kMindMapNodeTitleFieldKey));
+    await tester.enterText(find.byKey(kMindMapNodeTitleFieldKey), 'Child idea');
+    await enter(find.byKey(kMindMapNodeSaveKey));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Completed: 0/2'), findsOneWidget);
+
+    await enter(find.byKey(kMindMapAddNodeKey));
+    await tabTo(find.byKey(kMindMapNodeTitleFieldKey));
+    await tester.enterText(
+      find.byKey(kMindMapNodeTitleFieldKey),
+      'Keyboard note',
+    );
+    await tabTo(find.byType(DropdownButtonFormField<MindMapNodeKind>));
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    for (var step = 0; step < 3; step++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+    }
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    await enter(find.byKey(kMindMapNodeSaveKey));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Completed: 0/3'), findsOneWidget);
+    expect(
+      (await maps.readGraph(
+        ownerId: kTasksPreviewAccountId,
+        mapId: graph.map.id,
+      )).valueOrNull!.nodes.any((node) => node.kind == MindMapNodeKind.note),
+      isTrue,
+    );
+
+    await enter(find.byKey(kMindMapLinkTaskKey));
+    await enter(find.byKey(ValueKey('mind-map-task-${task.id}')));
+    await tester.pumpAndSettle();
+    expect(find.text('Keyboard Task'), findsWidgets);
+    expect(find.textContaining('Completed: 0/3'), findsOneWidget);
+  });
 }

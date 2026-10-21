@@ -337,21 +337,74 @@ void main() {
           .eq('map_id', mapId),
       isEmpty,
     );
-    await expectLater(
-      gatewayB.applyChange(
-        expectedOwnerId: other,
-        entityType: kMindMapNodeEntityType,
-        mapId: mapId,
-        entityId: '$mapId:$firstId',
-        payload: Map<String, dynamic>.from(
-          jsonDecode(codec.encodeNode(node(firstId, 'Foreign', secondAt)))
-              as Map,
-        ),
-        operationId: _uuid(),
-        kind: 'update',
-        updatedAt: secondAt,
+    for (final foreignEdit in <(String, String, String)>[
+      (kMindMapEntityType, mapId, codec.encodeMap(map)),
+      (
+        kMindMapNodeEntityType,
+        '$mapId:$firstId',
+        codec.encodeNode(node(firstId, 'Foreign', secondAt)),
       ),
+      (
+        kMindMapParentSlotEntityType,
+        '$mapId:parent:$firstId',
+        codec.encodeParentSlot(slot),
+      ),
+      (
+        kMindMapSideLinkEntityType,
+        '$mapId:side:${endpoints.first}:${endpoints.last}',
+        codec.encodeSideLink(side),
+      ),
+    ]) {
+      await expectLater(
+        gatewayB.applyChange(
+          expectedOwnerId: other,
+          entityType: foreignEdit.$1,
+          mapId: mapId,
+          entityId: foreignEdit.$2,
+          payload: Map<String, dynamic>.from(jsonDecode(foreignEdit.$3) as Map),
+          operationId: _uuid(),
+          kind: 'update',
+          updatedAt: secondAt,
+        ),
+        throwsA(isA<Exception>()),
+        reason: 'Other account must not change ${foreignEdit.$1}',
+      );
+    }
+    await expectLater(
+      clientB.from('mind_map_conflicts').delete().eq('map_id', mapId),
       throwsA(isA<Exception>()),
+    );
+    expect(
+      await clientA2.from('mind_maps').select('id').eq('id', mapId),
+      hasLength(1),
+    );
+    expect(
+      await clientA2
+          .from('mind_map_nodes')
+          .select('node_id')
+          .eq('map_id', mapId),
+      hasLength(3),
+    );
+    expect(
+      await clientA2
+          .from('mind_map_parent_slots')
+          .select('child_node_id')
+          .eq('map_id', mapId),
+      hasLength(1),
+    );
+    expect(
+      await clientA2
+          .from('mind_map_side_links')
+          .select('first_node_id')
+          .eq('map_id', mapId),
+      hasLength(1),
+    );
+    expect(
+      await clientA2
+          .from('mind_map_conflicts')
+          .select('conflict_id')
+          .eq('map_id', mapId),
+      isNotEmpty,
     );
   });
 }

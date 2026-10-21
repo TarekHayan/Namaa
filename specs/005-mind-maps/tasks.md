@@ -241,3 +241,10 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 3. **Task integration**: Complete US3; prove the same Task and single XP award from two maps before adding view options.
 4. **View controls**: Complete US4; validate all five layouts, saved styles and accessible navigation at 50/60 scale.
 5. **Account sync and closeout**: Complete US5 and Phase 8, using local Supabase tests and the agreed PR/manual five-target gate. Do not add Auth or final UI redesign to 005.
+
+## Phase 9: Convergence
+
+- [X] T096 Verify every defined library, graph, Task-link, layout and appearance scenario after one offline restart, including the expected visible result, and record evidence in specs/005-mind-maps/verification.md per SC-001.
+- [X] T097 Run and record ten offline restart/reconnect trials across two independent devices using the isolated nonproduction Supabase project; verify independent-node merge, same-node conflict recovery and no duplicate map elements per SC-003.
+- [X] T098 Verify on the isolated nonproduction Supabase project that a second account cannot read or change the first account's maps, nodes, links or conflict records, and that the development preview exposes none of that account's content; record evidence per SC-004.
+- [X] T099 Complete a keyboard-only walkthrough through labeled visible controls to create a map, add a child and note, link an existing Task and identify map progress; record the result alongside the touch walkthrough per SC-007.

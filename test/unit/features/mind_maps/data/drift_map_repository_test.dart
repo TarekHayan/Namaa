@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/features/mind_maps/application/map_commands.dart';
@@ -286,6 +287,44 @@ void main() {
     expect(await db.rawScalar('SELECT count(*) FROM mind_map_records'), 0);
     expect(await db.rawScalar('SELECT count(*) FROM mind_map_node_records'), 0);
     expect(await db.rawScalar('SELECT count(*) FROM pending_changes'), 0);
+  });
+
+  test('development preview and real account maps remain separate', () async {
+    final accountMap = (await commands.createMap(
+      title: 'Private account map',
+    )).valueOrNull!;
+    session.switchTo(kTasksPreviewAccountId);
+    expect(await repo.watchGraphs(kTasksPreviewAccountId).first, isEmpty);
+    expect(
+      (await repo.readGraph(
+        ownerId: kTasksPreviewAccountId,
+        mapId: accountMap.id,
+      )).valueOrNull,
+      isNull,
+    );
+    final previewMap = (await commands.createMap(
+      title: 'Preview map',
+    )).valueOrNull!;
+    expect(
+      (await repo.watchGraphs(kTasksPreviewAccountId).first).map(
+        (graph) => graph.map.id,
+      ),
+      [previewMap.id],
+    );
+    session.switchTo(kMindMapsTestAccountA);
+    expect(
+      (await repo.watchGraphs(kMindMapsTestAccountA).first).map(
+        (graph) => graph.map.id,
+      ),
+      [accountMap.id],
+    );
+    expect(
+      (await repo.readGraph(
+        ownerId: kMindMapsTestAccountA,
+        mapId: previewMap.id,
+      )).valueOrNull,
+      isNull,
+    );
   });
 
   test(

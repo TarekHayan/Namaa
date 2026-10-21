@@ -145,4 +145,95 @@ void main() {
       temp.dispose();
     },
   );
+
+  test(
+    'each layout survives an offline restart without changing graph identity',
+    () async {
+      final temp = TemporaryDatabasePath();
+      final path = temp.allocate();
+      final key = List<int>.generate(32, (i) => i + 73);
+      var db = await FoundationDatabase.openEncrypted(path: path, key: key);
+      final session = MindMapsTestSession();
+      final ids = MindMapsTestIds();
+      final clock = MindMapsTestClock();
+      DriftMapRepository repo() =>
+          DriftMapRepository(database: db, codec: const MapPayloadCodec());
+      MapSettingsCommands settings() => MapSettingsCommands(
+        repository: repo(),
+        session: session,
+        nextId: ids.nextOperationId,
+        nowUtc: clock.nextVersion,
+      );
+      addTearDown(() async {
+        await session.dispose();
+        await db.close();
+        temp.dispose();
+      });
+
+      final map = (await MapCommands(
+        repository: repo(),
+        session: session,
+        nextId: ids.nextOperationId,
+        nowUtc: clock.nextVersion,
+      ).createMap(title: 'Layouts')).valueOrNull!;
+      final graph = MapGraphCommands(
+        repository: repo(),
+        session: session,
+        nextId: ids.nextOperationId,
+        nowUtc: clock.nextVersion,
+      );
+      final branch = (await graph.addNode(
+        mapId: map.id,
+        kind: MindMapNodeKind.branch,
+        title: 'Branch',
+        parentId: map.centralNodeId,
+      )).valueOrNull!.nodes.single.after;
+      final note = (await graph.addNode(
+        mapId: map.id,
+        kind: MindMapNodeKind.note,
+        title: 'Note',
+        parentId: branch.id,
+      )).valueOrNull!.nodes.single.after;
+      expect(
+        (await graph.setSideLink(
+          mapId: map.id,
+          firstId: map.centralNodeId,
+          secondId: note.id,
+          connected: true,
+        )).failureOrNull,
+        isNull,
+      );
+      final originalIds = {map.centralNodeId, branch.id, note.id};
+
+      for (final layout in MapLayout.values) {
+        expect(
+          (await settings().applyLayout(
+            mapId: map.id,
+            layout: layout,
+            rtl: false,
+            spacing: 175,
+          )).failureOrNull,
+          isNull,
+          reason: '$layout must save',
+        );
+        await db.close();
+        db = await FoundationDatabase.openEncrypted(path: path, key: key);
+        final restored = (await repo().readGraph(
+          ownerId: kMindMapsTestAccountA,
+          mapId: map.id,
+        )).valueOrNull!;
+        expect(restored.map.settings.layout, layout);
+        expect(restored.map.settings.spacing, 175);
+        expect(restored.nodes.map((node) => node.id).toSet(), originalIds);
+        expect(restored.parentSlots, hasLength(2));
+        expect(restored.sideLinks, hasLength(1));
+        expect(
+          restored.parentSlots
+              .singleWhere((slot) => slot.childNodeId == note.id)
+              .parentNodeId,
+          branch.id,
+        );
+      }
+    },
+  );
 }
