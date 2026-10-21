@@ -129,6 +129,31 @@ void main() {
     expect(find.text('لا يمكن لهذا الحساب تعديل الخريطة.'), findsOneWidget);
     expect(find.byKey(kMapLibraryEmptyKey), findsOneWidget);
   });
+
+  testWidgets('create dialog fits a small phone with the keyboard open', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetViewInsets();
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    await open(tester, locale: const Locale('ar'));
+    await tester.tap(find.byKey(kMapLibraryCreateKey));
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+    await tester.pumpAndSettle();
+    expect(find.byKey(kMapLibraryTitleFieldKey), findsOneWidget);
+    expect(find.byKey(kMapLibraryDescriptionFieldKey), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.enterText(find.byKey(kMapLibraryTitleFieldKey), 'خريطة صغيرة');
+    await tester.tap(find.byKey(kMapLibrarySaveKey));
+    await tester.pumpAndSettle();
+    expect(find.text('خريطة صغيرة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 /// Persistence and rollback are tested against Drift separately.

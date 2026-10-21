@@ -47,6 +47,8 @@ The fifth run, [39489378940](https://github.com/TarekHayan/Namaa/actions/runs/39
 
 The seven Mind Maps iOS simulator jobs were rerun on the same commit in [attempt 4](https://github.com/TarekHayan/Namaa/actions/runs/39489378940/attempts/4) and all passed. The final acceptance changes below still need a full PR run on their own head commit before T093 and SC-006 can close.
 
+The next PR run, [39579607239](https://github.com/TarekHayan/Namaa/actions/runs/39579607239), passed quality, database security, Linux and iOS offline, but its Android Habits/Mind Maps shard found a real small-screen overflow in the Arabic map creation dialog while the keyboard was open. The other unfinished jobs were cancelled, so they provide no result for this head. A focused `320×640` widget test with simulated keyboard insets reproduced a 24-pixel overflow before the fix, then passed after the dialog content became scrollable; it also saved and displayed the Arabic map. All three map-library widget tests and the targeted Android localized-route `flutter drive` run passed locally after the fix. The new head still needs the complete five-target gate.
+
 ## SC-005: 50 nodes and 60 links, offline response
 
 All values are elapsed milliseconds from action through the next rendered test frame. The Windows and Android runs used encrypted local storage without a network dependency. The acceptance targets are the Android `390×844` viewport and Windows `1200×800` viewport.

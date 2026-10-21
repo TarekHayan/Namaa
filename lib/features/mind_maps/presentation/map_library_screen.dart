@@ -265,32 +265,34 @@ class _MapLibraryScreenState extends State<MapLibraryScreen> {
                 ? strings.editDescription
                 : strings.editTitle,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                key: kMapLibraryTitleFieldKey,
-                initialValue: draft,
-                onChanged: (value) => draft = value,
-                autofocus: true,
-                maxLines: editDescription ? 3 : 1,
-                decoration: InputDecoration(
-                  labelText: editDescription
-                      ? strings.mapDescription
-                      : strings.mapTitle,
-                  errorText: error,
-                ),
-              ),
-              if (create)
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 TextFormField(
-                  key: kMapLibraryDescriptionFieldKey,
-                  onChanged: (value) => descriptionDraft = value,
-                  maxLines: 2,
+                  key: kMapLibraryTitleFieldKey,
+                  initialValue: draft,
+                  onChanged: (value) => draft = value,
+                  autofocus: true,
+                  maxLines: editDescription ? 3 : 1,
                   decoration: InputDecoration(
-                    labelText: strings.mapDescription,
+                    labelText: editDescription
+                        ? strings.mapDescription
+                        : strings.mapTitle,
+                    errorText: error,
                   ),
                 ),
-            ],
+                if (create)
+                  TextFormField(
+                    key: kMapLibraryDescriptionFieldKey,
+                    onChanged: (value) => descriptionDraft = value,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: strings.mapDescription,
+                    ),
+                  ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
