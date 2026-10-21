@@ -548,6 +548,7 @@ jobs:
           result_bundle="$PWD/build/ios_integration/results.xcresult"
           # Native XCTest receives Dart results through the integration_test plugin;
           # it does not wait for discovery of a debugger VM-service URI.
+          # Ad-hoc simulator signing preserves the host app's Keychain identity.
           python3 .github/scripts/run-ios-integration.py "$result_bundle" -- \
             xcodebuild -quiet test -workspace ios/Runner.xcworkspace -scheme Runner \
             -configuration Debug -sdk iphonesimulator \
@@ -555,7 +556,7 @@ jobs:
             -only-testing:RunnerTests/RunnerTests/testFlutterIntegration \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -maximum-test-execution-time-allowance 600 \
-            -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=YES
+            -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES
 
   foundation-gate:
     name: Foundation and Task five-target gate
