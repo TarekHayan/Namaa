@@ -69,6 +69,29 @@ class IosResultsTest(unittest.TestCase):
         self.assertEqual(self.run_main(None), (124, 0))
 
 
+class IosBuildTest(unittest.TestCase):
+    def run_build(self, status):
+        command = ["xcodebuild", "build-for-testing"]
+        with (
+            patch.object(sys, "argv", ["runner", "--build-only", "--", *command]),
+            patch.object(ios_runner, "run_attempt", return_value=(status, "")) as attempt,
+            patch.object(ios_runner, "read_result_summary") as read_results,
+        ):
+            result = ios_runner.main()
+        attempt.assert_called_once_with(command, timeout_seconds=25 * 60)
+        read_results.assert_not_called()
+        return result
+
+    def test_build_success_does_not_claim_xctest_results(self):
+        self.assertEqual(self.run_build(0), 0)
+
+    def test_build_failure_stops_before_xctest(self):
+        self.assertEqual(self.run_build(65), 65)
+
+    def test_build_timeout_is_a_failure(self):
+        self.assertEqual(self.run_build(None), 124)
+
+
 class AndroidRetryTest(unittest.TestCase):
     def run_probe(self, scenario):
         bash = (

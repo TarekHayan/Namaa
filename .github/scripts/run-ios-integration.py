@@ -11,9 +11,12 @@ from typing import Optional
 
 
 ATTEMPT_TIMEOUT_SECONDS = 12 * 60
+BUILD_TIMEOUT_SECONDS = 25 * 60
 
 
-def run_attempt(command: list[str]) -> tuple[Optional[int], str]:
+def run_attempt(
+    command: list[str], *, timeout_seconds: int = ATTEMPT_TIMEOUT_SECONDS
+) -> tuple[Optional[int], str]:
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -35,7 +38,7 @@ def run_attempt(command: list[str]) -> tuple[Optional[int], str]:
     reader = threading.Thread(target=relay_output, daemon=True)
     reader.start()
     try:
-        return_code = process.wait(timeout=ATTEMPT_TIMEOUT_SECONDS)
+        return_code = process.wait(timeout=timeout_seconds)
     except subprocess.TimeoutExpired:
         try:
             os.killpg(process.pid, signal.SIGTERM)
@@ -80,11 +83,17 @@ def read_result_summary(result_bundle: str) -> Optional[dict]:
 
 def main() -> int:
     if len(sys.argv) < 4 or sys.argv[2] != "--":
-        print("Usage: run-ios-integration.py RESULT_BUNDLE -- COMMAND...", file=sys.stderr)
+        print("Usage: run-ios-integration.py RESULT_BUNDLE|--build-only -- COMMAND...", file=sys.stderr)
         return 2
 
     result_bundle = sys.argv[1]
     command = sys.argv[3:]
+    if result_bundle == "--build-only":
+        return_code, _ = run_attempt(command, timeout_seconds=BUILD_TIMEOUT_SECONDS)
+        if return_code is None:
+            print("iOS build-for-testing timed out before XCTest execution.", file=sys.stderr)
+            return 124
+        return return_code
     return_code, _ = run_attempt(command)
     if return_code is None:
         print("iOS native integration run timed out.", file=sys.stderr)

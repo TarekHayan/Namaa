@@ -139,6 +139,17 @@ SC-001 passes on the tested preview and Windows target: every scenario group has
 
 ## Remaining gate and later features
 
+### CI preparation repair after cancelling run 39634272362
+
+The user requested cancellation and repair; the workflow is cancelled and recurring monitoring is paused. Read failure logs before changing the pipeline:
+
+- Linux could not publish database port 54322. Supabase's fixed ports 54320–54329 overlap Linux's default ephemeral range. The Linux CI jobs now reserve that range while preserving existing reservations before Supabase downloads/startup; unused mail capture is excluded. This prevents automatic outgoing-port allocation from claiming those ports; it does not terminate existing services or change app connection settings.
+- iOS `tasks-completion-sync` and `habits-streak-history` lost hosted-runner communication during Flutter setup, before app tests. The exact cause of the lost hosts is not established. iOS setup now has explicit step deadlines and avoids the cache restore/save path. These measures bound preparation; they cannot guarantee a remote runner's network health.
+- iOS `habits-edit-delete` hit the shared 12-minute timeout while Xcode was still building. Build-for-testing now has a separate 25-minute deadline, followed by test-without-building against the same DerivedData. The actual XCTest execution deadline remains 12 minutes and its nonempty successful-result requirement is unchanged.
+- iOS `mind-maps-library` failed before tests when the SQLite hook could not resolve github.com to download its encrypted simulator library. A prefetch step now downloads the same pinned SQLite3MultipleCiphers artifact with bounded retries and verifies its SHA-256 against the resolved sqlite3 3.5.2 package manifest. The hook checks that cache again normally. No unencrypted/system SQLite substitution is made; upgrading sqlite3 requires revalidating this documented cache layout.
+
+Local verification: ten targeted iOS runner-control tests, three port-reservation tests and five artifact-integrity/cache tests passed (18 total). A network-isolated Linux container with a narrowed ephemeral range allocated its automatic socket outside the reserved Supabase range and still bound port54322 explicitly. The real x64 iOS encrypted artifact downloaded successfully and matched its published package hash. Affected Bash workflow steps and YAML parsed successfully. These are preparation checks; focused Linux and the four failed iOS entries still require real CI confirmation before a new complete merge gate. `include_linux` allows that focused check without restarting other platforms or satisfying the final gate.
+
 - **T093 target evidence is complete.** Actual cross-platform feature results and the focused mobile runner repairs are recorded above. Migrations `0008`–`0010` are deployed to the isolated nonproduction project.
 - **Merge remains blocked on the final complete workflow gate.** Manual `mobile_only` runs deliberately skip this gate. A normal complete run must pass quality, database security, both Android suites, all 20 iOS entries, Windows, macOS, and Linux on the final PR head. The successful final run and merge are recorded in PR #7's checks/history without creating a documentation-only commit that would invalidate that head.
 - Public account entry/initial sync depends on the later **Auth** feature. Final colors, typography and screen composition depend on **UI Refinement**. Neither dependency is implemented by 005.

@@ -15,6 +15,10 @@ on:
         description: 'Optional JSON array of iOS suites for a mobile-only run'
         type: string
         default: ''
+      include_linux:
+        description: 'Include Linux in a focused run without satisfying the final gate'
+        type: boolean
+        default: false
   pull_request:
     branches:
       - develop
@@ -96,7 +100,9 @@ jobs:
           version: ${{ env.SUPABASE_CLI_VERSION }}
 
       - name: Start local Supabase
-        run: supabase start
+        run: |
+          bash .github/scripts/reserve-supabase-ports.sh
+          supabase start -x mailpit
 
       - name: Verify Foundation and Task migrations, grants, RLS, and XP integrity
         run: supabase test db
@@ -149,8 +155,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Android integration needs API, auth, and database; mail capture is
-          # unused and its POP3 port can collide with hosted runner services.
+          bash .github/scripts/reserve-supabase-ports.sh
+          # These tests do not use mail capture.
           supabase start -x mailpit
           local_key="$(supabase status -o env | sed -n 's/^PUBLISHABLE_KEY=//p' | tr -d '\"')"
           test -n "$local_key"
@@ -182,7 +188,7 @@ jobs:
           script: bash .github/scripts/run-android-integration.sh
 
   linux:
-    if: ${{ !inputs.mobile_only }}
+    if: ${{ !inputs.mobile_only || inputs.include_linux }}
     name: Linux integration
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -217,7 +223,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          supabase start
+          bash .github/scripts/reserve-supabase-ports.sh
+          supabase start -x mailpit
           local_key="$(supabase status -o env | sed -n 's/^PUBLISHABLE_KEY=//p' | tr -d '\"')"
           test -n "$local_key"
           echo "::add-mask::$local_key"
@@ -457,7 +464,7 @@ jobs:
     name: iOS simulator (${{ matrix.suite }})
     # Use the separate Intel pool while ARM runners have capacity delays.
     runs-on: macos-26-intel
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -468,17 +475,24 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up Flutter
+        timeout-minutes: 10
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          cache: true
-          pub-cache: true
+          cache: false
+          pub-cache: false
 
       - name: Resolve dependencies
+        timeout-minutes: 5
         run: flutter pub get
 
+      - name: Prefetch verified encrypted SQLite for the simulator
+        timeout-minutes: 6
+        run: python3 .github/scripts/prefetch-ios-sqlite.py --arch "${{ runner.arch }}"
+
       - name: Boot an available iPhone simulator
+        timeout-minutes: 10
         id: simulator
         shell: bash
         run: |
@@ -489,7 +503,7 @@ jobs:
           xcrun simctl bootstatus "$device_id" -b
           echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
 
-      - name: Run iOS integration entry point through XCTest
+      - name: Build iOS integration entry point for XCTest
         timeout-minutes: 40
         shell: bash
         env:
@@ -545,13 +559,28 @@ jobs:
           DART
           flutter build ios --simulator --debug --no-codesign --no-pub --config-only \
             "${staging_defines[@]}" --target=build/ios_integration/entrypoint.dart
+          python3 .github/scripts/run-ios-integration.py --build-only -- \
+            xcodebuild -quiet build-for-testing -workspace ios/Runner.xcworkspace -scheme Runner \
+            -configuration Debug -sdk iphonesimulator \
+            -destination "id=$IOS_DEVICE_ID" \
+            -derivedDataPath "$PWD/build/ios_integration/DerivedData" \
+            CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES
+
+      - name: Run iOS integration entry point through XCTest
+        timeout-minutes: 15
+        shell: bash
+        env:
+          IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
+        run: |
+          set -euo pipefail
           result_bundle="$PWD/build/ios_integration/results.xcresult"
           # Native XCTest receives Dart results through the integration_test plugin;
           # it does not wait for discovery of a debugger VM-service URI.
           # Ad-hoc simulator signing preserves the host app's Keychain identity.
           python3 .github/scripts/run-ios-integration.py "$result_bundle" -- \
-            xcodebuild -quiet test -workspace ios/Runner.xcworkspace -scheme Runner \
+            xcodebuild -quiet test-without-building -workspace ios/Runner.xcworkspace -scheme Runner \
             -configuration Debug -sdk iphonesimulator \
+            -derivedDataPath "$PWD/build/ios_integration/DerivedData" \
             -destination "id=$IOS_DEVICE_ID" -parallel-testing-enabled NO \
             -only-testing:RunnerTests/RunnerTests/testFlutterIntegration \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
