@@ -56,6 +56,28 @@ def run_attempt(command: list[str]) -> tuple[Optional[int], str]:
     return return_code, "".join(output)
 
 
+def read_result_summary(result_bundle: str) -> Optional[dict]:
+    try:
+        summary = subprocess.run(
+            ["xcrun", "xcresulttool", "get", "test-results", "summary", "--path", result_bundle],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        if summary.returncode != 0:
+            print("Unable to read iOS XCTest result summary.", file=sys.stderr)
+            return None
+        result = json.loads(summary.stdout)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        print("Unable to read iOS XCTest result summary.", file=sys.stderr)
+        return None
+
+    for failure in result.get("testFailures", []):
+        print("iOS XCTest failure: " + json.dumps(failure, ensure_ascii=True), flush=True)
+    return result
+
+
 def main() -> int:
     if len(sys.argv) < 4 or sys.argv[2] != "--":
         print("Usage: run-ios-integration.py RESULT_BUNDLE -- COMMAND...", file=sys.stderr)
@@ -67,17 +89,13 @@ def main() -> int:
     if return_code is None:
         print("iOS native integration run timed out.", file=sys.stderr)
         return 124
+    # Even a quiet Xcode failure keeps its assertion/crash details in xcresult.
+    # Print those details before propagating the original failure status.
+    result = read_result_summary(result_bundle)
     if return_code != 0:
         return return_code
-
-    summary = subprocess.run(
-        ["xcrun", "xcresulttool", "get", "test-results", "summary", "--path", result_bundle],
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=True,
-    )
-    result = json.loads(summary.stdout)
+    if result is None:
+        return 1
     total = result.get("totalTestCount", 0)
     passed = result.get("passedTests", 0)
     if total < 1 or passed != total or result.get("failedTests", 0) != 0:

@@ -1,4 +1,6 @@
 import importlib.util
+from contextlib import redirect_stdout
+import io
 import json
 import os
 from pathlib import Path
@@ -19,8 +21,8 @@ SPEC.loader.exec_module(ios_runner)
 
 
 class IosResultsTest(unittest.TestCase):
-    def run_main(self, status, summary=None):
-        completed = subprocess.CompletedProcess([], 0, json.dumps(summary or {}))
+    def run_main(self, status, summary=None, summary_status=0):
+        completed = subprocess.CompletedProcess([], summary_status, json.dumps(summary or {}))
         with (
             patch.object(sys, "argv", ["runner", "results.xcresult", "--", "xcodebuild"]),
             patch.object(ios_runner, "run_attempt", return_value=(status, "")),
@@ -49,7 +51,19 @@ class IosResultsTest(unittest.TestCase):
                 )
 
     def test_propagates_xcode_failure_without_retrying(self):
-        self.assertEqual(self.run_main(65), (65, 0))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            result = self.run_main(
+                65, {"testFailures": [{"failureText": "credential-vault assertion failed"}]}
+            )
+        self.assertEqual(result, (65, 1))
+        self.assertIn("credential-vault assertion failed", output.getvalue())
+
+    def test_unreadable_bundle_does_not_hide_xcode_failure(self):
+        self.assertEqual(self.run_main(65, summary_status=1), (65, 1))
+
+    def test_xcode_success_requires_readable_bundle(self):
+        self.assertEqual(self.run_main(0, summary_status=1), (1, 1))
 
     def test_timeout_cannot_pass(self):
         self.assertEqual(self.run_main(None), (124, 0))
