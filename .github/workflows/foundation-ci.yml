@@ -130,7 +130,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          supabase start
+          # Android integration needs API, auth, and database; mail capture is
+          # unused and its POP3 port can collide with hosted runner services.
+          supabase start -x mailpit
           local_key="$(supabase status -o env | sed -n 's/^PUBLISHABLE_KEY=//p' | tr -d '\"')"
           test -n "$local_key"
           echo "::add-mask::$local_key"
