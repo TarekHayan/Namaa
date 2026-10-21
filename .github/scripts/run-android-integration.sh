@@ -56,7 +56,7 @@ for test_file in "${tests[@]}"; do
     fi
     log_file="$(mktemp)"
     set +e
-    timeout --signal=INT --kill-after=15s 12m flutter drive --no-pub --publish-port \
+    timeout --signal=INT --kill-after=15s 12m flutter drive --no-pub --publish-port --no-dds --no-start-paused \
       --dart-define="NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=$NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY" \
       --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
       --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
@@ -74,13 +74,13 @@ for test_file in "${tests[@]}"; do
       rm -f -- "$log_file"
       break
     fi
-    if [[ "$test_status" -eq 124 ]]; then
+    if [[ "$test_status" -eq 124 || "$test_status" -eq 137 ]]; then
       echo "Android integration timed out for $test_file."
       adb -s emulator-5554 logcat -d -t 100 -s AndroidRuntime:E flutter:E DartVM:E || true
     fi
 
     if [[ "$attempt" -eq 1 ]] &&
-      { [[ "$test_status" -eq 124 ]] ||
+      { [[ "$test_status" -eq 124 || "$test_status" -eq 137 ]] ||
         grep -Eq 'Service has disappeared|adb: device offline|device offline' "$log_file" ||
         { grep -Fq 'Failed to load' "$log_file" &&
           grep -Fq 'Failed to start Dart Development Service' "$log_file"; }; } &&
