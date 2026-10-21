@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-21
 **Branch:** `namaa/005-ci-fixes`
-**State:** SC-001 and SC-003 are verified locally and against the isolated hosted project. Do not merge until SC-006 passes on the final PR head.
+**State:** Feature acceptance evidence and the focused Android/iOS runner repairs are verified. The complete workflow gate must pass on the final PR head before merge; focused runs do not satisfy that gate.
 
 ## Checks run
 
@@ -63,6 +63,12 @@ Manual `mobile_only` workflow runs can select Android/iOS suite arrays for focus
 
 Focused run [39608159074](https://github.com/TarekHayan/Namaa/actions/runs/39608159074) on `186bd0e` passed the entire Android Foundation/Tasks shard. All three iOS native builds and launches worked; their entry points completed their user journeys but failed Flutter's end-of-test semantics-handle check when native accessibility became active during the first test. The native bootstrap now enables the platform semantics fixture before testWidgets records its baseline, while retaining the normal per-test handle disposal checks. A focused widget test confirmed that a native accessibility callback does not change the baseline and that an explicitly created test handle is still counted until disposal. Native builds now target only the active simulator architecture. The remaining iOS confirmation is pending; no final gate is claimed for the focused run.
 
+Focused run [39610974586](https://github.com/TarekHayan/Namaa/actions/runs/39610974586) on `73ce341` passed all three previously failing iOS entries: `habits-edit-delete`, `habits-localized-route`, and `mind-maps-localized-route`. Each job produced a successful native result bundle and reported `iOS XCTest verified: 1/1 native tests passed`; the native case asserts the success of every Dart result in its entry point. Android and desktop jobs were deliberately skipped in this iOS-only run.
+
+### Completed T093 feature evidence; final workflow gate still required
+
+Run [39588950642](https://github.com/TarekHayan/Namaa/actions/runs/39588950642) passed the Mind Maps persistence, Task-link, and hosted account-sync entries on Android, iOS, Windows, macOS, and Linux. Its unrelated Foundation/Tasks Android startup and three iOS startup failures were then repaired and verified in the focused runs above. `git diff 85cc2d6..73ce341 -- lib integration_test android macos windows linux supabase` is empty; subsequent changes concern runner infrastructure and native test initialization. T093's target checks and recorded results are complete. This combined evidence does not claim a complete workflow pass on the latest head: a final full run remains the merge prerequisite.
+
 ## SC-005: 50 nodes and 60 links, offline response
 
 All values are elapsed milliseconds from action through the next rendered test frame. The Windows and Android runs used encrypted local storage without a network dependency. The acceptance targets are the Android `390×844` viewport and Windows `1200×800` viewport.
@@ -103,26 +109,26 @@ SC-001 passes on the tested preview and Windows target: every scenario group has
 | FR-003 | Graph command, editor and repository tests cover node kinds, validation, edits, movement and central-node protection. Covered locally. |
 | FR-004 | Graph rule/command tests and SQL integrity tests cover parent slots, detach/reparent, cycle rejection, side links and duplicate-pair rejection. Covered locally. |
 | FR-005 | Progress/Task projection tests cover three statuses, central count and unavailable links. Covered locally. |
-| FR-006 | Layout and viewport tests cover five layouts, navigation and side-link-neutral placement. Covered locally; device parity is pending. |
+| FR-006 | Layout and viewport tests cover five layouts, navigation and side-link-neutral placement. The viewport entry passed on all five targets in run 39588950642. |
 | FR-007 | Settings/model/widget tests cover map defaults and node appearance. Covered locally. |
 | FR-008 | Editor-history tests cover undo/redo and exclude Task/XP effects. Covered locally. |
 | FR-009 | Task-link integration and bridge tests cover shared Task identity without copying or rewarding it. Covered locally. |
 | FR-010 | Ten complete/reopen journeys now check both linked maps after each transition and one lifetime XP award. Covered locally. |
 | FR-011 | Task-link widget/port tests cover unavailable links and privacy-safe repair. Covered locally. |
-| FR-012 | Encrypted Drift restart tests, outbox replay tests and local two-device trials cover offline durability and retry. Hosted device synchronization remains pending. |
+| FR-012 | Encrypted Drift restart tests, outbox replay tests and local two-device trials cover offline durability and retry. The hosted Mind Maps sync entry passed on all five targets in run 39588950642; ten coordinated hosted two-device trials also passed as recorded above. |
 | FR-013 | SQL owner/RLS/conflict tests, local reconciler tests, and isolated-hosted account read/write denial checks pass. |
 | FR-014 | Preview route/account isolation tests pass without sign-in; release Auth remains a later feature. Covered for the current preview. |
-| FR-015 | Arabic/English Android and Windows route tests and the full Windows keyboard walkthrough pass. Remaining iOS entries and final five-target gate are pending. |
+| FR-015 | Arabic/English Android and Windows route tests and the full Windows keyboard walkthrough pass. The corrected native iOS route entry passed in run 39610974586. The final complete workflow gate remains pending. |
 | SC-001 | PASS: library/editor/viewport integration tests and focused settings tests restart encrypted storage after rename, description search, duplicate, delete, graph edits, reparenting, statuses, all five layouts and appearance changes. The library and canvas render the expected saved results. See the scenario audit above. |
 | SC-002 | Ten alternate map/Tasks completion and reopening journeys pass for two linked maps; one XP award persists after restart. Covered locally. |
 | SC-003 | PASS: ten of ten hosted trials on an Android 17 emulator and Windows desktop with separate encrypted local databases, offline restart on each trial, same-account Supabase reconnection, independent-node merge, retained nonwinning same-node conflict, and four unique remote nodes. Both target processes exited successfully. |
 | SC-004 | Isolated-hosted test with two authenticated accounts returned zero foreign map/node/parent/side/conflict rows and rejected foreign mutation of all four graph record types and conflict deletion. The local repository test kept the debug preview identity separate from the real account in both directions; route-switch tests clear stale private UI. Targeted Windows staging and repository tests passed. |
 | SC-005 | Android and Windows measurements above are all under two seconds. Met on the tested targets. |
-| SC-006 | Arabic/English primary routes pass on Android and Windows. Five-target persistence and hosted sync gate remains pending. |
+| SC-006 | Arabic/English primary routes pass on Android, Windows, and the corrected native iOS runner. Mind Maps persistence, Task-link, and hosted sync passed on all five targets in run 39588950642. A final complete workflow run on the latest head is still required before merge. |
 | SC-007 | Android touch flow and Windows keyboard-only create/add/link/progress walkthrough pass through visible controls. |
 
 ## Remaining gate and later features
 
-- **T093 remains open.** The new `mind_maps_staging_sync_test.dart` and local persistence/Task-link entries are wired into Android, iOS, Windows, macOS and Linux CI. Migrations `0008`–`0010` are deployed to the isolated nonproduction project. The workflow runs on PRs to `develop` or manual dispatch. The five-target gate needs a clean rerun after the iOS and Android CI fixes above; local host access here provides Android and Windows only.
-- SC-006's new-head five-target gate remains open. SC-001 and SC-003 are verified above.
+- **T093 target evidence is complete.** Actual cross-platform feature results and the focused mobile runner repairs are recorded above. Migrations `0008`–`0010` are deployed to the isolated nonproduction project.
+- **Merge remains blocked on the final complete workflow gate.** Manual `mobile_only` runs deliberately skip this gate. A normal complete run must pass quality, database security, both Android suites, all 20 iOS entries, Windows, macOS, and Linux on the final PR head. The successful final run and merge are recorded in PR #7's checks/history without creating a documentation-only commit that would invalidate that head.
 - Public account entry/initial sync depends on the later **Auth** feature. Final colors, typography and screen composition depend on **UI Refinement**. Neither dependency is implemented by 005.
