@@ -41,7 +41,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: foundation-${{ github.workflow }}-${{ github.ref }}-${{ inputs.mobile_only && 'mobile' || 'full' }}
+  group: foundation-${{ github.workflow }}-${{ github.ref }}-${{ inputs.mobile_only && format('mobile-{0}', github.run_id) || 'full' }}
   cancel-in-progress: true
 
 env:
