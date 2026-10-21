@@ -146,6 +146,10 @@ jobs:
           yes | "$sdkmanager_path" --licenses >/dev/null || true
           "$sdkmanager_path" 'platforms;android-36'
 
+      - name: Prepare and verify Android emulator with bounded download retries
+        timeout-minutes: 8
+        run: python3 .github/scripts/prepare-android-emulator.py
+
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
         with:
@@ -170,7 +174,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Run Android Foundation and Task integration suite
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         env:
           ANDROID_SUITE: ${{ matrix.suite }}
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
