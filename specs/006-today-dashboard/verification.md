@@ -56,3 +56,11 @@ No acceptance criterion has been executed or passed in Phase 1. Record device, b
 - A direct Dart runtime smoke check instantiated the owner aggregates and confirmed the fixture's Tasks 4/10, Habits 2/5, and delayed session lookup after an A-to-B switch. It exited successfully. The temporary smoke script was removed.
 - The first focused Flutter invocation could not access the SDK lockfile in the restricted workspace environment. Running only `test/unit/features/today/today_fixtures_test.dart` with SDK lockfile access exposed an asynchronous stream-delivery expectation in the test; the fake/test were corrected and the same file was rerun: **3/3 tests passed**. This is fixture verification, not a Today acceptance result.
 - Existing encrypted database and preview records were not opened or modified by these checks. Runtime source files were not changed.
+
+## Phase 2 foundation checks
+
+- Implemented T003–T010 only: in-memory scope, calendar and owner reference values; independent section health; read-only owner/calendar ports; a device calendar adapter; closed composition-owned preview/account resolver; and an owner-boundary scanner. No schema, cloud endpoint, business writer, or existing preview data was changed.
+- Before implementation, the new calendar and scope tests failed to compile because their intended adapters were absent. After implementation, the focused `test/unit/features/today`, `test/unit/app/composition/today_scope_resolver_test.dart` and `test/architecture/today_boundaries_test.dart` run passed **20/20 tests**. The existing `test/architecture/domain_dependency_test.dart` passed **6/6 tests**. After strengthening the award-write negative control, `test/architecture/today_boundaries_test.dart` passed **4/4** on its focused rerun.
+- `dart analyze` on the new Today source, resolver and focused tests reported **No issues found**. `dart format` completed for the same Dart files.
+- Tests cover both existing preview IDs, equal real-account owners, signed-out/unknown clearing, mismatched context rejection, delayed initial lookup, local date/offset changes, half-open XP intervals, 23/25-hour days, source status invariants and package/relative import bypass controls.
+- These are foundation checks, not end-to-end acceptance: SC-001–SC-007 remain **unverified**. Phase 3 and later owner/UI/device work is still required.
