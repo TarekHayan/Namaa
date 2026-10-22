@@ -12,6 +12,63 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get appTitle => 'نماء';
 
   @override
+  String get todayTitle => 'اليوم';
+
+  @override
+  String get todayXp => 'نقاط اليوم';
+
+  @override
+  String get todayOpen => 'المتبقي';
+
+  @override
+  String get todayCompleted => 'المكتمل';
+
+  @override
+  String get todayStreak => 'سلسلة الإنجاز';
+
+  @override
+  String get todayDoFirst => 'ابدأ بالأهم';
+
+  @override
+  String get todayOverdue => 'المتأخر';
+
+  @override
+  String get todayNoTasks => 'لا توجد مهام مجدولة اليوم';
+
+  @override
+  String get todayNoHabits => 'لا توجد عادات مستحقة اليوم';
+
+  @override
+  String get todayLoading => 'جارٍ تحميل هذا القسم…';
+
+  @override
+  String get todaySourceUnavailable => 'هذا القسم غير متاح الآن.';
+
+  @override
+  String get todayPreferences => 'التفضيلات';
+
+  @override
+  String get todayLanguage => 'اللغة';
+
+  @override
+  String get todayAppearance => 'المظهر';
+
+  @override
+  String get todayEnglish => 'English';
+
+  @override
+  String get todayArabic => 'العربية';
+
+  @override
+  String get todaySystem => 'حسب النظام';
+
+  @override
+  String get todayLight => 'فاتح';
+
+  @override
+  String get todayDark => 'داكن';
+
+  @override
   String get foundationReady => 'نماء جاهز';
 
   @override

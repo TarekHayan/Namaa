@@ -10,6 +10,8 @@ import 'package:namma_project/core/application/ports/foundation_ports.dart';
 
 /// The only registered route in the Foundation scope.
 const String kFoundationRootRoute = '/';
+/// Today occupies the existing ready root; startup and failure still use it.
+const String kTodayRoute = kFoundationRootRoute;
 
 /// Account-scoped Tasks entry point.
 const String kTasksRoute = '/tasks';

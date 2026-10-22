@@ -23,6 +23,7 @@ import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
+import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/application/synchronization_engine.dart';
@@ -87,6 +88,16 @@ import 'package:namma_project/features/tasks/data/supabase_task_sync_adapter.dar
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/data/task_reconciler.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
+import 'package:namma_project/features/today/application/today_calendar_port.dart';
+import 'package:namma_project/features/today/application/today_habits_port.dart';
+import 'package:namma_project/features/today/application/today_tasks_port.dart';
+import 'package:namma_project/features/today/application/today_xp_port.dart';
+import 'package:namma_project/features/today/data/habits_today_adapter.dart';
+import 'package:namma_project/features/today/data/system_today_calendar.dart';
+import 'package:namma_project/features/today/data/tasks_today_adapter.dart';
+import 'package:namma_project/features/today/data/xp_today_adapter.dart';
+import 'package:namma_project/features/today/domain/today_scope.dart';
+import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/xp/application/award_ledger.dart';
 import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 import 'package:path_provider/path_provider.dart';
@@ -299,6 +310,30 @@ Future<void> configureDependencies({
     );
     getIt.registerLazySingleton<AwardLedgerPort>(
       () => DriftAwardLedger(database),
+    );
+    getIt.registerLazySingleton<TodayTasksPort>(
+      () => TasksTodayAdapter(getIt<TaskRepository>()),
+    );
+    getIt.registerLazySingleton<TodayHabitsPort>(
+      () => HabitsTodayAdapter(getIt<HabitRepository>()),
+    );
+    getIt.registerLazySingleton<TodayXpPort>(
+      () => XpTodayAdapter(getIt<AwardLedgerPort>()),
+    );
+    getIt.registerLazySingleton<TodayCalendarPort>(SystemTodayCalendar.new);
+    getIt.registerLazySingleton<TodayScopeResolver>(
+      () => preview
+          ? TodayScopeResolver.preview()
+          : TodayScopeResolver.account(getIt<CloudSessionPort>()),
+    );
+    getIt.registerFactoryParam<TodayCubit, TodayScope, void>(
+      (scope, _) => TodayCubit(
+        scope: scope,
+        calendar: getIt<TodayCalendarPort>(),
+        tasks: getIt<TodayTasksPort>(),
+        habits: getIt<TodayHabitsPort>(),
+        xp: getIt<TodayXpPort>(),
+      ),
     );
     getIt.registerLazySingleton<TaskCompletionUnitOfWork>(
       () => DriftTaskCompletionUnitOfWork(

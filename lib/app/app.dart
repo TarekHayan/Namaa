@@ -1,8 +1,5 @@
-/// The minimal Foundation app shell.
-///
-/// No product screens: the shell only represents bootstrap progress, the
-/// ready root, and safe failure states. Boot errors surface as safe startup
-/// state rather than uncaught exceptions
+/// Foundation startup and failure shell with the scoped Today ready root.
+/// Boot errors surface as safe startup state rather than uncaught exceptions
 /// (specs/001-namaa-foundation/contracts/application-boundaries.md).
 library;
 
@@ -13,10 +10,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
+import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/habits_strings_adapter.dart';
 import 'package:namma_project/app/l10n/mind_maps_strings_adapter.dart';
 import 'package:namma_project/app/l10n/tasks_strings_adapter.dart';
+import 'package:namma_project/app/l10n/today_localization_adapter.dart';
+import 'package:namma_project/app/preferences/app_preferences_sheet.dart';
 import 'package:namma_project/app/routing/app_router.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
@@ -31,6 +31,9 @@ import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.
 import 'package:namma_project/features/mind_maps/presentation/map_library_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
+import 'package:namma_project/features/today/domain/today_scope.dart';
+import 'package:namma_project/features/today/presentation/today_cubit.dart';
+import 'package:namma_project/features/today/presentation/today_screen.dart';
 
 export 'theme/app_theme.dart' show kProjectFontFamily;
 
@@ -364,7 +367,10 @@ class _FoundationShell extends StatelessWidget {
       body: BlocBuilder<FoundationCubit, FoundationState>(
         builder: (context, state) => switch (state) {
           FoundationStartup() => const _StartupShell(),
-          FoundationReady() => const _ReadyShell(),
+          FoundationReady() =>
+            GetIt.instance.isRegistered<TodayScopeResolver>()
+                ? const _TodayRootScope()
+                : const _ReadyShell(),
           FoundationRecoverableFailure(:final messageKey) => _SafeFailureShell(
             messageKey: messageKey,
             canRetry: state.canRetry,
@@ -416,6 +422,150 @@ class _ReadyShell extends StatelessWidget {
           ],
         ],
       ),
+    ),
+  );
+}
+
+/// Resolves the Today identity before creating any account-owned stream.
+/// Session changes clear the old view immediately, and stale async lookups
+/// cannot rebind a previous owner after a newer event.
+class _TodayRootScope extends StatefulWidget {
+  const _TodayRootScope();
+
+  @override
+  State<_TodayRootScope> createState() => _TodayRootScopeState();
+}
+
+class _TodayRootScopeState extends State<_TodayRootScope> {
+  late final TodayScopeResolver _resolver =
+      GetIt.instance<TodayScopeResolver>();
+  StreamSubscription<CloudSessionSnapshot>? _sessionSubscription;
+  TodayScope? _scope;
+  bool _unavailable = false;
+  int _revision = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!GetIt.instance.isRegistered<HabitsPreviewSession>()) {
+      _sessionSubscription = GetIt.instance<CloudSessionPort>()
+          .observeSession()
+          .listen(
+            _onSession,
+            onError: (_, _) {
+              _clear();
+              if (mounted) setState(() => _unavailable = true);
+            },
+          );
+    }
+    unawaited(_resolveInitial());
+  }
+
+  Future<void> _resolveInitial() async {
+    final revision = ++_revision;
+    final scope = await _resolver.resolveInitial();
+    if (!mounted || revision != _revision) return;
+    setState(() {
+      _scope = scope;
+      _unavailable = scope == null;
+    });
+  }
+
+  void _clear() {
+    _revision++;
+    _resolver.invalidate();
+    if (mounted) {
+      setState(() {
+        _scope = null;
+        _unavailable = false;
+      });
+    }
+  }
+
+  void _onSession(CloudSessionSnapshot snapshot) {
+    _clear();
+    final revision = _revision;
+    unawaited(() async {
+      final scope = await _resolver.resolveSnapshot(snapshot);
+      if (!mounted || revision != _revision) return;
+      setState(() {
+        _scope = scope;
+        _unavailable = scope == null;
+      });
+    }());
+  }
+
+  @override
+  void dispose() {
+    _revision++;
+    _resolver.invalidate();
+    unawaited(_sessionSubscription?.cancel());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = _scope;
+    if (scope == null) {
+      return SizedBox.expand(
+        key: kFoundationRootReadyKey,
+        child: Center(
+          child: _unavailable
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      FoundationLocalizations.of(
+                        context,
+                      ).todaySourceUnavailable,
+                    ),
+                    TextButton(
+                      onPressed: () => unawaited(_resolveInitial()),
+                      child: Text(FoundationLocalizations.of(context).retry),
+                    ),
+                  ],
+                )
+              : Text(FoundationLocalizations.of(context).todayLoading),
+        ),
+      );
+    }
+    return KeyedSubtree(
+      key: ValueKey('${scope.scopeKey}:${scope.generation}'),
+      child: _TodayBoundView(scope: scope),
+    );
+  }
+}
+
+class _TodayBoundView extends StatefulWidget {
+  const _TodayBoundView({required this.scope});
+  final TodayScope scope;
+
+  @override
+  State<_TodayBoundView> createState() => _TodayBoundViewState();
+}
+
+class _TodayBoundViewState extends State<_TodayBoundView> {
+  late final TodayCubit _cubit = GetIt.instance<TodayCubit>(
+    param1: widget.scope,
+  );
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox.expand(
+    key: kFoundationRootReadyKey,
+    child: TodayScreen(
+      cubit: _cubit,
+      stringsResolver: resolveTodayStrings,
+      onTasks: () => unawaited(GoRouter.of(context).push<void>(kTasksRoute)),
+      onHabits: () => unawaited(GoRouter.of(context).push<void>(kHabitsRoute)),
+      onMindMaps: () =>
+          unawaited(GoRouter.of(context).push<void>(kMindMapsRoute)),
+      onPreferences: () => showAppPreferencesSheet(context),
     ),
   );
 }

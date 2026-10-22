@@ -12,6 +12,63 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get appTitle => 'Namaa';
 
   @override
+  String get todayTitle => 'Today';
+
+  @override
+  String get todayXp => 'XP earned today';
+
+  @override
+  String get todayOpen => 'Open';
+
+  @override
+  String get todayCompleted => 'Completed';
+
+  @override
+  String get todayStreak => 'Current streak';
+
+  @override
+  String get todayDoFirst => 'Start with what matters';
+
+  @override
+  String get todayOverdue => 'Overdue';
+
+  @override
+  String get todayNoTasks => 'No tasks scheduled today';
+
+  @override
+  String get todayNoHabits => 'No habits due today';
+
+  @override
+  String get todayLoading => 'Loading this section…';
+
+  @override
+  String get todaySourceUnavailable => 'This section is unavailable right now.';
+
+  @override
+  String get todayPreferences => 'Preferences';
+
+  @override
+  String get todayLanguage => 'Language';
+
+  @override
+  String get todayAppearance => 'Appearance';
+
+  @override
+  String get todayEnglish => 'English';
+
+  @override
+  String get todayArabic => 'العربية';
+
+  @override
+  String get todaySystem => 'System';
+
+  @override
+  String get todayLight => 'Light';
+
+  @override
+  String get todayDark => 'Dark';
+
+  @override
   String get foundationReady => 'Namaa is ready';
 
   @override

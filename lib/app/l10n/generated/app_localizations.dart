@@ -107,6 +107,120 @@ abstract class FoundationLocalizations {
   /// **'Namaa'**
   String get appTitle;
 
+  /// No description provided for @todayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayTitle;
+
+  /// No description provided for @todayXp.
+  ///
+  /// In en, this message translates to:
+  /// **'XP earned today'**
+  String get todayXp;
+
+  /// No description provided for @todayOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get todayOpen;
+
+  /// No description provided for @todayCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get todayCompleted;
+
+  /// No description provided for @todayStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get todayStreak;
+
+  /// No description provided for @todayDoFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with what matters'**
+  String get todayDoFirst;
+
+  /// No description provided for @todayOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get todayOverdue;
+
+  /// No description provided for @todayNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks scheduled today'**
+  String get todayNoTasks;
+
+  /// No description provided for @todayNoHabits.
+  ///
+  /// In en, this message translates to:
+  /// **'No habits due today'**
+  String get todayNoHabits;
+
+  /// No description provided for @todayLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading this section…'**
+  String get todayLoading;
+
+  /// No description provided for @todaySourceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This section is unavailable right now.'**
+  String get todaySourceUnavailable;
+
+  /// No description provided for @todayPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get todayPreferences;
+
+  /// No description provided for @todayLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get todayLanguage;
+
+  /// No description provided for @todayAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get todayAppearance;
+
+  /// No description provided for @todayEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get todayEnglish;
+
+  /// No description provided for @todayArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'العربية'**
+  String get todayArabic;
+
+  /// No description provided for @todaySystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get todaySystem;
+
+  /// No description provided for @todayLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get todayLight;
+
+  /// No description provided for @todayDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get todayDark;
+
   /// No description provided for @foundationReady.
   ///
   /// In en, this message translates to:
