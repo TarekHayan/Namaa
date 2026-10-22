@@ -2,6 +2,23 @@ name: Foundation CI
 
 on:
   workflow_dispatch:
+    inputs:
+      mobile_only:
+        description: 'Run selected mobile suites without satisfying the final gate'
+        type: boolean
+        default: false
+      android_suites:
+        description: 'Optional JSON array of Android suites for a mobile-only run'
+        type: string
+        default: ''
+      ios_suites:
+        description: 'Optional JSON array of iOS suites for a mobile-only run'
+        type: string
+        default: ''
+      include_linux:
+        description: 'Include Linux in a focused run without satisfying the final gate'
+        type: boolean
+        default: false
   pull_request:
     branches:
       - develop
@@ -28,7 +45,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: foundation-${{ github.workflow }}-${{ github.ref }}
+  group: foundation-${{ github.workflow }}-${{ github.ref }}-${{ inputs.mobile_only && format('mobile-{0}', github.run_id) || 'full' }}
   cancel-in-progress: true
 
 env:
@@ -37,6 +54,7 @@ env:
 
 jobs:
   quality:
+    if: ${{ !inputs.mobile_only }}
     name: Quality and shared tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -58,6 +76,9 @@ jobs:
       - name: Verify source formatting
         run: dart format --output=none --set-exit-if-changed lib test integration_test
 
+      - name: Verify mobile runner failure handling
+        run: python3 -m unittest discover -s .github/scripts/tests -p 'test_*.py'
+
       - name: Analyze
         run: flutter analyze
 
@@ -65,6 +86,7 @@ jobs:
         run: flutter test --no-pub --reporter compact
 
   database-security:
+    if: ${{ !inputs.mobile_only }}
     name: Supabase database and RLS
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -78,18 +100,31 @@ jobs:
           version: ${{ env.SUPABASE_CLI_VERSION }}
 
       - name: Start local Supabase
-        run: supabase start
+        run: |
+          bash .github/scripts/reserve-supabase-ports.sh
+          supabase start -x mailpit
 
       - name: Verify Foundation and Task migrations, grants, RLS, and XP integrity
         run: supabase test db
 
   android:
-    name: Android integration
+    if: ${{ !inputs.mobile_only || inputs.android_suites != '[]' }}
+    name: Android integration (${{ matrix.suite }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJSON(inputs.mobile_only && inputs.android_suites || '["foundation-tasks","habits-mind-maps"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+
+      - name: Set up Android Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -111,6 +146,10 @@ jobs:
           yes | "$sdkmanager_path" --licenses >/dev/null || true
           "$sdkmanager_path" 'platforms;android-36'
 
+      - name: Prepare and verify Android emulator with bounded download retries
+        timeout-minutes: 8
+        run: python3 .github/scripts/prepare-android-emulator.py
+
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
         with:
@@ -120,7 +159,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          supabase start
+          bash .github/scripts/reserve-supabase-ports.sh
+          # These tests do not use mail capture.
+          supabase start -x mailpit
           local_key="$(supabase status -o env | sed -n 's/^PUBLISHABLE_KEY=//p' | tr -d '\"')"
           test -n "$local_key"
           echo "::add-mask::$local_key"
@@ -133,8 +174,9 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Run Android Foundation and Task integration suite
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         env:
+          ANDROID_SUITE: ${{ matrix.suite }}
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
           NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
           NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
@@ -150,6 +192,7 @@ jobs:
           script: bash .github/scripts/run-android-integration.sh
 
   linux:
+    if: ${{ !inputs.mobile_only || inputs.include_linux }}
     name: Linux integration
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -184,7 +227,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          supabase start
+          bash .github/scripts/reserve-supabase-ports.sh
+          supabase start -x mailpit
           local_key="$(supabase status -o env | sed -n 's/^PUBLISHABLE_KEY=//p' | tr -d '\"')"
           test -n "$local_key"
           echo "::add-mask::$local_key"
@@ -259,6 +303,7 @@ jobs:
           '
 
   windows:
+    if: ${{ !inputs.mobile_only }}
     name: Windows integration
     runs-on: windows-latest
     timeout-minutes: 60
@@ -339,6 +384,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Mind Maps staging sync failed on Windows' }
 
   macos:
+    if: ${{ !inputs.mobile_only }}
     name: macOS integration
     runs-on: macos-latest
     timeout-minutes: 60
@@ -418,73 +464,39 @@ jobs:
             --reporter expanded
 
   ios:
+    if: ${{ !inputs.mobile_only || inputs.ios_suites != '[]' }}
     name: iOS simulator (${{ matrix.suite }})
-    runs-on: macos-latest
-    timeout-minutes: 60
+    # Use the separate Intel pool while ARM runners have capacity delays.
+    runs-on: macos-26-intel
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       max-parallel: 3
       matrix:
-        include:
-          - suite: migration
-            test_file: integration_test/foundation_migration_test.dart
-          - suite: offline
-            test_file: integration_test/foundation_offline_test.dart
-          - suite: platform
-            test_file: integration_test/foundation_platform_test.dart
-          - suite: sync
-            test_file: integration_test/foundation_sync_test.dart
-          - suite: staging-supabase
-            test_file: integration_test/foundation_staging_supabase_test.dart
-          - suite: tasks-offline-sync
-            test_file: integration_test/tasks_offline_sync_test.dart
-          - suite: tasks-completion-sync
-            test_file: integration_test/tasks_completion_sync_test.dart
-          - suite: tasks-checklist-history
-            test_file: integration_test/tasks_checklist_history_test.dart
-          - suite: tasks-localized-route
-            test_file: integration_test/tasks_localized_route_test.dart
-          - suite: habits-offline-sync
-            test_file: integration_test/habits_offline_sync_test.dart
-          - suite: habits-streak-history
-            test_file: integration_test/habits_streak_history_test.dart
-          - suite: habits-edit-delete
-            test_file: integration_test/habits_edit_delete_test.dart
-          - suite: habits-localized-route
-            test_file: integration_test/habits_localized_route_test.dart
-          - suite: mind-maps-library
-            test_file: integration_test/mind_maps_library_test.dart
-          - suite: mind-maps-editor
-            test_file: integration_test/mind_maps_editor_test.dart
-          - suite: mind-maps-task-link
-            test_file: integration_test/mind_maps_task_link_test.dart
-          - suite: mind-maps-viewport
-            test_file: integration_test/mind_maps_viewport_test.dart
-          - suite: mind-maps-offline-sync
-            test_file: integration_test/mind_maps_offline_sync_test.dart
-          - suite: mind-maps-localized-route
-            test_file: integration_test/mind_maps_localized_route_test.dart
-          - suite: mind-maps-staging-sync
-            test_file: integration_test/mind_maps_staging_sync_test.dart
+        suite: ${{ fromJSON(inputs.mobile_only && inputs.ios_suites || '["migration","offline","platform","sync","staging-supabase","tasks-offline-sync","tasks-completion-sync","tasks-checklist-history","tasks-localized-route","habits-offline-sync","habits-streak-history","habits-edit-delete","habits-localized-route","mind-maps-library","mind-maps-editor","mind-maps-task-link","mind-maps-viewport","mind-maps-offline-sync","mind-maps-localized-route","mind-maps-staging-sync"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
 
       - name: Set up Flutter
+        timeout-minutes: 10
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          cache: true
-          pub-cache: true
+          cache: false
+          pub-cache: false
 
       - name: Resolve dependencies
+        timeout-minutes: 5
         run: flutter pub get
 
-      - name: Build iOS simulator application
-        run: flutter build ios --simulator --debug --no-codesign
+      - name: Prefetch verified encrypted SQLite for the simulator
+        timeout-minutes: 6
+        run: python3 .github/scripts/prefetch-ios-sqlite.py --arch "${{ runner.arch }}"
 
       - name: Boot an available iPhone simulator
+        timeout-minutes: 10
         id: simulator
         shell: bash
         run: |
@@ -495,12 +507,12 @@ jobs:
           xcrun simctl bootstatus "$device_id" -b
           echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
 
-      - name: Run iOS Foundation or Task integration entry point
+      - name: Build iOS integration entry point for XCTest
         timeout-minutes: 40
         shell: bash
         env:
           IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
-          TEST_FILE: ${{ matrix.test_file }}
+          IOS_SUITE: ${{ matrix.suite }}
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
           NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
           NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
@@ -509,6 +521,16 @@ jobs:
           NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
         run: |
           set -euo pipefail
+          case "$IOS_SUITE" in
+            migration|offline|platform|sync|staging-supabase)
+              test_file="integration_test/foundation_${IOS_SUITE//-/_}_test.dart"
+              ;;
+            tasks-*|habits-*|mind-maps-*)
+              test_file="integration_test/${IOS_SUITE//-/_}_test.dart"
+              ;;
+            *) echo "Unknown iOS integration suite: $IOS_SUITE" >&2; exit 2 ;;
+          esac
+          test -f "$test_file"
           staging_defines=(
             --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL"
             --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY"
@@ -517,17 +539,61 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL"
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD"
           )
-          # Retry only a pre-test VM-service startup stall. Test failures do
-          # not retry, and a second startup stall still fails this gate.
-          python3 .github/scripts/run-ios-integration.py "$IOS_DEVICE_ID" -- \
-            flutter drive --no-pub --publish-port "${staging_defines[@]}" \
-            -d "$IOS_DEVICE_ID" \
-            --driver=test_driver/integration_test.dart \
-            --target="$TEST_FILE"
+          # Xcode logs can include the encoded Dart defines from Generated.xcconfig.
+          python3 - "${staging_defines[@]}" <<'PY'
+          import base64, sys
+          for argument in sys.argv[1:]:
+              value = argument.removeprefix('--dart-define=')
+              print('::add-mask::' + base64.b64encode(value.encode()).decode())
+          PY
+          mkdir -p build/ios_integration
+          # XCTest can activate native accessibility after the first test begins.
+          # Establish it before testWidgets records its semantics-handle baseline.
+          cat > build/ios_integration/entrypoint.dart <<DART
+          import 'package:integration_test/integration_test.dart';
+
+          import '../../$test_file' as scenario;
+          import '../../test/support/native_ios_test_binding.dart';
+
+          void main() {
+            final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+            stabilizeNativeIosSemantics(binding);
+            scenario.main();
+          }
+          DART
+          flutter build ios --simulator --debug --no-codesign --no-pub --config-only \
+            "${staging_defines[@]}" --target=build/ios_integration/entrypoint.dart
+          python3 .github/scripts/run-ios-integration.py --build-only -- \
+            xcodebuild -quiet build-for-testing -workspace ios/Runner.xcworkspace -scheme Runner \
+            -configuration Debug -sdk iphonesimulator \
+            -destination "id=$IOS_DEVICE_ID" \
+            -derivedDataPath "$PWD/build/ios_integration/DerivedData" \
+            CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES
+
+      - name: Run iOS integration entry point through XCTest
+        timeout-minutes: 15
+        shell: bash
+        env:
+          IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
+        run: |
+          set -euo pipefail
+          result_bundle="$PWD/build/ios_integration/results.xcresult"
+          # Native XCTest receives Dart results through the integration_test plugin;
+          # it does not wait for discovery of a debugger VM-service URI.
+          # Ad-hoc simulator signing preserves the host app's Keychain identity.
+          python3 .github/scripts/run-ios-integration.py "$result_bundle" -- \
+            xcodebuild -quiet test-without-building -workspace ios/Runner.xcworkspace -scheme Runner \
+            -configuration Debug -sdk iphonesimulator \
+            -derivedDataPath "$PWD/build/ios_integration/DerivedData" \
+            -destination "id=$IOS_DEVICE_ID" -parallel-testing-enabled NO \
+            -only-testing:RunnerTests/RunnerTests/testFlutterIntegration \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
+            -maximum-test-execution-time-allowance 600 \
+            -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES
 
   foundation-gate:
     name: Foundation and Task five-target gate
-    if: always()
+    if: ${{ always() && !inputs.mobile_only }}
     needs:
       - quality
       - database-security

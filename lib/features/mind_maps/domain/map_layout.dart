@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import '../application/map_repository.dart';
+import 'map_graph.dart';
 import 'mind_map.dart';
 
 /// Saved canvas coordinates; viewport transformations never alter these values.

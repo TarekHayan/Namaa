@@ -209,7 +209,7 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 - [X] T090 [P] Extend PR-to-develop/manual workflow path filters for specs/005-mind-maps and affected integration entries on Android, iOS, Windows, macOS and Linux without adding a feature-push trigger in .github/workflows/foundation-ci.yml.
 - [X] T091 [P] Test Arabic/English primary flows, RTL/mixed-direction labels, touch/keyboard controls and route behavior on one mobile and one desktop target in integration_test/mind_maps_localized_route_test.dart.
 - [X] T092 Run format, analyze, relevant Flutter/widget/integration suites and local Supabase SQL tests; record exact commands/results and any environment limits in specs/005-mind-maps/verification.md.
-- [ ] T093 Run persistence, account sync and Task-link checks across Android, iOS, Windows, macOS and Linux with an isolated nonproduction Supabase project; append actual target results to specs/005-mind-maps/verification.md.
+- [X] T093 Run persistence, account sync and Task-link checks across Android, iOS, Windows, macOS and Linux with an isolated nonproduction Supabase project; append actual target results to specs/005-mind-maps/verification.md. Feature checks passed in run 39588950642 and mobile runner repairs in 39608159074/39610974586; the repaired native iOS platform/Keychain step passed in 39629487680. The final full workflow gate remains a separate merge prerequisite.
 - [X] T094 Record SC-005's 50-node/60-link offline response timings and SC-007's visible-control touch/keyboard walkthrough results in specs/005-mind-maps/verification.md.
 - [X] T095 Review every FR-001–FR-015 and SC-001–SC-007 against tests/results, document later Auth/public-release and UI Refinement dependencies, and record any unmet criterion in specs/005-mind-maps/verification.md.
 
@@ -241,3 +241,12 @@ description: "Dependency-ordered implementation tasks for Namaa Mind Maps 005"
 3. **Task integration**: Complete US3; prove the same Task and single XP award from two maps before adding view options.
 4. **View controls**: Complete US4; validate all five layouts, saved styles and accessible navigation at 50/60 scale.
 5. **Account sync and closeout**: Complete US5 and Phase 8, using local Supabase tests and the agreed PR/manual five-target gate. Do not add Auth or final UI redesign to 005.
+
+## Phase 9: Convergence
+
+- [X] T096 Verify every defined library, graph, Task-link, layout and appearance scenario after one offline restart, including the expected visible result, and record evidence in specs/005-mind-maps/verification.md per SC-001.
+- [X] T097 Run and record ten offline restart/reconnect trials across two independent devices using the isolated nonproduction Supabase project; verify independent-node merge, same-node conflict recovery and no duplicate map elements per SC-003.
+- [X] T098 Verify on the isolated nonproduction Supabase project that a second account cannot read or change the first account's maps, nodes, links or conflict records, and that the development preview exposes none of that account's content; record evidence per SC-004.
+- [X] T099 Complete a keyboard-only walkthrough through labeled visible controls to create a map, add a child and note, link an existing Task and identify map progress; record the result alongside the touch walkthrough per SC-007.
+- [X] T100 Verify repaired CI preparation on Linux and iOS tasks-completion-sync, habits-streak-history, habits-edit-delete and mind-maps-library; retain the separate successful full-head merge gate. All five selected jobs passed in focused run 39656944139 on 60fe943; local and real CI evidence is recorded in verification.md. The final complete workflow remains a merge prerequisite.
+- [X] T101 Verify Android habits-mind-maps after repairing the corrupt emulator SDK download in run 39664743454. All 11 entry points passed in focused run 39671502031 on 6150391, including verified headless emulator preparation; evidence is recorded in verification.md. The cancelled complete workflow remains unsatisfied as a merge gate.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Retry only an iOS integration-test startup stall, not a failed test."""
+"""Bound a native XCTest run and require a nonempty, successful result bundle."""
 
+import json
 import os
 import signal
 import subprocess
@@ -10,9 +11,12 @@ from typing import Optional
 
 
 ATTEMPT_TIMEOUT_SECONDS = 12 * 60
+BUILD_TIMEOUT_SECONDS = 25 * 60
 
 
-def run_attempt(command: list[str]) -> tuple[Optional[int], str]:
+def run_attempt(
+    command: list[str], *, timeout_seconds: int = ATTEMPT_TIMEOUT_SECONDS
+) -> tuple[Optional[int], str]:
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -34,7 +38,7 @@ def run_attempt(command: list[str]) -> tuple[Optional[int], str]:
     reader = threading.Thread(target=relay_output, daemon=True)
     reader.start()
     try:
-        return_code = process.wait(timeout=ATTEMPT_TIMEOUT_SECONDS)
+        return_code = process.wait(timeout=timeout_seconds)
     except subprocess.TimeoutExpired:
         try:
             os.killpg(process.pid, signal.SIGTERM)
@@ -55,34 +59,59 @@ def run_attempt(command: list[str]) -> tuple[Optional[int], str]:
     return return_code, "".join(output)
 
 
+def read_result_summary(result_bundle: str) -> Optional[dict]:
+    try:
+        summary = subprocess.run(
+            ["xcrun", "xcresulttool", "get", "test-results", "summary", "--path", result_bundle],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        if summary.returncode != 0:
+            print("Unable to read iOS XCTest result summary.", file=sys.stderr)
+            return None
+        result = json.loads(summary.stdout)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        print("Unable to read iOS XCTest result summary.", file=sys.stderr)
+        return None
+
+    for failure in result.get("testFailures", []):
+        print("iOS XCTest failure: " + json.dumps(failure, ensure_ascii=True), flush=True)
+    return result
+
+
 def main() -> int:
     if len(sys.argv) < 4 or sys.argv[2] != "--":
-        print("Usage: run-ios-integration.py DEVICE_ID -- COMMAND...", file=sys.stderr)
+        print("Usage: run-ios-integration.py RESULT_BUNDLE|--build-only -- COMMAND...", file=sys.stderr)
         return 2
 
-    device_id = sys.argv[1]
+    result_bundle = sys.argv[1]
     command = sys.argv[3:]
-    for attempt in (1, 2):
-        print(f"iOS integration attempt {attempt}/2", flush=True)
-        return_code, output = run_attempt(command)
-        if return_code is not None:
-            return return_code
-
-        started_tests = (
-            "VMServiceFlutterDriver: Connected to Flutter application." in output
-            or "All tests passed" in output
-            or "Failure Details:" in output
-        )
-        if started_tests or attempt == 2:
-            print("iOS integration timed out; not treating it as a pass.", file=sys.stderr)
+    if result_bundle == "--build-only":
+        return_code, _ = run_attempt(command, timeout_seconds=BUILD_TIMEOUT_SECONDS)
+        if return_code is None:
+            print("iOS build-for-testing timed out before XCTest execution.", file=sys.stderr)
             return 124
-
-        print("iOS test did not start; rebooting simulator for one retry.", flush=True)
-        subprocess.run(["xcrun", "simctl", "shutdown", device_id], check=False)
-        subprocess.run(["xcrun", "simctl", "boot", device_id], check=True)
-        subprocess.run(["xcrun", "simctl", "bootstatus", device_id, "-b"], check=True)
-
-    return 124
+        return return_code
+    return_code, _ = run_attempt(command)
+    if return_code is None:
+        print("iOS native integration run timed out.", file=sys.stderr)
+        return 124
+    # Even a quiet Xcode failure keeps its assertion/crash details in xcresult.
+    # Print those details before propagating the original failure status.
+    result = read_result_summary(result_bundle)
+    if return_code != 0:
+        return return_code
+    if result is None:
+        return 1
+    total = result.get("totalTestCount", 0)
+    passed = result.get("passedTests", 0)
+    if total < 1 or passed != total or result.get("failedTests", 0) != 0:
+        print("iOS result bundle has missing, skipped, or failed tests.", file=sys.stderr)
+        return 1
+    print(f"iOS XCTest verified: {passed}/{total} native tests passed.", flush=True)
+    return 0
 
 
 if __name__ == "__main__":

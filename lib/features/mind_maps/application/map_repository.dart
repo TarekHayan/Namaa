@@ -1,26 +1,11 @@
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/mind_maps/domain/map_connection.dart';
+import 'package:namma_project/features/mind_maps/domain/map_graph.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map.dart';
 import 'package:namma_project/features/mind_maps/domain/mind_map_node.dart';
 
-/// A single owner-scoped snapshot. Tombstoned descendants remain on disk but
-/// are hidden whenever their map or node is not live.
-final class MapGraph {
-  MapGraph({
-    required this.map,
-    required Iterable<MindMapNode> nodes,
-    required Iterable<ParentSlot> parentSlots,
-    required Iterable<SideLink> sideLinks,
-  }) : nodes = List.unmodifiable(nodes),
-       parentSlots = List.unmodifiable(parentSlots),
-       sideLinks = List.unmodifiable(sideLinks);
-
-  final MindMap map;
-  final List<MindMapNode> nodes;
-  final List<ParentSlot> parentSlots;
-  final List<SideLink> sideLinks;
-}
+export 'package:namma_project/features/mind_maps/domain/map_graph.dart';
 
 final class MapChange<T> {
   const MapChange({

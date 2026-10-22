@@ -232,6 +232,11 @@ void main() {
       restored.nodes.singleWhere((n) => n.id == nodeIds[1]).title,
       'Edited offline',
     );
+    graph = restored;
+    await tester.pumpWidget(view());
+    await tester.pump();
+    expect(find.byKey(kMindMapCanvasKey), findsOneWidget);
+    expect(find.text('Edited offline'), findsWidgets);
     await session.dispose();
     await db.close();
     temp.dispose();

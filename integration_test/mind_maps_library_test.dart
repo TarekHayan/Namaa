@@ -88,6 +88,21 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('First map'), findsOneWidget);
+      final first = (await repo.watchGraphs(kTasksPreviewAccountId).first)
+          .singleWhere((graph) => graph.map.title == 'First map')
+          .map;
+      await tester.tap(find.byKey(ValueKey('mind-map-rename-${first.id}')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(kMapLibraryTitleFieldKey),
+        'Renamed map',
+      );
+      await tester.tap(find.byKey(kMapLibrarySaveKey));
+      await waitFor(
+        (ready) => ready.maps.any((item) => item.map.title == 'Renamed map'),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Renamed map'), findsOneWidget);
 
       await tester.tap(find.byKey(kMapLibraryCreateKey));
       await tester.pumpAndSettle();
@@ -186,6 +201,7 @@ void main() {
       expect(find.text('Second map'), findsOneWidget);
       expect(find.text('First map'), findsNothing);
       await tester.enterText(find.byKey(kMapLibrarySearchKey), '');
+      FocusManager.instance.primaryFocus?.unfocus();
       await tester.pumpAndSettle();
       final duplicateButton = find.byKey(
         ValueKey('mind-map-duplicate-${second.id}'),
@@ -227,6 +243,7 @@ void main() {
       );
       final deleteButton = find.byKey(ValueKey('mind-map-delete-${second.id}'));
       await tester.ensureVisible(deleteButton);
+      await tester.pumpAndSettle();
       await tester.tap(deleteButton);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(kMapLibraryConfirmDeleteKey));
@@ -243,7 +260,6 @@ void main() {
         )).valueOrNull,
         isNull,
       );
-
       await tester.pumpWidget(const SizedBox.shrink());
       await cubit.close();
       await db.close();
@@ -269,6 +285,27 @@ void main() {
         )).valueOrNull,
         isNull,
       );
+      await cubit.load(kTasksPreviewAccountId);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates:
+              FoundationLocalizations.localizationsDelegates,
+          supportedLocales: FoundationLocalizations.supportedLocales,
+          home: MapLibraryScreen(
+            cubit: cubit,
+            ownerId: kTasksPreviewAccountId,
+            stringsResolver: resolveMindMapsStrings,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Renamed map'), findsOneWidget);
+      expect(find.text('Second map'), findsOneWidget);
+      await tester.enterText(find.byKey(kMapLibrarySearchKey), 'PROJECT');
+      await tester.pumpAndSettle();
+      expect(find.text('Second map'), findsOneWidget);
+      expect(find.text('Renamed map'), findsNothing);
     },
   );
 }

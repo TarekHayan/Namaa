@@ -15,6 +15,7 @@ const Key kMapLibraryEmptyKey = Key('mind_map_empty_library');
 const Key kMapLibraryEmptySearchKey = Key('mind_map_empty_search');
 const Key kMapLibraryConfirmDeleteKey = Key('mind_map_confirm_delete');
 const Key kMapLibraryTitleFieldKey = Key('mind_map_title_field');
+const Key kMapLibrarySaveKey = Key('mind_map_save');
 const Key kMapLibraryDescriptionFieldKey = Key('mind_map_description_field');
 
 class MapLibraryScreen extends StatefulWidget {
@@ -264,32 +265,34 @@ class _MapLibraryScreenState extends State<MapLibraryScreen> {
                 ? strings.editDescription
                 : strings.editTitle,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                key: kMapLibraryTitleFieldKey,
-                initialValue: draft,
-                onChanged: (value) => draft = value,
-                autofocus: true,
-                maxLines: editDescription ? 3 : 1,
-                decoration: InputDecoration(
-                  labelText: editDescription
-                      ? strings.mapDescription
-                      : strings.mapTitle,
-                  errorText: error,
-                ),
-              ),
-              if (create)
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 TextFormField(
-                  key: kMapLibraryDescriptionFieldKey,
-                  onChanged: (value) => descriptionDraft = value,
-                  maxLines: 2,
+                  key: kMapLibraryTitleFieldKey,
+                  initialValue: draft,
+                  onChanged: (value) => draft = value,
+                  autofocus: true,
+                  maxLines: editDescription ? 3 : 1,
                   decoration: InputDecoration(
-                    labelText: strings.mapDescription,
+                    labelText: editDescription
+                        ? strings.mapDescription
+                        : strings.mapTitle,
+                    errorText: error,
                   ),
                 ),
-            ],
+                if (create)
+                  TextFormField(
+                    key: kMapLibraryDescriptionFieldKey,
+                    onChanged: (value) => descriptionDraft = value,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: strings.mapDescription,
+                    ),
+                  ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -297,6 +300,7 @@ class _MapLibraryScreenState extends State<MapLibraryScreen> {
               child: Text(strings.cancel),
             ),
             FilledButton(
+              key: kMapLibrarySaveKey,
               onPressed: () {
                 if (!editDescription && draft.trim().isEmpty) {
                   setDialogState(() => error = strings.titleRequired);
