@@ -65,6 +65,26 @@ final class _AppTodayStrings implements TodayStrings {
   @override
   String get dark => _l10n.todayDark;
   @override
+  String get newTask => _l10n.todayNewTask;
+  @override
+  String get newHabit => _l10n.todayNewHabit;
+  @override
+  String get completeTask => _l10n.todayCompleteTask;
+  @override
+  String get reopenTask => _l10n.todayReopenTask;
+  @override
+  String get completeHabit => _l10n.todayCompleteHabit;
+  @override
+  String get undoHabit => _l10n.todayUndoHabit;
+  @override
+  String get saving => _l10n.todaySaving;
+  @override
+  String get saveFailed => _l10n.todaySaveFailed;
+  @override
+  String get uncertain => _l10n.todayUncertain;
+  @override
+  String get staleDay => _l10n.todayStaleDay;
+  @override
   String formatDate(TodayLocalDate date) => DateFormat.yMMMMEEEEd(
     _code,
   ).format(DateTime(date.year, date.month, date.day));

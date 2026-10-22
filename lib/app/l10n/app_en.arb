@@ -267,5 +267,15 @@
   "mindMapPanUp": "Pan up",
   "mindMapPanDown": "Pan down",
   "mindMapDragNode": "Drag node to move",
-  "mindMapKeyboardHelp": "Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers"
+  "mindMapKeyboardHelp": "Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers",
+  "todayNewTask": "New task",
+  "todayNewHabit": "New habit",
+  "todayCompleteTask": "Complete task",
+  "todayReopenTask": "Reopen task",
+  "todayCompleteHabit": "Complete habit",
+  "todayUndoHabit": "Undo habit",
+  "todaySaving": "Saving…",
+  "todaySaveFailed": "Could not save. Check the item and try again.",
+  "todayUncertain": "Save result is uncertain. Check the current item before trying again.",
+  "todayStaleDay": "The day changed. Review today's items before acting."
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/today/application/today_calendar_port.dart';
 import 'package:namma_project/features/today/application/today_habits_port.dart';
 import 'package:namma_project/features/today/application/today_tasks_port.dart';
@@ -53,6 +54,13 @@ class _HabitSnapshot implements TodayHabitReadSnapshot {
 }
 
 class _Tasks implements TodayTasksPort {
+  @override
+  Future<AppResult<void>> setCompleted({
+    required String ownerId,
+    required String taskId,
+    required TodayLocalDate expectedLocalDate,
+    required bool completed,
+  }) async => const AppResult.success(null);
   final a = StreamController<TodayTaskReadSnapshot>.broadcast(sync: true);
   final b = StreamController<TodayTaskReadSnapshot>.broadcast(sync: true);
   @override
@@ -61,6 +69,13 @@ class _Tasks implements TodayTasksPort {
 }
 
 class _Habits implements TodayHabitsPort {
+  @override
+  Future<AppResult<void>> setCompleted({
+    required String ownerId,
+    required String habitId,
+    required TodayLocalDate expectedLocalDate,
+    required bool completed,
+  }) async => const AppResult.success(null);
   final stream = StreamController<TodayHabitReadSnapshot>.broadcast(sync: true);
   @override
   Stream<TodayHabitReadSnapshot> watchHabits(String ownerId) => stream.stream;

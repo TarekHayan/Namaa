@@ -810,4 +810,36 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   @override
   String get mindMapKeyboardHelp =>
       'لوحة المفاتيح: الأسهم للتحريك، زائد وناقص للتكبير والتصغير، F لاحتواء الخريطة، C للتوسيط';
+
+  @override
+  String get todayNewTask => 'مهمة جديدة';
+
+  @override
+  String get todayNewHabit => 'عادة جديدة';
+
+  @override
+  String get todayCompleteTask => 'إنجاز المهمة';
+
+  @override
+  String get todayReopenTask => 'إعادة فتح المهمة';
+
+  @override
+  String get todayCompleteHabit => 'إنجاز العادة';
+
+  @override
+  String get todayUndoHabit => 'التراجع عن إنجاز العادة';
+
+  @override
+  String get todaySaving => 'جارٍ الحفظ…';
+
+  @override
+  String get todaySaveFailed => 'تعذر الحفظ. راجع العنصر وحاول مرة أخرى.';
+
+  @override
+  String get todayUncertain =>
+      'نتيجة الحفظ غير مؤكدة. راجع حالة العنصر قبل المحاولة مجددًا.';
+
+  @override
+  String get todayStaleDay =>
+      'تغير اليوم. راجع عناصر اليوم الحالي قبل التنفيذ.';
 }

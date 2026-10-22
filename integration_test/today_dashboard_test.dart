@@ -6,16 +6,20 @@ import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
+import 'package:namma_project/features/habits/application/habit_commands.dart';
 import 'package:namma_project/features/habits/application/habit_repository.dart';
 import 'package:namma_project/features/habits/data/drift_habit_repository.dart';
 import 'package:namma_project/features/habits/data/habit_payload_codec.dart';
 import 'package:namma_project/features/habits/domain/habit.dart';
 import 'package:namma_project/features/habits/domain/habit_day.dart';
+import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/data/drift_task_repository.dart';
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/today/application/today_actions.dart';
 import 'package:namma_project/features/today/application/today_calendar_port.dart';
 import 'package:namma_project/features/today/data/habits_today_adapter.dart';
 import 'package:namma_project/features/today/data/tasks_today_adapter.dart';
@@ -42,6 +46,191 @@ class _Clock implements TodayCalendarPort {
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'ten offline Today desired-state cycles retain one award across restart',
+    (tester) async {
+      final directory = await Directory.systemTemp.createTemp(
+        'namaa_today_actions_',
+      );
+      final path = '${directory.path}${Platform.pathSeparator}today.db';
+      final key = await resolveDatabaseKey(
+        SecureCredentialVault(store: InMemorySecureKeyValueStore()),
+      );
+      var database = await FoundationDatabase.openEncrypted(
+        path: path,
+        key: key,
+      );
+      addTearDown(() async {
+        await database.close();
+        await directory.delete(recursive: true);
+      });
+      var sequence = 0;
+      TodayActions actions() {
+        final tasks = DriftTaskRepository(
+          database: database,
+          codec: const TaskPayloadCodec(),
+        );
+        final habits = DriftHabitRepository(
+          database: database,
+          codec: const HabitPayloadCodec(),
+        );
+        DateTime now() => DateTime.utc(
+          2026,
+          10,
+          12,
+          12,
+        ).add(Duration(microseconds: ++sequence));
+        String operation() => 'today-action-${++sequence}';
+        return TodayActions(
+          tasks: TasksTodayAdapter(
+            tasks,
+            completionService: TaskCompletionService(
+              repository: tasks,
+              unitOfWork: DriftTaskCompletionUnitOfWork(
+                database: database,
+                codec: const TaskPayloadCodec(),
+                awardLedger: DriftAwardLedger(database),
+              ),
+              session: const TasksPreviewSession(),
+              nowUtc: now,
+              currentLocalDate: () => DateTime(2026, 10, 12),
+              nextOperationId: operation,
+            ),
+          ),
+          habits: HabitsTodayAdapter(
+            habits,
+            commands: HabitCommands(
+              repository: habits,
+              session: const HabitsPreviewSession(),
+              nowUtc: now,
+              localCalendar: () =>
+                  (localDate: '2026-10-12', utcOffsetMinutes: 0),
+              nextOperationId: operation,
+            ),
+          ),
+        );
+      }
+
+      final task = Task.create(
+        id: TodayOwnerFixture.taskId(1),
+        accountId: kTasksPreviewAccountId,
+        title: 'Offline task',
+        scheduledDate: DateTime(2026, 10, 12),
+        createdAt: DateTime.utc(2026, 10, 11, 8),
+        completionXp: 25,
+      );
+      expect(
+        (await DriftTaskRepository(
+              database: database,
+              codec: const TaskPayloadCodec(),
+            ).commitTask(
+              TaskWriteRequest(
+                task: task,
+                operationId: 'today-seed-task',
+                kind: ChangeKind.create,
+                queuedAt: task.createdAt,
+              ),
+            ))
+            .failureOrNull,
+        isNull,
+      );
+      final habit = Habit.create(
+        id: TodayOwnerFixture.habitId(1),
+        accountId: kHabitsPreviewAccountId,
+        name: 'Offline habit',
+        weekdays: {DateTime.monday},
+        revisionId: 'today-seed-revision',
+        createdAt: DateTime.utc(2026, 10, 11, 8),
+        effectiveLocalDate: '2026-10-11',
+        utcOffsetMinutes: 0,
+      );
+      expect(
+        (await DriftHabitRepository(
+              database: database,
+              codec: const HabitPayloadCodec(),
+            ).commitHabit(
+              HabitWriteRequest(
+                habit: habit,
+                operationId: 'today-seed-habit',
+                kind: ChangeKind.create,
+                queuedAt: habit.createdAt,
+              ),
+            ))
+            .failureOrNull,
+        isNull,
+      );
+      final scope = TodayScope.preview(
+        taskOwnerId: kTasksPreviewAccountId,
+        habitOwnerId: kHabitsPreviewAccountId,
+        generation: 1,
+      );
+      final day = TodayLocalDate(2026, 10, 12);
+      var dispatch = actions();
+      for (var cycle = 0; cycle < 10; cycle++) {
+        expect(
+          (await dispatch.setTaskCompleted(
+            scope: scope,
+            expectedLocalDate: day,
+            taskId: task.id,
+            completed: true,
+          )).failureOrNull,
+          isNull,
+          reason: 'Task complete cycle $cycle',
+        );
+        expect(
+          (await dispatch.setHabitCompleted(
+            scope: scope,
+            expectedLocalDate: day,
+            habitId: habit.id,
+            completed: true,
+          )).failureOrNull,
+          isNull,
+          reason: 'Habit complete cycle $cycle',
+        );
+        expect(await database.rawScalar('SELECT count(*) FROM xp_awards'), 1);
+        expect(
+          (await dispatch.setTaskCompleted(
+            scope: scope,
+            expectedLocalDate: day,
+            taskId: task.id,
+            completed: false,
+          )).failureOrNull,
+          isNull,
+          reason: 'Task reopen cycle $cycle',
+        );
+        expect(
+          (await dispatch.setHabitCompleted(
+            scope: scope,
+            expectedLocalDate: day,
+            habitId: habit.id,
+            completed: false,
+          )).failureOrNull,
+          isNull,
+          reason: 'Habit undo cycle $cycle',
+        );
+        if (cycle == 4) {
+          await database.close();
+          database = await FoundationDatabase.openEncrypted(
+            path: path,
+            key: key,
+          );
+          dispatch = actions();
+        }
+      }
+      expect(await database.rawScalar('SELECT count(*) FROM xp_awards'), 1);
+      expect(
+        await database.rawScalar('SELECT count(*) FROM habit_day_records'),
+        1,
+      );
+      expect(
+        await DriftAwardLedger(
+          database,
+        ).watchAwards(kHabitsPreviewAccountId).first,
+        isEmpty,
+      );
+    },
+  );
 
   testWidgets(
     'encrypted preview owner records survive restart and ten read-only refreshes',

@@ -2,8 +2,12 @@ library;
 
 import 'dart:async';
 
+import 'package:namma_project/core/domain/failures/app_failure.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/features/habits/application/habit_commands.dart';
 import 'package:namma_project/features/habits/application/habit_queries.dart';
 import 'package:namma_project/features/habits/application/habit_repository.dart';
+import 'package:namma_project/features/habits/application/habit_sync_service.dart';
 import 'package:namma_project/features/habits/domain/habit.dart';
 import 'package:namma_project/features/habits/domain/habit_day.dart';
 
@@ -12,8 +16,50 @@ import '../domain/today_calendar.dart';
 import '../domain/today_models.dart';
 
 final class HabitsTodayAdapter implements TodayHabitsPort {
-  const HabitsTodayAdapter(this._repository);
+  const HabitsTodayAdapter(
+    this._repository, {
+    HabitCommands? commands,
+    HabitSyncService? syncService,
+  }) : _commands = commands,
+       _syncService = syncService;
   final HabitRepository _repository;
+  final HabitCommands? _commands;
+  final HabitSyncService? _syncService;
+
+  @override
+  Future<AppResult<void>> setCompleted({
+    required String ownerId,
+    required String habitId,
+    required TodayLocalDate expectedLocalDate,
+    required bool completed,
+  }) async {
+    final commands = _commands;
+    if (commands == null) {
+      return AppResult.failure(
+        AppFailure.recoverable(
+          category: AppFailureCategory.persistence,
+          messageKey: 'today.action.unavailable',
+          occurredAt: DateTime.now().toUtc(),
+        ),
+      );
+    }
+    final result = completed
+        ? await commands.completeHabitToday(
+            habitId,
+            expectedAccountId: ownerId,
+            expectedLocalDate: expectedLocalDate.key,
+          )
+        : await commands.undoHabitToday(
+            habitId,
+            expectedAccountId: ownerId,
+            expectedLocalDate: expectedLocalDate.key,
+          );
+    if (result.failureOrNull case final failure?) {
+      return AppResult.failure(failure);
+    }
+    if (_syncService != null) unawaited(_syncService.synchronize());
+    return const AppResult.success(null);
+  }
 
   @override
   Stream<TodayHabitReadSnapshot> watchHabits(String ownerId) {

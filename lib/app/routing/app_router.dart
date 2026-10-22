@@ -8,8 +8,11 @@ import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 
+import 'owner_entry_intent.dart';
+
 /// The only registered route in the Foundation scope.
 const String kFoundationRootRoute = '/';
+
 /// Today occupies the existing ready root; startup and failure still use it.
 const String kTodayRoute = kFoundationRootRoute;
 
@@ -86,19 +89,28 @@ class FoundationAppRouter {
       GoRoute(
         path: kTasksRoute,
         name: 'tasks',
-        builder: (context, _) => _TasksRouteGate(
+        builder: (context, state) => _TasksRouteGate(
           cloudSession: cloudSession,
           tasksBuilder: tasksBuilder,
+          intent: switch (state.extra) {
+            OwnerEntryIntent.newTask ||
+            OwnerEntryIntent.taskMatrix ||
+            OwnerEntryIntent.taskOverdue => state.extra as OwnerEntryIntent,
+            _ => null,
+          },
         ),
       ),
     if (habitsSession != null && habitsBuilder != null)
       GoRoute(
         path: kHabitsRoute,
         name: 'habits',
-        builder: (context, _) => _TasksRouteGate(
+        builder: (context, state) => _TasksRouteGate(
           cloudSession: habitsSession,
           tasksBuilder: habitsBuilder,
           habits: true,
+          intent: state.extra == OwnerEntryIntent.newHabit
+              ? OwnerEntryIntent.newHabit
+              : null,
         ),
       ),
     if (mindMapsSession != null && mindMapsBuilder != null)
@@ -123,12 +135,14 @@ class _TasksRouteGate extends StatefulWidget {
     required this.tasksBuilder,
     this.habits = false,
     this.mindMaps = false,
+    this.intent,
   });
 
   final CloudSessionPort cloudSession;
   final AuthenticatedTasksBuilder tasksBuilder;
   final bool habits;
   final bool mindMaps;
+  final OwnerEntryIntent? intent;
 
   @override
   State<_TasksRouteGate> createState() => _TasksRouteGateState();
@@ -215,7 +229,10 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
   Widget build(BuildContext context) {
     final accountId = _accountId;
     if (_status == CloudSessionStatus.signedIn && accountId != null) {
-      return widget.tasksBuilder(context, accountId);
+      return OwnerEntryIntentScope(
+        intent: widget.intent,
+        child: widget.tasksBuilder(context, accountId),
+      );
     }
     if (_status == CloudSessionStatus.signedOut) {
       return Scaffold(

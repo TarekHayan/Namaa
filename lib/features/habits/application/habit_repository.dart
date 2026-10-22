@@ -38,6 +38,11 @@ final class HabitDayWriteRequest {
 }
 
 abstract interface class HabitRepository {
+  /// Fresh parent/day checks and their write share one local transaction.
+  /// A failed result rolls back any nested owner write and outbox change.
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  );
   Future<AppResult<Habit?>> readHabit({
     required String accountId,
     required String habitId,

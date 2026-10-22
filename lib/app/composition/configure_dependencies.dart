@@ -88,6 +88,7 @@ import 'package:namma_project/features/tasks/data/supabase_task_sync_adapter.dar
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/data/task_reconciler.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
+import 'package:namma_project/features/today/application/today_actions.dart';
 import 'package:namma_project/features/today/application/today_calendar_port.dart';
 import 'package:namma_project/features/today/application/today_habits_port.dart';
 import 'package:namma_project/features/today/application/today_tasks_port.dart';
@@ -312,15 +313,29 @@ Future<void> configureDependencies({
       () => DriftAwardLedger(database),
     );
     getIt.registerLazySingleton<TodayTasksPort>(
-      () => TasksTodayAdapter(getIt<TaskRepository>()),
+      () => TasksTodayAdapter(
+        getIt<TaskRepository>(),
+        completionService: getIt<TaskCompletionService>(),
+        syncService: preview ? null : getIt<TaskSyncService>(),
+      ),
     );
     getIt.registerLazySingleton<TodayHabitsPort>(
-      () => HabitsTodayAdapter(getIt<HabitRepository>()),
+      () => HabitsTodayAdapter(
+        getIt<HabitRepository>(),
+        commands: getIt<HabitCommands>(),
+        syncService: preview ? null : getIt<HabitSyncService>(),
+      ),
     );
     getIt.registerLazySingleton<TodayXpPort>(
       () => XpTodayAdapter(getIt<AwardLedgerPort>()),
     );
     getIt.registerLazySingleton<TodayCalendarPort>(SystemTodayCalendar.new);
+    getIt.registerLazySingleton<TodayActions>(
+      () => TodayActions(
+        tasks: getIt<TodayTasksPort>(),
+        habits: getIt<TodayHabitsPort>(),
+      ),
+    );
     getIt.registerLazySingleton<TodayScopeResolver>(
       () => preview
           ? TodayScopeResolver.preview()
@@ -333,6 +348,7 @@ Future<void> configureDependencies({
         tasks: getIt<TodayTasksPort>(),
         habits: getIt<TodayHabitsPort>(),
         xp: getIt<TodayXpPort>(),
+        actions: getIt<TodayActions>(),
       ),
     );
     getIt.registerLazySingleton<TaskCompletionUnitOfWork>(

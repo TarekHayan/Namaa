@@ -18,6 +18,7 @@ import 'package:namma_project/app/l10n/tasks_strings_adapter.dart';
 import 'package:namma_project/app/l10n/today_localization_adapter.dart';
 import 'package:namma_project/app/preferences/app_preferences_sheet.dart';
 import 'package:namma_project/app/routing/app_router.dart';
+import 'package:namma_project/app/routing/owner_entry_intent.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
@@ -566,6 +567,16 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
       onMindMaps: () =>
           unawaited(GoRouter.of(context).push<void>(kMindMapsRoute)),
       onPreferences: () => showAppPreferencesSheet(context),
+      onNewTask: () => unawaited(
+        GoRouter.of(
+          context,
+        ).push<void>(kTasksRoute, extra: OwnerEntryIntent.newTask),
+      ),
+      onNewHabit: () => unawaited(
+        GoRouter.of(
+          context,
+        ).push<void>(kHabitsRoute, extra: OwnerEntryIntent.newHabit),
+      ),
     ),
   );
 }
@@ -597,6 +608,7 @@ class _TasksRouteScopeState extends State<_TasksRouteScope> {
     accountId: widget.accountId,
     stringsResolver: resolveTasksStrings,
     session: GetIt.instance<CloudSessionPort>(),
+    entryIntent: OwnerEntryIntentScope.maybeOf(context),
   );
 }
 
@@ -623,6 +635,7 @@ class _HabitsRouteScopeState extends State<_HabitsRouteScope> {
     cubit: _cubit,
     accountId: widget.accountId,
     stringsResolver: resolveHabitsStrings,
+    entryIntent: OwnerEntryIntentScope.maybeOf(context),
   );
 }
 

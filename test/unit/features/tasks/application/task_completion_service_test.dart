@@ -29,6 +29,7 @@ void main() {
       unitOfWork: unitOfWork,
       session: session,
       nowUtc: clock.utcNow,
+      currentLocalDate: () => DateTime(2026, 10, 11),
       nextOperationId: ids.nextOperationId,
     );
   });
@@ -140,6 +141,79 @@ void main() {
     expect(repository.reads, isEmpty);
     expect(unitOfWork.commits, isEmpty);
   });
+
+  test(
+    'Today rejects a displayed day after midnight without a write',
+    () async {
+      repository.seed(_task());
+      service = TaskCompletionService(
+        repository: repository,
+        unitOfWork: unitOfWork,
+        session: session,
+        nowUtc: clock.utcNow,
+        currentLocalDate: () => DateTime(2026, 10, 12),
+        nextOperationId: ids.nextOperationId,
+      );
+
+      final result = await service.completeTask(
+        kTasksTestTaskId,
+        expectedAccountId: kTasksTestAccountA,
+        expectedLocalDate: DateTime(2026, 10, 11),
+      );
+
+      expect(result.failureOrNull?.messageKey, 'tasks.validation.stale_day');
+      expect(repository.reads, isEmpty);
+      expect(unitOfWork.commits, isEmpty);
+    },
+  );
+
+  test('Today rejects a freshly rescheduled Task before save', () async {
+    repository.seed(_task().copyWith(scheduledDate: DateTime(2026, 10, 12)));
+    service = TaskCompletionService(
+      repository: repository,
+      unitOfWork: unitOfWork,
+      session: session,
+      nowUtc: clock.utcNow,
+      currentLocalDate: () => DateTime(2026, 10, 11),
+      nextOperationId: ids.nextOperationId,
+    );
+
+    final result = await service.completeTask(
+      kTasksTestTaskId,
+      expectedAccountId: kTasksTestAccountA,
+      expectedLocalDate: DateTime(2026, 10, 11),
+    );
+
+    expect(result.failureOrNull?.messageKey, 'tasks.validation.stale_day');
+    expect(repository.reads, hasLength(1));
+    expect(unitOfWork.commits, isEmpty);
+  });
+
+  test(
+    'Today rejects midnight during a delayed read and validates no-ops',
+    () async {
+      repository.seed(_task().complete(clock.utcNow()));
+      var localDay = DateTime(2026, 10, 11);
+      repository.afterRead = () => localDay = DateTime(2026, 10, 12);
+      service = TaskCompletionService(
+        repository: repository,
+        unitOfWork: unitOfWork,
+        session: session,
+        nowUtc: clock.utcNow,
+        currentLocalDate: () => localDay,
+        nextOperationId: ids.nextOperationId,
+      );
+
+      final result = await service.completeTask(
+        kTasksTestTaskId,
+        expectedAccountId: kTasksTestAccountA,
+        expectedLocalDate: DateTime(2026, 10, 11),
+      );
+      expect(result.failureOrNull?.messageKey, 'tasks.validation.stale_day');
+      expect(result.valueOrNull, isNull);
+      expect(unitOfWork.commits, isEmpty);
+    },
+  );
 }
 
 Task _task({

@@ -128,6 +128,10 @@ void main() {
 }
 
 final class _HistoryRepository implements HabitRepository {
+  @override
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  ) => action();
   _HistoryRepository({required this.habits, required this.days});
   final List<Habit> habits;
   final List<HabitDay> days;

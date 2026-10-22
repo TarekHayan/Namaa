@@ -26,6 +26,16 @@ abstract interface class TodayStrings {
   String get system;
   String get light;
   String get dark;
+  String get newTask;
+  String get newHabit;
+  String get completeTask;
+  String get reopenTask;
+  String get completeHabit;
+  String get undoHabit;
+  String get saving;
+  String get saveFailed;
+  String get uncertain;
+  String get staleDay;
   String formatDate(TodayLocalDate date);
   String formatCount(int value);
   String formatPercent(int value);

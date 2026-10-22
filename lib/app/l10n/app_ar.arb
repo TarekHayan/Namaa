@@ -267,5 +267,15 @@
   "mindMapPanUp": "تحريك لأعلى",
   "mindMapPanDown": "تحريك لأسفل",
   "mindMapDragNode": "اسحب العقدة لتحريكها",
-  "mindMapKeyboardHelp": "لوحة المفاتيح: الأسهم للتحريك، زائد وناقص للتكبير والتصغير، F لاحتواء الخريطة، C للتوسيط"
+  "mindMapKeyboardHelp": "لوحة المفاتيح: الأسهم للتحريك، زائد وناقص للتكبير والتصغير، F لاحتواء الخريطة، C للتوسيط",
+  "todayNewTask": "مهمة جديدة",
+  "todayNewHabit": "عادة جديدة",
+  "todayCompleteTask": "إنجاز المهمة",
+  "todayReopenTask": "إعادة فتح المهمة",
+  "todayCompleteHabit": "إنجاز العادة",
+  "todayUndoHabit": "التراجع عن إنجاز العادة",
+  "todaySaving": "جارٍ الحفظ…",
+  "todaySaveFailed": "تعذر الحفظ. راجع العنصر وحاول مرة أخرى.",
+  "todayUncertain": "نتيجة الحفظ غير مؤكدة. راجع حالة العنصر قبل المحاولة مجددًا.",
+  "todayStaleDay": "تغير اليوم. راجع عناصر اليوم الحالي قبل التنفيذ."
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:namma_project/core/application/navigation/owner_entry_intent.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/tasks/presentation/task_editor.dart';
@@ -39,18 +40,21 @@ class TasksScreen extends StatefulWidget {
     required this.accountId,
     required this.stringsResolver,
     this.session,
+    this.entryIntent,
   });
 
   final TasksCubit cubit;
   final String? accountId;
   final TasksStringsResolver stringsResolver;
   final CloudSessionPort? session;
+  final OwnerEntryIntent? entryIntent;
 
   @override
   State<TasksScreen> createState() => _TasksScreenState();
 }
 
 class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
+  bool _intentConsumed = false;
   @override
   void initState() {
     super.initState();
@@ -77,6 +81,10 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(TasksScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.entryIntent != oldWidget.entryIntent ||
+        widget.accountId != oldWidget.accountId) {
+      _intentConsumed = false;
+    }
     if (widget.accountId != null && widget.accountId != oldWidget.accountId) {
       widget.cubit.load(widget.accountId!);
     }
@@ -102,6 +110,32 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     return BlocBuilder<TasksCubit, TasksState>(
       bloc: widget.cubit,
       builder: (context, state) {
+        if (!_intentConsumed &&
+            state is TasksReady &&
+            widget.entryIntent != null) {
+          _intentConsumed = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || widget.accountId != accountId) return;
+            switch (widget.entryIntent) {
+              case OwnerEntryIntent.newTask:
+                final now = DateTime.now();
+                TaskEditor.show(
+                  context,
+                  cubit: widget.cubit,
+                  stringsResolver: widget.stringsResolver,
+                  accountId: accountId,
+                  session: widget.session,
+                  initialScheduledDate: DateTime(now.year, now.month, now.day),
+                );
+              case OwnerEntryIntent.taskMatrix:
+                widget.cubit.showMatrix();
+              case OwnerEntryIntent.taskOverdue:
+                widget.cubit.selectFilter(TaskListFilter.overdue);
+              default:
+                break;
+            }
+          });
+        }
         return Scaffold(
           appBar: AppBar(
             title: Text(l10n.tasksTitle),

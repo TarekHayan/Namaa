@@ -1678,6 +1678,66 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers'**
   String get mindMapKeyboardHelp;
+
+  /// No description provided for @todayNewTask.
+  ///
+  /// In en, this message translates to:
+  /// **'New task'**
+  String get todayNewTask;
+
+  /// No description provided for @todayNewHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'New habit'**
+  String get todayNewHabit;
+
+  /// No description provided for @todayCompleteTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete task'**
+  String get todayCompleteTask;
+
+  /// No description provided for @todayReopenTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen task'**
+  String get todayReopenTask;
+
+  /// No description provided for @todayCompleteHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete habit'**
+  String get todayCompleteHabit;
+
+  /// No description provided for @todayUndoHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo habit'**
+  String get todayUndoHabit;
+
+  /// No description provided for @todaySaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get todaySaving;
+
+  /// No description provided for @todaySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Check the item and try again.'**
+  String get todaySaveFailed;
+
+  /// No description provided for @todayUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'Save result is uncertain. Check the current item before trying again.'**
+  String get todayUncertain;
+
+  /// No description provided for @todayStaleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'The day changed. Review today\'s items before acting.'**
+  String get todayStaleDay;
 }
 
 class _FoundationLocalizationsDelegate

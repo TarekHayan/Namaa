@@ -1,6 +1,8 @@
 /// Read-only Habit owner boundary for Today.
 library;
 
+import 'package:namma_project/core/domain/results/app_result.dart';
+
 import '../domain/today_calendar.dart';
 import '../domain/today_models.dart';
 
@@ -17,4 +19,11 @@ abstract interface class TodayHabitsPort {
   /// Either constituent error/closure invalidates this source; retry starts a
   /// fresh paired observation, never a mix of old/new unconfirmed rows.
   Stream<TodayHabitReadSnapshot> watchHabits(String ownerId);
+
+  Future<AppResult<void>> setCompleted({
+    required String ownerId,
+    required String habitId,
+    required TodayLocalDate expectedLocalDate,
+    required bool completed,
+  });
 }

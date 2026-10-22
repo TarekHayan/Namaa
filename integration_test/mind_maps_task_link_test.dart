@@ -17,6 +17,8 @@ import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/data/drift_task_repository.dart';
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/today/data/tasks_today_adapter.dart';
+import 'package:namma_project/features/today/domain/today_calendar.dart';
 import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
@@ -92,6 +94,7 @@ void main() {
           awardLedger: DriftAwardLedger(db),
         ),
         session: session,
+        currentLocalDate: () => DateTime(2026, 10, 19),
       );
       TasksMapLinkAdapter bridge() => TasksMapLinkAdapter(
         repository: tasks(),
@@ -169,6 +172,32 @@ void main() {
         expect(reopened.failureOrNull, isNull, reason: 'scenario $scenario');
         await verifyLinkedViews(false);
       }
+      // Today invokes the same owner command. Both linked maps still observe
+      // the one Task, with the lifetime award unchanged.
+      final today = TasksTodayAdapter(
+        tasks(),
+        completionService: taskService(),
+      );
+      expect(
+        (await today.setCompleted(
+          ownerId: kTasksPreviewAccountId,
+          taskId: task.id,
+          expectedLocalDate: TodayLocalDate(2026, 10, 19),
+          completed: true,
+        )).failureOrNull,
+        isNull,
+      );
+      await verifyLinkedViews(true);
+      expect(
+        (await today.setCompleted(
+          ownerId: kTasksPreviewAccountId,
+          taskId: task.id,
+          expectedLocalDate: TodayLocalDate(2026, 10, 19),
+          completed: false,
+        )).failureOrNull,
+        isNull,
+      );
+      await verifyLinkedViews(false);
       expect(
         (await bridge().complete(
           kTasksPreviewAccountId,

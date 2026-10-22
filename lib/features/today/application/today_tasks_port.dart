@@ -1,6 +1,8 @@
 /// Read-only Task owner boundary for Today.
 library;
 
+import 'package:namma_project/core/domain/results/app_result.dart';
+
 import '../domain/today_calendar.dart';
 import '../domain/today_models.dart';
 
@@ -18,4 +20,11 @@ abstract interface class TodayTasksPort {
   /// excludes foreign/deleted rows and preserves Task repository order.
   /// Errors and unexpected closure are surfaced to the independent section.
   Stream<TodayTaskReadSnapshot> watchTasks(String ownerId);
+
+  Future<AppResult<void>> setCompleted({
+    required String ownerId,
+    required String taskId,
+    required TodayLocalDate expectedLocalDate,
+    required bool completed,
+  });
 }

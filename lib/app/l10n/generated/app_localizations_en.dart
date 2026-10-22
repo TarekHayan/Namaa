@@ -816,4 +816,36 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   @override
   String get mindMapKeyboardHelp =>
       'Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers';
+
+  @override
+  String get todayNewTask => 'New task';
+
+  @override
+  String get todayNewHabit => 'New habit';
+
+  @override
+  String get todayCompleteTask => 'Complete task';
+
+  @override
+  String get todayReopenTask => 'Reopen task';
+
+  @override
+  String get todayCompleteHabit => 'Complete habit';
+
+  @override
+  String get todayUndoHabit => 'Undo habit';
+
+  @override
+  String get todaySaving => 'Saving…';
+
+  @override
+  String get todaySaveFailed => 'Could not save. Check the item and try again.';
+
+  @override
+  String get todayUncertain =>
+      'Save result is uncertain. Check the current item before trying again.';
+
+  @override
+  String get todayStaleDay =>
+      'The day changed. Review today\'s items before acting.';
 }

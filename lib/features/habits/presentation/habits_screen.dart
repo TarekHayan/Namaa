@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:namma_project/core/application/navigation/owner_entry_intent.dart';
 import 'package:namma_project/features/habits/application/habit_queries.dart';
 import 'package:namma_project/features/habits/application/habit_sync_service.dart';
 import 'package:namma_project/features/habits/presentation/habit_editor.dart';
@@ -27,11 +28,13 @@ class HabitsScreen extends StatefulWidget {
     required this.cubit,
     required this.accountId,
     required this.stringsResolver,
+    this.entryIntent,
   });
 
   final HabitsCubit cubit;
   final String? accountId;
   final HabitsStringsResolver stringsResolver;
+  final OwnerEntryIntent? entryIntent;
 
   @override
   State<HabitsScreen> createState() => _HabitsScreenState();
@@ -39,6 +42,7 @@ class HabitsScreen extends StatefulWidget {
 
 class _HabitsScreenState extends State<HabitsScreen>
     with WidgetsBindingObserver {
+  bool _intentConsumed = false;
   @override
   void initState() {
     super.initState();
@@ -49,6 +53,10 @@ class _HabitsScreenState extends State<HabitsScreen>
   @override
   void didUpdateWidget(HabitsScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.entryIntent != oldWidget.entryIntent ||
+        widget.accountId != oldWidget.accountId) {
+      _intentConsumed = false;
+    }
     if (widget.accountId != null && widget.accountId != oldWidget.accountId) {
       widget.cubit.load(widget.accountId!);
     }
@@ -78,141 +86,160 @@ class _HabitsScreenState extends State<HabitsScreen>
     }
     return BlocBuilder<HabitsCubit, HabitsState>(
       bloc: widget.cubit,
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(title: Text(strings.title)),
-        floatingActionButton: FloatingActionButton.extended(
-          key: kHabitAddButtonKey,
-          tooltip: strings.create,
-          icon: const Icon(Icons.add),
-          label: Text(strings.create),
-          onPressed: () => HabitEditor.show(
-            context,
-            cubit: widget.cubit,
-            stringsResolver: widget.stringsResolver,
+      builder: (context, state) {
+        if (!_intentConsumed &&
+            widget.entryIntent == OwnerEntryIntent.newHabit &&
+            state is HabitsReady &&
+            state.accountId == widget.accountId) {
+          _intentConsumed = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && widget.accountId == state.accountId) {
+              HabitEditor.show(
+                context,
+                cubit: widget.cubit,
+                stringsResolver: widget.stringsResolver,
+              );
+            }
+          });
+        }
+        return Scaffold(
+          appBar: AppBar(title: Text(strings.title)),
+          floatingActionButton: FloatingActionButton.extended(
+            key: kHabitAddButtonKey,
+            tooltip: strings.create,
+            icon: const Icon(Icons.add),
+            label: Text(strings.create),
+            onPressed: () => HabitEditor.show(
+              context,
+              cubit: widget.cubit,
+              stringsResolver: widget.stringsResolver,
+            ),
           ),
-        ),
-        body: switch (state) {
-          HabitsInitial() ||
-          HabitsLoading() => const Center(child: CircularProgressIndicator()),
-          HabitsFailure() => Center(child: Text(strings.loadFailure)),
-          HabitsReady(:final accountId) when accountId != widget.accountId =>
-            const Center(child: CircularProgressIndicator()),
-          HabitsReady(
-            :final today,
-            :final lastFailure,
-            :final syncSnapshot,
-            :final conflicts,
-          ) =>
-            LayoutBuilder(
-              builder: (context, constraints) => Center(
-                child: ConstrainedBox(
-                  key: constraints.maxWidth >= 700
-                      ? kHabitsDesktopLayoutKey
-                      : kHabitsMobileLayoutKey,
-                  constraints: const BoxConstraints(maxWidth: 720),
-                  child: Column(
-                    children: [
-                      if (syncSnapshot.status == HabitSyncStatus.synchronizing)
-                        ListTile(
-                          leading: const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          title: Text(strings.syncing),
-                        ),
-                      if (syncSnapshot.status == HabitSyncStatus.failed)
-                        MaterialBanner(
-                          content: Text(strings.syncFailed),
-                          actions: [
-                            TextButton(
-                              onPressed: widget.cubit.retrySync,
-                              child: Text(strings.syncRetry),
+          body: switch (state) {
+            HabitsInitial() ||
+            HabitsLoading() => const Center(child: CircularProgressIndicator()),
+            HabitsFailure() => Center(child: Text(strings.loadFailure)),
+            HabitsReady(:final accountId) when accountId != widget.accountId =>
+              const Center(child: CircularProgressIndicator()),
+            HabitsReady(
+              :final today,
+              :final lastFailure,
+              :final syncSnapshot,
+              :final conflicts,
+            ) =>
+              LayoutBuilder(
+                builder: (context, constraints) => Center(
+                  child: ConstrainedBox(
+                    key: constraints.maxWidth >= 700
+                        ? kHabitsDesktopLayoutKey
+                        : kHabitsMobileLayoutKey,
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Column(
+                      children: [
+                        if (syncSnapshot.status ==
+                            HabitSyncStatus.synchronizing)
+                          ListTile(
+                            leading: const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
-                          ],
-                        ),
-                      if (conflicts.isNotEmpty)
-                        SizedBox(
-                          height: 140,
-                          child: ListView.builder(
-                            itemCount: conflicts.length,
-                            itemBuilder: (context, index) {
-                              final conflict = conflicts[index];
-                              return Card(
-                                key: ValueKey('habit-conflict-${conflict.id}'),
-                                child: ListTile(
-                                  title: Text(strings.conflict),
-                                  subtitle: Text(
-                                    '${strings.activeVersion}: ${conflict.activeLabel}\n'
-                                    '${strings.retainedVersion}: ${conflict.retainedLabel}'
-                                    '${conflict.unresolved ? '\n${strings.unresolvedConflict}' : ''}',
-                                  ),
-                                ),
-                              );
-                            },
+                            title: Text(strings.syncing),
                           ),
-                        ),
-                      if (lastFailure != null)
-                        MaterialBanner(
-                          content: Text(strings.saveFailure),
-                          actions: [
-                            TextButton(
-                              onPressed: widget.cubit.clearFailure,
-                              child: Text(strings.cancel),
-                            ),
-                          ],
-                        ),
-                      Expanded(
-                        child: today.isEmpty
-                            ? Center(
-                                child: Text(
-                                  strings.empty,
-                                  key: kHabitsEmptyKey,
-                                ),
-                              )
-                            : ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  12,
-                                  16,
-                                  96,
-                                ),
-                                itemCount: today.length,
-                                itemBuilder: (context, index) => _HabitCard(
-                                  value: today[index],
-                                  strings: strings,
-                                  onComplete: () => widget.cubit.completeToday(
-                                    today[index].habit.id,
-                                  ),
-                                  onUndo: () => widget.cubit.undoToday(
-                                    today[index].habit.id,
-                                  ),
-                                  onHistory: () => HabitHistoryView.show(
-                                    context,
-                                    history: today[index].history,
-                                    strings: strings,
-                                  ),
-                                  onEdit: () => HabitEditor.show(
-                                    context,
-                                    cubit: widget.cubit,
-                                    stringsResolver: widget.stringsResolver,
-                                    habit: today[index].habit,
-                                  ),
-                                  onDelete: () => _confirmDelete(
-                                    context,
-                                    today[index].habit.id,
-                                    strings,
-                                  ),
-                                ),
+                        if (syncSnapshot.status == HabitSyncStatus.failed)
+                          MaterialBanner(
+                            content: Text(strings.syncFailed),
+                            actions: [
+                              TextButton(
+                                onPressed: widget.cubit.retrySync,
+                                child: Text(strings.syncRetry),
                               ),
-                      ),
-                    ],
+                            ],
+                          ),
+                        if (conflicts.isNotEmpty)
+                          SizedBox(
+                            height: 140,
+                            child: ListView.builder(
+                              itemCount: conflicts.length,
+                              itemBuilder: (context, index) {
+                                final conflict = conflicts[index];
+                                return Card(
+                                  key: ValueKey(
+                                    'habit-conflict-${conflict.id}',
+                                  ),
+                                  child: ListTile(
+                                    title: Text(strings.conflict),
+                                    subtitle: Text(
+                                      '${strings.activeVersion}: ${conflict.activeLabel}\n'
+                                      '${strings.retainedVersion}: ${conflict.retainedLabel}'
+                                      '${conflict.unresolved ? '\n${strings.unresolvedConflict}' : ''}',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        if (lastFailure != null)
+                          MaterialBanner(
+                            content: Text(strings.saveFailure),
+                            actions: [
+                              TextButton(
+                                onPressed: widget.cubit.clearFailure,
+                                child: Text(strings.cancel),
+                              ),
+                            ],
+                          ),
+                        Expanded(
+                          child: today.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    strings.empty,
+                                    key: kHabitsEmptyKey,
+                                  ),
+                                )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    12,
+                                    16,
+                                    96,
+                                  ),
+                                  itemCount: today.length,
+                                  itemBuilder: (context, index) => _HabitCard(
+                                    value: today[index],
+                                    strings: strings,
+                                    onComplete: () => widget.cubit
+                                        .completeToday(today[index].habit.id),
+                                    onUndo: () => widget.cubit.undoToday(
+                                      today[index].habit.id,
+                                    ),
+                                    onHistory: () => HabitHistoryView.show(
+                                      context,
+                                      history: today[index].history,
+                                      strings: strings,
+                                    ),
+                                    onEdit: () => HabitEditor.show(
+                                      context,
+                                      cubit: widget.cubit,
+                                      stringsResolver: widget.stringsResolver,
+                                      habit: today[index].habit,
+                                    ),
+                                    onDelete: () => _confirmDelete(
+                                      context,
+                                      today[index].habit.id,
+                                      strings,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        },
-      ),
+          },
+        );
+      },
     );
   }
 

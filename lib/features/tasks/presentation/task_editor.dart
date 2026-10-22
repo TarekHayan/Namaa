@@ -28,6 +28,7 @@ class TaskEditor extends StatefulWidget {
     required this.accountId,
     this.session,
     this.initialTask,
+    this.initialScheduledDate,
   });
 
   final TasksCubit cubit;
@@ -35,6 +36,7 @@ class TaskEditor extends StatefulWidget {
   final String accountId;
   final CloudSessionPort? session;
   final Task? initialTask;
+  final DateTime? initialScheduledDate;
 
   static Future<void> show(
     BuildContext context, {
@@ -43,6 +45,7 @@ class TaskEditor extends StatefulWidget {
     required String accountId,
     CloudSessionPort? session,
     Task? initialTask,
+    DateTime? initialScheduledDate,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -59,6 +62,7 @@ class TaskEditor extends StatefulWidget {
             accountId: accountId,
             session: session,
             initialTask: initialTask,
+            initialScheduledDate: initialScheduledDate,
           ),
         ),
       ),
@@ -140,7 +144,7 @@ class _TaskEditorState extends State<TaskEditor> {
           ? '30'
           : task.estimatedDurationMinutes?.toString() ?? '',
     );
-    _scheduledDate = task?.scheduledDate;
+    _scheduledDate = task?.scheduledDate ?? widget.initialScheduledDate;
     _scheduledTime = task?.scheduledTime;
     _targetDeadline = task?.targetDeadline;
     _category = task?.category ?? TaskCategory.work;

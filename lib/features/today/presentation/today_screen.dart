@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../domain/today_projection.dart';
+import '../domain/today_section.dart';
 import 'today_cubit.dart';
 import 'today_state.dart';
 import 'today_strings.dart';
@@ -26,6 +27,8 @@ class TodayScreen extends StatelessWidget {
     required this.onHabits,
     required this.onMindMaps,
     required this.onPreferences,
+    this.onNewTask,
+    this.onNewHabit,
   });
   final TodayCubit cubit;
   final TodayStrings Function(BuildContext) stringsResolver;
@@ -33,6 +36,8 @@ class TodayScreen extends StatelessWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback onPreferences;
+  final VoidCallback? onNewTask;
+  final VoidCallback? onNewHabit;
 
   @override
   Widget build(BuildContext context) => BlocProvider.value(
@@ -67,6 +72,26 @@ class TodayScreen extends StatelessWidget {
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 16),
+                        if (onNewTask != null || onNewHabit != null)
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              if (onNewTask != null)
+                                FilledButton.icon(
+                                  key: const Key('today_new_task'),
+                                  onPressed: onNewTask,
+                                  icon: const Icon(Icons.add_task),
+                                  label: Text(strings.newTask),
+                                ),
+                              if (onNewHabit != null)
+                                FilledButton.icon(
+                                  key: const Key('today_new_habit'),
+                                  onPressed: onNewHabit,
+                                  icon: const Icon(Icons.add),
+                                  label: Text(strings.newHabit),
+                                ),
+                            ],
+                          ),
                         TodaySummarySection<TodayTaskSummary>(
                           title: strings.tasks,
                           section: state.tasks,
@@ -87,6 +112,15 @@ class TodayScreen extends StatelessWidget {
                                 TodayTaskList(
                                   tasks: summary.items,
                                   strings: strings,
+                                  actions: state.taskActions,
+                                  allowActions:
+                                      state.tasks.status ==
+                                      TodaySectionStatus.available,
+                                  onSetCompleted:
+                                      state.tasks.status ==
+                                          TodaySectionStatus.available
+                                      ? cubit.setTaskCompleted
+                                      : null,
                                 ),
                               ],
                               Text(
@@ -129,6 +163,12 @@ class TodayScreen extends StatelessWidget {
                                 TodayHabitList(
                                   habits: summary.items,
                                   strings: strings,
+                                  actions: state.habitActions,
+                                  onSetCompleted:
+                                      state.habits.status ==
+                                          TodaySectionStatus.available
+                                      ? cubit.setHabitCompleted
+                                      : null,
                                 ),
                               ],
                             ],
