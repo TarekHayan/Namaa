@@ -12,6 +12,7 @@
   "todayNoHabits": "No habits due today",
   "todayLoading": "Loading this section…",
   "todaySourceUnavailable": "This section is unavailable right now.",
+  "todayOutdated": "Showing older information. Try again to update it.",
   "todayPreferences": "Preferences",
   "todayLanguage": "Language",
   "todayAppearance": "Appearance",

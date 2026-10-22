@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
 
 import 'owner_entry_intent.dart';
 
@@ -153,6 +154,7 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
   CloudSessionStatus _status = CloudSessionStatus.unknown;
   String? _accountId;
   int _sessionRevision = 0;
+  bool _lookupFailed = false;
 
   @override
   void initState() {
@@ -166,7 +168,19 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
 
   Future<void> _resolveInitialSession() async {
     final revision = _sessionRevision;
-    final result = await widget.cloudSession.obtainSyncContext();
+    AppResult<CloudSyncContext> result;
+    try {
+      result = await widget.cloudSession.obtainSyncContext().timeout(
+        const Duration(seconds: 10),
+      );
+    } catch (_) {
+      if (!mounted || revision != _sessionRevision) return;
+      setState(() {
+        _lookupFailed = true;
+        _accountId = null;
+      });
+      return;
+    }
     if (!mounted || revision != _sessionRevision) {
       return;
     }
@@ -176,6 +190,7 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
       return;
     }
     setState(() {
+      _lookupFailed = false;
       _status = CloudSessionStatus.signedIn;
       _accountId = accountId;
     });
@@ -186,6 +201,7 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
       return;
     }
     _sessionRevision++;
+    _lookupFailed = false;
     final accountId = snapshot.accountId;
     if (snapshot.status != CloudSessionStatus.signedIn ||
         accountId == null ||
@@ -214,6 +230,7 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
       return;
     }
     setState(() {
+      _lookupFailed = false;
       _status = CloudSessionStatus.signedOut;
       _accountId = null;
     });
@@ -228,6 +245,24 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
   @override
   Widget build(BuildContext context) {
     final accountId = _accountId;
+    if (_lookupFailed) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                FoundationLocalizations.of(context).foundationRouteUnavailable,
+              ),
+              TextButton(
+                onPressed: () => unawaited(_resolveInitialSession()),
+                child: Text(FoundationLocalizations.of(context).retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     if (_status == CloudSessionStatus.signedIn && accountId != null) {
       return OwnerEntryIntentScope(
         intent: widget.intent,

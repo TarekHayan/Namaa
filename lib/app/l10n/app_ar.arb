@@ -12,6 +12,7 @@
   "todayNoHabits": "لا توجد عادات مستحقة اليوم",
   "todayLoading": "جارٍ تحميل هذا القسم…",
   "todaySourceUnavailable": "هذا القسم غير متاح الآن.",
+  "todayOutdated": "المعلومات المعروضة قديمة. حاول مجددًا لتحديثها.",
   "todayPreferences": "التفضيلات",
   "todayLanguage": "اللغة",
   "todayAppearance": "المظهر",

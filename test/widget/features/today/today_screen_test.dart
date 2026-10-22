@@ -27,6 +27,19 @@ class _Clock implements TodayCalendarPort {
   );
 }
 
+class _MutableClock implements TodayCalendarPort {
+  int day = 12;
+  @override
+  TodayCalendar sample({required int projectionRevision}) => TodayCalendar(
+    localDate: TodayLocalDate(2026, 10, day),
+    nowUtc: DateTime.utc(2026, 10, day, 12),
+    utcOffsetMinutes: 0,
+    dayStartUtc: DateTime.utc(2026, 10, day),
+    nextDayStartUtc: DateTime.utc(2026, 10, day + 1),
+    projectionRevision: projectionRevision,
+  );
+}
+
 class _TaskSnapshot implements TodayTaskReadSnapshot {
   @override
   String get ownerId => 'owner';
@@ -107,6 +120,61 @@ class _Xp implements TodayXpPort {
 }
 
 void main() {
+  testWidgets(
+    'resume refreshes the visible local day and marks failed data outdated',
+    (tester) async {
+      final tasks = _Tasks();
+      final habits = _Habits();
+      final xp = _Xp();
+      final clock = _MutableClock();
+      final cubit = TodayCubit(
+        scope: TodayScope.account(accountId: 'owner', generation: 1),
+        calendar: clock,
+        tasks: tasks,
+        habits: habits,
+        xp: xp,
+      );
+      addTearDown(() async {
+        await cubit.close();
+        await tasks.controller.close();
+        await habits.controller.close();
+        await xp.controller.close();
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates:
+              FoundationLocalizations.localizationsDelegates,
+          supportedLocales: FoundationLocalizations.supportedLocales,
+          home: TodayScreen(
+            cubit: cubit,
+            stringsResolver: resolveTodayStrings,
+            onTasks: () {},
+            onHabits: () {},
+            onMindMaps: () {},
+            onPreferences: () {},
+          ),
+        ),
+      );
+      tasks.controller.add(_TaskSnapshot());
+      habits.controller.add(_HabitSnapshot());
+      xp.controller.add([]);
+      await tester.pump();
+      tasks.controller.addError(StateError('offline'));
+      await tester.pump();
+      expect(
+        find.text('Showing older information. Try again to update it.'),
+        findsOneWidget,
+      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      clock.day = 13;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(cubit.state.calendar.localDate, TodayLocalDate(2026, 10, 13));
+      expect(find.text('Visible Task'), findsNothing);
+      expect(find.text('This section is unavailable right now.'), findsWidgets);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   testWidgets('renders independent read-only summaries and owner navigation', (
     tester,
   ) async {

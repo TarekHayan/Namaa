@@ -45,6 +45,9 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get todaySourceUnavailable => 'هذا القسم غير متاح الآن.';
 
   @override
+  String get todayOutdated => 'المعلومات المعروضة قديمة. حاول مجددًا لتحديثها.';
+
+  @override
   String get todayPreferences => 'التفضيلات';
 
   @override

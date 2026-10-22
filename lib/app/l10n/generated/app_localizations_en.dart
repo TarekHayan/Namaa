@@ -45,6 +45,10 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get todaySourceUnavailable => 'This section is unavailable right now.';
 
   @override
+  String get todayOutdated =>
+      'Showing older information. Try again to update it.';
+
+  @override
   String get todayPreferences => 'Preferences';
 
   @override

@@ -17,6 +17,7 @@ abstract interface class TodayStrings {
   String get noHabits;
   String get loading;
   String get unavailable;
+  String get outdated;
   String get retry;
   String get preferences;
   String get language;

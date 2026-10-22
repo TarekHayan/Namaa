@@ -30,12 +30,12 @@ class TodaySummarySection<T> extends StatelessWidget {
           Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           if (section.status == TodaySectionStatus.loading)
-            Text(strings.loading)
+            Semantics(liveRegion: true, child: Text(strings.loading))
           else if (section.value == null)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(strings.unavailable),
+                Semantics(liveRegion: true, child: Text(strings.unavailable)),
                 TextButton(onPressed: onRetry, child: Text(strings.retry)),
               ],
             )
@@ -44,7 +44,12 @@ class TodaySummarySection<T> extends StatelessWidget {
             if (section.status == TodaySectionStatus.stale)
               Row(
                 children: [
-                  Flexible(child: Text(strings.unavailable)),
+                  Flexible(
+                    child: Semantics(
+                      liveRegion: true,
+                      child: Text(strings.outdated),
+                    ),
+                  ),
                   TextButton(onPressed: onRetry, child: Text(strings.retry)),
                 ],
               ),

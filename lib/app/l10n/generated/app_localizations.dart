@@ -173,6 +173,12 @@ abstract class FoundationLocalizations {
   /// **'This section is unavailable right now.'**
   String get todaySourceUnavailable;
 
+  /// No description provided for @todayOutdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing older information. Try again to update it.'**
+  String get todayOutdated;
+
   /// No description provided for @todayPreferences.
   ///
   /// In en, this message translates to:

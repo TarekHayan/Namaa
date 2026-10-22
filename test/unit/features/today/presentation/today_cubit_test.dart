@@ -147,6 +147,9 @@ void main() {
       expect(cubit.state.tasks.status, TodaySectionStatus.unavailable);
       expect(cubit.state.habits.status, TodaySectionStatus.unavailable);
       xp.stream.add([]);
+      expect(cubit.state.xp.status, TodaySectionStatus.unavailable);
+      cubit.retryXp();
+      xp.stream.add([]);
       expect(cubit.state.xp.status, TodaySectionStatus.empty);
       await cubit.close();
       await tasks.a.close();

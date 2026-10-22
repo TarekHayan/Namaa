@@ -47,6 +47,8 @@ final class _AppTodayStrings implements TodayStrings {
   @override
   String get unavailable => _l10n.todaySourceUnavailable;
   @override
+  String get outdated => _l10n.todayOutdated;
+  @override
   String get retry => _l10n.retry;
   @override
   String get preferences => _l10n.todayPreferences;

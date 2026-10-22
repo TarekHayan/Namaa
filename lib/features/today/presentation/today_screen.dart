@@ -18,7 +18,7 @@ const Key kTodayHabitsNavigationKey = Key('today_habits_navigation');
 const Key kTodayMindMapsNavigationKey = Key('today_mind_maps_navigation');
 const Key kTodayPreferencesKey = Key('today_preferences');
 
-class TodayScreen extends StatelessWidget {
+class TodayScreen extends StatefulWidget {
   const TodayScreen({
     super.key,
     required this.cubit,
@@ -40,11 +40,48 @@ class TodayScreen extends StatelessWidget {
   final VoidCallback? onNewHabit;
 
   @override
+  State<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.cubit.resumeForeground();
+  }
+
+  @override
+  void didUpdateWidget(covariant TodayScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.cubit != widget.cubit) {
+      oldWidget.cubit.pauseForeground();
+      widget.cubit.resumeForeground();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.cubit.resumeForeground();
+    } else {
+      widget.cubit.pauseForeground();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.cubit.pauseForeground();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => BlocProvider.value(
-    value: cubit,
+    value: widget.cubit,
     child: BlocBuilder<TodayCubit, TodayState>(
       builder: (context, state) {
-        final strings = stringsResolver(context);
+        final strings = widget.stringsResolver(context);
         return Scaffold(
           key: kTodayScreenKey,
           appBar: AppBar(
@@ -53,14 +90,14 @@ class TodayScreen extends StatelessWidget {
               IconButton(
                 key: kTodayPreferencesKey,
                 tooltip: strings.preferences,
-                onPressed: onPreferences,
+                onPressed: widget.onPreferences,
                 icon: const Icon(Icons.tune),
               ),
             ],
           ),
           body: SafeArea(
             child: RefreshIndicator(
-              onRefresh: () async => cubit.refresh(),
+              onRefresh: () async => widget.cubit.refresh(),
               child: CustomScrollView(
                 slivers: [
                   SliverPadding(
@@ -72,21 +109,22 @@ class TodayScreen extends StatelessWidget {
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 16),
-                        if (onNewTask != null || onNewHabit != null)
+                        if (widget.onNewTask != null ||
+                            widget.onNewHabit != null)
                           Wrap(
                             spacing: 8,
                             children: [
-                              if (onNewTask != null)
+                              if (widget.onNewTask != null)
                                 FilledButton.icon(
                                   key: const Key('today_new_task'),
-                                  onPressed: onNewTask,
+                                  onPressed: widget.onNewTask,
                                   icon: const Icon(Icons.add_task),
                                   label: Text(strings.newTask),
                                 ),
-                              if (onNewHabit != null)
+                              if (widget.onNewHabit != null)
                                 FilledButton.icon(
                                   key: const Key('today_new_habit'),
-                                  onPressed: onNewHabit,
+                                  onPressed: widget.onNewHabit,
                                   icon: const Icon(Icons.add),
                                   label: Text(strings.newHabit),
                                 ),
@@ -96,7 +134,7 @@ class TodayScreen extends StatelessWidget {
                           title: strings.tasks,
                           section: state.tasks,
                           strings: strings,
-                          onRetry: cubit.retryTasks,
+                          onRetry: widget.cubit.retryTasks,
                           content: (summary) => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -119,7 +157,7 @@ class TodayScreen extends StatelessWidget {
                                   onSetCompleted:
                                       state.tasks.status ==
                                           TodaySectionStatus.available
-                                      ? cubit.setTaskCompleted
+                                      ? widget.cubit.setTaskCompleted
                                       : null,
                                 ),
                               ],
@@ -143,14 +181,14 @@ class TodayScreen extends StatelessWidget {
                         ),
                         TextButton(
                           key: kTodayTasksNavigationKey,
-                          onPressed: onTasks,
+                          onPressed: widget.onTasks,
                           child: Text(strings.tasks),
                         ),
                         TodaySummarySection<TodayHabitSummary>(
                           title: strings.habits,
                           section: state.habits,
                           strings: strings,
-                          onRetry: cubit.retryHabits,
+                          onRetry: widget.cubit.retryHabits,
                           content: (summary) => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -167,7 +205,7 @@ class TodayScreen extends StatelessWidget {
                                   onSetCompleted:
                                       state.habits.status ==
                                           TodaySectionStatus.available
-                                      ? cubit.setHabitCompleted
+                                      ? widget.cubit.setHabitCompleted
                                       : null,
                                 ),
                               ],
@@ -176,14 +214,14 @@ class TodayScreen extends StatelessWidget {
                         ),
                         TextButton(
                           key: kTodayHabitsNavigationKey,
-                          onPressed: onHabits,
+                          onPressed: widget.onHabits,
                           child: Text(strings.habits),
                         ),
                         TodaySummarySection<TodayXpSummary>(
                           title: strings.xp,
                           section: state.xp,
                           strings: strings,
-                          onRetry: cubit.retryXp,
+                          onRetry: widget.cubit.retryXp,
                           content: (summary) => Text(
                             strings.formatXp(summary.amount),
                             style: Theme.of(context).textTheme.headlineSmall,
@@ -191,7 +229,7 @@ class TodayScreen extends StatelessWidget {
                         ),
                         TextButton.icon(
                           key: kTodayMindMapsNavigationKey,
-                          onPressed: onMindMaps,
+                          onPressed: widget.onMindMaps,
                           icon: const Icon(Icons.hub_outlined),
                           label: Text(strings.mindMaps),
                         ),

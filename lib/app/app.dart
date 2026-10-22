@@ -444,6 +444,7 @@ class _TodayRootScopeState extends State<_TodayRootScope> {
   TodayScope? _scope;
   bool _unavailable = false;
   int _revision = 0;
+  TodayCubit? _boundCubit;
 
   @override
   void initState() {
@@ -457,6 +458,10 @@ class _TodayRootScopeState extends State<_TodayRootScope> {
               _clear();
               if (mounted) setState(() => _unavailable = true);
             },
+            onDone: () {
+              _clear();
+              if (mounted) setState(() => _unavailable = true);
+            },
           );
     }
     unawaited(_resolveInitial());
@@ -464,7 +469,14 @@ class _TodayRootScopeState extends State<_TodayRootScope> {
 
   Future<void> _resolveInitial() async {
     final revision = ++_revision;
-    final scope = await _resolver.resolveInitial();
+    TodayScope? scope;
+    try {
+      scope = await _resolver.resolveInitial().timeout(
+        const Duration(seconds: 10),
+      );
+    } catch (_) {
+      scope = null;
+    }
     if (!mounted || revision != _revision) return;
     setState(() {
       _scope = scope;
@@ -475,6 +487,8 @@ class _TodayRootScopeState extends State<_TodayRootScope> {
   void _clear() {
     _revision++;
     _resolver.invalidate();
+    _boundCubit?.suspend();
+    _boundCubit = null;
     if (mounted) {
       setState(() {
         _scope = null;
@@ -487,7 +501,14 @@ class _TodayRootScopeState extends State<_TodayRootScope> {
     _clear();
     final revision = _revision;
     unawaited(() async {
-      final scope = await _resolver.resolveSnapshot(snapshot);
+      TodayScope? scope;
+      try {
+        scope = await _resolver
+            .resolveSnapshot(snapshot)
+            .timeout(const Duration(seconds: 10));
+      } catch (_) {
+        scope = null;
+      }
       if (!mounted || revision != _revision) return;
       setState(() {
         _scope = scope;
@@ -500,6 +521,8 @@ class _TodayRootScopeState extends State<_TodayRootScope> {
   void dispose() {
     _revision++;
     _resolver.invalidate();
+    _boundCubit?.suspend();
+    _boundCubit = null;
     unawaited(_sessionSubscription?.cancel());
     super.dispose();
   }
@@ -532,14 +555,26 @@ class _TodayRootScopeState extends State<_TodayRootScope> {
     }
     return KeyedSubtree(
       key: ValueKey('${scope.scopeKey}:${scope.generation}'),
-      child: _TodayBoundView(scope: scope),
+      child: _TodayBoundView(
+        scope: scope,
+        onBound: (cubit) => _boundCubit = cubit,
+        onUnbound: (cubit) {
+          if (identical(_boundCubit, cubit)) _boundCubit = null;
+        },
+      ),
     );
   }
 }
 
 class _TodayBoundView extends StatefulWidget {
-  const _TodayBoundView({required this.scope});
+  const _TodayBoundView({
+    required this.scope,
+    required this.onBound,
+    required this.onUnbound,
+  });
   final TodayScope scope;
+  final void Function(TodayCubit) onBound;
+  final void Function(TodayCubit) onUnbound;
 
   @override
   State<_TodayBoundView> createState() => _TodayBoundViewState();
@@ -551,7 +586,14 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    widget.onBound(_cubit);
+  }
+
+  @override
   void dispose() {
+    widget.onUnbound(_cubit);
     unawaited(_cubit.close());
     super.dispose();
   }

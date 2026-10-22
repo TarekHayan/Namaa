@@ -86,30 +86,39 @@ final class HabitsTodayAdapter implements TodayHabitsPort {
 
     controller = StreamController<TodayHabitReadSnapshot>(
       onListen: () {
-        habitSub = _repository
-            .watchHabits(ownerId)
-            .listen(
-              (value) {
-                habits = value;
-                emitPair();
-              },
-              onError: fail,
-              onDone: () =>
-                  fail(StateError('Habit stream closed'), StackTrace.current),
-            );
-        daySub = _repository
-            .watchDays(ownerId)
-            .listen(
-              (value) {
-                days = value;
-                emitPair();
-              },
-              onError: fail,
-              onDone: () => fail(
-                StateError('Habit day stream closed'),
-                StackTrace.current,
-              ),
-            );
+        try {
+          habitSub = _repository
+              .watchHabits(ownerId)
+              .listen(
+                (value) {
+                  habits = value;
+                  emitPair();
+                },
+                onError: fail,
+                onDone: () =>
+                    fail(StateError('Habit stream closed'), StackTrace.current),
+              );
+          if (stopped) {
+            unawaited(habitSub?.cancel());
+            return;
+          }
+          daySub = _repository
+              .watchDays(ownerId)
+              .listen(
+                (value) {
+                  days = value;
+                  emitPair();
+                },
+                onError: fail,
+                onDone: () => fail(
+                  StateError('Habit day stream closed'),
+                  StackTrace.current,
+                ),
+              );
+          if (stopped) unawaited(daySub?.cancel());
+        } catch (error, stack) {
+          fail(error, stack);
+        }
       },
       onCancel: () async {
         stopped = true;

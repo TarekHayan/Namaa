@@ -7,6 +7,7 @@ import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
 import 'package:namma_project/features/habits/application/habit_commands.dart';
 import 'package:namma_project/features/habits/application/habit_repository.dart';
@@ -21,11 +22,13 @@ import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/today/application/today_actions.dart';
 import 'package:namma_project/features/today/application/today_calendar_port.dart';
+import 'package:namma_project/features/today/application/today_tasks_port.dart';
 import 'package:namma_project/features/today/data/habits_today_adapter.dart';
 import 'package:namma_project/features/today/data/tasks_today_adapter.dart';
 import 'package:namma_project/features/today/data/xp_today_adapter.dart';
 import 'package:namma_project/features/today/domain/today_calendar.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
+import 'package:namma_project/features/today/domain/today_section.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
@@ -33,14 +36,57 @@ import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 import '../test/support/today_fixtures.dart';
 
 class _Clock implements TodayCalendarPort {
+  TodayLocalDate localDate = TodayLocalDate(2026, 10, 12);
+  int utcOffsetMinutes = 0;
   @override
-  TodayCalendar sample({required int projectionRevision}) => TodayCalendar(
-    localDate: TodayLocalDate(2026, 10, 12),
-    nowUtc: DateTime.utc(2026, 10, 12, 12),
-    utcOffsetMinutes: 0,
-    dayStartUtc: DateTime.utc(2026, 10, 12),
-    nextDayStartUtc: DateTime.utc(2026, 10, 13),
-    projectionRevision: projectionRevision,
+  TodayCalendar sample({required int projectionRevision}) {
+    final start = DateTime.utc(
+      localDate.year,
+      localDate.month,
+      localDate.day,
+    ).subtract(Duration(minutes: utcOffsetMinutes));
+    final next = DateTime.utc(
+      localDate.year,
+      localDate.month,
+      localDate.day + 1,
+    ).subtract(Duration(minutes: utcOffsetMinutes));
+    return TodayCalendar(
+      localDate: localDate,
+      nowUtc: start.add(const Duration(hours: 12)),
+      utcOffsetMinutes: utcOffsetMinutes,
+      dayStartUtc: start,
+      nextDayStartUtc: next,
+      projectionRevision: projectionRevision,
+    );
+  }
+}
+
+class _RecoveringTasks implements TodayTasksPort {
+  _RecoveringTasks(this.delegate);
+  final TodayTasksPort delegate;
+  bool failOnce = true;
+
+  @override
+  Stream<TodayTaskReadSnapshot> watchTasks(String ownerId) {
+    if (!failOnce) return delegate.watchTasks(ownerId);
+    failOnce = false;
+    return (() async* {
+      yield await delegate.watchTasks(ownerId).first;
+      throw StateError('simulated read interruption after local snapshot');
+    })();
+  }
+
+  @override
+  Future<AppResult<void>> setCompleted({
+    required String ownerId,
+    required String taskId,
+    required TodayLocalDate expectedLocalDate,
+    required bool completed,
+  }) => delegate.setCompleted(
+    ownerId: ownerId,
+    taskId: taskId,
+    expectedLocalDate: expectedLocalDate,
+    completed: completed,
   );
 }
 
@@ -456,12 +502,16 @@ void main() {
         generation: 1,
       );
       Future<void> inspect(FoundationDatabase db) async {
-        final cubit = TodayCubit(
-          scope: scope,
-          calendar: _Clock(),
-          tasks: TasksTodayAdapter(
+        final clock = _Clock();
+        final recoveringTasks = _RecoveringTasks(
+          TasksTodayAdapter(
             DriftTaskRepository(database: db, codec: const TaskPayloadCodec()),
           ),
+        );
+        final cubit = TodayCubit(
+          scope: scope,
+          calendar: clock,
+          tasks: recoveringTasks,
           habits: HabitsTodayAdapter(
             DriftHabitRepository(
               database: db,
@@ -486,9 +536,37 @@ void main() {
           expect(cubit.state.habits.value?.totalCount, 5);
           expect(cubit.state.habits.value?.percent, 40);
           expect(cubit.state.xp.value?.amount, 40);
+          if (cubit.state.tasks.status != TodaySectionStatus.stale) {
+            await cubit.stream
+                .firstWhere(
+                  (state) => state.tasks.status == TodaySectionStatus.stale,
+                )
+                .timeout(const Duration(seconds: 5));
+          }
+          expect(cubit.state.tasks.value?.totalCount, 10);
+          expect(cubit.state.habits.status, TodaySectionStatus.available);
+          expect(cubit.state.xp.status, TodaySectionStatus.available);
+          cubit.retryTasks();
+          if (cubit.state.tasks.status != TodaySectionStatus.available) {
+            await cubit.stream
+                .firstWhere(
+                  (state) => state.tasks.status == TodaySectionStatus.available,
+                )
+                .timeout(const Duration(seconds: 5));
+          }
           for (var index = 0; index < 10; index++) {
             cubit.refresh();
           }
+          clock.localDate = TodayLocalDate(2026, 10, 13);
+          cubit.resumeForeground();
+          expect(cubit.state.tasks.value?.totalCount, 1);
+          expect(cubit.state.xp.value?.amount, 0);
+          clock.localDate = TodayLocalDate(2026, 10, 12);
+          clock.utcOffsetMinutes = 60;
+          cubit.refresh();
+          expect(cubit.state.tasks.value?.totalCount, 10);
+          expect(cubit.state.habits.value?.completedCount, 2);
+          expect(cubit.state.xp.value?.amount, 40);
         } finally {
           await cubit.close();
         }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -24,6 +26,8 @@ import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
 
+import '../../support/today_fixtures.dart';
+
 class _Preferences implements LocalStorePort {
   @override
   Future<AppResult<String?>> readPreference(String key) async =>
@@ -48,11 +52,48 @@ class _Clock implements TodayCalendarPort {
 }
 
 class _TaskSnapshot implements TodayTaskReadSnapshot {
-  _TaskSnapshot(this.ownerId);
+  _TaskSnapshot(this.ownerId, [this.title]);
   @override
   final String ownerId;
+  final String? title;
   @override
-  List<TodayTaskReference> project(TodayCalendar calendar) => [];
+  List<TodayTaskReference> project(TodayCalendar calendar) => title == null
+      ? []
+      : [
+          TodayTaskReference(
+            taskId: '$ownerId-task',
+            ownerId: ownerId,
+            title: title!,
+            scheduledLocalDate: calendar.localDate,
+            scheduledMinuteOfDay: null,
+            estimatedDurationMinutes: null,
+            isCompleted: false,
+            isUrgentImportant: false,
+            isOverdue: false,
+            ownerOrder: 0,
+          ),
+        ];
+}
+
+class _StreamingTasks implements TodayTasksPort {
+  final streams = <String, StreamController<TodayTaskReadSnapshot>>{};
+  Completer<AppResult<void>>? pending;
+  @override
+  Stream<TodayTaskReadSnapshot> watchTasks(String ownerId) => streams
+      .putIfAbsent(ownerId, () => StreamController.broadcast(sync: true))
+      .stream;
+  @override
+  Future<AppResult<void>> setCompleted({
+    required String ownerId,
+    required String taskId,
+    required TodayLocalDate expectedLocalDate,
+    required bool completed,
+  }) => pending?.future ?? Future.value(const AppResult.success(null));
+  Future<void> close() async {
+    for (final stream in streams.values) {
+      await stream.close();
+    }
+  }
 }
 
 class _HabitSnapshot implements TodayHabitReadSnapshot {
@@ -214,4 +255,139 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets(
+    'account switch clears old rows before a delayed lookup resolves',
+    (tester) async {
+      final session = TodayControlledSession(initialAccountId: 'owner-a');
+      final tasks = _StreamingTasks();
+      addTearDown(() async {
+        await session.close();
+        await tasks.close();
+      });
+      GetIt.instance.unregister<CloudSessionPort>();
+      GetIt.instance.unregister<HabitsPreviewSession>();
+      GetIt.instance.unregister<TodayScopeResolver>();
+      GetIt.instance.registerSingleton<CloudSessionPort>(session);
+      GetIt.instance.registerSingleton<TodayScopeResolver>(
+        TodayScopeResolver.account(session),
+      );
+      GetIt.instance.unregister<TodayCubit>();
+      final boundCubits = <TodayCubit>[];
+      GetIt.instance.registerFactoryParam<TodayCubit, TodayScope, void>((
+        scope,
+        _,
+      ) {
+        final cubit = TodayCubit(
+          scope: scope,
+          calendar: _Clock(),
+          tasks: tasks,
+          habits: _Habits(),
+          xp: _Xp(),
+        );
+        boundCubits.add(cubit);
+        return cubit;
+      });
+
+      final (foundation, locale, theme) = await controls(session);
+      addTearDown(() async {
+        await foundation.close();
+        await locale.close();
+        await theme.close();
+      });
+      await tester.pumpWidget(
+        FoundationApp(
+          cubitOverride: foundation,
+          localeCubitOverride: locale,
+          themeCubitOverride: theme,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      tasks.streams['owner-a']!.add(_TaskSnapshot('owner-a', 'A private task'));
+      await tester.pump();
+      expect(find.text('A private task'), findsOneWidget);
+
+      tasks.pending = Completer<AppResult<void>>();
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('today_task_action_owner-a-task')),
+        250,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('today_task_action_owner-a-task')),
+      );
+      await tester.pump();
+
+      session.holdContext();
+      session.signIn('owner-b');
+      expect(boundCubits.first.state.tasks.value, isNull);
+      expect(boundCubits.first.state.habits.value, isNull);
+      expect(boundCubits.first.state.xp.value, isNull);
+      expect(boundCubits.first.state.taskActions, isEmpty);
+      expect(boundCubits.first.state.habitActions, isEmpty);
+      await tester.pump();
+      tasks.pending!.complete(const AppResult.success(null));
+      await tester.pump();
+      expect(find.text('A private task'), findsNothing);
+      expect(find.byKey(kTodayScreenKey), findsNothing);
+      tasks.streams['owner-a']!.add(_TaskSnapshot('owner-a', 'Late A task'));
+      session.releaseContextFor('owner-a');
+      await tester.pump();
+      expect(find.text('Late A task'), findsNothing);
+      session.signIn('owner-b');
+      await tester.pump();
+      await tester.pump();
+      tasks.streams['owner-b']!.add(_TaskSnapshot('owner-b', 'B private task'));
+      await tester.pump();
+      expect(find.text('B private task'), findsOneWidget);
+      expect(find.text('A private task'), findsNothing);
+
+      session.signOut();
+      await tester.pump();
+      expect(find.text('B private task'), findsNothing);
+      expect(find.byKey(kTodayScreenKey), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets('unresolved initial account lookup reaches bounded recovery', (
+    tester,
+  ) async {
+    final session = TodayControlledSession(initialAccountId: 'owner-a')
+      ..holdContext();
+    addTearDown(session.close);
+    GetIt.instance.unregister<CloudSessionPort>();
+    GetIt.instance.unregister<HabitsPreviewSession>();
+    GetIt.instance.unregister<TodayScopeResolver>();
+    GetIt.instance.registerSingleton<CloudSessionPort>(session);
+    GetIt.instance.registerSingleton<TodayScopeResolver>(
+      TodayScopeResolver.account(session),
+    );
+    final (foundation, locale, theme) = await controls(session);
+    addTearDown(() async {
+      await foundation.close();
+      await locale.close();
+      await theme.close();
+    });
+    await tester.pumpWidget(
+      FoundationApp(
+        cubitOverride: foundation,
+        localeCubitOverride: locale,
+        themeCubitOverride: theme,
+      ),
+    );
+    await tester.pump();
+    expect(find.byKey(kTodayScreenKey), findsNothing);
+    await tester.pump(const Duration(seconds: 10));
+    await tester.pump();
+    expect(find.byKey(kTodayScreenKey), findsNothing);
+    expect(find.text('This section is unavailable right now.'), findsOneWidget);
+    session.releaseContextFor('owner-a');
+    await tester.pump();
+    await tester.tap(find.text('Retry'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.byKey(kTodayScreenKey), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

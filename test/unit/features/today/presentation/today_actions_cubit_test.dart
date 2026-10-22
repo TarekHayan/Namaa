@@ -188,6 +188,7 @@ void main() {
       await cubit.setTaskCompleted('task', true);
       expect(tasks.calls, 0);
 
+      cubit.retryTasks();
       tasks.stream.add(_Snapshot('task-owner'));
       expect(cubit.state.tasks.status, TodaySectionStatus.available);
       final action = cubit.setTaskCompleted('task', true);

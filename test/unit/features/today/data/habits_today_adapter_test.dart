@@ -24,6 +24,7 @@ class _Repository implements HabitRepository {
   Habit? currentHabit;
   HabitDay? currentDay;
   int dayWrites = 0;
+  bool throwOnDays = false;
   @override
   Future<AppResult<Habit?>> readHabit({
     required String accountId,
@@ -55,12 +56,72 @@ class _Repository implements HabitRepository {
   @override
   Stream<List<Habit>> watchHabits(String ownerId) => habits.stream;
   @override
-  Stream<List<HabitDay>> watchDays(String ownerId) => days.stream;
+  Stream<List<HabitDay>> watchDays(String ownerId) {
+    if (throwOnDays) throw StateError('day listener unavailable');
+    return days.stream;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
+  test(
+    'paired source error ends its subscription and a new pair can recover',
+    () async {
+      final repo = _Repository();
+      final errors = <Object>[];
+      var oldCount = 0;
+      final old = HabitsTodayAdapter(repo)
+          .watchHabits('owner')
+          .listen(
+            (_) => oldCount++,
+            onError: (Object error) => errors.add(error),
+          );
+      repo.habits.add([]);
+      repo.days.add([]);
+      await Future<void>.delayed(Duration.zero);
+      expect(oldCount, 1);
+      repo.days.addError(StateError('day read failed'));
+      await Future<void>.delayed(Duration.zero);
+      expect(errors, hasLength(1));
+      repo.habits.add([]);
+      repo.days.add([]);
+      await Future<void>.delayed(Duration.zero);
+      expect(oldCount, 1);
+
+      var freshCount = 0;
+      final fresh = HabitsTodayAdapter(
+        repo,
+      ).watchHabits('owner').listen((_) => freshCount++);
+      repo.habits.add([]);
+      expect(freshCount, 0);
+      repo.days.add([]);
+      await Future<void>.delayed(Duration.zero);
+      expect(freshCount, 1);
+      await old.cancel();
+      await fresh.cancel();
+      await repo.habits.close();
+      await repo.days.close();
+    },
+  );
+
+  test('synchronous second listener failure is exposed and disposed', () async {
+    final repo = _Repository()..throwOnDays = true;
+    final errors = <Object>[];
+    final sub = HabitsTodayAdapter(repo)
+        .watchHabits('owner')
+        .listen(
+          (_) => fail('unexpected snapshot'),
+          onError: (Object error) => errors.add(error),
+        );
+    await Future<void>.delayed(Duration.zero);
+    expect(errors, hasLength(1));
+    expect(repo.habits.hasListener, isFalse);
+    await sub.cancel();
+    await repo.habits.close();
+    await repo.days.close();
+  });
   test(
     'waits for both constituent emissions and retains owner streak/earned completion',
     () async {
