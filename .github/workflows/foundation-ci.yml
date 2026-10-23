@@ -151,6 +151,10 @@ jobs:
           yes | "$sdkmanager_path" --licenses >/dev/null || true
           "$sdkmanager_path" 'platforms;android-36'
 
+      - name: Prepare and verify Flutter NDK with isolated download retries
+        timeout-minutes: 12
+        run: python3 .github/scripts/prepare-android-ndk.py
+
       - name: Prepare and verify Android emulator with bounded download retries
         timeout-minutes: 8
         run: python3 .github/scripts/prepare-android-emulator.py
