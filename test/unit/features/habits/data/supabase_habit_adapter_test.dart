@@ -132,6 +132,39 @@ void main() {
       isNotNull,
     );
   });
+
+  test(
+    'reader collapses repeated page rows but rejects changed copies',
+    () async {
+      final gateway = _Gateway(account: habit.accountId)
+        ..habitRows = [_habitRow(habit), _habitRow(habit)]
+        ..dayRows = [_dayRow(day), _dayRow(day)];
+      final reader = SupabaseHabitReader(gateway: gateway, pageSize: 1);
+      final snapshot = await reader.readAll(habit.accountId);
+      expect(snapshot.failureOrNull, isNull);
+      expect(snapshot.valueOrNull!.habits, hasLength(1));
+      expect(snapshot.valueOrNull!.days, hasLength(1));
+
+      final changed = habit.edit(
+        name: 'Changed',
+        weekdays: {1},
+        reminderMinuteOfDay: null,
+        revisionId: 'changed-revision',
+        editedAt: at.add(const Duration(minutes: 1)),
+        effectiveLocalDate: '2026-10-12',
+        utcOffsetMinutes: 120,
+      );
+      gateway.habitRows = [_habitRow(habit), _habitRow(changed)];
+      expect((await reader.readAll(habit.accountId)).failureOrNull, isNotNull);
+
+      gateway.habitRows = [_habitRow(habit)];
+      gateway.dayRows = [
+        _dayRow(day),
+        _dayRow(day.undo(at.add(const Duration(minutes: 1)), 120)),
+      ];
+      expect((await reader.readAll(habit.accountId)).failureOrNull, isNotNull);
+    },
+  );
 }
 
 Map<String, dynamic> _habitRow(Habit habit) => {

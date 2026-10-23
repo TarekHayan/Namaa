@@ -19,6 +19,10 @@ on:
         description: 'Include Linux in a focused run without satisfying the final gate'
         type: boolean
         default: false
+      include_macos:
+        description: 'Run only macOS Today staging sync in a focused run'
+        type: boolean
+        default: false
   pull_request:
     branches:
       - develop
@@ -405,7 +409,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Today staging sync failed on Windows' }
 
   macos:
-    if: ${{ !inputs.mobile_only }}
+    if: ${{ !inputs.mobile_only || inputs.include_macos }}
     name: macOS integration
     runs-on: macos-latest
     timeout-minutes: 60
@@ -432,6 +436,7 @@ jobs:
       - name: Run macOS Foundation and Task integration entry points
         shell: bash
         env:
+          FOCUSED_MACOS: ${{ inputs.mobile_only }}
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
           NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
           NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
@@ -440,6 +445,17 @@ jobs:
           NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
         run: |
           set -euo pipefail
+          if [[ "$FOCUSED_MACOS" == "true" ]]; then
+            flutter test --no-pub \
+              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+              -d macos integration_test/today_sync_test.dart --reporter expanded
+            exit 0
+          fi
           tests=(
             integration_test/foundation_migration_test.dart
             integration_test/foundation_offline_test.dart

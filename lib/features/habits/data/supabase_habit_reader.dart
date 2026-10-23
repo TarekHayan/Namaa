@@ -26,6 +26,8 @@ final class SupabaseHabitReader implements HabitRemoteReaderPort {
       if (pageSize < 1) throw ArgumentError.value(pageSize, 'pageSize');
       final habits = <Habit>[];
       final days = <HabitDay>[];
+      final habitRowsById = <String, String>{};
+      final dayRowsById = <String, String>{};
       final habitCursors = <String>{};
       String? cursor;
       do {
@@ -52,6 +54,16 @@ final class SupabaseHabitReader implements HabitRemoteReaderPort {
           payload['id'] = row['id'];
           payload['updatedAt'] = row['updated_at'];
           payload['deletedAt'] = row['deleted_at'];
+          final id = row['id'] as String;
+          final fingerprint = jsonEncode(row);
+          final previous = habitRowsById[id];
+          if (previous != null) {
+            if (previous != fingerprint) {
+              throw StateError('Inconsistent repeated Habit page row');
+            }
+            continue;
+          }
+          habitRowsById[id] = fingerprint;
           habits.add(_codec.decodeHabit(jsonEncode(payload)));
         }
         cursor = page.nextCursor;
@@ -89,6 +101,16 @@ final class SupabaseHabitReader implements HabitRemoteReaderPort {
           payload['habitId'] = row['habit_id'];
           payload['localDate'] = row['local_date'];
           payload['updatedAt'] = row['updated_at'];
+          final id = '${row['habit_id']}:${row['local_date']}';
+          final fingerprint = jsonEncode(row);
+          final previous = dayRowsById[id];
+          if (previous != null) {
+            if (previous != fingerprint) {
+              throw StateError('Inconsistent repeated HabitDay page row');
+            }
+            continue;
+          }
+          dayRowsById[id] = fingerprint;
           days.add(_codec.decodeDay(jsonEncode(payload)));
         }
         cursor = page.nextCursor;
