@@ -2,7 +2,7 @@
 set -euo pipefail
 
 case "${ANDROID_SUITE:-}" in
-  foundation-tasks)
+  foundation)
     tests=(
       integration_test/foundation_migration_test.dart
       integration_test/foundation_offline_test.dart
@@ -10,6 +10,10 @@ case "${ANDROID_SUITE:-}" in
       integration_test/foundation_staging_supabase_test.dart
       integration_test/foundation_supabase_test.dart
       integration_test/foundation_sync_test.dart
+    )
+    ;;
+  tasks)
+    tests=(
       integration_test/tasks_checklist_history_test.dart
       integration_test/tasks_completion_sync_test.dart
       integration_test/tasks_localized_route_test.dart

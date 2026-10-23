@@ -116,7 +116,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: ${{ fromJSON(inputs.mobile_only && inputs.android_suites || '["foundation-tasks","habits-mind-maps"]') }}
+        suite: ${{ fromJSON(inputs.mobile_only && inputs.android_suites || '["foundation","tasks","habits-mind-maps"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -174,7 +174,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run Android Foundation and Task integration suite
+      - name: Run Android integration suite
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         env:
           ANDROID_SUITE: ${{ matrix.suite }}

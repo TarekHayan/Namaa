@@ -131,7 +131,7 @@ echo 'All tests passed'
                 stub.chmod(0o755)
             env = dict(os.environ)
             env.update(
-                ANDROID_SUITE="foundation-tasks",
+                ANDROID_SUITE="tasks",
                 PROBE_BIN=bash_path(probe),
                 PROBE_CALLS=bash_path(probe / "calls"),
                 PROBE_MARKER=bash_path(probe / "marker"),
@@ -157,7 +157,7 @@ echo 'All tests passed'
     def test_sigkill_before_test_retries_once_then_runs_suite(self):
         result, calls = self.run_probe("startup-kill")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(len(calls), 11)
+        self.assertEqual(len(calls), 5)
         self.assertEqual(calls[0], calls[1])
 
     def test_real_test_failure_is_not_retried(self):
