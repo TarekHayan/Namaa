@@ -136,6 +136,10 @@ void main() {
     tasks.stream.add(_TaskSnapshot(false));
     habits.stream.add(_HabitSnapshot());
     await tester.pump();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('today_task_action_task')),
+    );
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('today_task_action_task')));
     await tester.pump();
     expect(find.text('Saving…'), findsOneWidget);

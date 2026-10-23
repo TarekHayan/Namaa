@@ -870,4 +870,233 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get todayOpenOverdue => 'فتح المهام المتأخرة';
+
+  @override
+  String get dashboardGreetingMorning => 'بداية هادئة ليومك';
+
+  @override
+  String get dashboardGreetingLater => 'مساحة لما يستحق اهتمامك';
+
+  @override
+  String get dashboardSubtitle => 'أولوياتك وإيقاع يومك في مكان واحد.';
+
+  @override
+  String get dashboardOverview => 'يومك في لمحة';
+
+  @override
+  String get dashboardTasksProgress => 'المهام المنجزة';
+
+  @override
+  String get dashboardHabitsProgress => 'العادات المنجزة';
+
+  @override
+  String get dashboardXpEarned => 'نقاط اليوم';
+
+  @override
+  String get dashboardExplore => 'اكتشف مساحتك';
+
+  @override
+  String get dashboardMindMapsHint => 'حوّل أفكارك إلى خطوات واضحة';
+
+  @override
+  String get dashboardPreviewTitle => 'مساحات قادمة';
+
+  @override
+  String get dashboardPreviewDescription =>
+      'لمحة عن الأقسام التي نجهزها لاحقًا.';
+
+  @override
+  String get dashboardSampleBadge => 'بيانات تجريبية';
+
+  @override
+  String get dashboardPrayer => 'مواقيت الصلاة';
+
+  @override
+  String get dashboardPrayerDetail => 'القادمة: العصر · ٣:٢٥ م';
+
+  @override
+  String get dashboardQuran => 'ورد القرآن';
+
+  @override
+  String get dashboardQuranDetail => '٧ من ٢٠ صفحة هذا الأسبوع';
+
+  @override
+  String get dashboardFinance => 'المالية الشخصية';
+
+  @override
+  String get dashboardFinanceDetail => 'هدف الشهر · ٤٬٢٥٠ / ٨٬٠٠٠';
+
+  @override
+  String get dashboardFocus => 'وقت التركيز';
+
+  @override
+  String get dashboardFocusDetail => 'جلستان مخططتان · ٥٠ دقيقة';
+
+  @override
+  String get dashboardEncryptedBadge => 'محفوظ محلياً ومشفّر';
+
+  @override
+  String get dashboardProductiveDay => 'يوم منتج متزن';
+
+  @override
+  String dashboardLevelBadge(int level, int xp) {
+    return 'مستوى $level • $xp XP';
+  }
+
+  @override
+  String get dashboardSampleNotice =>
+      'عرض تجريبي للميزة قيد التطوير. البيانات توضيحية.';
+
+  @override
+  String get dashboardPrayerTitle => 'مواقيت الصلوات الخمس';
+
+  @override
+  String get dashboardPrayerCity => 'الرياض';
+
+  @override
+  String get dashboardPrayerFajr => 'الفجر';
+
+  @override
+  String get dashboardPrayerDhuhr => 'الظهر';
+
+  @override
+  String get dashboardPrayerAsr => 'العصر';
+
+  @override
+  String get dashboardPrayerMaghrib => 'المغرب';
+
+  @override
+  String get dashboardPrayerIsha => 'العشاء';
+
+  @override
+  String get dashboardPrayerNext => 'الصلاة القادمة';
+
+  @override
+  String get dashboardPrayerRemaining => 'متبقي ٣:٢٤ س';
+
+  @override
+  String get dashboardPrayerDone => 'تمت';
+
+  @override
+  String get dashboardPrayerUpcoming => 'انتظار';
+
+  @override
+  String get dashboardQuranSectionTitle => 'ورد القرآن الكريم وحفظه';
+
+  @override
+  String get dashboardQuranWirdTitle => 'ورد اليوم • سورة الكهف';
+
+  @override
+  String get dashboardQuranProgressInfo =>
+      'الجزء ١٥ • صفحة ٣٠٢ من ٣٠٤ • ٧٥٪ مكتمل';
+
+  @override
+  String get dashboardQuranRemainingPages => 'متبقي صفحتان لختام الورد';
+
+  @override
+  String get dashboardQuranAyahQuote =>
+      '«وَأَمَّا الْجِدَارُ فَكَانَ لِغُلَامَيْنِ يَتِيمَيْنِ فِي الْمَدِينَةِ وَكَانَ تَحْتَهُ كَنزٌ لَّهُمَا...»';
+
+  @override
+  String get dashboardQuranAyahRef => 'سورة الكهف • الآية ٨٢';
+
+  @override
+  String get dashboardQuranContinueReading => 'متابعة التلاوة';
+
+  @override
+  String get dashboardQuranMemorizationTitle => 'تثبيت الحفظ • سورة الملك';
+
+  @override
+  String get dashboardQuranMemorizationDetail =>
+      'الآيات (1 - 5 تم بنجاح ✓) • الآيات 6 - 10 بانتظار البدء';
+
+  @override
+  String get dashboardQuranStartRecite => 'ابدأ التسميع';
+
+  @override
+  String get dashboardFinanceSectionTitle => 'المحفظة والمالية الشخصية';
+
+  @override
+  String get dashboardFinanceMonth => 'مثال للشهر الحالي';
+
+  @override
+  String get dashboardFinanceTotalBalance => 'الرصيد الإجمالي';
+
+  @override
+  String get dashboardFinanceAvailable => 'المتاح للصرف';
+
+  @override
+  String get dashboardFinanceSavings => 'المدخرات';
+
+  @override
+  String get dashboardFinanceCurrency => 'ر.س';
+
+  @override
+  String get dashboardFinanceFlowTitle => 'التدفق لآخر ٧ أيام';
+
+  @override
+  String get dashboardFinanceIncome => 'دخل';
+
+  @override
+  String get dashboardFinanceExpense => 'مصروف';
+
+  @override
+  String get dashboardFinanceBudgetConsumption => 'استهلاك ميزانية الشهر';
+
+  @override
+  String get dashboardFinanceBudgetConsumed => '٥٢٪ مستهلك';
+
+  @override
+  String get dashboardFinanceSpent => 'المصروف';
+
+  @override
+  String get dashboardFinanceRemaining => 'المتبقي';
+
+  @override
+  String get dashboardFinanceDaysLeft => '١٦ يوماً متبقية';
+
+  @override
+  String get dashboardFinanceAddIncome => '+ دخل';
+
+  @override
+  String get dashboardFinanceAddExpense => '- مصروف';
+
+  @override
+  String get dashboardFinanceAddSaving => 'ادخار';
+
+  @override
+  String get dashboardFocusSectionTitle => 'جلسات التركيز والأوراد الروحية';
+
+  @override
+  String get dashboardFocusPomodoroTitle => 'جلسة تركيز مقترحة';
+
+  @override
+  String get dashboardFocusPomodoroDuration => 'المدة: ٢٥ دقيقة';
+
+  @override
+  String get dashboardFocusStart => 'بدء الجلسة';
+
+  @override
+  String get dashboardFocusCompletedToday => '٥٠ دقيقة منجزة اليوم';
+
+  @override
+  String get dashboardAdhkarTitle => 'الأوراد الروحية والسنن';
+
+  @override
+  String get dashboardAdhkarMorning => 'أذكار الصباح';
+
+  @override
+  String get dashboardAdhkarEvening => 'أذكار المساء';
+
+  @override
+  String get dashboardAdhkarQiyam => 'الوتر والقيام';
+
+  @override
+  String get dashboardReflectionTitle => 'إشراقة اليوم';
+
+  @override
+  String get dashboardReflectionQuote => '«أحب الأعمال إلى الله أدومها وإن قل»';
+
+  @override
+  String get dashboardReflectionAction => 'تدوين خاطرة';
 }

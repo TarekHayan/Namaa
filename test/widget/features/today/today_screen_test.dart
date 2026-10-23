@@ -298,17 +298,19 @@ void main() {
     expect(find.textContaining('100%'), findsOneWidget);
     expect(find.text('0/1 · 0%'), findsOneWidget);
     expect(find.byType(Checkbox), findsNothing);
+    expect(find.text('SAMPLE DATA'), findsNWidgets(4));
+    await tester.ensureVisible(find.byKey(kTodayTasksNavigationKey));
+    await tester.pump();
     await tester.tap(find.byKey(kTodayTasksNavigationKey));
-    await tester.scrollUntilVisible(find.byKey(kTodayHabitsNavigationKey), 250);
+    await tester.ensureVisible(find.byKey(kTodayHabitsNavigationKey));
+    await tester.pump();
     await tester.tap(find.byKey(kTodayHabitsNavigationKey));
     await tester.tap(find.byKey(kTodayPreferencesKey));
     expect(taskOpens, 1);
     expect(habitOpens, 1);
     expect(preferenceOpens, 1);
-    await tester.scrollUntilVisible(
-      find.byKey(kTodayMindMapsNavigationKey),
-      300,
-    );
+    await tester.ensureVisible(find.byKey(kTodayMindMapsNavigationKey));
+    await tester.pump();
     await tester.tap(find.byKey(kTodayMindMapsNavigationKey));
     expect(mapOpens, 1);
   });

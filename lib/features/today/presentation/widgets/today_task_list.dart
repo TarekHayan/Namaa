@@ -1,6 +1,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/features/today/domain/today_models.dart';
 
 import '../today_state.dart';
@@ -56,6 +57,9 @@ class _TodayTaskListState extends State<TodayTaskList> {
   );
 
   Widget _taskTile(BuildContext context, TodayTaskReference task) {
+    final colors = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
     final compact =
         MediaQuery.sizeOf(context).width < 400 ||
         MediaQuery.textScalerOf(context).scale(1) > 1.3;
@@ -79,12 +83,23 @@ class _TodayTaskListState extends State<TodayTaskList> {
     final tile = ListTile(
       key: ValueKey('today_task_${task.taskId}'),
       onTap: widget.onOpenTasks,
+      tileColor: colors.surfaceSecondary,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       leading: Icon(
         task.isCompleted
             ? Icons.check_circle_outline
             : Icons.radio_button_unchecked,
+        color: task.isCompleted ? colors.primary : colors.textMuted,
       ),
-      title: Text(task.title),
+      title: Text(
+        task.title,
+        style: task.isCompleted
+            ? TextStyle(
+                color: colors.textSecondary,
+                decoration: TextDecoration.lineThrough,
+              )
+            : null,
+      ),
       subtitle: Text(
         [
           widget.strings.formatDate(task.scheduledLocalDate),
@@ -99,14 +114,17 @@ class _TodayTaskListState extends State<TodayTaskList> {
       ),
       trailing: compact ? null : action,
     );
-    return compact
-        ? Column(
-            children: [
-              tile,
-              Align(alignment: AlignmentDirectional.centerEnd, child: action),
-            ],
-          )
-        : tile;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: compact
+          ? Column(
+              children: [
+                tile,
+                Align(alignment: AlignmentDirectional.centerEnd, child: action),
+              ],
+            )
+          : tile,
+    );
   }
 
   bool _hasError(TodayActionFeedback? feedback) =>

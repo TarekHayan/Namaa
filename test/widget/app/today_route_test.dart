@@ -309,10 +309,10 @@ void main() {
       expect(find.text('A private task'), findsOneWidget);
 
       tasks.pending = Completer<AppResult<void>>();
-      await tester.scrollUntilVisible(
+      await tester.ensureVisible(
         find.byKey(const ValueKey('today_task_action_owner-a-task')),
-        250,
       );
+      await tester.pump();
       await tester.tap(
         find.byKey(const ValueKey('today_task_action_owner-a-task')),
       );
