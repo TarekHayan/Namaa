@@ -99,16 +99,21 @@ final class SupabaseHabitGatewayImpl implements SupabaseHabitGateway {
     String? cursor,
   }) async {
     _checkAccount(expectedAccountId);
-    var query = _client.from('habits').select();
-    if (cursor != null) query = query.gt('id', cursor);
-    final response = await query.order('id').limit(pageSize);
+    final offset = cursor == null ? 0 : int.parse(cursor);
+    if (offset < 0) throw const FormatException('Invalid Habit cursor');
+    final response = await _client
+        .from('habits')
+        .select()
+        .eq('owner', expectedAccountId)
+        .order('id')
+        .range(offset, offset + pageSize - 1);
     _checkAccount(expectedAccountId);
     final rows = [
       for (final row in response) Map<String, dynamic>.from(row as Map),
     ];
     return HabitRemotePage(
       rows: rows,
-      nextCursor: rows.length == pageSize ? rows.last['id'] as String? : null,
+      nextCursor: rows.length == pageSize ? '${offset + rows.length}' : null,
     );
   }
 
@@ -119,29 +124,22 @@ final class SupabaseHabitGatewayImpl implements SupabaseHabitGateway {
     String? cursor,
   }) async {
     _checkAccount(expectedAccountId);
-    var query = _client.from('habit_days').select();
-    if (cursor != null) {
-      final parts = cursor.split('|');
-      if (parts.length != 2) {
-        throw const FormatException('Invalid HabitDay cursor');
-      }
-      query = query.or(
-        'habit_id.gt.${parts[0]},and(habit_id.eq.${parts[0]},local_date.gt.${parts[1]})',
-      );
-    }
-    final response = await query
+    final offset = cursor == null ? 0 : int.parse(cursor);
+    if (offset < 0) throw const FormatException('Invalid HabitDay cursor');
+    final response = await _client
+        .from('habit_days')
+        .select()
+        .eq('owner', expectedAccountId)
         .order('habit_id')
         .order('local_date')
-        .limit(pageSize);
+        .range(offset, offset + pageSize - 1);
     _checkAccount(expectedAccountId);
     final rows = [
       for (final row in response) Map<String, dynamic>.from(row as Map),
     ];
     return HabitRemotePage(
       rows: rows,
-      nextCursor: rows.length == pageSize
-          ? '${rows.last['habit_id']}|${rows.last['local_date']}'
-          : null,
+      nextCursor: rows.length == pageSize ? '${offset + rows.length}' : null,
     );
   }
 }
