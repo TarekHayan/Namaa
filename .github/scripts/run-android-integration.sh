@@ -20,12 +20,18 @@ case "${ANDROID_SUITE:-}" in
       integration_test/tasks_offline_sync_test.dart
     )
     ;;
-  habits-mind-maps)
+  habits-today)
     tests=(
       integration_test/habits_edit_delete_test.dart
       integration_test/habits_localized_route_test.dart
       integration_test/habits_offline_sync_test.dart
       integration_test/habits_streak_history_test.dart
+      integration_test/today_dashboard_test.dart
+      integration_test/today_sync_test.dart
+    )
+    ;;
+  mind-maps)
+    tests=(
       integration_test/mind_maps_editor_test.dart
       integration_test/mind_maps_library_test.dart
       integration_test/mind_maps_localized_route_test.dart
@@ -33,8 +39,6 @@ case "${ANDROID_SUITE:-}" in
       integration_test/mind_maps_staging_sync_test.dart
       integration_test/mind_maps_task_link_test.dart
       integration_test/mind_maps_viewport_test.dart
-      integration_test/today_dashboard_test.dart
-      integration_test/today_sync_test.dart
     )
     ;;
   *)

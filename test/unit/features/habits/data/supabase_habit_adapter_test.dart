@@ -165,6 +165,47 @@ void main() {
       expect((await reader.readAll(habit.accountId)).failureOrNull, isNotNull);
     },
   );
+
+  test(
+    'reader keeps a parent snapshot consistent during concurrent writes',
+    () async {
+      final laterHabit = Habit.create(
+        id: kHabitsTestOtherHabitId,
+        accountId: habit.accountId,
+        name: 'Later',
+        weekdays: {1},
+        revisionId: 'later-revision',
+        createdAt: at,
+        effectiveLocalDate: '2026-10-12',
+        utcOffsetMinutes: 120,
+      );
+      final laterDay = HabitDay.completed(
+        accountId: laterHabit.accountId,
+        habitId: laterHabit.id,
+        localDate: '2026-10-12',
+        completedAt: at,
+        earnedAgainstRevisionId: 'later-revision',
+        recordedUtcOffsetMinutes: 120,
+      );
+      final gateway = _Gateway(account: habit.accountId)
+        ..habitRows = [_habitRow(habit)]
+        ..dayRows = [_dayRow(day)];
+      gateway.afterFirstHabitPage = () {
+        gateway.habitRows.add(_habitRow(laterHabit));
+        gateway.dayRows.add(_dayRow(laterDay));
+      };
+      final reader = SupabaseHabitReader(gateway: gateway);
+      final first = await reader.readAll(habit.accountId);
+      expect(first.failureOrNull, isNull);
+      expect(first.valueOrNull!.habits, hasLength(1));
+      expect(first.valueOrNull!.days, hasLength(1));
+
+      final second = await reader.readAll(habit.accountId);
+      expect(second.failureOrNull, isNull);
+      expect(second.valueOrNull!.habits, hasLength(2));
+      expect(second.valueOrNull!.days, hasLength(2));
+    },
+  );
 }
 
 Map<String, dynamic> _habitRow(Habit habit) => {
@@ -191,6 +232,7 @@ final class _Gateway implements SupabaseHabitGateway {
   bool fail = false;
   bool wrongOwner = false;
   bool failDayPage = false;
+  void Function()? afterFirstHabitPage;
   List<Map<String, dynamic>> habitRows = [];
   List<Map<String, dynamic>> dayRows = [];
   @override
@@ -226,12 +268,13 @@ final class _Gateway implements SupabaseHabitGateway {
   }) async {
     final start = cursor == null ? 0 : int.parse(cursor);
     final rows = habitRows.skip(start).take(pageSize).toList();
-    return HabitRemotePage(
-      rows: rows,
-      nextCursor: start + rows.length < habitRows.length
-          ? '${start + rows.length}'
-          : null,
-    );
+    final nextCursor = start + rows.length < habitRows.length
+        ? '${start + rows.length}'
+        : null;
+    final afterPage = afterFirstHabitPage;
+    afterFirstHabitPage = null;
+    afterPage?.call();
+    return HabitRemotePage(rows: rows, nextCursor: nextCursor);
   }
 
   @override

@@ -174,7 +174,7 @@ echo 'All tests passed'
 class TodaySuiteSelectionTest(unittest.TestCase):
     def test_android_today_suites_are_selected_once_in_existing_group(self):
         script = (ROOT / ".github/scripts/run-android-integration.sh").read_text()
-        group = script.split("  habits-mind-maps)", 1)[1].split("    ;;", 1)[0]
+        group = script.split("  habits-today)", 1)[1].split("    ;;", 1)[0]
         for suite in ("today_dashboard", "today_sync"):
             self.assertEqual(group.count(f"integration_test/{suite}_test.dart"), 1)
         self.assertIn('Unknown Android integration suite:', script)

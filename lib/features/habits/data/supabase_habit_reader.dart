@@ -28,55 +28,11 @@ final class SupabaseHabitReader implements HabitRemoteReaderPort {
       final days = <HabitDay>[];
       final habitRowsById = <String, String>{};
       final dayRowsById = <String, String>{};
-      final habitCursors = <String>{};
-      String? cursor;
-      do {
-        final page = await _gateway.fetchHabitPage(
-          expectedAccountId: accountId,
-          pageSize: pageSize,
-          cursor: cursor,
-        );
-        if (page.rows.length > pageSize) {
-          throw StateError('Oversized Habit page');
-        }
-        for (final row in page.rows) {
-          if (row['owner'] != accountId) {
-            throw StateError('Foreign Habit owner');
-          }
-          final payload = Map<String, dynamic>.from(row['payload'] as Map);
-          if (payload['accountId'] != accountId ||
-              payload['id'] != row['id'] ||
-              !_sameInstant(payload['updatedAt'], row['updated_at']) ||
-              !_sameInstant(payload['deletedAt'], row['deleted_at'])) {
-            throw StateError('Habit page identity or version mismatch');
-          }
-          payload['accountId'] = row['owner'];
-          payload['id'] = row['id'];
-          payload['updatedAt'] = row['updated_at'];
-          payload['deletedAt'] = row['deleted_at'];
-          final id = row['id'] as String;
-          final fingerprint = jsonEncode(row);
-          final previous = habitRowsById[id];
-          if (previous != null) {
-            if (previous != fingerprint) {
-              throw StateError('Inconsistent repeated Habit page row');
-            }
-            continue;
-          }
-          habitRowsById[id] = fingerprint;
-          habits.add(_codec.decodeHabit(jsonEncode(payload)));
-        }
-        cursor = page.nextCursor;
-        if (page.rows.isEmpty && cursor != null) {
-          throw StateError('Empty Habit page has another cursor');
-        }
-        if (cursor != null && !habitCursors.add(cursor)) {
-          throw StateError('Repeated Habit cursor');
-        }
-      } while (cursor != null);
-
+      // Habit days have a remote foreign key to their parent. Reading days
+      // first prevents a parent created during this scan from being omitted
+      // from the later Habit scan on a concurrently written account.
       final dayCursors = <String>{};
-      cursor = null;
+      String? cursor;
       do {
         final page = await _gateway.fetchDayPage(
           expectedAccountId: accountId,
@@ -121,6 +77,57 @@ final class SupabaseHabitReader implements HabitRemoteReaderPort {
           throw StateError('Repeated HabitDay cursor');
         }
       } while (cursor != null);
+
+      final habitCursors = <String>{};
+      cursor = null;
+      do {
+        final page = await _gateway.fetchHabitPage(
+          expectedAccountId: accountId,
+          pageSize: pageSize,
+          cursor: cursor,
+        );
+        if (page.rows.length > pageSize) {
+          throw StateError('Oversized Habit page');
+        }
+        for (final row in page.rows) {
+          if (row['owner'] != accountId) {
+            throw StateError('Foreign Habit owner');
+          }
+          final payload = Map<String, dynamic>.from(row['payload'] as Map);
+          if (payload['accountId'] != accountId ||
+              payload['id'] != row['id'] ||
+              !_sameInstant(payload['updatedAt'], row['updated_at']) ||
+              !_sameInstant(payload['deletedAt'], row['deleted_at'])) {
+            throw StateError('Habit page identity or version mismatch');
+          }
+          payload['accountId'] = row['owner'];
+          payload['id'] = row['id'];
+          payload['updatedAt'] = row['updated_at'];
+          payload['deletedAt'] = row['deleted_at'];
+          final id = row['id'] as String;
+          final fingerprint = jsonEncode(row);
+          final previous = habitRowsById[id];
+          if (previous != null) {
+            if (previous != fingerprint) {
+              throw StateError('Inconsistent repeated Habit page row');
+            }
+            continue;
+          }
+          habitRowsById[id] = fingerprint;
+          habits.add(_codec.decodeHabit(jsonEncode(payload)));
+        }
+        cursor = page.nextCursor;
+        if (page.rows.isEmpty && cursor != null) {
+          throw StateError('Empty Habit page has another cursor');
+        }
+        if (cursor != null && !habitCursors.add(cursor)) {
+          throw StateError('Repeated Habit cursor');
+        }
+      } while (cursor != null);
+      final habitIds = habitRowsById.keys.toSet();
+      if (days.any((day) => !habitIds.contains(day.habitId))) {
+        throw StateError('HabitDay snapshot has a missing parent');
+      }
       return AppResult.success(HabitRemoteSnapshot(habits: habits, days: days));
     } catch (error) {
       return AppResult.failure(
