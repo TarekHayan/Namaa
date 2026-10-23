@@ -1744,6 +1744,48 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'The day changed. Review today\'s items before acting.'**
   String get todayStaleDay;
+
+  /// No description provided for @todayAgenda.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s agenda'**
+  String get todayAgenda;
+
+  /// No description provided for @todayTimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed'**
+  String get todayTimed;
+
+  /// No description provided for @todayUntimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Untimed'**
+  String get todayUntimed;
+
+  /// No description provided for @todayMinuteUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get todayMinuteUnit;
+
+  /// No description provided for @todayNoPriorityTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No urgent and important tasks due today or overdue.'**
+  String get todayNoPriorityTasks;
+
+  /// No description provided for @todayOpenMatrix.
+  ///
+  /// In en, this message translates to:
+  /// **'Open task matrix'**
+  String get todayOpenMatrix;
+
+  /// No description provided for @todayOpenOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Open overdue tasks'**
+  String get todayOpenOverdue;
 }
 
 class _FoundationLocalizationsDelegate

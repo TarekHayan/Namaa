@@ -13,6 +13,12 @@ abstract interface class TodayStrings {
   String get streak;
   String get doFirst;
   String get overdue;
+  String get agenda;
+  String get timed;
+  String get untimed;
+  String get noPriorityTasks;
+  String get openMatrix;
+  String get openOverdue;
   String get noTasks;
   String get noHabits;
   String get loading;
@@ -42,4 +48,5 @@ abstract interface class TodayStrings {
   String formatPercent(int value);
   String formatXp(int value);
   String formatTime(int minuteOfDay);
+  String formatDurationMinutes(int minutes);
 }

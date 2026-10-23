@@ -845,4 +845,26 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   @override
   String get todayStaleDay =>
       'تغير اليوم. راجع عناصر اليوم الحالي قبل التنفيذ.';
+
+  @override
+  String get todayAgenda => 'جدول اليوم';
+
+  @override
+  String get todayTimed => 'بموعد محدد';
+
+  @override
+  String get todayUntimed => 'بدون موعد محدد';
+
+  @override
+  String get todayMinuteUnit => 'دقيقة';
+
+  @override
+  String get todayNoPriorityTasks =>
+      'لا توجد مهام عاجلة ومهمة لليوم أو متأخرة.';
+
+  @override
+  String get todayOpenMatrix => 'فتح مصفوفة المهام';
+
+  @override
+  String get todayOpenOverdue => 'فتح المهام المتأخرة';
 }

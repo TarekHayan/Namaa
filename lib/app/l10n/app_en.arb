@@ -278,5 +278,12 @@
   "todaySaving": "Saving…",
   "todaySaveFailed": "Could not save. Check the item and try again.",
   "todayUncertain": "Save result is uncertain. Check the current item before trying again.",
-  "todayStaleDay": "The day changed. Review today's items before acting."
+  "todayStaleDay": "The day changed. Review today's items before acting.",
+  "todayAgenda": "Today's agenda",
+  "todayTimed": "Timed",
+  "todayUntimed": "Untimed",
+  "todayMinuteUnit": "min",
+  "todayNoPriorityTasks": "No urgent and important tasks due today or overdue.",
+  "todayOpenMatrix": "Open task matrix",
+  "todayOpenOverdue": "Open overdue tasks"
 }

@@ -26,7 +26,10 @@ import 'package:namma_project/features/today/application/today_tasks_port.dart';
 import 'package:namma_project/features/today/data/habits_today_adapter.dart';
 import 'package:namma_project/features/today/data/tasks_today_adapter.dart';
 import 'package:namma_project/features/today/data/xp_today_adapter.dart';
+import 'package:namma_project/features/today/domain/today_agenda.dart';
 import 'package:namma_project/features/today/domain/today_calendar.dart';
+import 'package:namma_project/features/today/domain/today_priority.dart';
+import 'package:namma_project/features/today/domain/today_projection.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/domain/today_section.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
@@ -264,6 +267,54 @@ void main() {
           dispatch = actions();
         }
       }
+      // A return from the owner must read its current Task, not a captured
+      // Today copy. The same stable ID feeds agenda and priority references.
+      final ownerRepository = DriftTaskRepository(
+        database: database,
+        codec: const TaskPayloadCodec(),
+      );
+      final currentTask = (await ownerRepository.readTask(
+        accountId: kTasksPreviewAccountId,
+        taskId: task.id,
+      )).valueOrNull!;
+      final renamed = currentTask.copyWith(
+        title: 'Edited in Tasks',
+        updatedAt: DateTime.utc(2026, 10, 12, 13),
+      );
+      expect(
+        (await ownerRepository.commitTask(
+          TaskWriteRequest(
+            task: renamed,
+            operationId: 'today-owner-edit',
+            kind: ChangeKind.update,
+            queuedAt: renamed.updatedAt,
+          ),
+        )).failureOrNull,
+        isNull,
+      );
+      final calendar = _Clock().sample(projectionRevision: 0);
+      final latest = (await TasksTodayAdapter(
+        ownerRepository,
+      ).watchTasks(kTasksPreviewAccountId).first).project(calendar);
+      final summary = TodayProjection.tasks(scope, calendar, latest);
+      expect(summary.items.single.title, 'Edited in Tasks');
+      expect(summary.items.single.taskId, task.id);
+      expect(
+        TodayAgenda.project(
+          day,
+          latest,
+          ownerId: kTasksPreviewAccountId,
+        ).untimed.single.taskId,
+        task.id,
+      );
+      expect(
+        TodayPriority.project(
+          kTasksPreviewAccountId,
+          day,
+          latest,
+        ).doFirst.single.taskId,
+        task.id,
+      );
       expect(await database.rawScalar('SELECT count(*) FROM xp_awards'), 1);
       expect(
         await database.rawScalar('SELECT count(*) FROM habit_day_records'),

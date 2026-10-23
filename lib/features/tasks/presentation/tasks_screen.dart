@@ -110,13 +110,16 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     return BlocBuilder<TasksCubit, TasksState>(
       bloc: widget.cubit,
       builder: (context, state) {
-        if (!_intentConsumed &&
-            state is TasksReady &&
-            widget.entryIntent != null) {
+        final entryIntent = widget.entryIntent;
+        if (!_intentConsumed && state is TasksReady && entryIntent != null) {
           _intentConsumed = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted || widget.accountId != accountId) return;
-            switch (widget.entryIntent) {
+            if (!mounted ||
+                widget.accountId != accountId ||
+                widget.entryIntent != entryIntent) {
+              return;
+            }
+            switch (entryIntent) {
               case OwnerEntryIntent.newTask:
                 final now = DateTime.now();
                 TaskEditor.show(

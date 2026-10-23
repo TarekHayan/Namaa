@@ -852,4 +852,26 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   @override
   String get todayStaleDay =>
       'The day changed. Review today\'s items before acting.';
+
+  @override
+  String get todayAgenda => 'Today\'s agenda';
+
+  @override
+  String get todayTimed => 'Timed';
+
+  @override
+  String get todayUntimed => 'Untimed';
+
+  @override
+  String get todayMinuteUnit => 'min';
+
+  @override
+  String get todayNoPriorityTasks =>
+      'No urgent and important tasks due today or overdue.';
+
+  @override
+  String get todayOpenMatrix => 'Open task matrix';
+
+  @override
+  String get todayOpenOverdue => 'Open overdue tasks';
 }

@@ -3,6 +3,7 @@ library;
 
 import 'today_calendar.dart';
 import 'today_models.dart';
+import 'today_priority.dart';
 import 'today_scope.dart';
 
 final class TodayTaskSummary {
@@ -54,34 +55,16 @@ abstract final class TodayProjection {
             seen.add(task.taskId),
       ),
     );
-    final seenPriority = <String>{};
-    final pending = rows
-        .where(
-          (task) =>
-              task.ownerId == scope.taskOwnerId &&
-              !task.isCompleted &&
-              task.isUrgentImportant &&
-              (task.scheduledLocalDate == calendar.localDate ||
-                  task.isOverdue) &&
-              seenPriority.add(task.taskId),
-        )
-        .toList();
-    // The owner's canonical order is retained when priorities tie.
-    pending.sort((a, b) => a.ownerOrder.compareTo(b.ownerOrder));
+    final priority = TodayPriority.project(
+      scope.taskOwnerId,
+      calendar.localDate,
+      rows,
+    );
     return TodayTaskSummary(
       items: items,
       completedCount: items.where((task) => task.isCompleted).length,
-      overdueCount: rows
-          .where(
-            (task) =>
-                task.ownerId == scope.taskOwnerId &&
-                task.isOverdue &&
-                !task.isCompleted,
-          )
-          .map((task) => task.taskId)
-          .toSet()
-          .length,
-      doFirst: List.unmodifiable(pending.take(3)),
+      overdueCount: priority.overdueCount,
+      doFirst: priority.doFirst,
     );
   }
 

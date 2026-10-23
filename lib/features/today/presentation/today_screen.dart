@@ -3,14 +3,17 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../domain/today_agenda.dart';
 import '../domain/today_projection.dart';
 import '../domain/today_section.dart';
 import 'today_cubit.dart';
 import 'today_state.dart';
 import 'today_strings.dart';
+import 'widgets/today_agenda_section.dart';
 import 'widgets/today_habit_list.dart';
+import 'widgets/today_overdue_section.dart';
+import 'widgets/today_priority_section.dart';
 import 'widgets/today_summary_section.dart';
-import 'widgets/today_task_list.dart';
 
 const Key kTodayScreenKey = Key('today_screen');
 const Key kTodayTasksNavigationKey = Key('today_tasks_navigation');
@@ -29,6 +32,8 @@ class TodayScreen extends StatefulWidget {
     required this.onPreferences,
     this.onNewTask,
     this.onNewHabit,
+    this.onTaskMatrix,
+    this.onTaskOverdue,
   });
   final TodayCubit cubit;
   final TodayStrings Function(BuildContext) stringsResolver;
@@ -38,6 +43,8 @@ class TodayScreen extends StatefulWidget {
   final VoidCallback onPreferences;
   final VoidCallback? onNewTask;
   final VoidCallback? onNewHabit;
+  final VoidCallback? onTaskMatrix;
+  final VoidCallback? onTaskOverdue;
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
@@ -138,44 +145,45 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
                           content: (summary) => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (summary.totalCount == 0)
-                                Text(strings.noTasks)
-                              else ...[
+                              if (summary.totalCount > 0) ...[
                                 Text(
                                   '${strings.formatCount(summary.completedCount)}/${strings.formatCount(summary.totalCount)} · ${strings.formatPercent(summary.percent!)}',
                                 ),
                                 Text(
                                   '${strings.open}: ${strings.formatCount(summary.openCount)} · ${strings.completed}: ${strings.formatCount(summary.completedCount)}',
                                 ),
-                                TodayTaskList(
-                                  tasks: summary.items,
-                                  strings: strings,
-                                  actions: state.taskActions,
-                                  allowActions:
-                                      state.tasks.status ==
-                                      TodaySectionStatus.available,
-                                  onSetCompleted:
-                                      state.tasks.status ==
-                                          TodaySectionStatus.available
-                                      ? widget.cubit.setTaskCompleted
-                                      : null,
-                                ),
                               ],
-                              Text(
-                                '${strings.overdue}: ${strings.formatCount(summary.overdueCount)}',
+                              TodayAgendaSection(
+                                agenda: TodayAgenda.project(
+                                  state.calendar.localDate,
+                                  summary.items,
+                                  ownerId: state.scope.taskOwnerId,
+                                ),
+                                strings: strings,
+                                onOpenTasks: widget.onTasks,
+                                actions: state.taskActions,
+                                allowActions:
+                                    state.tasks.status ==
+                                    TodaySectionStatus.available,
+                                onSetCompleted:
+                                    state.tasks.status ==
+                                        TodaySectionStatus.available
+                                    ? widget.cubit.setTaskCompleted
+                                    : null,
                               ),
-                              if (summary.doFirst.isNotEmpty) ...[
-                                Text(
-                                  strings.doFirst,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                                TodayTaskList(
-                                  tasks: summary.doFirst,
-                                  strings: strings,
-                                ),
-                              ],
+                              TodayPrioritySection(
+                                tasks: summary.doFirst,
+                                strings: strings,
+                                onOpenTasks: widget.onTasks,
+                                onOpenMatrix:
+                                    widget.onTaskMatrix ?? widget.onTasks,
+                              ),
+                              TodayOverdueSection(
+                                count: summary.overdueCount,
+                                strings: strings,
+                                onOpenOverdue:
+                                    widget.onTaskOverdue ?? widget.onTasks,
+                              ),
                             ],
                           ),
                         ),

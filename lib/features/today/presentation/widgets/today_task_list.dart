@@ -14,12 +14,14 @@ class TodayTaskList extends StatelessWidget {
     this.actions = const {},
     this.onSetCompleted,
     this.allowActions = false,
+    this.onOpenTasks,
   });
   final List<TodayTaskReference> tasks;
   final TodayStrings strings;
   final Map<String, TodayActionFeedback> actions;
   final void Function(String, bool)? onSetCompleted;
   final bool allowActions;
+  final VoidCallback? onOpenTasks;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -27,6 +29,7 @@ class TodayTaskList extends StatelessWidget {
       for (final task in tasks)
         ListTile(
           key: ValueKey('today_task_${task.taskId}'),
+          onTap: onOpenTasks,
           leading: Icon(
             task.isCompleted
                 ? Icons.check_circle_outline
@@ -38,6 +41,8 @@ class TodayTaskList extends StatelessWidget {
               strings.formatDate(task.scheduledLocalDate),
               if (task.scheduledMinuteOfDay != null)
                 strings.formatTime(task.scheduledMinuteOfDay!),
+              if (task.estimatedDurationMinutes != null)
+                strings.formatDurationMinutes(task.estimatedDurationMinutes!),
               if (task.isOverdue) strings.overdue,
             ].join(' · '),
           ),

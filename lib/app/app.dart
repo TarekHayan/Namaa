@@ -605,6 +605,16 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
       cubit: _cubit,
       stringsResolver: resolveTodayStrings,
       onTasks: () => unawaited(GoRouter.of(context).push<void>(kTasksRoute)),
+      onTaskMatrix: () => unawaited(
+        GoRouter.of(
+          context,
+        ).push<void>(kTasksRoute, extra: OwnerEntryIntent.taskMatrix),
+      ),
+      onTaskOverdue: () => unawaited(
+        GoRouter.of(
+          context,
+        ).push<void>(kTasksRoute, extra: OwnerEntryIntent.taskOverdue),
+      ),
       onHabits: () => unawaited(GoRouter.of(context).push<void>(kHabitsRoute)),
       onMindMaps: () =>
           unawaited(GoRouter.of(context).push<void>(kMindMapsRoute)),

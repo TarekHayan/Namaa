@@ -231,6 +231,7 @@ void main() {
     expect(find.text('0/1 · 0%'), findsOneWidget);
     expect(find.byType(Checkbox), findsNothing);
     await tester.tap(find.byKey(kTodayTasksNavigationKey));
+    await tester.scrollUntilVisible(find.byKey(kTodayHabitsNavigationKey), 250);
     await tester.tap(find.byKey(kTodayHabitsNavigationKey));
     await tester.tap(find.byKey(kTodayPreferencesKey));
     expect(taskOpens, 1);

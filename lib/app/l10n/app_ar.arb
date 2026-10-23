@@ -278,5 +278,12 @@
   "todaySaving": "جارٍ الحفظ…",
   "todaySaveFailed": "تعذر الحفظ. راجع العنصر وحاول مرة أخرى.",
   "todayUncertain": "نتيجة الحفظ غير مؤكدة. راجع حالة العنصر قبل المحاولة مجددًا.",
-  "todayStaleDay": "تغير اليوم. راجع عناصر اليوم الحالي قبل التنفيذ."
+  "todayStaleDay": "تغير اليوم. راجع عناصر اليوم الحالي قبل التنفيذ.",
+  "todayAgenda": "جدول اليوم",
+  "todayTimed": "بموعد محدد",
+  "todayUntimed": "بدون موعد محدد",
+  "todayMinuteUnit": "دقيقة",
+  "todayNoPriorityTasks": "لا توجد مهام عاجلة ومهمة لليوم أو متأخرة.",
+  "todayOpenMatrix": "فتح مصفوفة المهام",
+  "todayOpenOverdue": "فتح المهام المتأخرة"
 }

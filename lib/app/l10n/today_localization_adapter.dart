@@ -39,6 +39,18 @@ final class _AppTodayStrings implements TodayStrings {
   @override
   String get overdue => _l10n.todayOverdue;
   @override
+  String get agenda => _l10n.todayAgenda;
+  @override
+  String get timed => _l10n.todayTimed;
+  @override
+  String get untimed => _l10n.todayUntimed;
+  @override
+  String get noPriorityTasks => _l10n.todayNoPriorityTasks;
+  @override
+  String get openMatrix => _l10n.todayOpenMatrix;
+  @override
+  String get openOverdue => _l10n.todayOpenOverdue;
+  @override
   String get noTasks => _l10n.todayNoTasks;
   @override
   String get noHabits => _l10n.todayNoHabits;
@@ -102,4 +114,7 @@ final class _AppTodayStrings implements TodayStrings {
   String formatTime(int minuteOfDay) => DateFormat.jm(
     _code,
   ).format(DateTime(2026, 1, 1, minuteOfDay ~/ 60, minuteOfDay % 60));
+  @override
+  String formatDurationMinutes(int minutes) =>
+      '${formatCount(minutes)} ${_l10n.todayMinuteUnit}';
 }
