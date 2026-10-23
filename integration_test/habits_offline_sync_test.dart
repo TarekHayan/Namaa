@@ -19,6 +19,7 @@ import 'package:namma_project/features/habits/domain/habit.dart';
 import 'package:namma_project/features/habits/domain/habit_day.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import 'package:namma_project/features/habits/presentation/habits_state.dart';
+import 'package:namma_project/features/today/presentation/today_screen.dart';
 
 import '../test/support/foundation_test_support.dart';
 import '../test/support/habits_test_support.dart';
@@ -312,6 +313,15 @@ void main() {
   testWidgets('debug preview navigation completes and restores one due habit', (
     tester,
   ) async {
+    Future<void> openHabitsFromToday() async {
+      final entry = find.byKey(kTodayHabitsNavigationKey);
+      await tester.scrollUntilVisible(entry, 200);
+      await tester.ensureVisible(entry);
+      await tester.pump();
+      await tester.tap(entry);
+      await tester.pumpAndSettle();
+    }
+
     Future<void> waitForPreviewHabit({required bool completed}) async {
       final cubit = tester
           .widget<HabitsScreen>(find.byType(HabitsScreen))
@@ -349,9 +359,8 @@ void main() {
     await configure();
     await tester.pumpWidget(const FoundationApp());
     await tester.pumpAndSettle();
-    expect(find.byKey(kFoundationHabitsNavigationKey), findsOneWidget);
-    await tester.tap(find.byKey(kFoundationHabitsNavigationKey));
-    await tester.pumpAndSettle();
+    expect(find.byKey(kTodayScreenKey), findsOneWidget);
+    await openHabitsFromToday();
     expect(find.byKey(kHabitsEmptyKey), findsOneWidget);
     await tester.tap(find.byKey(kHabitAddButtonKey));
     await tester.pumpAndSettle();
@@ -373,8 +382,7 @@ void main() {
     await configure();
     await tester.pumpWidget(const FoundationApp());
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(kFoundationHabitsNavigationKey));
-    await tester.pumpAndSettle();
+    await openHabitsFromToday();
     await waitForPreviewHabit(completed: true);
     expect(find.text('Preview reading'), findsOneWidget);
     expect(find.byIcon(Icons.undo), findsOneWidget);

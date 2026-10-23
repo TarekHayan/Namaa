@@ -527,7 +527,8 @@ jobs:
         run: python3 .github/scripts/prefetch-ios-sqlite.py --arch "${{ runner.arch }}"
 
       - name: Boot an available iPhone simulator
-        timeout-minutes: 10
+        # Hosted images may spend over ten minutes migrating simulator data.
+        timeout-minutes: 20
         id: simulator
         shell: bash
         run: |
