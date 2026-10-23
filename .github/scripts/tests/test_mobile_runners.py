@@ -131,7 +131,7 @@ echo 'All tests passed'
                 stub.chmod(0o755)
             env = dict(os.environ)
             env.update(
-                ANDROID_SUITE="foundation-tasks",
+                ANDROID_SUITE="tasks",
                 PROBE_BIN=bash_path(probe),
                 PROBE_CALLS=bash_path(probe / "calls"),
                 PROBE_MARKER=bash_path(probe / "marker"),
@@ -157,7 +157,7 @@ echo 'All tests passed'
     def test_sigkill_before_test_retries_once_then_runs_suite(self):
         result, calls = self.run_probe("startup-kill")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(len(calls), 11)
+        self.assertEqual(len(calls), 5)
         self.assertEqual(calls[0], calls[1])
 
     def test_real_test_failure_is_not_retried(self):
@@ -169,6 +169,28 @@ echo 'All tests passed'
         result, calls = self.run_probe("test-kill")
         self.assertEqual(result.returncode, 137, result.stdout + result.stderr)
         self.assertEqual(len(calls), 1)
+
+
+class TodaySuiteSelectionTest(unittest.TestCase):
+    def test_android_today_suites_are_selected_once_in_existing_group(self):
+        script = (ROOT / ".github/scripts/run-android-integration.sh").read_text()
+        group = script.split("  habits-today)", 1)[1].split("    ;;", 1)[0]
+        for suite in ("today_dashboard", "today_sync"):
+            self.assertEqual(group.count(f"integration_test/{suite}_test.dart"), 1)
+        self.assertIn('Unknown Android integration suite:', script)
+        self.assertIn('VMServiceFlutterDriver: Connected to Flutter application.', script)
+
+    def test_ios_today_suite_names_map_to_existing_xctest_harness(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        for suite in ("today-dashboard", "today-sync"):
+            self.assertIn(f'"{suite}"', workflow)
+        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*)', workflow)
+        self.assertIn('run-ios-integration.py "$result_bundle"', workflow)
+        self.assertIn('CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-', workflow)
+        self.assertIn('stabilizeNativeIosSemantics(binding)', workflow)
+        runner = (ROOT / ".github/scripts/run-ios-integration.py").read_text()
+        self.assertIn('totalTestCount', runner)
+        self.assertIn('passedTests', runner)
 
 
 if __name__ == "__main__":

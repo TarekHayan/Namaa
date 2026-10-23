@@ -107,6 +107,132 @@ abstract class FoundationLocalizations {
   /// **'Namaa'**
   String get appTitle;
 
+  /// No description provided for @todayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayTitle;
+
+  /// No description provided for @todayXp.
+  ///
+  /// In en, this message translates to:
+  /// **'XP earned today'**
+  String get todayXp;
+
+  /// No description provided for @todayOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get todayOpen;
+
+  /// No description provided for @todayCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get todayCompleted;
+
+  /// No description provided for @todayStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get todayStreak;
+
+  /// No description provided for @todayDoFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with what matters'**
+  String get todayDoFirst;
+
+  /// No description provided for @todayOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get todayOverdue;
+
+  /// No description provided for @todayNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks scheduled today'**
+  String get todayNoTasks;
+
+  /// No description provided for @todayNoHabits.
+  ///
+  /// In en, this message translates to:
+  /// **'No habits due today'**
+  String get todayNoHabits;
+
+  /// No description provided for @todayShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get todayShowMore;
+
+  /// No description provided for @todayLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading this section…'**
+  String get todayLoading;
+
+  /// No description provided for @todaySourceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This section is unavailable right now.'**
+  String get todaySourceUnavailable;
+
+  /// No description provided for @todayOutdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing older information. Try again to update it.'**
+  String get todayOutdated;
+
+  /// No description provided for @todayPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get todayPreferences;
+
+  /// No description provided for @todayLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get todayLanguage;
+
+  /// No description provided for @todayAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get todayAppearance;
+
+  /// No description provided for @todayEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get todayEnglish;
+
+  /// No description provided for @todayArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'العربية'**
+  String get todayArabic;
+
+  /// No description provided for @todaySystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get todaySystem;
+
+  /// No description provided for @todayLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get todayLight;
+
+  /// No description provided for @todayDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get todayDark;
+
   /// No description provided for @foundationReady.
   ///
   /// In en, this message translates to:
@@ -1564,6 +1690,108 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers'**
   String get mindMapKeyboardHelp;
+
+  /// No description provided for @todayNewTask.
+  ///
+  /// In en, this message translates to:
+  /// **'New task'**
+  String get todayNewTask;
+
+  /// No description provided for @todayNewHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'New habit'**
+  String get todayNewHabit;
+
+  /// No description provided for @todayCompleteTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete task'**
+  String get todayCompleteTask;
+
+  /// No description provided for @todayReopenTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen task'**
+  String get todayReopenTask;
+
+  /// No description provided for @todayCompleteHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete habit'**
+  String get todayCompleteHabit;
+
+  /// No description provided for @todayUndoHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo habit'**
+  String get todayUndoHabit;
+
+  /// No description provided for @todaySaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get todaySaving;
+
+  /// No description provided for @todaySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Check the item and try again.'**
+  String get todaySaveFailed;
+
+  /// No description provided for @todayUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'Save result is uncertain. Check the current item before trying again.'**
+  String get todayUncertain;
+
+  /// No description provided for @todayStaleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'The day changed. Review today\'s items before acting.'**
+  String get todayStaleDay;
+
+  /// No description provided for @todayAgenda.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s agenda'**
+  String get todayAgenda;
+
+  /// No description provided for @todayTimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed'**
+  String get todayTimed;
+
+  /// No description provided for @todayUntimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Untimed'**
+  String get todayUntimed;
+
+  /// No description provided for @todayMinuteUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get todayMinuteUnit;
+
+  /// No description provided for @todayNoPriorityTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No urgent and important tasks due today or overdue.'**
+  String get todayNoPriorityTasks;
+
+  /// No description provided for @todayOpenMatrix.
+  ///
+  /// In en, this message translates to:
+  /// **'Open task matrix'**
+  String get todayOpenMatrix;
+
+  /// No description provided for @todayOpenOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Open overdue tasks'**
+  String get todayOpenOverdue;
 }
 
 class _FoundationLocalizationsDelegate

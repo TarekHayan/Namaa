@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/habits_strings_adapter.dart';
+import 'package:namma_project/app/routing/owner_entry_intent.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/habits/application/habit_commands.dart';
 import 'package:namma_project/features/habits/application/habit_repository.dart';
@@ -16,6 +17,49 @@ import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import '../../../support/habits_test_support.dart';
 
 void main() {
+  testWidgets(
+    'new-Habit intent opens the owner form once; cancel creates nothing',
+    (tester) async {
+      final repository = _WidgetHabitRepository();
+      final clock = HabitsTestClock();
+      final cubit = HabitsCubit(
+        repository: repository,
+        commands: HabitCommands(
+          repository: repository,
+          session: const HabitsPreviewSession(),
+          nowUtc: clock.utcNow,
+          localCalendar: clock.captureLocalCalendar,
+        ),
+        localCalendar: clock.captureLocalCalendar,
+      );
+      addTearDown(() async {
+        await cubit.close();
+        await repository.close();
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates:
+              FoundationLocalizations.localizationsDelegates,
+          supportedLocales: FoundationLocalizations.supportedLocales,
+          home: HabitsScreen(
+            cubit: cubit,
+            accountId: kHabitsPreviewAccountId,
+            stringsResolver: resolveHabitsStrings,
+            entryIntent: OwnerEntryIntent.newHabit,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(kHabitNameFieldKey), findsOneWidget);
+      Navigator.of(tester.element(find.byKey(kHabitNameFieldKey))).pop();
+      await tester.pumpAndSettle();
+      expect(find.byKey(kHabitNameFieldKey), findsNothing);
+      expect(repository._habits, isEmpty);
+      await tester.pump();
+      expect(find.byKey(kHabitNameFieldKey), findsNothing);
+    },
+  );
+
   testWidgets('empty, create validation, complete and undo are accessible', (
     tester,
   ) async {
@@ -77,6 +121,10 @@ void main() {
 }
 
 final class _WidgetHabitRepository implements HabitRepository {
+  @override
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  ) => action();
   final Map<String, Habit> _habits = {};
   final Map<String, HabitDay> _days = {};
   final StreamController<List<Habit>> _habitChanges =

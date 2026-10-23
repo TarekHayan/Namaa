@@ -334,12 +334,22 @@ void main() {
         store: localB,
         localStore: DriftLocalStore(databaseB),
       );
+      final inbound = await reconciler.reconcile(
+        accountId: ownerId,
+        remote: snapshot,
+      );
+      final habitIds = snapshot.habits.map((habit) => habit.id).toSet();
+      final orphanDays = snapshot.days
+          .where((day) => !habitIds.contains(day.habitId))
+          .length;
       expect(
-        (await reconciler.reconcile(
-          accountId: ownerId,
-          remote: snapshot,
-        )).failureOrNull,
+        inbound.failureOrNull,
         isNull,
+        reason:
+            'Habit staging inbound failed: '
+            '${inbound.failureOrNull?.technicalCause}; '
+            'habits=${snapshot.habits.length}, days=${snapshot.days.length}, '
+            'orphanDays=$orphanDays',
       );
       expect(
         (await localB.readHabit(

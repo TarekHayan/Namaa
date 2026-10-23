@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/tasks_strings_adapter.dart';
+import 'package:namma_project/app/routing/owner_entry_intent.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
@@ -92,6 +93,31 @@ void main() {
     expect(saved.estimatedDurationMinutes, 30);
     expect(find.byKey(ValueKey<String>('task-${saved.id}')), findsOneWidget);
   });
+
+  taskTestWidgets(
+    'new-Task entry intent opens owner editor once and cancel writes nothing',
+    (tester) async {
+      await _pumpTasks(
+        tester,
+        cubit: cubit,
+        entryIntent: OwnerEntryIntent.newTask,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(kTaskTitleFieldKey), findsOneWidget);
+      final editor = tester.widget<TaskEditor>(find.byType(TaskEditor));
+      final now = DateTime.now();
+      expect(
+        editor.initialScheduledDate,
+        DateTime(now.year, now.month, now.day),
+      );
+      Navigator.of(tester.element(find.byType(TaskEditor))).pop();
+      await tester.pumpAndSettle();
+      expect(find.byKey(kTaskTitleFieldKey), findsNothing);
+      expect(repository.tasks, isEmpty);
+      await tester.pump();
+      expect(find.byKey(kTaskTitleFieldKey), findsNothing);
+    },
+  );
 
   taskTestWidgets(
     'blank title shows localized validation and persists nothing',
@@ -404,6 +430,7 @@ Future<void> _pumpTasks(
   Size size = const Size(800, 700),
   Locale locale = const Locale('en'),
   CloudSessionPort? session,
+  OwnerEntryIntent? entryIntent,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -420,6 +447,7 @@ Future<void> _pumpTasks(
         accountId: accountId,
         stringsResolver: resolveTasksStrings,
         session: session,
+        entryIntent: entryIntent,
       ),
     ),
   );

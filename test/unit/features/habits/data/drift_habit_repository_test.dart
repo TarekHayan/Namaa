@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/domain/failures/app_failure.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/habits/application/habit_repository.dart';
 import 'package:namma_project/features/habits/data/drift_habit_repository.dart';
 import 'package:namma_project/features/habits/data/habit_payload_codec.dart';
@@ -32,6 +34,70 @@ void main() {
     await database.close();
     path.dispose();
   });
+
+  test(
+    'failed owner transaction rolls back nested day and outbox writes',
+    () async {
+      final habit = Habit.create(
+        id: kHabitsTestHabitId,
+        accountId: kHabitsTestAccountA,
+        name: 'Read',
+        weekdays: {1},
+        revisionId: kHabitsTestRevisionId,
+        createdAt: at,
+        effectiveLocalDate: '2026-10-12',
+        utcOffsetMinutes: 120,
+      );
+      expect(
+        (await repository.commitHabit(
+          HabitWriteRequest(
+            habit: habit,
+            operationId: kHabitsTestOperationId,
+            kind: ChangeKind.create,
+            queuedAt: at,
+          ),
+        )).failureOrNull,
+        isNull,
+      );
+      final day = HabitDay.completed(
+        accountId: habit.accountId,
+        habitId: habit.id,
+        localDate: '2026-10-12',
+        completedAt: at,
+        earnedAgainstRevisionId: kHabitsTestRevisionId,
+        recordedUtcOffsetMinutes: 120,
+      );
+
+      final result = await repository.runInTransaction<void>(() async {
+        final saved = await repository.commitDay(
+          HabitDayWriteRequest(
+            day: day,
+            operationId: 'rolled-back-day',
+            kind: ChangeKind.create,
+            queuedAt: at,
+          ),
+        );
+        expect(saved.failureOrNull, isNull);
+        return AppResult.failure(
+          AppFailure.recoverable(
+            category: AppFailureCategory.validation,
+            messageKey: 'test.reject',
+            occurredAt: at,
+          ),
+        );
+      });
+
+      expect(result.failureOrNull?.messageKey, 'test.reject');
+      expect(
+        await database.rawScalar('SELECT count(*) FROM habit_day_records'),
+        0,
+      );
+      expect(
+        await database.rawScalar('SELECT count(*) FROM pending_changes'),
+        1,
+      );
+    },
+  );
 
   test(
     'habit and day writes queue stable operations and isolate accounts',

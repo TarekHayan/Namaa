@@ -64,5 +64,24 @@ fi
         self.assertEqual(self.reserve("", 1)[0], 1)
 
 
+class TodayCiRegistrationTest(unittest.TestCase):
+    def test_today_paths_and_desktop_suites_are_registered(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        self.assertIn("specs/006-today-dashboard/**", workflow)
+        for suite in ("today_dashboard", "today_sync"):
+            self.assertIn(f"integration_test/{suite}_test.dart", workflow)
+        self.assertIn("integration_test/today_dashboard_test.dart", workflow)
+        self.assertIn("integration_test/today_sync_test.dart", workflow)
+
+    def test_existing_ci_policy_and_port_guard_remain(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        self.assertIn("pull_request:", workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertNotIn("\n  push:", workflow)
+        self.assertIn("foundation-gate:", workflow)
+        self.assertIn("reserve-supabase-ports.sh", workflow)
+        self.assertNotIn("today_performance_test.dart", workflow)
+
+
 if __name__ == "__main__":
     unittest.main()

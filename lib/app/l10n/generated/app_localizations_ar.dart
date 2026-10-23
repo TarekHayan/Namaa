@@ -12,6 +12,69 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get appTitle => 'نماء';
 
   @override
+  String get todayTitle => 'اليوم';
+
+  @override
+  String get todayXp => 'نقاط اليوم';
+
+  @override
+  String get todayOpen => 'المتبقي';
+
+  @override
+  String get todayCompleted => 'المكتمل';
+
+  @override
+  String get todayStreak => 'سلسلة الإنجاز';
+
+  @override
+  String get todayDoFirst => 'ابدأ بالأهم';
+
+  @override
+  String get todayOverdue => 'المتأخر';
+
+  @override
+  String get todayNoTasks => 'لا توجد مهام مجدولة اليوم';
+
+  @override
+  String get todayNoHabits => 'لا توجد عادات مستحقة اليوم';
+
+  @override
+  String get todayShowMore => 'عرض المزيد';
+
+  @override
+  String get todayLoading => 'جارٍ تحميل هذا القسم…';
+
+  @override
+  String get todaySourceUnavailable => 'هذا القسم غير متاح الآن.';
+
+  @override
+  String get todayOutdated => 'المعلومات المعروضة قديمة. حاول مجددًا لتحديثها.';
+
+  @override
+  String get todayPreferences => 'التفضيلات';
+
+  @override
+  String get todayLanguage => 'اللغة';
+
+  @override
+  String get todayAppearance => 'المظهر';
+
+  @override
+  String get todayEnglish => 'English';
+
+  @override
+  String get todayArabic => 'العربية';
+
+  @override
+  String get todaySystem => 'حسب النظام';
+
+  @override
+  String get todayLight => 'فاتح';
+
+  @override
+  String get todayDark => 'داكن';
+
+  @override
   String get foundationReady => 'نماء جاهز';
 
   @override
@@ -753,4 +816,58 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   @override
   String get mindMapKeyboardHelp =>
       'لوحة المفاتيح: الأسهم للتحريك، زائد وناقص للتكبير والتصغير، F لاحتواء الخريطة، C للتوسيط';
+
+  @override
+  String get todayNewTask => 'مهمة جديدة';
+
+  @override
+  String get todayNewHabit => 'عادة جديدة';
+
+  @override
+  String get todayCompleteTask => 'إنجاز المهمة';
+
+  @override
+  String get todayReopenTask => 'إعادة فتح المهمة';
+
+  @override
+  String get todayCompleteHabit => 'إنجاز العادة';
+
+  @override
+  String get todayUndoHabit => 'التراجع عن إنجاز العادة';
+
+  @override
+  String get todaySaving => 'جارٍ الحفظ…';
+
+  @override
+  String get todaySaveFailed => 'تعذر الحفظ. راجع العنصر وحاول مرة أخرى.';
+
+  @override
+  String get todayUncertain =>
+      'نتيجة الحفظ غير مؤكدة. راجع حالة العنصر قبل المحاولة مجددًا.';
+
+  @override
+  String get todayStaleDay =>
+      'تغير اليوم. راجع عناصر اليوم الحالي قبل التنفيذ.';
+
+  @override
+  String get todayAgenda => 'جدول اليوم';
+
+  @override
+  String get todayTimed => 'بموعد محدد';
+
+  @override
+  String get todayUntimed => 'بدون موعد محدد';
+
+  @override
+  String get todayMinuteUnit => 'دقيقة';
+
+  @override
+  String get todayNoPriorityTasks =>
+      'لا توجد مهام عاجلة ومهمة لليوم أو متأخرة.';
+
+  @override
+  String get todayOpenMatrix => 'فتح مصفوفة المهام';
+
+  @override
+  String get todayOpenOverdue => 'فتح المهام المتأخرة';
 }

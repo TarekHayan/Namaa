@@ -19,6 +19,10 @@ on:
         description: 'Include Linux in a focused run without satisfying the final gate'
         type: boolean
         default: false
+      include_macos:
+        description: 'Run only macOS Today staging sync in a focused run'
+        type: boolean
+        default: false
   pull_request:
     branches:
       - develop
@@ -36,6 +40,7 @@ on:
       - 'specs/003-namaa-tasks/**'
       - 'specs/004-habits/**'
       - 'specs/005-mind-maps/**'
+      - 'specs/006-today-dashboard/**'
       - 'supabase/**'
       - 'test/**'
       - 'test_driver/**'
@@ -115,7 +120,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: ${{ fromJSON(inputs.mobile_only && inputs.android_suites || '["foundation-tasks","habits-mind-maps"]') }}
+        suite: ${{ fromJSON(inputs.mobile_only && inputs.android_suites || '["foundation","tasks","habits-today","mind-maps"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -146,6 +151,10 @@ jobs:
           yes | "$sdkmanager_path" --licenses >/dev/null || true
           "$sdkmanager_path" 'platforms;android-36'
 
+      - name: Prepare and verify Flutter NDK with isolated download retries
+        timeout-minutes: 12
+        run: python3 .github/scripts/prepare-android-ndk.py
+
       - name: Prepare and verify Android emulator with bounded download retries
         timeout-minutes: 8
         run: python3 .github/scripts/prepare-android-emulator.py
@@ -173,7 +182,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run Android Foundation and Task integration suite
+      - name: Run Android integration suite
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         env:
           ANDROID_SUITE: ${{ matrix.suite }}
@@ -271,6 +280,7 @@ jobs:
               integration_test/mind_maps_viewport_test.dart
               integration_test/mind_maps_offline_sync_test.dart
               integration_test/mind_maps_localized_route_test.dart
+              integration_test/today_dashboard_test.dart
             )
             for test_file in "${tests[@]}"; do
               flutter test --no-pub \
@@ -299,6 +309,15 @@ jobs:
               --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
               --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
               -d linux integration_test/mind_maps_staging_sync_test.dart \
+              --reporter expanded
+            flutter test --no-pub \
+              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+              -d linux integration_test/today_sync_test.dart \
               --reporter expanded
           '
 
@@ -356,7 +375,8 @@ jobs:
             'integration_test/mind_maps_task_link_test.dart',
             'integration_test/mind_maps_viewport_test.dart',
             'integration_test/mind_maps_offline_sync_test.dart',
-            'integration_test/mind_maps_localized_route_test.dart'
+            'integration_test/mind_maps_localized_route_test.dart',
+            'integration_test/today_dashboard_test.dart'
           )
           foreach ($test in $tests) {
             flutter test --no-pub -d windows $test --reporter expanded
@@ -382,9 +402,18 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD" `
             -d windows integration_test/mind_maps_staging_sync_test.dart --reporter expanded
           if ($LASTEXITCODE -ne 0) { throw 'Mind Maps staging sync failed on Windows' }
+          flutter test --no-pub `
+            --dart-define="NAMAA_SUPABASE_URL=$env:NAMAA_STAGING_SUPABASE_URL" `
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$env:NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$env:NAMAA_STAGING_TEST_USER_A_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$env:NAMAA_STAGING_TEST_USER_A_PASSWORD" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$env:NAMAA_STAGING_TEST_USER_B_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD" `
+            -d windows integration_test/today_sync_test.dart --reporter expanded
+          if ($LASTEXITCODE -ne 0) { throw 'Today staging sync failed on Windows' }
 
   macos:
-    if: ${{ !inputs.mobile_only }}
+    if: ${{ !inputs.mobile_only || inputs.include_macos }}
     name: macOS integration
     runs-on: macos-latest
     timeout-minutes: 60
@@ -411,6 +440,7 @@ jobs:
       - name: Run macOS Foundation and Task integration entry points
         shell: bash
         env:
+          FOCUSED_MACOS: ${{ inputs.mobile_only }}
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
           NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
           NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
@@ -419,6 +449,17 @@ jobs:
           NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
         run: |
           set -euo pipefail
+          if [[ "$FOCUSED_MACOS" == "true" ]]; then
+            flutter test --no-pub \
+              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+              -d macos integration_test/today_sync_test.dart --reporter expanded
+            exit 0
+          fi
           tests=(
             integration_test/foundation_migration_test.dart
             integration_test/foundation_offline_test.dart
@@ -438,6 +479,7 @@ jobs:
             integration_test/mind_maps_viewport_test.dart
             integration_test/mind_maps_offline_sync_test.dart
             integration_test/mind_maps_localized_route_test.dart
+            integration_test/today_dashboard_test.dart
           )
           for test_file in "${tests[@]}"; do
             flutter test --no-pub -d macos "$test_file" --reporter expanded
@@ -462,6 +504,15 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
             -d macos integration_test/mind_maps_staging_sync_test.dart \
             --reporter expanded
+          flutter test --no-pub \
+            --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+            -d macos integration_test/today_sync_test.dart \
+            --reporter expanded
 
   ios:
     if: ${{ !inputs.mobile_only || inputs.ios_suites != '[]' }}
@@ -473,7 +524,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        suite: ${{ fromJSON(inputs.mobile_only && inputs.ios_suites || '["migration","offline","platform","sync","staging-supabase","tasks-offline-sync","tasks-completion-sync","tasks-checklist-history","tasks-localized-route","habits-offline-sync","habits-streak-history","habits-edit-delete","habits-localized-route","mind-maps-library","mind-maps-editor","mind-maps-task-link","mind-maps-viewport","mind-maps-offline-sync","mind-maps-localized-route","mind-maps-staging-sync"]') }}
+        suite: ${{ fromJSON(inputs.mobile_only && inputs.ios_suites || '["migration","offline","platform","sync","staging-supabase","tasks-offline-sync","tasks-completion-sync","tasks-checklist-history","tasks-localized-route","habits-offline-sync","habits-streak-history","habits-edit-delete","habits-localized-route","mind-maps-library","mind-maps-editor","mind-maps-task-link","mind-maps-viewport","mind-maps-offline-sync","mind-maps-localized-route","mind-maps-staging-sync","today-dashboard","today-sync"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -496,7 +547,8 @@ jobs:
         run: python3 .github/scripts/prefetch-ios-sqlite.py --arch "${{ runner.arch }}"
 
       - name: Boot an available iPhone simulator
-        timeout-minutes: 10
+        # Hosted images may spend over ten minutes migrating simulator data.
+        timeout-minutes: 20
         id: simulator
         shell: bash
         run: |
@@ -525,7 +577,7 @@ jobs:
             migration|offline|platform|sync|staging-supabase)
               test_file="integration_test/foundation_${IOS_SUITE//-/_}_test.dart"
               ;;
-            tasks-*|habits-*|mind-maps-*)
+            tasks-*|habits-*|mind-maps-*|today-*)
               test_file="integration_test/${IOS_SUITE//-/_}_test.dart"
               ;;
             *) echo "Unknown iOS integration suite: $IOS_SUITE" >&2; exit 2 ;;

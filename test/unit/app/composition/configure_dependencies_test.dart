@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/composition/configure_dependencies.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
+import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.dart';
@@ -31,6 +32,11 @@ import 'package:namma_project/features/tasks/application/task_sync_service.dart'
 import 'package:namma_project/features/tasks/data/drift_task_repository.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
+import 'package:namma_project/features/today/application/today_calendar_port.dart';
+import 'package:namma_project/features/today/application/today_habits_port.dart';
+import 'package:namma_project/features/today/application/today_tasks_port.dart';
+import 'package:namma_project/features/today/application/today_xp_port.dart';
+import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/xp/application/award_ledger.dart';
 import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 
@@ -148,6 +154,16 @@ void main() {
         databasePathOverride: dbPath,
       );
       expect(getIt<CloudSessionPort>(), isA<TasksPreviewSession>());
+      expect(getIt<TodayTasksPort>(), isNotNull);
+      expect(getIt<TodayHabitsPort>(), isNotNull);
+      expect(getIt<TodayXpPort>(), isNotNull);
+      expect(getIt<TodayCalendarPort>(), isNotNull);
+      final todayScope = await getIt<TodayScopeResolver>().resolveInitial();
+      expect(todayScope?.taskOwnerId, kTasksPreviewAccountId);
+      expect(todayScope?.habitOwnerId, isNot(kTasksPreviewAccountId));
+      final todayCubit = getIt<TodayCubit>(param1: todayScope);
+      expect(todayCubit.state.scope, same(todayScope));
+      await todayCubit.close();
       expect(getIt<CloudSyncPort>(), isA<UnconfiguredCloudSync>());
       expect(getIt.isRegistered<TaskSyncService>(), isFalse);
       final session = getIt<CloudSessionPort>();
@@ -253,6 +269,12 @@ void main() {
 
       expect(getIt<LocalStorePort>(), isA<DriftLocalStore>());
       expect(getIt<CloudSessionPort>(), isA<SupabaseSessionAdapter>());
+      expect(getIt.isRegistered<TodayTasksPort>(), isTrue);
+      expect(getIt.isRegistered<TodayHabitsPort>(), isTrue);
+      expect(getIt.isRegistered<TodayXpPort>(), isTrue);
+      expect(getIt.isRegistered<TodayCalendarPort>(), isTrue);
+      expect(getIt.isRegistered<TodayCubit>(), isTrue);
+      expect(await getIt<TodayScopeResolver>().resolveInitial(), isNull);
       expect(getIt<CloudSyncPort>(), isA<EntityDispatchRouter>());
       expect(getIt<TaskRepository>(), isA<DriftTaskRepository>());
       expect(getIt<TaskCommands>(), isA<TaskCommands>());

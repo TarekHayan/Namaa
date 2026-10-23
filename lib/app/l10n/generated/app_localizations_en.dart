@@ -12,6 +12,70 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get appTitle => 'Namaa';
 
   @override
+  String get todayTitle => 'Today';
+
+  @override
+  String get todayXp => 'XP earned today';
+
+  @override
+  String get todayOpen => 'Open';
+
+  @override
+  String get todayCompleted => 'Completed';
+
+  @override
+  String get todayStreak => 'Current streak';
+
+  @override
+  String get todayDoFirst => 'Start with what matters';
+
+  @override
+  String get todayOverdue => 'Overdue';
+
+  @override
+  String get todayNoTasks => 'No tasks scheduled today';
+
+  @override
+  String get todayNoHabits => 'No habits due today';
+
+  @override
+  String get todayShowMore => 'Show more';
+
+  @override
+  String get todayLoading => 'Loading this section…';
+
+  @override
+  String get todaySourceUnavailable => 'This section is unavailable right now.';
+
+  @override
+  String get todayOutdated =>
+      'Showing older information. Try again to update it.';
+
+  @override
+  String get todayPreferences => 'Preferences';
+
+  @override
+  String get todayLanguage => 'Language';
+
+  @override
+  String get todayAppearance => 'Appearance';
+
+  @override
+  String get todayEnglish => 'English';
+
+  @override
+  String get todayArabic => 'العربية';
+
+  @override
+  String get todaySystem => 'System';
+
+  @override
+  String get todayLight => 'Light';
+
+  @override
+  String get todayDark => 'Dark';
+
+  @override
   String get foundationReady => 'Namaa is ready';
 
   @override
@@ -759,4 +823,58 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   @override
   String get mindMapKeyboardHelp =>
       'Keyboard: arrow keys pan, plus and minus zoom, F fits, C centers';
+
+  @override
+  String get todayNewTask => 'New task';
+
+  @override
+  String get todayNewHabit => 'New habit';
+
+  @override
+  String get todayCompleteTask => 'Complete task';
+
+  @override
+  String get todayReopenTask => 'Reopen task';
+
+  @override
+  String get todayCompleteHabit => 'Complete habit';
+
+  @override
+  String get todayUndoHabit => 'Undo habit';
+
+  @override
+  String get todaySaving => 'Saving…';
+
+  @override
+  String get todaySaveFailed => 'Could not save. Check the item and try again.';
+
+  @override
+  String get todayUncertain =>
+      'Save result is uncertain. Check the current item before trying again.';
+
+  @override
+  String get todayStaleDay =>
+      'The day changed. Review today\'s items before acting.';
+
+  @override
+  String get todayAgenda => 'Today\'s agenda';
+
+  @override
+  String get todayTimed => 'Timed';
+
+  @override
+  String get todayUntimed => 'Untimed';
+
+  @override
+  String get todayMinuteUnit => 'min';
+
+  @override
+  String get todayNoPriorityTasks =>
+      'No urgent and important tasks due today or overdue.';
+
+  @override
+  String get todayOpenMatrix => 'Open task matrix';
+
+  @override
+  String get todayOpenOverdue => 'Open overdue tasks';
 }

@@ -111,6 +111,10 @@ void main() {
 }
 
 final class _Repository implements HabitRepository {
+  @override
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  ) => action();
   final Map<String, Habit> habits = {};
   final Map<String, HabitDay> days = {};
   final StreamController<List<Habit>> _habits = StreamController.broadcast(

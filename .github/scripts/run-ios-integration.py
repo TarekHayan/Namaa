@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Bound a native XCTest run and require a nonempty, successful result bundle."""
+"""Bound native XCTest and require a nonempty, successful result bundle.
+
+The workflow maps suite names (including Today) to Dart entry points; this
+shared runner preserves the same native result requirement for every suite.
+"""
 
 import json
 import os
