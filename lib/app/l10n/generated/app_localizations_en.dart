@@ -917,6 +917,18 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get dashboardSampleBadge => 'SAMPLE DATA';
 
   @override
+  String get dashboardSidebarTagline => 'Space for a balanced day';
+
+  @override
+  String get dashboardComingSoon => 'Coming soon';
+
+  @override
+  String get dashboardPrayerShort => 'Prayer';
+
+  @override
+  String get dashboardMore => 'More';
+
+  @override
   String get dashboardPrayer => 'Prayer times';
 
   @override

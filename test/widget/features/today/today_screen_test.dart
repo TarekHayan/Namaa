@@ -14,6 +14,8 @@ import 'package:namma_project/features/today/domain/today_models.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_bottom_navigation.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 
 class _Clock implements TodayCalendarPort {
   @override
@@ -313,5 +315,85 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(kTodayMindMapsNavigationKey));
     expect(mapOpens, 1);
+  });
+
+  testWidgets('phone has bottom navigation and desktop has side navigation', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final tasks = _Tasks();
+    final habits = _Habits();
+    final xp = _Xp();
+    final cubit = TodayCubit(
+      scope: TodayScope.account(accountId: 'owner', generation: 1),
+      calendar: _Clock(),
+      tasks: tasks,
+      habits: habits,
+      xp: xp,
+    );
+    addTearDown(() async {
+      await cubit.close();
+      await tasks.controller.close();
+      await habits.controller.close();
+      await xp.controller.close();
+    });
+
+    var taskOpens = 0;
+    var mapOpens = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        home: TodayScreen(
+          cubit: cubit,
+          stringsResolver: resolveTodayStrings,
+          onTasks: () => taskOpens++,
+          onHabits: () {},
+          onMindMaps: () => mapOpens++,
+          onPreferences: () {},
+        ),
+      ),
+    );
+
+    tasks.controller.add(_TaskSnapshot());
+    habits.controller.add(_HabitSnapshot());
+    xp.controller.add([]);
+    await tester.pump();
+
+    expect(find.byKey(kTodayBottomNavigationKey), findsOneWidget);
+    expect(find.byKey(kTodaySidebarKey), findsNothing);
+    await tester.tap(find.byKey(kTodayBottomTasksKey));
+    expect(taskOpens, 1);
+
+    await tester.tap(find.byKey(kTodayBottomPrayerKey));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
+    Navigator.of(tester.element(find.byType(BottomSheet))).pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(kTodayBottomMoreKey));
+    await tester.pumpAndSettle();
+    expect(find.byKey(kTodayMoreMindMapsKey), findsOneWidget);
+    await tester.tap(find.byKey(kTodayMoreMindMapsKey));
+    await tester.pumpAndSettle();
+    expect(mapOpens, 1);
+
+    await tester.tap(find.byKey(kTodayBottomMoreKey));
+    await tester.pumpAndSettle();
+    expect(find.byKey(kTodayMorePreferencesKey), findsOneWidget);
+    await tester.tap(find.byKey(kTodayMorePreferencesKey));
+    await tester.pumpAndSettle();
+
+    tester.view.physicalSize = const Size(1440, 900);
+    await tester.pumpAndSettle();
+    expect(find.byKey(kTodayBottomNavigationKey), findsNothing);
+    expect(find.byKey(kTodaySidebarKey), findsOneWidget);
+    await tester.tap(find.byKey(kTodaySidebarTasksKey));
+    expect(taskOpens, 2);
+    expect(tester.takeException(), isNull);
   });
 }

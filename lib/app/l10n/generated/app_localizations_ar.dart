@@ -909,6 +909,18 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get dashboardSampleBadge => 'بيانات تجريبية';
 
   @override
+  String get dashboardSidebarTagline => 'مساحتك ليوم متزن';
+
+  @override
+  String get dashboardComingSoon => 'قريبًا';
+
+  @override
+  String get dashboardPrayerShort => 'الصلوات';
+
+  @override
+  String get dashboardMore => 'المزيد';
+
+  @override
   String get dashboardPrayer => 'مواقيت الصلاة';
 
   @override

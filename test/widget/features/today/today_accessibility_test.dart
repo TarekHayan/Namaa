@@ -33,6 +33,7 @@ import 'package:namma_project/features/today/domain/today_models.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_bottom_navigation.dart';
 import 'package:namma_project/features/xp/application/award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
@@ -381,10 +382,7 @@ void main() {
           );
           if (keyboardOnly) {
             await _activateByKeyboard(tester, taskAction);
-            await _activateByKeyboard(
-              tester,
-              find.byKey(kTodayTasksNavigationKey),
-            );
+            await _activateByKeyboard(tester, find.byKey(kTodayBottomTasksKey));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTasksMobileLayoutKey), findsOneWidget);
             expect(find.byKey(kTasksHistoryFilterKey), findsOneWidget);
@@ -394,7 +392,7 @@ void main() {
             await _activateByKeyboard(tester, habitAction);
             await _activateByKeyboard(
               tester,
-              find.byKey(kTodayHabitsNavigationKey),
+              find.byKey(kTodayBottomHabitsKey),
             );
             await _finishRouteTransition(tester);
             expect(find.byKey(kHabitsMobileLayoutKey), findsOneWidget);

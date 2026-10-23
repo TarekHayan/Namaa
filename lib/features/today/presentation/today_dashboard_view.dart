@@ -11,9 +11,11 @@ import '../domain/today_section.dart';
 import 'today_state.dart';
 import 'today_strings.dart';
 import 'widgets/today_agenda_section.dart';
+import 'widgets/today_bottom_navigation.dart';
 import 'widgets/today_finance_card.dart';
 import 'widgets/today_focus_reflection_card.dart';
 import 'widgets/today_habit_list.dart';
+import 'widgets/today_navigation_sidebar.dart';
 import 'widgets/today_overdue_section.dart';
 import 'widgets/today_prayer_card.dart';
 import 'widgets/today_priority_section.dart';
@@ -107,194 +109,278 @@ class TodayDashboardView extends StatelessWidget {
         ),
         dividerColor: colors.border,
       ),
-      child: Scaffold(
-        key: kTodayScreenKey,
-        appBar: AppBar(
-          backgroundColor: colors.background,
-          surfaceTintColor: Colors.transparent,
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
+      child: LayoutBuilder(
+        builder: (context, viewport) {
+          final showSidebar = viewport.maxWidth >= 1100;
+          return Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(9),
-                child: Image.asset(
-                  'assets/images/namaa_icon.png',
-                  width: 32,
-                  height: 32,
-                  fit: BoxFit.contain,
+              if (showSidebar)
+                SizedBox(
+                  width: 252,
+                  child: TodayNavigationSidebar(
+                    colors: colors,
+                    xpAmount: state.xp.value?.amount,
+                    onTasks: onTasks,
+                    onHabits: onHabits,
+                    onMindMaps: onMindMaps,
+                    onPreferences: onPreferences,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                copy.appTitle,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              key: kTodayPreferencesKey,
-              tooltip: strings.preferences,
-              onPressed: onPreferences,
-              icon: const Icon(Icons.tune_rounded),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        body: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: () async => onRefresh(),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth;
-                final contentWidth = width > 1328
-                    ? 1280.0
-                    : (width > 48 ? width - 32 : width);
-                final isDesktop = contentWidth >= 1100;
-                final isTablet = contentWidth >= 768 && !isDesktop;
-
-                return CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Center(
-                        child: SizedBox(
-                          width: contentWidth,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const SizedBox(height: 18),
-                                _hero(context, copy, colors),
-                                const SizedBox(height: 24),
-                                _heading(context, copy.dashboardOverview),
-                                const SizedBox(height: 12),
-                                _overview(context, copy, colors),
-                                const SizedBox(height: 24),
-                                if (isDesktop)
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Column 1: Daily Execution (Tasks & Habits)
-                                      Expanded(
-                                        flex: 4,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            _tasks(context, colors),
-                                            const SizedBox(height: 20),
-                                            _habits(context, colors),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 20),
-                                      // Column 2: Spiritual Routine (Prayer & Quran)
-                                      Expanded(
-                                        flex: 4,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            TodayPrayerCard(colors: colors),
-                                            const SizedBox(height: 20),
-                                            TodayQuranCard(colors: colors),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 20),
-                                      // Column 3: Life & Focus (Finance, Focus, Explore)
-                                      Expanded(
-                                        flex: 4,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            TodayFinanceCard(colors: colors),
-                                            const SizedBox(height: 20),
-                                            TodayFocusReflectionCard(
-                                              colors: colors,
-                                            ),
-                                            const SizedBox(height: 20),
-                                            _explore(context, copy, colors),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                else if (isTablet)
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Column 1: Execution & Explore
-                                      Expanded(
-                                        flex: 6,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            _tasks(context, colors),
-                                            const SizedBox(height: 20),
-                                            _habits(context, colors),
-                                            const SizedBox(height: 20),
-                                            _explore(context, copy, colors),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 20),
-                                      // Column 2: Spiritual & Lifestyle
-                                      Expanded(
-                                        flex: 6,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            TodayPrayerCard(colors: colors),
-                                            const SizedBox(height: 20),
-                                            TodayQuranCard(colors: colors),
-                                            const SizedBox(height: 20),
-                                            TodayFinanceCard(colors: colors),
-                                            const SizedBox(height: 20),
-                                            TodayFocusReflectionCard(
-                                              colors: colors,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                else ...[
-                                  // Mobile single column
-                                  _tasks(context, colors),
-                                  const SizedBox(height: 20),
-                                  _habits(context, colors),
-                                  const SizedBox(height: 20),
-                                  TodayPrayerCard(colors: colors),
-                                  const SizedBox(height: 20),
-                                  TodayQuranCard(colors: colors),
-                                  const SizedBox(height: 20),
-                                  TodayFinanceCard(colors: colors),
-                                  const SizedBox(height: 20),
-                                  TodayFocusReflectionCard(colors: colors),
-                                  const SizedBox(height: 20),
-                                  _explore(context, copy, colors),
-                                ],
-                                const SizedBox(height: 36),
-                              ],
-                            ),
+              Expanded(
+                child: Scaffold(
+                  key: kTodayScreenKey,
+                  bottomNavigationBar: showSidebar
+                      ? null
+                      : TodayBottomNavigation(
+                          colors: colors,
+                          onTasks: onTasks,
+                          onHabits: onHabits,
+                          onMindMaps: onMindMaps,
+                          onPreferences: onPreferences,
+                        ),
+                  appBar: AppBar(
+                    backgroundColor: colors.background,
+                    surfaceTintColor: Colors.transparent,
+                    automaticallyImplyLeading: false,
+                    title: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(9),
+                          child: Image.asset(
+                            'assets/images/namaa_icon.png',
+                            width: 32,
+                            height: 32,
+                            fit: BoxFit.contain,
                           ),
                         ),
+                        const SizedBox(width: 10),
+                        Text(
+                          copy.appTitle,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      IconButton(
+                        key: kTodayPreferencesKey,
+                        tooltip: strings.preferences,
+                        onPressed: onPreferences,
+                        icon: const Icon(Icons.tune_rounded),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  ),
+                  body: SafeArea(
+                    child: RefreshIndicator(
+                      onRefresh: () async => onRefresh(),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final width = constraints.maxWidth;
+                          final contentWidth = width > 1328
+                              ? 1280.0
+                              : (width > 48 ? width - 32 : width);
+                          final isDesktop = contentWidth >= 1100;
+                          final isTablet = contentWidth >= 768 && !isDesktop;
+
+                          return CustomScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              SliverToBoxAdapter(
+                                child: Center(
+                                  child: SizedBox(
+                                    width: contentWidth,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          const SizedBox(height: 18),
+                                          _hero(context, copy, colors),
+                                          const SizedBox(height: 24),
+                                          _heading(
+                                            context,
+                                            copy.dashboardOverview,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          _overview(context, copy, colors),
+                                          const SizedBox(height: 24),
+                                          if (isDesktop)
+                                            Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // Column 1: Daily Execution (Tasks & Habits)
+                                                Expanded(
+                                                  flex: 4,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .stretch,
+                                                    children: [
+                                                      _tasks(context, colors),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      _habits(context, colors),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 20),
+                                                // Column 2: Spiritual Routine (Prayer & Quran)
+                                                Expanded(
+                                                  flex: 4,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .stretch,
+                                                    children: [
+                                                      TodayPrayerCard(
+                                                        colors: colors,
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      TodayQuranCard(
+                                                        colors: colors,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 20),
+                                                // Column 3: Life & Focus (Finance, Focus, Explore)
+                                                Expanded(
+                                                  flex: 4,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .stretch,
+                                                    children: [
+                                                      TodayFinanceCard(
+                                                        colors: colors,
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      TodayFocusReflectionCard(
+                                                        colors: colors,
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      _explore(
+                                                        context,
+                                                        copy,
+                                                        colors,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          else if (isTablet)
+                                            Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // Column 1: Execution & Explore
+                                                Expanded(
+                                                  flex: 6,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .stretch,
+                                                    children: [
+                                                      _tasks(context, colors),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      _habits(context, colors),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      _explore(
+                                                        context,
+                                                        copy,
+                                                        colors,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 20),
+                                                // Column 2: Spiritual & Lifestyle
+                                                Expanded(
+                                                  flex: 6,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .stretch,
+                                                    children: [
+                                                      TodayPrayerCard(
+                                                        colors: colors,
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      TodayQuranCard(
+                                                        colors: colors,
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      TodayFinanceCard(
+                                                        colors: colors,
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 20,
+                                                      ),
+                                                      TodayFocusReflectionCard(
+                                                        colors: colors,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          else ...[
+                                            // Mobile single column
+                                            _tasks(context, colors),
+                                            const SizedBox(height: 20),
+                                            _habits(context, colors),
+                                            const SizedBox(height: 20),
+                                            TodayPrayerCard(colors: colors),
+                                            const SizedBox(height: 20),
+                                            TodayQuranCard(colors: colors),
+                                            const SizedBox(height: 20),
+                                            TodayFinanceCard(colors: colors),
+                                            const SizedBox(height: 20),
+                                            TodayFocusReflectionCard(
+                                              colors: colors,
+                                            ),
+                                            const SizedBox(height: 20),
+                                            _explore(context, copy, colors),
+                                          ],
+                                          const SizedBox(height: 36),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

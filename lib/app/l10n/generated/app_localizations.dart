@@ -1865,6 +1865,30 @@ abstract class FoundationLocalizations {
   /// **'SAMPLE DATA'**
   String get dashboardSampleBadge;
 
+  /// No description provided for @dashboardSidebarTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Space for a balanced day'**
+  String get dashboardSidebarTagline;
+
+  /// No description provided for @dashboardComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get dashboardComingSoon;
+
+  /// No description provided for @dashboardPrayerShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer'**
+  String get dashboardPrayerShort;
+
+  /// No description provided for @dashboardMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get dashboardMore;
+
   /// No description provided for @dashboardPrayer.
   ///
   /// In en, this message translates to:
