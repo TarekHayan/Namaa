@@ -39,6 +39,9 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get todayNoHabits => 'لا توجد عادات مستحقة اليوم';
 
   @override
+  String get todayShowMore => 'عرض المزيد';
+
+  @override
   String get todayLoading => 'جارٍ تحميل هذا القسم…';
 
   @override

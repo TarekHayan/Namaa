@@ -55,6 +55,8 @@ final class _AppTodayStrings implements TodayStrings {
   @override
   String get noHabits => _l10n.todayNoHabits;
   @override
+  String get showMore => _l10n.todayShowMore;
+  @override
   String get loading => _l10n.todayLoading;
   @override
   String get unavailable => _l10n.todaySourceUnavailable;

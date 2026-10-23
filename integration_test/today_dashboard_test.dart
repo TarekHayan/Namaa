@@ -37,6 +37,8 @@ import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 import '../test/support/today_fixtures.dart';
+import '../test/widget/features/today/today_accessibility_test.dart'
+    as accessibility;
 
 class _Clock implements TodayCalendarPort {
   TodayLocalDate localDate = TodayLocalDate(2026, 10, 12);
@@ -95,6 +97,7 @@ class _RecoveringTasks implements TodayTasksPort {
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  accessibility.main();
 
   testWidgets(
     'ten offline Today desired-state cycles retain one award across restart',

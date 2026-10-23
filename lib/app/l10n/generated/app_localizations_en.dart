@@ -39,6 +39,9 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get todayNoHabits => 'No habits due today';
 
   @override
+  String get todayShowMore => 'Show more';
+
+  @override
   String get todayLoading => 'Loading this section…';
 
   @override

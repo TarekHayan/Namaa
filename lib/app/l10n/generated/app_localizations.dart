@@ -161,6 +161,12 @@ abstract class FoundationLocalizations {
   /// **'No habits due today'**
   String get todayNoHabits;
 
+  /// No description provided for @todayShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get todayShowMore;
+
   /// No description provided for @todayLoading.
   ///
   /// In en, this message translates to:

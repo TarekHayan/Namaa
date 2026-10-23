@@ -6,7 +6,7 @@ import 'package:namma_project/features/today/domain/today_models.dart';
 import '../today_state.dart';
 import '../today_strings.dart';
 
-class TodayTaskList extends StatelessWidget {
+class TodayTaskList extends StatefulWidget {
   const TodayTaskList({
     super.key,
     required this.tasks,
@@ -24,56 +24,90 @@ class TodayTaskList extends StatelessWidget {
   final VoidCallback? onOpenTasks;
 
   @override
+  State<TodayTaskList> createState() => _TodayTaskListState();
+}
+
+class _TodayTaskListState extends State<TodayTaskList> {
+  static const _pageSize = 20;
+  int _visibleCount = _pageSize;
+
+  @override
   Widget build(BuildContext context) => Column(
     children: [
-      for (final task in tasks)
-        ListTile(
-          key: ValueKey('today_task_${task.taskId}'),
-          onTap: onOpenTasks,
-          leading: Icon(
-            task.isCompleted
-                ? Icons.check_circle_outline
-                : Icons.radio_button_unchecked,
-          ),
-          title: Text(task.title),
-          subtitle: Text(
-            [
-              strings.formatDate(task.scheduledLocalDate),
-              if (task.scheduledMinuteOfDay != null)
-                strings.formatTime(task.scheduledMinuteOfDay!),
-              if (task.estimatedDurationMinutes != null)
-                strings.formatDurationMinutes(task.estimatedDurationMinutes!),
-              if (task.isOverdue) strings.overdue,
-            ].join(' · '),
-          ),
-          trailing: allowActions && onSetCompleted != null
-              ? TextButton(
-                  key: ValueKey('today_task_action_${task.taskId}'),
-                  onPressed: actions[task.taskId]?.blocksAction == true
-                      ? null
-                      : () => onSetCompleted!(task.taskId, !task.isCompleted),
-                  child: Text(
-                    actions[task.taskId]?.phase == TodayActionPhase.pending
-                        ? strings.saving
-                        : task.isCompleted
-                        ? strings.reopenTask
-                        : strings.completeTask,
-                  ),
-                )
-              : Text(task.isCompleted ? strings.completed : strings.open),
-        ),
-      for (final task in tasks)
-        if (allowActions && _hasError(actions[task.taskId]))
+      for (final task in widget.tasks.take(_visibleCount))
+        _taskTile(context, task),
+      for (final task in widget.tasks.take(_visibleCount))
+        if (widget.allowActions && _hasError(widget.actions[task.taskId]))
           Text(
-            actions[task.taskId]!.phase == TodayActionPhase.uncertain
-                ? strings.uncertain
-                : actions[task.taskId]!.failure?.messageKey ==
+            widget.actions[task.taskId]!.phase == TodayActionPhase.uncertain
+                ? widget.strings.uncertain
+                : widget.actions[task.taskId]!.failure?.messageKey ==
                       'tasks.validation.stale_day'
-                ? strings.staleDay
-                : strings.saveFailed,
+                ? widget.strings.staleDay
+                : widget.strings.saveFailed,
           ),
+      if (widget.tasks.length > _visibleCount)
+        TextButton(
+          key: const Key('today_tasks_show_more'),
+          onPressed: () => setState(() => _visibleCount += _pageSize),
+          child: Text(widget.strings.showMore),
+        ),
     ],
   );
+
+  Widget _taskTile(BuildContext context, TodayTaskReference task) {
+    final compact =
+        MediaQuery.sizeOf(context).width < 400 ||
+        MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    final action = widget.allowActions && widget.onSetCompleted != null
+        ? TextButton(
+            key: ValueKey('today_task_action_${task.taskId}'),
+            onPressed: widget.actions[task.taskId]?.blocksAction == true
+                ? null
+                : () => widget.onSetCompleted!(task.taskId, !task.isCompleted),
+            child: Text(
+              widget.actions[task.taskId]?.phase == TodayActionPhase.pending
+                  ? widget.strings.saving
+                  : task.isCompleted
+                  ? widget.strings.reopenTask
+                  : widget.strings.completeTask,
+            ),
+          )
+        : Text(
+            task.isCompleted ? widget.strings.completed : widget.strings.open,
+          );
+    final tile = ListTile(
+      key: ValueKey('today_task_${task.taskId}'),
+      onTap: widget.onOpenTasks,
+      leading: Icon(
+        task.isCompleted
+            ? Icons.check_circle_outline
+            : Icons.radio_button_unchecked,
+      ),
+      title: Text(task.title),
+      subtitle: Text(
+        [
+          widget.strings.formatDate(task.scheduledLocalDate),
+          if (task.scheduledMinuteOfDay != null)
+            widget.strings.formatTime(task.scheduledMinuteOfDay!),
+          if (task.estimatedDurationMinutes != null)
+            widget.strings.formatDurationMinutes(
+              task.estimatedDurationMinutes!,
+            ),
+          if (task.isOverdue) widget.strings.overdue,
+        ].join(' · '),
+      ),
+      trailing: compact ? null : action,
+    );
+    return compact
+        ? Column(
+            children: [
+              tile,
+              Align(alignment: AlignmentDirectional.centerEnd, child: action),
+            ],
+          )
+        : tile;
+  }
 
   bool _hasError(TodayActionFeedback? feedback) =>
       feedback?.phase == TodayActionPhase.failed ||

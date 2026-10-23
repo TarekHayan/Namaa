@@ -15,13 +15,12 @@ class TodayOverdueSection extends StatelessWidget {
   final VoidCallback onOpenOverdue;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) => Wrap(
+    crossAxisAlignment: WrapCrossAlignment.center,
     children: [
-      Expanded(
-        child: Text(
-          '${strings.overdue}: ${strings.formatCount(count)}',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+      Text(
+        '${strings.overdue}: ${strings.formatCount(count)}',
+        style: Theme.of(context).textTheme.titleMedium,
       ),
       TextButton(
         key: const Key('today_open_overdue'),

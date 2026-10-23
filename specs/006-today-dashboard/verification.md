@@ -10,18 +10,18 @@
 
 ## Functional requirement ledger
 
-Every requirement is **unverified** until an executed check is recorded with its result and evidence. Planned proof is from the specification and quickstart, not an executed outcome.
+The status below separates focused evidence from final feature acceptance. Earlier phase results and the Phase 7 ledger below give the executed checks; a targeted pass does not replace the five-target integration gate.
 
 | ID | Planned proof | Status |
 |---|---|---|
-| FR-001 | Direct preview root, owner areas and preferences without sign-in | Unverified |
-| FR-002 | Scheduled-today Task fixture including completed rows and exclusions | Unverified |
-| FR-003 | Owner Habit due/retained-completion and streak comparison | Unverified |
-| FR-004 | Independent ratios, rounding, empty and unavailable states | Unverified |
-| FR-005 | Actual award ledger at local-day boundaries; deleted/reopened Tasks | Unverified |
-| FR-006 | Task completion/reopen owner command, map link and single award | Unverified |
-| FR-007 | Habit current-day complete/undo and stale-day rejection | Unverified |
-| FR-008 | Existing owner creation flows, navigation and read-only opening | Unverified |
+| FR-001 | Direct preview root, owner areas and preferences without sign-in | Phase 3–6 targeted pass; final acceptance pending |
+| FR-002 | Scheduled-today Task fixture including completed rows and exclusions | Phase 3/6 targeted pass; final acceptance pending |
+| FR-003 | Owner Habit due/retained-completion and streak comparison | Phase 3–5 targeted pass; final acceptance pending |
+| FR-004 | Independent ratios, rounding, empty and unavailable states | Phase 3/5 targeted pass; final acceptance pending |
+| FR-005 | Actual award ledger at local-day boundaries; deleted/reopened Tasks | Phase 3–5 targeted pass; final acceptance pending |
+| FR-006 | Task completion/reopen owner command, map link and single award | Phase 4/5 targeted pass; final acceptance pending |
+| FR-007 | Habit current-day complete/undo and stale-day rejection | Phase 4/5 targeted pass; final acceptance pending |
+| FR-008 | Existing owner creation flows, navigation and read-only opening | Phase 4/6 targeted pass; final acceptance pending |
 | FR-009 | Timed/untimed agenda, equal-time order and saved duration | Phase 6 targeted pass; final acceptance pending |
 | FR-010 | At most three eligible Do First Tasks, today/overdue only | Phase 6 targeted pass; final acceptance pending |
 | FR-011 | Overdue count and identity equality with Tasks owner | Phase 6 targeted pass; final acceptance pending |
@@ -30,24 +30,24 @@ Every requirement is **unverified** until an executed check is recorded with its
 | FR-014 | Offline save/restart/sync, failure handling and deduplication | Phase 5 targeted pass; final acceptance pending |
 | FR-015 | Real/preview scope isolation and delayed account switching | Phase 5 targeted pass; final acceptance pending |
 | FR-016 | Independent loading/empty/available/unavailable/retry states | Phase 5 targeted pass; final acceptance pending |
-| FR-017 | No fabricated future-domain metrics or active controls | Unverified |
-| FR-018 | Arabic/English, RTL, semantics and keyboard/touch access | Unverified |
-| FR-019 | Owner authority, no Today store or parallel sync/writer | Unverified |
+| FR-017 | No fabricated future-domain metrics or active controls | Phase 7 code/architecture audit pass; final acceptance pending |
+| FR-018 | Arabic/English, RTL, semantics and keyboard/touch access | Phase 7 Windows/Android targeted pass; remaining targets pending |
+| FR-019 | Owner authority, no Today store or parallel sync/writer | Phase 7 architecture/security checks pass; final acceptance pending |
 | FR-020 | Functional prototype structure and five-target parity | Unverified |
 
 ## Acceptance measurements
 
-No acceptance criterion has been executed or passed in Phase 1. Record device, build/commit, fixture, method, measured result and link/log before changing a status.
+The original Phase 1 baseline had no executed acceptance evidence. Later checkpoints are recorded below. Missing parts remain pending even when a focused check has passed.
 
 | ID | Required measurement/evidence | Status |
 |---|---|---|
-| SC-001 | Exact owner equality over mixed dates/deletions/schedule edits/map links/empty day; Tasks 4/10 and Habits 2/5 each 40%; Do First scope and actual XP | Unverified |
-| SC-002 | 500 Tasks, 100 Habits, 200 awards; initial view and local action visible within 2 s on one mobile and one desktop target | Unverified |
-| SC-003 | Ten offline action journeys across restart and later sync; one lifetime Task award, no Habit XP; ten read-only refreshes with zero business/pending writes | Unverified |
-| SC-004 | Foreground midnight within 1 min, resume/timezone within 2 s; reject stale-day Habit action and preserve history | Unverified |
-| SC-005 | Each failed/hung source shows recovery within 10 s; other sections remain usable; recovery within 2 s; zero foreign account/preview values | Unverified |
-| SC-006 | Arabic and English mobile/desktop journeys; equivalent owner/offline behavior on Android, iOS, Windows, macOS, Linux; touch and keyboard journeys each within 3 min | Unverified |
-| SC-007 | Two devices, same-account sync on matching and differing local dates; matching owner state and no duplicate awards/map-linked counts | Unverified |
+| SC-001 | Exact owner equality over mixed dates/deletions/schedule edits/map links/empty day; Tasks 4/10 and Habits 2/5 each 40%; Do First scope and actual XP | Partial: Windows encrypted 4/10, 2/5, XP and no-write fixture; map-link/dedup and Do First targeted checks. Unified final acceptance pending. |
+| SC-002 | 500 Tasks, 100 Habits, 200 awards; initial view and local action visible within 2 s on one mobile and one desktop target | Phase 7 Profile measurements on Android/Windows pass; final gate pending. See timings below. |
+| SC-003 | Ten offline action journeys across restart and later sync; one lifetime Task award, no Habit XP; ten read-only refreshes with zero business/pending writes | Partial: ten Windows cycles/restart and zero-write reads; isolated two-device sync exercised separately. Combined end-to-end journey pending. |
+| SC-004 | Foreground midnight within 1 min, resume/timezone within 2 s; reject stale-day Habit action and preserve history | Partial: deterministic lifecycle/guard tests and Windows reprojection; physical device timing pending. |
+| SC-005 | Each failed/hung source shows recovery within 10 s; other sections remain usable; recovery within 2 s; zero foreign account/preview values | Partial: bounded failure/retry and scope-isolation tests; five-target acceptance pending. |
+| SC-006 | Arabic and English mobile/desktop journeys; equivalent owner/offline behavior on Android, iOS, Windows, macOS, Linux; touch and keyboard journeys each within 3 min | Partial: four scripted journeys including actual Tasks/Habits owner entry and return passed on Android and Windows; iOS/macOS/Linux parity and final gate pending. |
+| SC-007 | Two devices, same-account sync on matching and differing local dates; matching owner state and no duplicate awards/map-linked counts | Partial: Phase 5 Windows/Android sessions verified owner/date/award isolation; map-linked counts in the same journey and final gate pending. |
 
 ## Phase 1 checks
 
@@ -100,3 +100,33 @@ No acceptance criterion has been executed or passed in Phase 1. Record device, b
 - The Today view now displays its Task rows once in the agenda, keeping the existing guarded completion controls there. Other-date priority rows only navigate to Tasks. Matrix and overdue buttons push typed entry intents through the existing owner route gate; Tasks consumes each intent after loading and preserves editor/filter ownership. A pending post-frame intent is rejected if its route/account intent changes. Returning reads the current owner stream, including a renamed Task in the encrypted Windows integration scenario.
 - Focused `flutter test` for Today domain, Today widgets, Today route, owner-navigation widget, Tasks screen and Today architecture boundary: **38/38 passed**. This includes equal-time/untimed ordering, duration, bounded priority, future-deadline eligibility, map-link deduplication, Arabic RTL labels, owner matrix/overdue entry and return, existing Task editing and source-health regressions. `integration_test/today_dashboard_test.dart -d windows`: **2/2 passed** after checking the edited owner Task ID/title through agenda and priority against the encrypted local database.
 - `flutter gen-l10n` regenerated Arabic/English resources. Targeted `dart analyze` on the affected production and test files reported **No issues found**. The independent Phase 6 checkpoint passed locally on Windows; mobile/desktop acceptance measurements, five-platform parity and the complete same-head CI gate remain Phase 7 work. No full device workflow was started for this feature-branch push.
+
+## Phase 7 local verification (2026-10-23)
+
+These results are from the **uncommitted Phase 7 working tree** on baseline `96dabf8159b1ed0096907839725dc4141d24e92d`. No Phase 7 commit or push was made. CI URLs and same-head acceptance do not exist yet.
+
+### Scale and interaction measurements
+
+`integration_test/today_performance_test.dart` creates exactly **500 Task records, 100 Habit records and 200 immutable award rows** in one temporary encrypted Foundation database before starting its clock. Award source IDs correspond to Tasks that could have been completed then reopened; the owner ledger remains the actual XP source. The measured initial interval starts immediately before `TodayCubit` subscribes to the available local owner stores and ends after the first rendered frame with all three owner sections confirmed. The action interval starts before the owner completion command and ends after the confirmed Task count is visible. The inbound interval starts before the independent owner read/edit and ends after its new title is visible. Fixture seeding, build, installation and network time are excluded; the three intervals include repository work and widget pumps. Every assertion uses a two-second ceiling.
+
+| Target | OS / mode | Initial | Local action | Owner edit to Today | Result |
+|---|---|---:|---:|---:|---|
+| Windows desktop | Windows 10.0.19045.7807 / Flutter Profile | 268 ms | 247 ms | 166 ms | Pass, `flutter drive --profile ... today_performance_test.dart` |
+| Pixel 7 emulator | Android 17 API 37 x64 / Flutter Profile | 492 ms | 208 ms | 167 ms | Pass, same Profile driver/target |
+
+The initial 500-row Debug runs exposed an eager-render bottleneck: Windows took 7,025 ms before list paging. Rendering 20 owner rows per list with a localized **Show more** control reduced one Windows Debug run to 1,996 ms. A later final-tree Windows Debug run varied to **2,424 ms**; Android Debug measured **4,874 ms**. These diagnostic Debug failures are recorded rather than hidden; the Profile results above are the measured acceptance builds. The local completion and owner-update intervals passed even in those Debug runs. The production view has no benchmark or seed controls.
+
+### Accessible journeys and concrete fixes
+
+- `integration_test/today_dashboard_test.dart` includes four scripted journeys from `test/widget/features/today/today_accessibility_test.dart`: Arabic and English, each with touch and Tab/Enter-only interaction. They use a 360×760 logical-pixel view, 1.5× text, long mixed Arabic/English titles, RTL/LTR assertions, a labeled preferences control, both independent owner counts, Task/Habit completion, and the real gated Tasks/Habits owner routes with return to Today. The owners use matching test snapshots reflecting the completed items, and the route entry displays each actual owner screen; no callback-only navigation probe remains. Each journey completed well within three minutes. After this route upgrade, the full six-test entry point passed **6/6 on Windows 10 Debug** and **6/6 on Pixel 7 Android 17 API 37 Debug** on 2026-10-23. The four journeys also passed **4/4** as focused widget tests. This is local two-target evidence, not iOS/macOS/Linux parity or the full final gate.
+- The narrow/text-scaled journey first found a clipped stale-state row, an overdue row overflow and Task/Habit trailing buttons that consumed the full tile width. Stale and overdue content now wrap; compact or scaled tiles place the action below the title. The 25-Task paging regression confirms the 25-item owner count stays intact and later items remain reachable through **Show more**. The four journeys and paging regression passed after these fixes.
+
+### CI selection, architecture and quality
+
+- Runner-selection tests were added **before** registering Today; their initial Today assertions failed as expected. After registration, `.github/scripts/tests/test_mobile_runners.py` passed **15/15** and `test_ci_setup.py` passed **5/5**. The existing Android groups now include dashboard/sync under `habits-mind-maps`; the iOS matrix maps `today-dashboard` and `today-sync` through the existing verified XCTest runner; Linux/Windows/macOS run local dashboard and isolated staging sync separately. The 006 spec path triggers PR-to-`develop` checks. The workflow still has manual/PR triggers, no push trigger, no performance matrix, the Supabase port guard and the full foundation gate. YAML parsed with eight jobs. The iOS runner's native pass/fail checks and signing path were not relaxed.
+- The nine constitutional principles were audited: **I** shared Flutter logic is unchanged, with Windows/Android checked and three CI targets pending; **II** Today consumes Task/Habit/XP owners through existing ports; **III** the scale and offline fixtures use encrypted local owner stores and existing sync; **IV** Phase 5 staging account isolation and immutable-award dedup remain authoritative; **V** Quran and Finance code/data are untouched; **VI** Cubit owns presentation state and XP stays in the award ledger; **VII** both ARB locales, RTL and keyboard focus were checked; **VIII** the observed render bottleneck was fixed with focused tests; **IX** no client secret or unencrypted Today store was added. The boundary, domain-dependency and client-secret suites passed **14/14**, including negative controls. This audit does not claim the outstanding five-target gate.
+- `flutter gen-l10n` completed; `dart format --output=none --set-exit-if-changed lib test integration_test` passed on **294 files, zero changes** after formatting the three flagged files; full `flutter analyze` reported **No issues found**. Focused Today unit/widget/root/owner-navigation regressions passed **57/57**. The Android/Windows dashboard integration entry points each passed **6/6**. These are the affected tests; no full CI or repeated all-device matrix was started.
+
+### Remaining acceptance and integration
+
+The SC ledger above intentionally retains partial statuses where a combined or platform-specific criterion remains unproven. In particular, SC-001's unified mixed-map equality, SC-003's combined ten-cycle reconnect journey, SC-004/005 physical recovery timing, SC-006 iOS/macOS/Linux parity and SC-007 map-linked counts in the two-device run need final evidence. T074/T075 require the complete quality, database/RLS, both Android groups, all iOS suites, Windows/macOS/Linux and foundation-gate on one final pushed 006 SHA. This working tree has not been pushed, so no final same-head gate, merge or closure is claimed.

@@ -29,6 +29,8 @@ case "${ANDROID_SUITE:-}" in
       integration_test/mind_maps_staging_sync_test.dart
       integration_test/mind_maps_task_link_test.dart
       integration_test/mind_maps_viewport_test.dart
+      integration_test/today_dashboard_test.dart
+      integration_test/today_sync_test.dart
     )
     ;;
   *)

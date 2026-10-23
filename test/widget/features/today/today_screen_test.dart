@@ -60,6 +60,27 @@ class _TaskSnapshot implements TodayTaskReadSnapshot {
   ];
 }
 
+class _ManyTasks implements TodayTaskReadSnapshot {
+  @override
+  String get ownerId => 'owner';
+  @override
+  List<TodayTaskReference> project(TodayCalendar day) => [
+    for (var index = 0; index < 25; index++)
+      TodayTaskReference(
+        taskId: 'task-$index',
+        ownerId: ownerId,
+        title: 'Task $index',
+        scheduledLocalDate: day.localDate,
+        scheduledMinuteOfDay: null,
+        estimatedDurationMinutes: null,
+        isCompleted: false,
+        isUrgentImportant: false,
+        isOverdue: false,
+        ownerOrder: index,
+      ),
+  ];
+}
+
 class _HabitSnapshot implements TodayHabitReadSnapshot {
   @override
   String get ownerId => 'owner';
@@ -120,6 +141,53 @@ class _Xp implements TodayXpPort {
 }
 
 void main() {
+  testWidgets('large task agenda loads more without changing owner totals', (
+    tester,
+  ) async {
+    final tasks = _Tasks();
+    final habits = _Habits();
+    final xp = _Xp();
+    final cubit = TodayCubit(
+      scope: TodayScope.account(accountId: 'owner', generation: 1),
+      calendar: _Clock(),
+      tasks: tasks,
+      habits: habits,
+      xp: xp,
+    );
+    addTearDown(() async {
+      await cubit.close();
+      await tasks.controller.close();
+      await habits.controller.close();
+      await xp.controller.close();
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        home: TodayScreen(
+          cubit: cubit,
+          stringsResolver: resolveTodayStrings,
+          onTasks: () {},
+          onHabits: () {},
+          onMindMaps: () {},
+          onPreferences: () {},
+        ),
+      ),
+    );
+    tasks.controller.add(_ManyTasks());
+    habits.controller.add(_HabitSnapshot());
+    xp.controller.add([]);
+    await tester.pump();
+    expect(cubit.state.tasks.value?.totalCount, 25);
+    expect(find.byKey(const ValueKey('today_task_task-24')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('today_tasks_show_more')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('today_tasks_show_more')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('today_task_task-24')), findsOneWidget);
+    expect(cubit.state.tasks.value?.totalCount, 25);
+  });
+
   testWidgets(
     'resume refreshes the visible local day and marks failed data outdated',
     (tester) async {

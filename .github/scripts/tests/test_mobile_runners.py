@@ -171,5 +171,27 @@ echo 'All tests passed'
         self.assertEqual(len(calls), 1)
 
 
+class TodaySuiteSelectionTest(unittest.TestCase):
+    def test_android_today_suites_are_selected_once_in_existing_group(self):
+        script = (ROOT / ".github/scripts/run-android-integration.sh").read_text()
+        group = script.split("  habits-mind-maps)", 1)[1].split("    ;;", 1)[0]
+        for suite in ("today_dashboard", "today_sync"):
+            self.assertEqual(group.count(f"integration_test/{suite}_test.dart"), 1)
+        self.assertIn('Unknown Android integration suite:', script)
+        self.assertIn('VMServiceFlutterDriver: Connected to Flutter application.', script)
+
+    def test_ios_today_suite_names_map_to_existing_xctest_harness(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        for suite in ("today-dashboard", "today-sync"):
+            self.assertIn(f'"{suite}"', workflow)
+        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*)', workflow)
+        self.assertIn('run-ios-integration.py "$result_bundle"', workflow)
+        self.assertIn('CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-', workflow)
+        self.assertIn('stabilizeNativeIosSemantics(binding)', workflow)
+        runner = (ROOT / ".github/scripts/run-ios-integration.py").read_text()
+        self.assertIn('totalTestCount', runner)
+        self.assertIn('passedTests', runner)
+
+
 if __name__ == "__main__":
     unittest.main()

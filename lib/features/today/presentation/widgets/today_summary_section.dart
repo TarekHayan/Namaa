@@ -42,14 +42,10 @@ class TodaySummarySection<T> extends StatelessWidget {
           else ...[
             content(section.value as T),
             if (section.status == TodaySectionStatus.stale)
-              Row(
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Flexible(
-                    child: Semantics(
-                      liveRegion: true,
-                      child: Text(strings.outdated),
-                    ),
-                  ),
+                  Semantics(liveRegion: true, child: Text(strings.outdated)),
                   TextButton(onPressed: onRetry, child: Text(strings.retry)),
                 ],
               ),

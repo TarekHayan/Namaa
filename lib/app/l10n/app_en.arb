@@ -10,6 +10,7 @@
   "todayOverdue": "Overdue",
   "todayNoTasks": "No tasks scheduled today",
   "todayNoHabits": "No habits due today",
+  "todayShowMore": "Show more",
   "todayLoading": "Loading this section…",
   "todaySourceUnavailable": "This section is unavailable right now.",
   "todayOutdated": "Showing older information. Try again to update it.",

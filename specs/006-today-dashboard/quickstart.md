@@ -1,6 +1,6 @@
 # Quickstart Validation: Dashboard / Today 006
 
-This guide applies **after implementation**. Planning documents alone do not add Today or the planned tests. Expected behavior is in spec.md, data-model.md and contracts/. No tests, devices or CI results are claimed by this planning step.
+Today and its focused tests are implemented on the 006 branch. This guide gives runnable validation paths; measured results and remaining gates are recorded in `verification.md`. Expected behavior remains in `spec.md`, `data-model.md` and `contracts/`.
 
 ## 1. Prerequisites
 
@@ -13,7 +13,7 @@ flutter analyze
 dart format --output=none --set-exit-if-changed lib test integration_test
 ~~~
 
-During implementation, test the changed area first. These planned paths become runnable once their corresponding implementation/tests exist:
+During implementation, test the changed area first. These paths are runnable:
 
 ~~~powershell
 flutter test --no-pub test/unit/features/today
@@ -117,11 +117,20 @@ Prepare the scale fixture with **500 locally available Tasks, 100 Habits and 200
 
 Record device/OS, build mode, fixture counts, timing start/end definition and observed timings. Do not substitute a small fixture or a single machine's result for both target classes.
 
+~~~powershell
+flutter drive --profile --no-pub -d windows --driver=test_driver/integration_test.dart --target=integration_test/today_performance_test.dart
+flutter drive --profile --no-pub -d emulator-5554 --driver=test_driver/integration_test.dart --target=integration_test/today_performance_test.dart
+~~~
+
+The performance suite is intentionally outside the regular CI matrix. Its 500 Task, 100 Habit and 200 persisted award fixtures are created only in a temporary encrypted test database; seeding and build/install time are excluded from the three printed timing intervals. The Android command needs a running emulator or equivalent device ID.
+
 Run Arabic and English primary flows on mobile and desktop, including narrow layout, long/mixed titles, increased text scale, semantics and visible focus. Script a touch journey and keyboard-only journey: open Today, identify both ratios, complete a Task and Habit, visit owners and return. Each completes within three minutes using labeled controls. No external participant recruitment is required.
+
+The four scripted AR/EN touch/keyboard journeys are included in the compact `integration_test/today_dashboard_test.dart` entry point and can be run on both Windows and Android with the existing device test commands. The widget-level version is `test/widget/features/today/today_accessibility_test.dart`.
 
 ## 7. Integration and two-device synchronization (SC-007)
 
-Planned local journey:
+Local journey:
 
 ~~~powershell
 flutter test --no-pub -d windows integration_test/today_dashboard_test.dart

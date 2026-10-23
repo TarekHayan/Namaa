@@ -74,18 +74,15 @@ void main() {
     expect(resolver.current, isNull);
   });
 
-  test(
-    'real resolver rejects a preview ID supplied by its session',
-    () async {
-      final session = TodayControlledSession(
-        initialAccountId: TodayFixtureAccounts.tasksMapsXpPreview,
-      );
-      addTearDown(session.close);
-      final resolver = TodayScopeResolver.account(session);
-      expect(await resolver.resolveInitial(), isNull);
-      expect(resolver.current, isNull);
-    },
-  );
+  test('real resolver rejects a preview ID supplied by its session', () async {
+    final session = TodayControlledSession(
+      initialAccountId: TodayFixtureAccounts.tasksMapsXpPreview,
+    );
+    addTearDown(session.close);
+    final resolver = TodayScopeResolver.account(session);
+    expect(await resolver.resolveInitial(), isNull);
+    expect(resolver.current, isNull);
+  });
 
   test('late initial context cannot restore a signed-out scope', () async {
     final session = TodayControlledSession(

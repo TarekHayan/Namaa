@@ -21,6 +21,7 @@ abstract interface class TodayStrings {
   String get openOverdue;
   String get noTasks;
   String get noHabits;
+  String get showMore;
   String get loading;
   String get unavailable;
   String get outdated;

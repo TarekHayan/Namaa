@@ -36,6 +36,7 @@ on:
       - 'specs/003-namaa-tasks/**'
       - 'specs/004-habits/**'
       - 'specs/005-mind-maps/**'
+      - 'specs/006-today-dashboard/**'
       - 'supabase/**'
       - 'test/**'
       - 'test_driver/**'
@@ -271,6 +272,7 @@ jobs:
               integration_test/mind_maps_viewport_test.dart
               integration_test/mind_maps_offline_sync_test.dart
               integration_test/mind_maps_localized_route_test.dart
+              integration_test/today_dashboard_test.dart
             )
             for test_file in "${tests[@]}"; do
               flutter test --no-pub \
@@ -299,6 +301,15 @@ jobs:
               --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
               --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
               -d linux integration_test/mind_maps_staging_sync_test.dart \
+              --reporter expanded
+            flutter test --no-pub \
+              --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+              --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+              --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+              -d linux integration_test/today_sync_test.dart \
               --reporter expanded
           '
 
@@ -356,7 +367,8 @@ jobs:
             'integration_test/mind_maps_task_link_test.dart',
             'integration_test/mind_maps_viewport_test.dart',
             'integration_test/mind_maps_offline_sync_test.dart',
-            'integration_test/mind_maps_localized_route_test.dart'
+            'integration_test/mind_maps_localized_route_test.dart',
+            'integration_test/today_dashboard_test.dart'
           )
           foreach ($test in $tests) {
             flutter test --no-pub -d windows $test --reporter expanded
@@ -382,6 +394,15 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD" `
             -d windows integration_test/mind_maps_staging_sync_test.dart --reporter expanded
           if ($LASTEXITCODE -ne 0) { throw 'Mind Maps staging sync failed on Windows' }
+          flutter test --no-pub `
+            --dart-define="NAMAA_SUPABASE_URL=$env:NAMAA_STAGING_SUPABASE_URL" `
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$env:NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$env:NAMAA_STAGING_TEST_USER_A_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$env:NAMAA_STAGING_TEST_USER_A_PASSWORD" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$env:NAMAA_STAGING_TEST_USER_B_EMAIL" `
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD" `
+            -d windows integration_test/today_sync_test.dart --reporter expanded
+          if ($LASTEXITCODE -ne 0) { throw 'Today staging sync failed on Windows' }
 
   macos:
     if: ${{ !inputs.mobile_only }}
@@ -438,6 +459,7 @@ jobs:
             integration_test/mind_maps_viewport_test.dart
             integration_test/mind_maps_offline_sync_test.dart
             integration_test/mind_maps_localized_route_test.dart
+            integration_test/today_dashboard_test.dart
           )
           for test_file in "${tests[@]}"; do
             flutter test --no-pub -d macos "$test_file" --reporter expanded
@@ -462,6 +484,15 @@ jobs:
             --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
             -d macos integration_test/mind_maps_staging_sync_test.dart \
             --reporter expanded
+          flutter test --no-pub \
+            --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+            -d macos integration_test/today_sync_test.dart \
+            --reporter expanded
 
   ios:
     if: ${{ !inputs.mobile_only || inputs.ios_suites != '[]' }}
@@ -473,7 +504,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        suite: ${{ fromJSON(inputs.mobile_only && inputs.ios_suites || '["migration","offline","platform","sync","staging-supabase","tasks-offline-sync","tasks-completion-sync","tasks-checklist-history","tasks-localized-route","habits-offline-sync","habits-streak-history","habits-edit-delete","habits-localized-route","mind-maps-library","mind-maps-editor","mind-maps-task-link","mind-maps-viewport","mind-maps-offline-sync","mind-maps-localized-route","mind-maps-staging-sync"]') }}
+        suite: ${{ fromJSON(inputs.mobile_only && inputs.ios_suites || '["migration","offline","platform","sync","staging-supabase","tasks-offline-sync","tasks-completion-sync","tasks-checklist-history","tasks-localized-route","habits-offline-sync","habits-streak-history","habits-edit-delete","habits-localized-route","mind-maps-library","mind-maps-editor","mind-maps-task-link","mind-maps-viewport","mind-maps-offline-sync","mind-maps-localized-route","mind-maps-staging-sync","today-dashboard","today-sync"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -525,7 +556,7 @@ jobs:
             migration|offline|platform|sync|staging-supabase)
               test_file="integration_test/foundation_${IOS_SUITE//-/_}_test.dart"
               ;;
-            tasks-*|habits-*|mind-maps-*)
+            tasks-*|habits-*|mind-maps-*|today-*)
               test_file="integration_test/${IOS_SUITE//-/_}_test.dart"
               ;;
             *) echo "Unknown iOS integration suite: $IOS_SUITE" >&2; exit 2 ;;
