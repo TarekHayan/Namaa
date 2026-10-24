@@ -35,25 +35,25 @@
 
 ### Tests
 
-- [X] T008 [P] [US1] Add failing widget assertions for exactly eight Home groups in order, six hub labels in order, five main labels in order, and no extra Habits/Explore group in test/widget/features/today/dashboard_prototype_contract_test.dart.
+- [ ] T008 [P] [US1] Add failing widget assertions for exactly eight Home groups in order, six hub labels in order, five main labels in order, and no extra Habits/Explore group in test/widget/features/today/dashboard_prototype_contract_test.dart.
 - [X] T009 [P] [US1] Validate the proposed offline calendar package's source, license, supported dates, actual API, and several KACST month/year-boundary reference vectors; only then add the vetted version to pubspec.yaml and pubspec.lock and record evidence or a blocked adoption in specs/007-dashboard-prototype-ui/verification.md.
 - [X] T010 [US1] Add failing tests for official boundary vectors, unsupported dates, local-midnight/offset refresh, and no guessed fallback in test/unit/features/today/data/umm_al_qura_today_date_test.dart using the vetted reference from T009.
 
 ### Implementation
 
 - [X] T011 [US1] Implement a pure date-only adapter from TodayCalendar.localDate to verified Umm al-Qura fields or unavailable, without a second clock read or network access, in lib/features/today/data/umm_al_qura_today_date.dart.
-- [X] T012 [US1] Build the prototype-role greeting/header with Namaa icon, same-sample Gregorian/Hijri date, calendar name, sample-tagged unowned badges, existing LocaleCubit language switch, and existing quick-add callbacks in lib/features/today/presentation/widgets/today_dashboard_header.dart.
-- [X] T013 [US1] Build the progress hero with circular sample gauge, clearly tagged level/status, real XP, separate real Task/Habit ratios, and six prototype metric positions in lib/features/today/presentation/today_dashboard_view.dart.
-- [X] T014 [P] [US1] Adapt the next-prayer card to the prototype's next/following-prayer, location, time, countdown and sample roles in lib/features/today/presentation/today_dashboard_view.dart.
-- [X] T015 [P] [US1] Adapt the Quran Wird card to the prototype's title, progress and reading affordance with sample status in lib/features/today/presentation/today_dashboard_view.dart.
-- [X] T016 [P] [US1] Build the six quick hubs in the exact Prayer, Focus, Quran, Adhkar, Qiyam, Counters order in lib/features/today/presentation/today_dashboard_view.dart.
-- [X] T017 [P] [US1] Build the vertical-rail timeline from existing TodayAgenda Task references plus separately tagged sample events, preserving real Task time/order/status, in lib/features/today/presentation/today_dashboard_view.dart.
-- [X] T018 [P] [US1] Adapt the compact Do First card and matrix affordance around the existing three-item TodayPriority projection in lib/features/today/presentation/widgets/today_priority_section.dart.
-- [X] T019 [P] [US1] Adapt the Finance summary to the prototype's two spending/savings tiles with sample amounts and destination in lib/features/today/presentation/today_dashboard_view.dart.
-- [X] T020 [P] [US1] Build the prototype's compact sample Counters snippet with at most four entries in lib/features/today/presentation/today_dashboard_view.dart.
-- [X] T021 [US1] Compose T012–T020 into exactly eight ordered Home groups using existing AppColors, ThmanyahSans and assets/images/namaa_icon.png; remove extra Home-only Habits/Explore panels without removing owner navigation in lib/features/today/presentation/today_dashboard_view.dart.
-- [X] T022 [US1] Align visible labels and positions to Home, Tasks, Track, Finance, More in lib/features/today/presentation/widgets/today_bottom_navigation.dart and lib/features/today/presentation/widgets/today_navigation_sidebar.dart; preserve callbacks for US4 routing.
-- [X] T023 [US1] Run the focused US1 widget/date tests and record a side-by-side large-screen prototype comparison plus unresolved mismatches in specs/007-dashboard-prototype-ui/verification.md.
+- [ ] T012 [US1] Build the prototype-role greeting/header with Namaa icon, same-sample Gregorian/Hijri date, calendar name, sample-tagged unowned badges, existing LocaleCubit language switch, and existing quick-add callbacks in lib/features/today/presentation/widgets/today_dashboard_header.dart.
+- [ ] T013 [US1] Build the progress hero with circular sample gauge, clearly tagged level/status, real XP, separate real Task/Habit ratios, and six prototype metric positions in lib/features/today/presentation/widgets/today_progress_hero.dart.
+- [ ] T014 [P] [US1] Adapt the next-prayer card to the prototype's next/following-prayer, location, time, countdown and sample roles in lib/features/today/presentation/widgets/today_prayer_card.dart.
+- [ ] T015 [P] [US1] Adapt the Quran Wird card to the prototype's title, progress and reading affordance with sample status in lib/features/today/presentation/widgets/today_quran_card.dart.
+- [ ] T016 [P] [US1] Build the six quick hubs in the exact Prayer, Focus, Quran, Adhkar, Qiyam, Counters order in lib/features/today/presentation/widgets/today_quick_hubs.dart.
+- [ ] T017 [P] [US1] Build the vertical-rail timeline from existing TodayAgenda Task references plus separately tagged sample events, preserving real Task time/order/status, in lib/features/today/presentation/widgets/today_timeline_section.dart.
+- [ ] T018 [P] [US1] Adapt the compact Do First card and matrix affordance around the existing three-item TodayPriority projection in lib/features/today/presentation/widgets/today_priority_section.dart.
+- [ ] T019 [P] [US1] Adapt the Finance summary to the prototype's two spending/savings tiles with sample amounts and destination in lib/features/today/presentation/widgets/today_finance_card.dart.
+- [ ] T020 [P] [US1] Build the prototype's compact sample Counters snippet with at most four entries in lib/features/today/presentation/widgets/today_counters_card.dart.
+- [ ] T021 [US1] Compose T012–T020 into exactly eight ordered Home groups using existing AppColors, ThmanyahSans and assets/images/namaa_icon.png; remove extra Home-only Habits/Explore panels without removing owner navigation in lib/features/today/presentation/today_dashboard_view.dart.
+- [ ] T022 [US1] Align visible labels and positions to Home, Tasks, Track, Finance, More in lib/features/today/presentation/widgets/today_bottom_navigation.dart and lib/features/today/presentation/widgets/today_navigation_sidebar.dart; preserve callbacks for US4 routing.
+- [ ] T023 [US1] Run the focused US1 widget/date tests and record a side-by-side large-screen prototype comparison plus unresolved mismatches in specs/007-dashboard-prototype-ui/verification.md.
 
 **Checkpoint**: The reference inventory is recognizable and US1 passes independently; owner features are not redesigned.
 

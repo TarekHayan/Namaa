@@ -1,10 +1,8 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
-import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 
 import '../../data/umm_al_qura_today_date.dart';
 import '../today_state.dart';
@@ -38,7 +36,6 @@ class TodayDashboardHeader extends StatelessWidget
   Widget build(BuildContext context) {
     final copy = FoundationLocalizations.of(context);
     final hijri = UmmAlQuraTodayDate.fromLocalDate(state.calendar.localDate);
-    final localeCubit = BlocProvider.maybeOf<LocaleCubit>(context);
 
     return AppBar(
       backgroundColor: colors.background,
@@ -99,16 +96,6 @@ class TodayDashboardHeader extends StatelessWidget
         ],
       ),
       actions: [
-        if (localeCubit != null)
-          PopupMenuButton<String>(
-            tooltip: strings.language,
-            icon: const Icon(Icons.language_rounded),
-            onSelected: localeCubit.selectLanguage,
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'ar', child: Text(strings.arabic)),
-              PopupMenuItem(value: 'en', child: Text(strings.english)),
-            ],
-          ),
         if (onNewTask != null || onNewHabit != null)
           PopupMenuButton<VoidCallback>(
             tooltip: '${strings.newTask} / ${strings.newHabit}',

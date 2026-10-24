@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 
-import 'today_coming_soon_page.dart';
+import 'today_prayer_card.dart';
 
 const Key kTodayBottomNavigationKey = Key('today_bottom_navigation');
 const Key kTodayBottomTasksKey = Key('today_bottom_tasks');
-const Key kTodayBottomTrackKey = Key('today_bottom_track');
-@Deprecated('Habits live under More in Dashboard 007.')
-const Key kTodayBottomHabitsKey = kTodayBottomTrackKey;
-const Key kTodayBottomFinanceKey = Key('today_bottom_finance');
+const Key kTodayBottomHabitsKey = Key('today_bottom_habits');
+const Key kTodayBottomPrayerKey = Key('today_bottom_prayer');
 const Key kTodayBottomMoreKey = Key('today_bottom_more');
-const Key kTodayMoreHabitsKey = Key('today_more_habits');
 const Key kTodayMoreMindMapsKey = Key('today_more_mind_maps');
 const Key kTodayMorePreferencesKey = Key('today_more_preferences');
 
@@ -65,17 +62,9 @@ class TodayBottomNavigation extends StatelessWidget {
             case 1:
               onTasks();
             case 2:
-              showTodayComingSoonPage(
-                context,
-                title: copy.dashboardTrack,
-                icon: Icons.insights_outlined,
-              );
+              onHabits();
             case 3:
-              showTodayComingSoonPage(
-                context,
-                title: copy.dashboardFinance,
-                icon: Icons.account_balance_wallet_outlined,
-              );
+              _showPrayerPreview(context);
             case 4:
               _showMore(context);
           }
@@ -92,14 +81,14 @@ class TodayBottomNavigation extends StatelessWidget {
             label: copy.tasksTitle,
           ),
           NavigationDestination(
-            key: kTodayBottomTrackKey,
-            icon: const Icon(Icons.insights_outlined),
-            label: copy.dashboardTrack,
+            key: kTodayBottomHabitsKey,
+            icon: const Icon(Icons.autorenew_rounded),
+            label: copy.habitsTitle,
           ),
           NavigationDestination(
-            key: kTodayBottomFinanceKey,
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            label: copy.dashboardFinance,
+            key: kTodayBottomPrayerKey,
+            icon: const Icon(Icons.schedule_outlined),
+            label: copy.dashboardPrayerShort,
           ),
           NavigationDestination(
             key: kTodayBottomMoreKey,
@@ -107,6 +96,28 @@ class TodayBottomNavigation extends StatelessWidget {
             label: copy.dashboardMore,
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPrayerPreview(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: colors.surface,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.8,
+            ),
+            child: SingleChildScrollView(
+              child: TodayPrayerCard(colors: colors),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -134,15 +145,6 @@ class TodayBottomNavigation extends StatelessWidget {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
-              ListTile(
-                key: kTodayMoreHabitsKey,
-                leading: const Icon(Icons.autorenew_rounded),
-                title: Text(copy.habitsTitle),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  onHabits();
-                },
-              ),
               ListTile(
                 key: kTodayMoreMindMapsKey,
                 leading: const Icon(Icons.hub_outlined),
