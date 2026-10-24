@@ -18,12 +18,12 @@
 
 **Purpose**: Supply localized, explicitly tagged presentation values and one honest placeholder used by all stories. No new persisted owner state.
 
-- [ ] T002 [P] Add Arabic ARB keys for prototype-only labels, Track/Counters, sample and stale/unavailable wording, named Umm al-Qura calendar, twelve Hijri months, and contextual placeholder titles in lib/app/l10n/app_ar.arb.
-- [ ] T003 [P] Add matching English ARB keys and placeholder metadata with identical parameter shapes in lib/app/l10n/app_en.arb.
-- [ ] T004 Generate Flutter localizations after T002–T003 and verify key/parameter parity in lib/app/l10n/generated/app_localizations.dart, lib/app/l10n/generated/app_localizations_ar.dart, and lib/app/l10n/generated/app_localizations_en.dart.
-- [ ] T005 [P] Define a small immutable display-value provenance type for live, sample, loading, empty, stale, and unavailable states without persistence in lib/features/today/presentation/dashboard_display_value.dart.
-- [ ] T006 Build one immutable, presentation-only fixture for ring, unowned badges, prayer, Quran, Finance, Focus, Qiyam, Adhkar, and up to four Counters, using T005 provenance and no owner IDs, in lib/features/today/presentation/dashboard_preview_data.dart.
-- [ ] T007 Complete the existing localized, feature-titled coming-soon destination with return navigation and no fake saved action in lib/features/today/presentation/widgets/today_coming_soon_page.dart; preserve any uncommitted implementation already in that file.
+- [X] T002 [P] Add Arabic ARB keys for prototype-only labels, Track/Counters, sample and stale/unavailable wording, named Umm al-Qura calendar, twelve Hijri months, and contextual placeholder titles in lib/app/l10n/app_ar.arb.
+- [X] T003 [P] Add matching English ARB keys and placeholder metadata with identical parameter shapes in lib/app/l10n/app_en.arb.
+- [X] T004 Generate Flutter localizations after T002–T003 and verify key/parameter parity in lib/app/l10n/generated/app_localizations.dart, lib/app/l10n/generated/app_localizations_ar.dart, and lib/app/l10n/generated/app_localizations_en.dart.
+- [X] T005 [P] Define a small immutable display-value provenance type for live, sample, loading, empty, stale, and unavailable states without persistence in lib/features/today/presentation/dashboard_display_value.dart.
+- [X] T006 Build one immutable, presentation-only fixture for ring, unowned badges, prayer, Quran, Finance, Focus, Qiyam, Adhkar, and up to four Counters, using T005 provenance and no owner IDs, in lib/features/today/presentation/dashboard_preview_data.dart.
+- [X] T007 Complete the existing localized, feature-titled coming-soon destination with return navigation and no fake saved action in lib/features/today/presentation/widgets/today_coming_soon_page.dart; preserve any uncommitted implementation already in that file.
 
 **Checkpoint**: The shared presentation boundary is ready; no sample can masquerade as a real owner value.
 

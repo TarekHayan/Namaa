@@ -1122,4 +1122,139 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get dashboardReflectionAction => 'Write reflection';
+
+  @override
+  String get dashboardHome => 'Home';
+
+  @override
+  String get dashboardTrack => 'Track';
+
+  @override
+  String get dashboardCounters => 'Counters';
+
+  @override
+  String get dashboardTodayProgress => 'Today\'s progress';
+
+  @override
+  String get dashboardNextPrayer => 'Next prayer';
+
+  @override
+  String get dashboardDailyQuran => 'Daily Quran portion';
+
+  @override
+  String get dashboardQuickAccess => 'Quick access';
+
+  @override
+  String get dashboardDailyTimeline => 'Daily timeline';
+
+  @override
+  String get dashboardFinancialSummary => 'Financial summary';
+
+  @override
+  String get dashboardCountersSection => 'Counters preview';
+
+  @override
+  String get dashboardOverallProgress => 'Overall progress';
+
+  @override
+  String get dashboardLevel => 'Level';
+
+  @override
+  String get dashboardStreak => 'Streak';
+
+  @override
+  String get dashboardLiveValue => 'Live data';
+
+  @override
+  String get dashboardSampleValue => 'Sample data';
+
+  @override
+  String get dashboardLoadingValue => 'Loading value…';
+
+  @override
+  String get dashboardEmptyValue => 'No value available yet';
+
+  @override
+  String get dashboardStaleValue => 'Outdated data';
+
+  @override
+  String get dashboardUnavailableValue => 'Value unavailable';
+
+  @override
+  String get dashboardUmmAlQuraCalendar => 'Umm al-Qura calendar';
+
+  @override
+  String get dashboardHijriDateUnavailable => 'Hijri date unavailable';
+
+  @override
+  String dashboardHijriDate(String day, String month, String year) {
+    return '$day $month $year AH';
+  }
+
+  @override
+  String get dashboardHijriMuharram => 'Muharram';
+
+  @override
+  String get dashboardHijriSafar => 'Safar';
+
+  @override
+  String get dashboardHijriRabiAlAwwal => 'Rabi al-Awwal';
+
+  @override
+  String get dashboardHijriRabiAlThani => 'Rabi al-Thani';
+
+  @override
+  String get dashboardHijriJumadaAlAwwal => 'Jumada al-Awwal';
+
+  @override
+  String get dashboardHijriJumadaAlThani => 'Jumada al-Thani';
+
+  @override
+  String get dashboardHijriRajab => 'Rajab';
+
+  @override
+  String get dashboardHijriShaban => 'Sha\'ban';
+
+  @override
+  String get dashboardHijriRamadan => 'Ramadan';
+
+  @override
+  String get dashboardHijriShawwal => 'Shawwal';
+
+  @override
+  String get dashboardHijriDhuAlQidah => 'Dhu al-Qidah';
+
+  @override
+  String get dashboardHijriDhuAlHijjah => 'Dhu al-Hijjah';
+
+  @override
+  String get dashboardComingSoonTrackTitle => 'Track';
+
+  @override
+  String get dashboardComingSoonPrayerTitle => 'Prayer';
+
+  @override
+  String get dashboardComingSoonFocusTitle => 'Focus';
+
+  @override
+  String get dashboardComingSoonQuranTitle => 'Quran';
+
+  @override
+  String get dashboardComingSoonAdhkarTitle => 'Adhkar';
+
+  @override
+  String get dashboardComingSoonQiyamTitle => 'Qiyam';
+
+  @override
+  String get dashboardComingSoonCountersTitle => 'Counters';
+
+  @override
+  String get dashboardComingSoonFinanceTitle => 'Finance';
+
+  @override
+  String get dashboardComingSoonDescription =>
+      'This space is being prepared and will be available soon.';
+
+  @override
+  String get dashboardBackToHome => 'Back to Home';
 }

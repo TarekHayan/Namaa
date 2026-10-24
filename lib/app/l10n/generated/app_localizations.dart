@@ -2260,6 +2260,270 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Write reflection'**
   String get dashboardReflectionAction;
+
+  /// No description provided for @dashboardHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get dashboardHome;
+
+  /// No description provided for @dashboardTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track'**
+  String get dashboardTrack;
+
+  /// No description provided for @dashboardCounters.
+  ///
+  /// In en, this message translates to:
+  /// **'Counters'**
+  String get dashboardCounters;
+
+  /// No description provided for @dashboardTodayProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s progress'**
+  String get dashboardTodayProgress;
+
+  /// No description provided for @dashboardNextPrayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Next prayer'**
+  String get dashboardNextPrayer;
+
+  /// No description provided for @dashboardDailyQuran.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Quran portion'**
+  String get dashboardDailyQuran;
+
+  /// No description provided for @dashboardQuickAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick access'**
+  String get dashboardQuickAccess;
+
+  /// No description provided for @dashboardDailyTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily timeline'**
+  String get dashboardDailyTimeline;
+
+  /// No description provided for @dashboardFinancialSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial summary'**
+  String get dashboardFinancialSummary;
+
+  /// No description provided for @dashboardCountersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Counters preview'**
+  String get dashboardCountersSection;
+
+  /// No description provided for @dashboardOverallProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall progress'**
+  String get dashboardOverallProgress;
+
+  /// No description provided for @dashboardLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get dashboardLevel;
+
+  /// No description provided for @dashboardStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get dashboardStreak;
+
+  /// No description provided for @dashboardLiveValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Live data'**
+  String get dashboardLiveValue;
+
+  /// No description provided for @dashboardSampleValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample data'**
+  String get dashboardSampleValue;
+
+  /// No description provided for @dashboardLoadingValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading value…'**
+  String get dashboardLoadingValue;
+
+  /// No description provided for @dashboardEmptyValue.
+  ///
+  /// In en, this message translates to:
+  /// **'No value available yet'**
+  String get dashboardEmptyValue;
+
+  /// No description provided for @dashboardStaleValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Outdated data'**
+  String get dashboardStaleValue;
+
+  /// No description provided for @dashboardUnavailableValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value unavailable'**
+  String get dashboardUnavailableValue;
+
+  /// No description provided for @dashboardUmmAlQuraCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Umm al-Qura calendar'**
+  String get dashboardUmmAlQuraCalendar;
+
+  /// No description provided for @dashboardHijriDateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Hijri date unavailable'**
+  String get dashboardHijriDateUnavailable;
+
+  /// No description provided for @dashboardHijriDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} {month} {year} AH'**
+  String dashboardHijriDate(String day, String month, String year);
+
+  /// No description provided for @dashboardHijriMuharram.
+  ///
+  /// In en, this message translates to:
+  /// **'Muharram'**
+  String get dashboardHijriMuharram;
+
+  /// No description provided for @dashboardHijriSafar.
+  ///
+  /// In en, this message translates to:
+  /// **'Safar'**
+  String get dashboardHijriSafar;
+
+  /// No description provided for @dashboardHijriRabiAlAwwal.
+  ///
+  /// In en, this message translates to:
+  /// **'Rabi al-Awwal'**
+  String get dashboardHijriRabiAlAwwal;
+
+  /// No description provided for @dashboardHijriRabiAlThani.
+  ///
+  /// In en, this message translates to:
+  /// **'Rabi al-Thani'**
+  String get dashboardHijriRabiAlThani;
+
+  /// No description provided for @dashboardHijriJumadaAlAwwal.
+  ///
+  /// In en, this message translates to:
+  /// **'Jumada al-Awwal'**
+  String get dashboardHijriJumadaAlAwwal;
+
+  /// No description provided for @dashboardHijriJumadaAlThani.
+  ///
+  /// In en, this message translates to:
+  /// **'Jumada al-Thani'**
+  String get dashboardHijriJumadaAlThani;
+
+  /// No description provided for @dashboardHijriRajab.
+  ///
+  /// In en, this message translates to:
+  /// **'Rajab'**
+  String get dashboardHijriRajab;
+
+  /// No description provided for @dashboardHijriShaban.
+  ///
+  /// In en, this message translates to:
+  /// **'Sha\'ban'**
+  String get dashboardHijriShaban;
+
+  /// No description provided for @dashboardHijriRamadan.
+  ///
+  /// In en, this message translates to:
+  /// **'Ramadan'**
+  String get dashboardHijriRamadan;
+
+  /// No description provided for @dashboardHijriShawwal.
+  ///
+  /// In en, this message translates to:
+  /// **'Shawwal'**
+  String get dashboardHijriShawwal;
+
+  /// No description provided for @dashboardHijriDhuAlQidah.
+  ///
+  /// In en, this message translates to:
+  /// **'Dhu al-Qidah'**
+  String get dashboardHijriDhuAlQidah;
+
+  /// No description provided for @dashboardHijriDhuAlHijjah.
+  ///
+  /// In en, this message translates to:
+  /// **'Dhu al-Hijjah'**
+  String get dashboardHijriDhuAlHijjah;
+
+  /// No description provided for @dashboardComingSoonTrackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track'**
+  String get dashboardComingSoonTrackTitle;
+
+  /// No description provided for @dashboardComingSoonPrayerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer'**
+  String get dashboardComingSoonPrayerTitle;
+
+  /// No description provided for @dashboardComingSoonFocusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get dashboardComingSoonFocusTitle;
+
+  /// No description provided for @dashboardComingSoonQuranTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran'**
+  String get dashboardComingSoonQuranTitle;
+
+  /// No description provided for @dashboardComingSoonAdhkarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhkar'**
+  String get dashboardComingSoonAdhkarTitle;
+
+  /// No description provided for @dashboardComingSoonQiyamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Qiyam'**
+  String get dashboardComingSoonQiyamTitle;
+
+  /// No description provided for @dashboardComingSoonCountersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Counters'**
+  String get dashboardComingSoonCountersTitle;
+
+  /// No description provided for @dashboardComingSoonFinanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance'**
+  String get dashboardComingSoonFinanceTitle;
+
+  /// No description provided for @dashboardComingSoonDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This space is being prepared and will be available soon.'**
+  String get dashboardComingSoonDescription;
+
+  /// No description provided for @dashboardBackToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Home'**
+  String get dashboardBackToHome;
 }
 
 class _FoundationLocalizationsDelegate

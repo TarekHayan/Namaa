@@ -1111,4 +1111,139 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get dashboardReflectionAction => 'تدوين خاطرة';
+
+  @override
+  String get dashboardHome => 'الرئيسية';
+
+  @override
+  String get dashboardTrack => 'المتابعة';
+
+  @override
+  String get dashboardCounters => 'العدادات';
+
+  @override
+  String get dashboardTodayProgress => 'تقدم اليوم';
+
+  @override
+  String get dashboardNextPrayer => 'الصلاة القادمة';
+
+  @override
+  String get dashboardDailyQuran => 'ورد القرآن اليومي';
+
+  @override
+  String get dashboardQuickAccess => 'وصول سريع';
+
+  @override
+  String get dashboardDailyTimeline => 'الجدول اليومي';
+
+  @override
+  String get dashboardFinancialSummary => 'الملخص المالي';
+
+  @override
+  String get dashboardCountersSection => 'لمحة عن العدادات';
+
+  @override
+  String get dashboardOverallProgress => 'التقدم العام';
+
+  @override
+  String get dashboardLevel => 'المستوى';
+
+  @override
+  String get dashboardStreak => 'سلسلة الإنجاز';
+
+  @override
+  String get dashboardLiveValue => 'بيانات فعلية';
+
+  @override
+  String get dashboardSampleValue => 'بيانات تجريبية';
+
+  @override
+  String get dashboardLoadingValue => 'جارٍ تحميل القيمة…';
+
+  @override
+  String get dashboardEmptyValue => 'لا توجد قيمة بعد';
+
+  @override
+  String get dashboardStaleValue => 'بيانات قديمة';
+
+  @override
+  String get dashboardUnavailableValue => 'القيمة غير متاحة';
+
+  @override
+  String get dashboardUmmAlQuraCalendar => 'تقويم أم القرى';
+
+  @override
+  String get dashboardHijriDateUnavailable => 'التاريخ الهجري غير متاح';
+
+  @override
+  String dashboardHijriDate(String day, String month, String year) {
+    return '$day $month $year هـ';
+  }
+
+  @override
+  String get dashboardHijriMuharram => 'محرم';
+
+  @override
+  String get dashboardHijriSafar => 'صفر';
+
+  @override
+  String get dashboardHijriRabiAlAwwal => 'ربيع الأول';
+
+  @override
+  String get dashboardHijriRabiAlThani => 'ربيع الآخر';
+
+  @override
+  String get dashboardHijriJumadaAlAwwal => 'جمادى الأولى';
+
+  @override
+  String get dashboardHijriJumadaAlThani => 'جمادى الآخرة';
+
+  @override
+  String get dashboardHijriRajab => 'رجب';
+
+  @override
+  String get dashboardHijriShaban => 'شعبان';
+
+  @override
+  String get dashboardHijriRamadan => 'رمضان';
+
+  @override
+  String get dashboardHijriShawwal => 'شوال';
+
+  @override
+  String get dashboardHijriDhuAlQidah => 'ذو القعدة';
+
+  @override
+  String get dashboardHijriDhuAlHijjah => 'ذو الحجة';
+
+  @override
+  String get dashboardComingSoonTrackTitle => 'المتابعة';
+
+  @override
+  String get dashboardComingSoonPrayerTitle => 'مواقيت الصلاة';
+
+  @override
+  String get dashboardComingSoonFocusTitle => 'التركيز';
+
+  @override
+  String get dashboardComingSoonQuranTitle => 'القرآن';
+
+  @override
+  String get dashboardComingSoonAdhkarTitle => 'الأذكار';
+
+  @override
+  String get dashboardComingSoonQiyamTitle => 'القيام';
+
+  @override
+  String get dashboardComingSoonCountersTitle => 'العدادات';
+
+  @override
+  String get dashboardComingSoonFinanceTitle => 'المالية';
+
+  @override
+  String get dashboardComingSoonDescription =>
+      'نعمل على تجهيز هذه المساحة وستتوفر قريبًا.';
+
+  @override
+  String get dashboardBackToHome => 'العودة إلى الرئيسية';
 }

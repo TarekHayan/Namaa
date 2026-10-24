@@ -85,3 +85,20 @@ The branch also contains two existing Dashboard commits above `develop`: `8bc168
 - Tests: not run; Phase 1 is a read-only inventory/documentation task.
 - App implementation status: unchanged and not yet compliant with the 007 contract.
 
+## Phase 2 foundation — 2026-10-24
+
+- Added matching Arabic and English Dashboard copy for the prototype section/navigation roles, explicit live/sample/loading/empty/stale/unavailable states, the named Umm al-Qura calendar, all twelve Hijri months, contextual coming-soon titles, and return navigation.
+- Verified ARB parity across 408 keys. The `dashboardHijriDate` method has the same `day`, `month`, and `year` string parameters in both locales.
+- Regenerated `FoundationLocalizations`; the base, Arabic, and English generated outputs expose the new keys and matching Hijri method signature.
+- Added `DashboardDisplayValue<T>` with explicit live, sample, loading, empty, stale, and unavailable provenance. It has no serialization or persistence surface.
+- Added one constant `DashboardPreviewData.standard` fixture. Its ring, level/streak, Prayer, Quran, Finance, Focus, Qiyam, Adhkar, and four Counter values are all sample-provenance values, use no account/owner identifiers, and keep locale-dependent formatting outside the fixture.
+- Preserved and completed the existing coming-soon page with a localized return control, contextual title, localized explanation, and no action that claims to save data.
+- Focused validation: `flutter analyze lib/features/today/presentation` and the final `dart analyze lib/features/today/presentation/dashboard_preview_data.dart` passed with no issues after the two reported implementation errors were corrected.
+- Focused widget regression: `flutter test test/widget/features/today/today_dashboard_preview_cards_test.dart` passed all four Arabic/English, light/dark, 320-pixel and 150%-text cases.
+
+### Phase 2 result
+
+- T002–T007: complete.
+- No database, synchronization, authentication, or owner feature behavior changed.
+- Phase 3 and all final acceptance criteria remain open.
+
