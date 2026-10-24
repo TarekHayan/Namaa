@@ -10,26 +10,29 @@ import '../domain/today_projection.dart';
 import '../domain/today_section.dart';
 import 'today_state.dart';
 import 'today_strings.dart';
-import 'widgets/today_agenda_section.dart';
 import 'widgets/today_bottom_navigation.dart';
-import 'widgets/today_finance_card.dart';
-import 'widgets/today_focus_reflection_card.dart';
-import 'widgets/today_habit_list.dart';
+import 'widgets/today_coming_soon_page.dart';
+import 'widgets/today_dashboard_header.dart';
 import 'widgets/today_navigation_sidebar.dart';
 import 'widgets/today_overdue_section.dart';
-import 'widgets/today_prayer_card.dart';
 import 'widgets/today_priority_section.dart';
-import 'widgets/today_quran_card.dart';
-import 'widgets/today_summary_section.dart';
+import 'widgets/today_task_list.dart';
 
 const Key kTodayScreenKey = Key('today_screen');
 const Key kTodayTasksNavigationKey = Key('today_tasks_navigation');
 const Key kTodayHabitsNavigationKey = Key('today_habits_navigation');
 const Key kTodayMindMapsNavigationKey = Key('today_mind_maps_navigation');
 const Key kTodayPreferencesKey = Key('today_preferences');
+const Key kDashboardProgressGroup = Key('dashboard_group_progress');
+const Key kDashboardPrayerGroup = Key('dashboard_group_prayer');
+const Key kDashboardQuranGroup = Key('dashboard_group_quran');
+const Key kDashboardHubsGroup = Key('dashboard_group_hubs');
+const Key kDashboardTimelineGroup = Key('dashboard_group_timeline');
+const Key kDashboardPriorityGroup = Key('dashboard_group_priority');
+const Key kDashboardFinanceGroup = Key('dashboard_group_finance');
+const Key kDashboardCountersGroup = Key('dashboard_group_counters');
 
-/// Today dashboard screen presenting real task/habit projections and comprehensive
-/// domain modules with brand emerald styling and responsive multi-device layouts.
+/// A glanceable daily overview. Detailed work stays in its owning section.
 class TodayDashboardView extends StatelessWidget {
   const TodayDashboardView({
     super.key,
@@ -119,7 +122,6 @@ class TodayDashboardView extends StatelessWidget {
                   width: 252,
                   child: TodayNavigationSidebar(
                     colors: colors,
-                    xpAmount: state.xp.value?.amount,
                     onTasks: onTasks,
                     onHabits: onHabits,
                     onMindMaps: onMindMaps,
@@ -138,38 +140,13 @@ class TodayDashboardView extends StatelessWidget {
                           onMindMaps: onMindMaps,
                           onPreferences: onPreferences,
                         ),
-                  appBar: AppBar(
-                    backgroundColor: colors.background,
-                    surfaceTintColor: Colors.transparent,
-                    automaticallyImplyLeading: false,
-                    title: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(9),
-                          child: Image.asset(
-                            'assets/images/namaa_icon.png',
-                            width: 32,
-                            height: 32,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          copy.appTitle,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                    actions: [
-                      IconButton(
-                        key: kTodayPreferencesKey,
-                        tooltip: strings.preferences,
-                        onPressed: onPreferences,
-                        icon: const Icon(Icons.tune_rounded),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
+                  appBar: TodayDashboardHeader(
+                    state: state,
+                    strings: strings,
+                    colors: colors,
+                    onPreferences: onPreferences,
+                    onNewTask: onNewTask,
+                    onNewHabit: onNewHabit,
                   ),
                   body: SafeArea(
                     child: RefreshIndicator(
@@ -177,11 +154,9 @@ class TodayDashboardView extends StatelessWidget {
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final width = constraints.maxWidth;
-                          final contentWidth = width > 1328
-                              ? 1280.0
+                          final contentWidth = width > 1072
+                              ? 1024.0
                               : (width > 48 ? width - 32 : width);
-                          final isDesktop = contentWidth >= 1100;
-                          final isTablet = contentWidth >= 768 && !isDesktop;
 
                           return CustomScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
@@ -198,171 +173,70 @@ class TodayDashboardView extends StatelessWidget {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.stretch,
                                         children: [
-                                          const SizedBox(height: 18),
-                                          _hero(context, copy, colors),
-                                          const SizedBox(height: 24),
-                                          _heading(
-                                            context,
-                                            copy.dashboardOverview,
-                                          ),
-                                          const SizedBox(height: 12),
-                                          _overview(context, copy, colors),
-                                          const SizedBox(height: 24),
-                                          if (isDesktop)
-                                            Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                // Column 1: Daily Execution (Tasks & Habits)
-                                                Expanded(
-                                                  flex: 4,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .stretch,
-                                                    children: [
-                                                      _tasks(context, colors),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      _habits(context, colors),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 20),
-                                                // Column 2: Spiritual Routine (Prayer & Quran)
-                                                Expanded(
-                                                  flex: 4,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .stretch,
-                                                    children: [
-                                                      TodayPrayerCard(
-                                                        colors: colors,
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      TodayQuranCard(
-                                                        colors: colors,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 20),
-                                                // Column 3: Life & Focus (Finance, Focus, Explore)
-                                                Expanded(
-                                                  flex: 4,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .stretch,
-                                                    children: [
-                                                      TodayFinanceCard(
-                                                        colors: colors,
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      TodayFocusReflectionCard(
-                                                        colors: colors,
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      _explore(
-                                                        context,
-                                                        copy,
-                                                        colors,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            )
-                                          else if (isTablet)
-                                            Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                // Column 1: Execution & Explore
-                                                Expanded(
-                                                  flex: 6,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .stretch,
-                                                    children: [
-                                                      _tasks(context, colors),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      _habits(context, colors),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      _explore(
-                                                        context,
-                                                        copy,
-                                                        colors,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 20),
-                                                // Column 2: Spiritual & Lifestyle
-                                                Expanded(
-                                                  flex: 6,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .stretch,
-                                                    children: [
-                                                      TodayPrayerCard(
-                                                        colors: colors,
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      TodayQuranCard(
-                                                        colors: colors,
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      TodayFinanceCard(
-                                                        colors: colors,
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 20,
-                                                      ),
-                                                      TodayFocusReflectionCard(
-                                                        colors: colors,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            )
-                                          else ...[
-                                            // Mobile single column
-                                            _tasks(context, colors),
-                                            const SizedBox(height: 20),
-                                            _habits(context, colors),
-                                            const SizedBox(height: 20),
-                                            TodayPrayerCard(colors: colors),
-                                            const SizedBox(height: 20),
-                                            TodayQuranCard(colors: colors),
-                                            const SizedBox(height: 20),
-                                            TodayFinanceCard(colors: colors),
-                                            const SizedBox(height: 20),
-                                            TodayFocusReflectionCard(
-                                              colors: colors,
+                                          const SizedBox(height: 16),
+                                          KeyedSubtree(
+                                            key: kDashboardProgressGroup,
+                                            child: _progressHero(
+                                              context,
+                                              copy,
+                                              colors,
                                             ),
-                                            const SizedBox(height: 20),
-                                            _explore(context, copy, colors),
-                                          ],
+                                          ),
+                                          const SizedBox(height: 20),
+                                          KeyedSubtree(
+                                            key: kDashboardPrayerGroup,
+                                            child: _prayerPreview(
+                                              context,
+                                              copy,
+                                              colors,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          KeyedSubtree(
+                                            key: kDashboardQuranGroup,
+                                            child: _quranPreview(
+                                              context,
+                                              copy,
+                                              colors,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          KeyedSubtree(
+                                            key: kDashboardHubsGroup,
+                                            child: _quickHubs(
+                                              context,
+                                              copy,
+                                              colors,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          KeyedSubtree(
+                                            key: kDashboardTimelineGroup,
+                                            child: _tasks(context, colors),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          KeyedSubtree(
+                                            key: kDashboardPriorityGroup,
+                                            child: _priority(context, colors),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          KeyedSubtree(
+                                            key: kDashboardFinanceGroup,
+                                            child: _financePreview(
+                                              context,
+                                              copy,
+                                              colors,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          KeyedSubtree(
+                                            key: kDashboardCountersGroup,
+                                            child: _counterPreview(
+                                              context,
+                                              copy,
+                                              colors,
+                                            ),
+                                          ),
                                           const SizedBox(height: 36),
                                         ],
                                       ),
@@ -385,349 +259,319 @@ class TodayDashboardView extends StatelessWidget {
     );
   }
 
-  Widget _hero(
+  Widget _progressHero(
     BuildContext context,
     FoundationLocalizations copy,
     AppColors colors,
   ) {
-    final hour = state.calendar.nowUtc
-        .add(Duration(minutes: state.calendar.utcOffsetMinutes))
-        .hour;
-    final xp = state.xp.value?.amount ?? 0;
-    final level = (xp ~/ 200) + 1;
-
+    final taskSummary = state.tasks.value;
+    final taskPercent = taskSummary?.percent;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: colors.border),
         gradient: LinearGradient(
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
-          colors: [colors.secondary, colors.primary],
+          colors: [
+            Color.alphaBlend(
+              colors.primary.withValues(alpha: isDark ? 0.13 : 0.09),
+              colors.surface,
+            ),
+            colors.surface,
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.cardGlow,
-            blurRadius: 28,
-            offset: const Offset(0, 10),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Top metadata row
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.calendar_today_rounded,
-                    size: 15,
-                    color: Colors.white70,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final ring = SizedBox(
+            width: 136,
+            height: 136,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 124,
+                  height: 124,
+                  child: CircularProgressIndicator(
+                    value: (taskPercent ?? 0) / 100,
+                    strokeWidth: 9,
+                    strokeCap: StrokeCap.round,
+                    backgroundColor: colors.surfaceSecondary,
+                    valueColor: AlwaysStoppedAnimation(colors.primary),
                   ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      strings.formatDate(state.calendar.localDate),
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w500,
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      taskPercent == null
+                          ? '—'
+                          : strings.formatPercent(taskPercent),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      strings.tasks,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colors.textSecondary,
                       ),
                     ),
+                  ],
+                ),
+              ],
+            ),
+          );
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                copy.dashboardOverview,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                copy.dashboardSubtitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _liveSummary(
+                    context,
+                    copy.dashboardTasksProgress,
+                    _sourceValue(
+                      context,
+                      state.tasks,
+                      onRetryTasks,
+                      (TodayTaskSummary value) =>
+                          '${strings.formatCount(value.completedCount)}/${strings.formatCount(value.totalCount)}',
+                    ),
+                    colors,
+                  ),
+                  _liveSummary(
+                    context,
+                    copy.dashboardHabitsProgress,
+                    _sourceValue(
+                      context,
+                      state.habits,
+                      onRetryHabits,
+                      (TodayHabitSummary value) =>
+                          '${strings.formatCount(value.completedCount)}/${strings.formatCount(value.totalCount)}',
+                    ),
+                    colors,
+                  ),
+                  _liveSummary(
+                    context,
+                    copy.dashboardXpEarned,
+                    _sourceValue(
+                      context,
+                      state.xp,
+                      onRetryXp,
+                      (TodayXpSummary value) => strings.formatXp(value.amount),
+                    ),
+                    colors,
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.lock_outline_rounded,
-                      size: 13,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        copy.dashboardEncryptedBadge,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+              const SizedBox(height: 16),
+              LayoutBuilder(
+                builder: (context, grid) {
+                  final columns = grid.maxWidth >= 600 ? 3 : 2;
+                  const gap = 8.0;
+                  final tileWidth =
+                      (grid.maxWidth - gap * (columns - 1)) / columns;
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      _heroMetric(
+                        context,
+                        strings.tasks,
+                        Text('3/5', style: _metricTextStyle(context)),
+                        colors,
+                        tileWidth,
+                        sample:
+                            '${copy.dashboardSampleBadge} · ${copy.dashboardComingSoon}',
                       ),
-                    ),
-                  ],
-                ),
+                      _heroMetric(
+                        context,
+                        copy.dashboardPrayerShort,
+                        Text('3/5', style: _metricTextStyle(context)),
+                        colors,
+                        tileWidth,
+                        sample:
+                            '${copy.dashboardComingSoon} · ${copy.dashboardSampleBadge}',
+                      ),
+                      _heroMetric(
+                        context,
+                        copy.dashboardQuran,
+                        Text('7/20', style: _metricTextStyle(context)),
+                        colors,
+                        tileWidth,
+                        sample:
+                            '${copy.dashboardComingSoon} · ${copy.dashboardSampleBadge}',
+                      ),
+                      _heroMetric(
+                        context,
+                        copy.dashboardAdhkarTitle,
+                        Text('12/33', style: _metricTextStyle(context)),
+                        colors,
+                        tileWidth,
+                        sample:
+                            '${copy.dashboardSampleBadge} · ${copy.dashboardComingSoon}',
+                      ),
+                      _heroMetric(
+                        context,
+                        copy.dashboardFocus,
+                        Text(
+                          strings.formatDurationMinutes(50),
+                          style: _metricTextStyle(context),
+                        ),
+                        colors,
+                        tileWidth,
+                        sample:
+                            '${copy.dashboardComingSoon} · ${copy.dashboardSampleBadge}',
+                      ),
+                      _heroMetric(
+                        context,
+                        copy.dashboardAdhkarQiyam,
+                        Text('1/1', style: _metricTextStyle(context)),
+                        colors,
+                        tileWidth,
+                        sample:
+                            '${copy.dashboardSampleBadge} · ${copy.dashboardComingSoon}',
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
-          ),
-          const SizedBox(height: 14),
-          // Greeting & Level XP row
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 12,
+          );
+          if (constraints.maxWidth < 620) {
+            return Column(
+              children: [ring, const SizedBox(height: 18), details],
+            );
+          }
+          return Row(
             children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 540),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      hour < 12
-                          ? copy.dashboardGreetingMorning
-                          : copy.dashboardGreetingLater,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      copy.dashboardSubtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.92),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.18),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.military_tech_rounded,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            copy.dashboardLevelBadge(level, xp),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      copy.dashboardProductiveDay,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              ring,
+              const SizedBox(width: 28),
+              Expanded(child: details),
             ],
-          ),
-          // Action Buttons
-          if (onNewTask != null || onNewHabit != null) ...[
-            const SizedBox(height: 18),
-            Wrap(
-              spacing: 10,
-              runSpacing: 8,
-              children: [
-                if (onNewTask != null)
-                  FilledButton.icon(
-                    key: const Key('today_new_task'),
-                    onPressed: onNewTask,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: colors.secondary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add_task_rounded, size: 18),
-                    label: Text(
-                      strings.newTask,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                if (onNewHabit != null)
-                  OutlinedButton.icon(
-                    key: const Key('today_new_habit'),
-                    onPressed: onNewHabit,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white70, width: 1.5),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: Text(
-                      strings.newHabit,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _overview(
+  TextStyle? _metricTextStyle(BuildContext context) => Theme.of(
+    context,
+  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800);
+
+  Widget _liveSummary(
     BuildContext context,
-    FoundationLocalizations copy,
+    String label,
+    Widget value,
     AppColors colors,
-  ) => LayoutBuilder(
-    builder: (context, constraints) {
-      final columns = constraints.maxWidth >= 740
-          ? 3
-          : constraints.maxWidth >= 480
-          ? 2
-          : 1;
-      final gap = 12.0;
-      final width = (constraints.maxWidth - (columns - 1) * gap) / columns;
-      return Wrap(
-        spacing: gap,
-        runSpacing: gap,
+  ) => Container(
+    constraints: const BoxConstraints(minWidth: 96, maxWidth: 180),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(
+      color: colors.accentSoft.withValues(alpha: 0.45),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.labelSmall),
+        value,
+      ],
+    ),
+  );
+
+  Widget _sourceValue<T>(
+    BuildContext context,
+    TodaySection<T> section,
+    VoidCallback retry,
+    String Function(T) label,
+  ) {
+    if (section.status == TodaySectionStatus.loading) {
+      return Semantics(liveRegion: true, child: Text(strings.loading));
+    }
+    if (section.value == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: width,
-            child: TodaySummarySection<TodayTaskSummary>(
-              title: copy.dashboardTasksProgress,
-              icon: Icons.check_circle_outline_rounded,
-              section: state.tasks,
-              strings: strings,
-              onRetry: onRetryTasks,
-              content: (summary) => _progress(
-                context,
-                colors,
-                summary.completedCount,
-                summary.totalCount,
-                summary.percent,
-              ),
-            ),
-          ),
-          SizedBox(
-            width: width,
-            child: TodaySummarySection<TodayHabitSummary>(
-              title: copy.dashboardHabitsProgress,
-              icon: Icons.autorenew_rounded,
-              section: state.habits,
-              strings: strings,
-              onRetry: onRetryHabits,
-              content: (summary) => _progress(
-                context,
-                colors,
-                summary.completedCount,
-                summary.totalCount,
-                summary.percent,
-              ),
-            ),
-          ),
-          SizedBox(
-            width: width,
-            child: TodaySummarySection<TodayXpSummary>(
-              title: copy.dashboardXpEarned,
-              icon: Icons.auto_awesome_outlined,
-              section: state.xp,
-              strings: strings,
-              onRetry: onRetryXp,
-              content: (summary) => Text(
-                strings.formatXp(summary.amount),
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colors.primary,
-                ),
-              ),
-            ),
-          ),
+          Semantics(liveRegion: true, child: Text(strings.unavailable)),
+          TextButton(onPressed: retry, child: Text(strings.retry)),
         ],
       );
-    },
-  );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label(section.value as T), style: _metricTextStyle(context)),
+        if (section.status == TodaySectionStatus.stale) ...[
+          Semantics(liveRegion: true, child: Text(strings.outdated)),
+          TextButton(onPressed: retry, child: Text(strings.retry)),
+        ],
+      ],
+    );
+  }
 
-  Widget _progress(
+  Widget _heroMetric(
     BuildContext context,
+    String title,
+    Widget value,
     AppColors colors,
-    int completed,
-    int total,
-    int? percent,
-  ) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        total == 0
-            ? '${strings.formatCount(completed)}/${strings.formatCount(total)}'
-            : '${strings.formatCount(completed)}/${strings.formatCount(total)} · ${strings.formatPercent(percent!)}',
-        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: colors.primary,
-        ),
+    double width, {
+    String? sample,
+  }) => SizedBox(
+    width: width,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: colors.surfaceSecondary.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
       ),
-      const SizedBox(height: 12),
-      ClipRRect(
-        borderRadius: BorderRadius.circular(99),
-        child: LinearProgressIndicator(
-          value: total == 0 ? 0 : completed / total,
-          minHeight: 7,
-          backgroundColor: colors.surfaceSecondary,
-          valueColor: AlwaysStoppedAnimation(colors.primary),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: colors.textSecondary),
+          ),
+          const SizedBox(height: 4),
+          value,
+          if (sample != null)
+            Text(
+              sample,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colors.textMuted,
+                fontSize: 10,
+              ),
+            ),
+        ],
       ),
-      const SizedBox(height: 8),
-      Text(
-        '${strings.open}: ${strings.formatCount(total - completed)} · ${strings.completed}: ${strings.formatCount(completed)}',
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
-      ),
-    ],
+    ),
   );
-
   Widget _tasks(BuildContext context, AppColors colors) => _Surface(
     colors: colors,
     child: Column(
@@ -736,8 +580,8 @@ class TodayDashboardView extends StatelessWidget {
         _panelHeader(
           context,
           colors,
-          Icons.checklist_rtl_rounded,
-          strings.tasks,
+          Icons.calendar_today_outlined,
+          strings.agenda,
           TextButton.icon(
             key: kTodayTasksNavigationKey,
             onPressed: onTasks,
@@ -745,117 +589,660 @@ class TodayDashboardView extends StatelessWidget {
             label: Text(strings.tasks),
           ),
         ),
+        const SizedBox(height: 4),
+        Text(
+          strings.formatDate(state.calendar.localDate),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+        ),
         if (state.tasks.value case final summary?) ...[
           const SizedBox(height: 12),
-          TodayPrioritySection(
-            tasks: summary.doFirst,
-            strings: strings,
-            onOpenTasks: onTasks,
-            onOpenMatrix: onTaskMatrix ?? onTasks,
-          ),
-          const SizedBox(height: 12),
-          Divider(color: colors.border),
-          const SizedBox(height: 12),
-          TodayAgendaSection(
-            agenda: TodayAgenda.project(
-              state.calendar.localDate,
-              summary.items,
-              ownerId: state.scope.taskOwnerId,
+          if (summary.items.isEmpty)
+            Text(strings.noTasks)
+          else ...[
+            if (TodayAgenda.project(
+                  state.calendar.localDate,
+                  summary.items,
+                  ownerId: state.scope.taskOwnerId,
+                ).timed
+                case final timed when timed.isNotEmpty) ...[
+              Text(
+                strings.timed,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 6),
+              TodayTaskList(
+                tasks: timed,
+                strings: strings,
+                onOpenTasks: onTasks,
+                actions: state.taskActions,
+                allowActions:
+                    state.tasks.status == TodaySectionStatus.available,
+                onSetCompleted:
+                    state.tasks.status == TodaySectionStatus.available
+                    ? onSetTaskCompleted
+                    : null,
+              ),
+            ],
+            if (TodayAgenda.project(
+                  state.calendar.localDate,
+                  summary.items,
+                  ownerId: state.scope.taskOwnerId,
+                ).untimed
+                case final untimed when untimed.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                strings.untimed,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 6),
+              TodayTaskList(
+                tasks: untimed,
+                strings: strings,
+                onOpenTasks: onTasks,
+                actions: state.taskActions,
+                allowActions:
+                    state.tasks.status == TodaySectionStatus.available,
+                onSetCompleted:
+                    state.tasks.status == TodaySectionStatus.available
+                    ? onSetTaskCompleted
+                    : null,
+              ),
+            ],
+          ],
+          if (summary.overdueCount > 0) ...[
+            const SizedBox(height: 12),
+            Divider(color: colors.border),
+            TodayOverdueSection(
+              count: summary.overdueCount,
+              strings: strings,
+              onOpenOverdue: onTaskOverdue ?? onTasks,
             ),
-            strings: strings,
-            onOpenTasks: onTasks,
-            actions: state.taskActions,
-            allowActions: state.tasks.status == TodaySectionStatus.available,
-            onSetCompleted: state.tasks.status == TodaySectionStatus.available
-                ? onSetTaskCompleted
-                : null,
-          ),
-          const SizedBox(height: 12),
-          Divider(color: colors.border),
-          TodayOverdueSection(
-            count: summary.overdueCount,
-            strings: strings,
-            onOpenOverdue: onTaskOverdue ?? onTasks,
-          ),
+          ],
         ],
-      ],
-    ),
-  );
-
-  Widget _habits(BuildContext context, AppColors colors) => _Surface(
-    colors: colors,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _panelHeader(
+        const SizedBox(height: 12),
+        Divider(color: colors.border),
+        const SizedBox(height: 8),
+        _timelineSample(
           context,
           colors,
-          Icons.autorenew_rounded,
-          strings.habits,
-          TextButton.icon(
-            key: kTodayHabitsNavigationKey,
-            onPressed: onHabits,
-            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-            label: Text(strings.habits),
-          ),
+          Icons.schedule_rounded,
+          FoundationLocalizations.of(context).dashboardPrayerAsr,
+          '03:29',
         ),
-        if (state.habits.value case final summary?) ...[
-          const SizedBox(height: 12),
-          if (summary.totalCount == 0)
-            Text(strings.noHabits)
-          else
-            TodayHabitList(
-              habits: summary.items,
-              strings: strings,
-              actions: state.habitActions,
-              onSetCompleted:
-                  state.habits.status == TodaySectionStatus.available
-                  ? onSetHabitCompleted
-                  : null,
-            ),
-        ],
+        _timelineSample(
+          context,
+          colors,
+          Icons.menu_book_outlined,
+          FoundationLocalizations.of(context).dashboardQuran,
+          '07:20',
+        ),
       ],
     ),
   );
 
-  Widget _explore(
+  Widget _priority(BuildContext context, AppColors colors) => _Surface(
+    colors: colors,
+    child: TodayPrioritySection(
+      tasks: state.tasks.value?.doFirst ?? const [],
+      strings: strings,
+      onOpenTasks: onTasks,
+      onOpenMatrix: onTaskMatrix ?? onTasks,
+    ),
+  );
+
+  Widget _timelineSample(
+    BuildContext context,
+    AppColors colors,
+    IconData icon,
+    String title,
+    String time,
+  ) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: colors.accentSoft,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: colors.primary, size: 15),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title),
+              Text(
+                '${FoundationLocalizations.of(context).dashboardComingSoon} · ${FoundationLocalizations.of(context).dashboardSampleBadge}',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: colors.textMuted),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(time, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+  );
+
+  Widget _prayerPreview(
     BuildContext context,
     FoundationLocalizations copy,
     AppColors colors,
-  ) => _Surface(
-    colors: colors,
+  ) => InkWell(
+    borderRadius: BorderRadius.circular(28),
+    onTap: () => showTodayComingSoonPage(
+      context,
+      title: copy.dashboardPrayer,
+      icon: Icons.schedule_outlined,
+    ),
+    child: _Surface(
+      colors: colors,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sampleHeader(
+            context,
+            copy,
+            colors,
+            copy.dashboardPrayerNext,
+            Icons.schedule_outlined,
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final prayer = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    copy.dashboardPrayerAsr,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    copy.dashboardPrayerCity,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+              );
+              final time = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '03:29',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    copy.dashboardPrayerRemaining,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+              );
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [prayer, const SizedBox(height: 10), time],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: prayer),
+                  time,
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          Divider(color: colors.border),
+          Text(
+            '${copy.dashboardPrayerMaghrib} · 06:09',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _quranPreview(
+    BuildContext context,
+    FoundationLocalizations copy,
+    AppColors colors,
+  ) => InkWell(
+    borderRadius: BorderRadius.circular(28),
+    onTap: () => showTodayComingSoonPage(
+      context,
+      title: copy.dashboardQuran,
+      icon: Icons.menu_book_outlined,
+    ),
+    child: _Surface(
+      colors: colors,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sampleHeader(
+            context,
+            copy,
+            colors,
+            copy.dashboardQuranSectionTitle,
+            Icons.menu_book_outlined,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            copy.dashboardQuranWirdTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  copy.dashboardQuranDetail,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+                ),
+              ),
+              Text(
+                '7/20',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: 0.35,
+              minHeight: 7,
+              backgroundColor: colors.surfaceSecondary,
+              valueColor: AlwaysStoppedAnimation(colors.primary),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _quickHubs(
+    BuildContext context,
+    FoundationLocalizations copy,
+    AppColors colors,
+  ) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        copy.dashboardExplore,
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      ),
+      const SizedBox(height: 10),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= 720 ? 6 : 3;
+          const gap = 8.0;
+          final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              _hubTile(
+                context,
+                copy,
+                colors,
+                copy.dashboardPrayerShort,
+                Icons.schedule_outlined,
+                width,
+              ),
+              _hubTile(
+                context,
+                copy,
+                colors,
+                copy.dashboardFocus,
+                Icons.play_circle_outline_rounded,
+                width,
+              ),
+              _hubTile(
+                context,
+                copy,
+                colors,
+                copy.dashboardQuran,
+                Icons.menu_book_outlined,
+                width,
+              ),
+              _hubTile(
+                context,
+                copy,
+                colors,
+                copy.dashboardAdhkarTitle,
+                Icons.wb_sunny_outlined,
+                width,
+              ),
+              _hubTile(
+                context,
+                copy,
+                colors,
+                copy.dashboardAdhkarQiyam,
+                Icons.nightlight_outlined,
+                width,
+              ),
+              _hubTile(
+                context,
+                copy,
+                colors,
+                copy.dashboardCounters,
+                Icons.exposure_plus_1_outlined,
+                width,
+              ),
+            ],
+          );
+        },
+      ),
+    ],
+  );
+
+  Widget _hubTile(
+    BuildContext context,
+    FoundationLocalizations copy,
+    AppColors colors,
+    String title,
+    IconData icon,
+    double width,
+  ) => SizedBox(
+    width: width,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () => showTodayComingSoonPage(context, title: title, icon: icon),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+        decoration: BoxDecoration(
+          color: colors.surfaceSecondary,
+          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: colors.primary, size: 24),
+            const SizedBox(height: 7),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            Text(
+              copy.dashboardComingSoon,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: colors.textMuted),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Widget _financePreview(
+    BuildContext context,
+    FoundationLocalizations copy,
+    AppColors colors,
+  ) => InkWell(
+    borderRadius: BorderRadius.circular(28),
+    onTap: () => showTodayComingSoonPage(
+      context,
+      title: copy.dashboardFinance,
+      icon: Icons.account_balance_wallet_outlined,
+    ),
+    child: _Surface(
+      colors: colors,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sampleHeader(
+            context,
+            copy,
+            colors,
+            copy.dashboardFinanceSectionTitle,
+            Icons.account_balance_wallet_outlined,
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 480 ? 2 : 1;
+              const gap = 10.0;
+              final width =
+                  (constraints.maxWidth - gap * (columns - 1)) / columns;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  _financeTile(
+                    context,
+                    colors,
+                    copy.dashboardFinanceAvailable,
+                    '4,250 ${copy.dashboardFinanceCurrency}',
+                    width,
+                    0.52,
+                  ),
+                  _financeTile(
+                    context,
+                    colors,
+                    copy.dashboardFinanceSavings,
+                    '8,200 ${copy.dashboardFinanceCurrency}',
+                    width,
+                    0.68,
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _financeTile(
+    BuildContext context,
+    AppColors colors,
+    String title,
+    String value,
+    double width,
+    double progress,
+  ) => SizedBox(
+    width: width,
+    child: Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.surfaceSecondary,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              backgroundColor: colors.background,
+              valueColor: AlwaysStoppedAnimation(colors.primary),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _counterPreview(
+    BuildContext context,
+    FoundationLocalizations copy,
+    AppColors colors,
+  ) => InkWell(
+    borderRadius: BorderRadius.circular(28),
+    onTap: () => showTodayComingSoonPage(
+      context,
+      title: copy.dashboardCounters,
+      icon: Icons.exposure_plus_1_outlined,
+    ),
+    child: _Surface(
+      colors: colors,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sampleHeader(
+            context,
+            copy,
+            colors,
+            copy.dashboardCountersSection,
+            Icons.exposure_plus_1_outlined,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _counterTile(
+                  context,
+                  colors,
+                  copy.dashboardAdhkarMorning,
+                  '12/33',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _counterTile(
+                  context,
+                  colors,
+                  copy.dashboardAdhkarEvening,
+                  '7/10',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _counterTile(
+                  context,
+                  colors,
+                  copy.dashboardAdhkarQiyam,
+                  '1/1',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _counterTile(
+    BuildContext context,
+    AppColors colors,
+    String title,
+    String value,
+  ) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: colors.surfaceSecondary,
+      borderRadius: BorderRadius.circular(14),
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _heading(context, copy.dashboardExplore),
-        const SizedBox(height: 12),
-        ListTile(
-          key: kTodayMindMapsNavigationKey,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: colors.primary,
+            fontWeight: FontWeight.w800,
           ),
-          tileColor: colors.surfaceSecondary,
-          leading: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: colors.accentSoft,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.hub_outlined, color: colors.primary, size: 20),
-          ),
-          title: Text(
-            strings.mindMaps,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text(copy.dashboardMindMapsHint),
-          trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
-          onTap: onMindMaps,
         ),
       ],
     ),
   );
 
+  Widget _sampleHeader(
+    BuildContext context,
+    FoundationLocalizations copy,
+    AppColors colors,
+    String title,
+    IconData icon,
+  ) => Row(
+    children: [
+      Icon(icon, size: 20, color: colors.primary),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            copy.dashboardComingSoon,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colors.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            copy.dashboardSampleBadge,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: colors.textMuted),
+          ),
+        ],
+      ),
+    ],
+  );
   Widget _heading(BuildContext context, String title) => Text(
     title,
     style: Theme.of(

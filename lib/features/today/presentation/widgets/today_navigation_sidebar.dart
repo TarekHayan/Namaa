@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 
+import 'today_coming_soon_page.dart';
+
 const Key kTodaySidebarKey = Key('today_sidebar');
 const Key kTodaySidebarTasksKey = Key('today_sidebar_tasks');
+const Key kTodaySidebarTrackKey = Key('today_sidebar_track');
+const Key kTodaySidebarFinanceKey = Key('today_sidebar_finance');
+const Key kTodaySidebarMoreKey = Key('today_sidebar_more');
 const Key kTodaySidebarHabitsKey = Key('today_sidebar_habits');
 const Key kTodaySidebarMindMapsKey = Key('today_sidebar_mind_maps');
 const Key kTodaySidebarPreferencesKey = Key('today_sidebar_preferences');
@@ -18,7 +23,6 @@ class TodayNavigationSidebar extends StatelessWidget {
     required this.onHabits,
     required this.onMindMaps,
     required this.onPreferences,
-    this.xpAmount,
   });
 
   final AppColors colors;
@@ -26,13 +30,10 @@ class TodayNavigationSidebar extends StatelessWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback onPreferences;
-  final int? xpAmount;
 
   @override
   Widget build(BuildContext context) {
     final copy = FoundationLocalizations.of(context);
-    final level = xpAmount == null ? null : (xpAmount! ~/ 200) + 1;
-
     return Material(
       key: kTodaySidebarKey,
       color: colors.navigationBackground,
@@ -83,8 +84,8 @@ class TodayNavigationSidebar extends StatelessWidget {
                 children: [
                   _item(
                     context,
-                    icon: Icons.dashboard_rounded,
-                    label: copy.todayTitle,
+                    icon: Icons.home_outlined,
+                    label: copy.dashboardHome,
                     selected: true,
                   ),
                   const SizedBox(height: 4),
@@ -97,17 +98,25 @@ class TodayNavigationSidebar extends StatelessWidget {
                   ),
                   _item(
                     context,
-                    key: kTodaySidebarHabitsKey,
-                    icon: Icons.autorenew_rounded,
-                    label: copy.habitsTitle,
-                    onTap: onHabits,
+                    key: kTodaySidebarTrackKey,
+                    icon: Icons.insights_outlined,
+                    label: copy.dashboardTrack,
+                    onTap: () => _showComingSoon(
+                      context,
+                      copy.dashboardTrack,
+                      Icons.insights_outlined,
+                    ),
                   ),
                   _item(
                     context,
-                    key: kTodaySidebarMindMapsKey,
-                    icon: Icons.hub_outlined,
-                    label: copy.mindMapsTitle,
-                    onTap: onMindMaps,
+                    key: kTodaySidebarFinanceKey,
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: copy.dashboardFinance,
+                    onTap: () => _showComingSoon(
+                      context,
+                      copy.dashboardFinance,
+                      Icons.account_balance_wallet_outlined,
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -117,7 +126,7 @@ class TodayNavigationSidebar extends StatelessWidget {
                       8,
                     ),
                     child: Text(
-                      copy.dashboardPreviewTitle,
+                      copy.dashboardMore,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: colors.textMuted,
                         fontWeight: FontWeight.w700,
@@ -126,33 +135,10 @@ class TodayNavigationSidebar extends StatelessWidget {
                   ),
                   _item(
                     context,
-                    icon: Icons.schedule_rounded,
-                    label: copy.dashboardPrayer,
-                    comingSoon: true,
-                  ),
-                  _item(
-                    context,
-                    icon: Icons.menu_book_rounded,
-                    label: copy.dashboardQuran,
-                    comingSoon: true,
-                  ),
-                  _item(
-                    context,
-                    icon: Icons.self_improvement_rounded,
-                    label: copy.dashboardAdhkarTitle,
-                    comingSoon: true,
-                  ),
-                  _item(
-                    context,
-                    icon: Icons.timer_outlined,
-                    label: copy.dashboardFocus,
-                    comingSoon: true,
-                  ),
-                  _item(
-                    context,
-                    icon: Icons.account_balance_wallet_outlined,
-                    label: copy.dashboardFinance,
-                    comingSoon: true,
+                    key: kTodaySidebarMoreKey,
+                    icon: Icons.grid_view_rounded,
+                    label: copy.dashboardMore,
+                    onTap: () => _showMore(context),
                   ),
                 ],
               ),
@@ -170,22 +156,43 @@ class TodayNavigationSidebar extends StatelessWidget {
                     label: copy.todayPreferences,
                     onTap: onPreferences,
                   ),
-                  if (level != null) ...[
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        copy.dashboardLevelBadge(level, xpAmount!),
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              color: colors.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showComingSoon(BuildContext context, String title, IconData icon) {
+    showTodayComingSoonPage(context, title: title, icon: icon);
+  }
+
+  void _showMore(BuildContext context) {
+    final copy = FoundationLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              key: kTodaySidebarHabitsKey,
+              leading: const Icon(Icons.autorenew_rounded),
+              title: Text(copy.habitsTitle),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                onHabits();
+              },
+            ),
+            ListTile(
+              key: kTodaySidebarMindMapsKey,
+              leading: const Icon(Icons.hub_outlined),
+              title: Text(copy.mindMapsTitle),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                onMindMaps();
+              },
             ),
           ],
         ),

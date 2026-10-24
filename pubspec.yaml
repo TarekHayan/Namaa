@@ -30,6 +30,9 @@ dependencies:
   # Immutable value types and payload serialization.
   freezed_annotation: ^3.1.0
 
+  # Verified offline Umm al-Qura calendar conversion for Dashboard dates.
+  general_datetime_core: ^1.0.0
+
   # Composition root (Constitution: get_it/injectable).
   get_it: ^9.2.1
 

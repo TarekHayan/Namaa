@@ -479,6 +479,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.7.1"
+  general_datetime_core:
+    dependency: "direct main"
+    description:
+      name: general_datetime_core
+      sha256: "5dd3cbc88d25cf1416f11cfd2acb1a17088858d318103535c65edc828344a32d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   get_it:
     dependency: "direct main"
     description:

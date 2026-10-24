@@ -102,3 +102,30 @@ The branch also contains two existing Dashboard commits above `develop`: `8bc168
 - No database, synchronization, authentication, or owner feature behavior changed.
 - Phase 3 and all final acceptance criteria remain open.
 
+## Phase 3 — Prototype Home hierarchy and Umm al-Qura date — 2026-10-24
+
+### Calendar dependency review
+
+- Added `general_datetime_core` `1.0.0`, a pure-Dart package with a BSD-3-Clause license and no runtime dependency chain. The examined source exposes `CalendarSystems.ummAlQura.fromGregorianDay(DateTime)` and has a finite Umm al-Qura table rather than an algorithmic fallback.
+- The adapter passes only `TodayCalendar.localDate` to that API as a UTC civil day. It does not read a second clock and it returns `null` for unsupported table dates.
+- The selected vectors are `2024-03-10 → 29 Sha'ban 1445`, `2024-03-11 → 1 Ramadan 1445`, and `2024-07-07 → 1 Muharram 1446`. The first Ramadan boundary is corroborated by the Saudi Press Agency's official announcement; the date convention is named on the header as Umm al-Qura. The package's own table provenance is ICU/OpenJDK, so a further official calendar regression audit remains part of final T049 rather than being inferred from this dependency alone.
+
+### Implemented Home contract
+
+- The Home body now has exactly eight ordered keyed groups: Progress, Prayer, Quran, Quick hubs, Timeline, Do First, Finance, and Counters. The independent Home Habits and Explore panels were removed; their owner routes are kept for More in the next navigation story.
+- The header shows Namaa identity, Gregorian and named Umm al-Qura dates from the same calendar sample, language choice when `LocaleCubit` is available, quick add, and preferences.
+- The progress group keeps real Task, Habit, and XP values separate. Its six prototype metric positions are Tasks, Prayer, Quran, Adhkar, Focus, and Qiyam; future-domain values remain visibly sample-tagged.
+- The quick hubs are exactly Prayer, Focus, Quran, Adhkar, Qiyam, and Counters. Finance remains a separate sample summary. The existing agenda and Do First projections continue to use canonical task references and their existing three-item cap.
+- Phone and desktop navigation now expose Home, Tasks, Track, Finance, and More. Track and Finance use the honest coming-soon destination; Habits and Mind Maps remain reachable under More. The sidebar no longer derives a user level from XP.
+
+### Focused validation
+
+- `flutter test test/unit/features/today/data/umm_al_qura_today_date_test.dart test/widget/features/today/dashboard_prototype_contract_test.dart` passed.
+- `flutter analyze` over the Phase 3 adapter, Dashboard, header, navigation widgets, and contract test passed.
+- The widget contract exercises the eight group keys in their on-screen order, confirms no Home Habits/Explore group exists, checks the six hub labels, and checks the five phone destination labels.
+
+### Open after this phase
+
+- Phase 4 owns the final phone/tablet width, safe-area, text-scale, and RTL/LTR checks.
+- Phase 5 will complete the per-figure provenance/semantics audit. Phase 6 owns complete routing interaction tests, including every card and More path.
+
