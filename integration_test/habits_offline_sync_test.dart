@@ -20,6 +20,8 @@ import 'package:namma_project/features/habits/domain/habit_day.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import 'package:namma_project/features/habits/presentation/habits_state.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_bottom_navigation.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 
 import '../test/support/foundation_test_support.dart';
 import '../test/support/habits_test_support.dart';
@@ -314,12 +316,15 @@ void main() {
     tester,
   ) async {
     Future<void> openHabitsFromToday() async {
-      final entry = find.byKey(kTodayHabitsNavigationKey);
-      await tester.scrollUntilVisible(entry, 200);
-      await tester.ensureVisible(entry);
-      await tester.pump();
-      await tester.tap(entry);
+      if (find.byKey(kTodaySidebarKey).evaluate().isNotEmpty) {
+        await tester.tap(find.byKey(kTodaySidebarHabitsKey));
+      } else {
+        await tester.tap(find.byKey(kTodayBottomMoreKey));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(kTodayBottomHabitsKey));
+      }
       await tester.pumpAndSettle();
+      expect(find.byType(HabitsScreen), findsOneWidget);
     }
 
     Future<void> waitForPreviewHabit({required bool completed}) async {
