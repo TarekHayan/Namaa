@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:namma_project/app/theme/app_select_field.dart';
 
 import '../domain/mind_map.dart';
 import 'mind_maps_strings.dart';
@@ -10,23 +11,96 @@ const mapNodeShapes = [
   MapNodeShape.pill,
   MapNodeShape.glass,
 ];
-const mapNodeIcons = ['idea', 'task', 'note', 'star', 'flag'];
+const mapNodeIcons = [
+  'target',
+  'book',
+  'code',
+  'sparkles',
+  'star',
+  'lightbulb',
+  'flag',
+  'compass',
+  'layers',
+  'briefcase',
+  'heart',
+  'zap',
+  'folder',
+  'award',
+  'rocket',
+  'coffee',
+];
 const mapColors = [
-  0xffffffff,
-  0xffd9e8ff,
-  0xffd9f5e5,
-  0xffffedbd,
-  0xffeedcff,
-  0xff273449,
-  0xff64748b,
+  0xff10b981, // emerald
+  0xff059669, // forest
+  0xff84cc16, // sage
+  0xff14b8a6, // mint
+  0xff06b6d4, // teal
+  0xff3b82f6, // blue
+  0xffa855f7, // purple
+  0xfff59e0b, // amber
+  0xfff43f5e, // rose
+  0xff94a3b8, // neutral
 ];
 
 IconData mapIcon(String id) => switch (id) {
+  'target' => Icons.track_changes_outlined,
+  'book' => Icons.menu_book_outlined,
+  'code' => Icons.code_rounded,
+  'sparkles' => Icons.auto_awesome_outlined,
   'task' => Icons.check_box_outlined,
   'note' => Icons.sticky_note_2_outlined,
   'star' => Icons.star_outline,
+  'lightbulb' => Icons.lightbulb_outline,
   'flag' => Icons.flag_outlined,
+  'compass' => Icons.explore_outlined,
+  'layers' => Icons.layers_outlined,
+  'briefcase' => Icons.work_outline_rounded,
+  'heart' => Icons.favorite_border_rounded,
+  'zap' => Icons.bolt_outlined,
+  'folder' => Icons.folder_outlined,
+  'award' => Icons.workspace_premium_outlined,
+  'rocket' => Icons.rocket_launch_outlined,
+  'coffee' => Icons.local_cafe_outlined,
+  'none' => Icons.block_outlined,
   _ => Icons.lightbulb_outline,
+};
+
+String mapIconName(String id, bool isRtl, MindMapsStrings strings) =>
+    switch (id) {
+      'target' => isRtl ? 'هدف' : 'Target',
+      'book' => isRtl ? 'دراسة' : 'Book',
+      'code' => isRtl ? 'برمجة' : 'Code',
+      'sparkles' => isRtl ? 'إبداع' : 'Sparkles',
+      'star' => strings.iconStar,
+      'lightbulb' || 'idea' => strings.iconIdea,
+      'flag' => strings.iconFlag,
+      'compass' => isRtl ? 'توجيه' : 'Compass',
+      'layers' => isRtl ? 'طبقات' : 'Layers',
+      'briefcase' => isRtl ? 'عمل' : 'Work',
+      'heart' => isRtl ? 'صحة' : 'Health',
+      'zap' => isRtl ? 'طاقة' : 'Energy',
+      'folder' => isRtl ? 'ملف' : 'Folder',
+      'award' => isRtl ? 'إنجاز' : 'Award',
+      'rocket' => isRtl ? 'إطلاق' : 'Rocket',
+      'coffee' => isRtl ? 'استراحة' : 'Coffee',
+      'task' => strings.iconTask,
+      'note' => strings.iconNote,
+      'none' => isRtl ? 'بدون أيقونة' : 'No icon',
+      _ => id,
+    };
+
+String mapColorName(int argb, bool isRtl) => switch (argb) {
+  0xff10b981 => isRtl ? 'زمردي' : 'Emerald',
+  0xff059669 => isRtl ? 'غابي' : 'Forest',
+  0xff84cc16 => isRtl ? 'مريمية' : 'Sage',
+  0xff14b8a6 => isRtl ? 'نعناعي' : 'Mint',
+  0xff06b6d4 => isRtl ? 'تركواز' : 'Teal',
+  0xff3b82f6 => isRtl ? 'أزرق هادئ' : 'Blue',
+  0xffa855f7 => isRtl ? 'بنفسجي' : 'Purple',
+  0xfff59e0b => isRtl ? 'كهرماني' : 'Amber',
+  0xfff43f5e => isRtl ? 'وردي' : 'Rose',
+  0xff94a3b8 => isRtl ? 'حيادي شفاف' : 'Neutral Glass',
+  _ => isRtl ? 'لون مخصص' : 'Custom color',
 };
 
 String mapShapeLabel(MapNodeShape shape, MindMapsStrings strings) =>
@@ -72,7 +146,8 @@ class MapColorField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = <int>{...mapColors, value};
-    return DropdownButtonFormField<int>(
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    return AppSelectField<int>(
       key: ValueKey('color-$label-$value'),
       initialValue: value,
       decoration: InputDecoration(labelText: label),
@@ -85,7 +160,11 @@ class MapColorField extends StatelessWidget {
               children: [
                 Icon(Icons.circle, color: Color(color)),
                 const SizedBox(width: 8),
-                Text(mapColorLabel(color, strings)),
+                Text(
+                  mapColors.contains(color)
+                      ? mapColorName(color, isRtl)
+                      : mapColorLabel(color, strings),
+                ),
               ],
             ),
           ),
@@ -135,7 +214,7 @@ class MapAppearanceFields extends StatelessWidget {
         strings: strings,
         onChanged: (value) => _change(argb: value),
       ),
-      DropdownButtonFormField<String>(
+      AppSelectField<String>(
         key: ValueKey('icon-${appearance.icon}'),
         initialValue: appearance.icon,
         decoration: InputDecoration(labelText: strings.nodeIcon),
@@ -148,13 +227,13 @@ class MapAppearanceFields extends StatelessWidget {
                 children: [
                   Icon(mapIcon(icon)),
                   const SizedBox(width: 8),
-                  Text(switch (icon) {
-                    'task' => strings.iconTask,
-                    'note' => strings.iconNote,
-                    'star' => strings.iconStar,
-                    'flag' => strings.iconFlag,
-                    _ => strings.iconIdea,
-                  }),
+                  Text(
+                    mapIconName(
+                      icon,
+                      Directionality.of(context) == TextDirection.rtl,
+                      strings,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -163,7 +242,7 @@ class MapAppearanceFields extends StatelessWidget {
           if (value != null) _change(icon: value);
         },
       ),
-      DropdownButtonFormField<MapNodeShape>(
+      AppSelectField<MapNodeShape>(
         key: ValueKey('shape-${appearance.shape.name}'),
         initialValue: appearance.shape,
         decoration: InputDecoration(labelText: strings.nodeShape),
@@ -182,7 +261,7 @@ class MapAppearanceFields extends StatelessWidget {
         (strings.nodeSize, appearance.nodeSize, true),
         (strings.textSize, appearance.textSize, false),
       ])
-        DropdownButtonFormField<MapSize>(
+        AppSelectField<MapSize>(
           key: ValueKey('size-$label-${selected.name}'),
           initialValue: selected,
           decoration: InputDecoration(labelText: label),

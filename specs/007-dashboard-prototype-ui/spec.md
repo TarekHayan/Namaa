@@ -8,7 +8,7 @@
 
 **Input**: Design the Dashboard first, follow the supplied `prototype.zip` rather than inventing a new layout, use Namaa's existing colors, primary font, and app icon, and give phones a deliberate, polished layout.
 
-**Visual reference**: `../../../prototype/prototype.zip`, specifically `src/views/HomeView.tsx`, `src/components/Header.tsx`, and `src/components/Navbar.tsx`. The archive describes the desired screen; it does not authorize its unrelated product behavior or authentication flow. Namaa plan §21–22 and Feature 006 define the existing data and behavior boundaries.
+**Visual reference**: `../../prototype/prototype.zip`, specifically `src/views/HomeView.tsx`, `src/components/Header.tsx`, and `src/components/Navbar.tsx`. The archive describes the desired screen; it does not authorize its unrelated product behavior or authentication flow. Namaa plan §21–22 and Feature 006 define the existing data and behavior boundaries.
 
 **Scope**: Refine the Home/Dashboard screen and its directly visible header and navigation. The Dashboard must retain the prototype's content inventory, hierarchy, section order, and intended controls. The first pass does not redesign the owning Tasks, Habits, Mind Maps, Prayer, Quran, Focus, Finance, or More screens. It does not add authentication or new domain records.
 
@@ -21,9 +21,14 @@
 - Q: How should primary navigation adapt to the phone? → A: Keep the sidebar on larger layouts and place the navigation at the bottom on phones, as previously approved by the product owner; retain the prototype's five-destination order.
 - Q: How should unfinished destinations behave? → A: Example figures are allowed on the Dashboard if unmistakably labeled as sample data; opening an unfinished feature shows a “Coming soon” destination. This does not make the example figures real account data.
 - Q: Should users still complete Habits directly on the Dashboard despite the prototype having no such control? → A: No. Show only the separate real Habit progress summary on the Dashboard; users complete Habits in the Habits owner screen.
-- Q: Where should the implemented Habits and Mind Maps be reached without adding primary tabs beyond the prototype's five? → A: Both are reachable from More.
+- Q: Where should the implemented Habits and Mind Maps be reached without adding primary tabs beyond the prototype's five? → A: Both are reachable from More on phones.
 - Q: Should the prototype's Hijri date beside the Gregorian date be live or deferred? → A: Show a real, verified Hijri date beside the Gregorian date now; do not display a fabricated Hijri date.
 - Q: Which Hijri calendar defines the displayed date across devices? → A: Use Umm al-Qura for every user and identify the calendar by name.
+
+### Session 2026-10-25
+
+- Q: How should the desktop sidebar use its available space? → A: Show every current section directly, including Habits and Mind Maps and clearly marked coming-soon destinations; keep More only in the five-item phone bottom bar.
+- Q: Which prototype dimensions guide the desktop Dashboard? → A: Use a 64-pixel single-row translucent header with greeting and both dates together, a 16-pixel gap before content, a centered 1024-pixel content well with 24-pixel desktop gutters, and 20-pixel gaps between Home groups. Compact and enlarged-text layouts may put the date on a second row.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -41,7 +46,7 @@ As a user familiar with the supplied prototype, I open Namaa and find the same D
 2. **Given** the top of the screen is visible, **When** the user scans the header, **Then** the current local Gregorian date and corresponding Umm al-Qura Hijri date, compact status badges, language switch, and quick-add affordance appear in the same relative roles as the prototype; the existing Namaa icon is used for product identification without replacing the greeting. The Hijri calendar is named, and a badge without a live owner is visibly marked as sample.
 3. **Given** the progress region is visible, **When** the user scans it, **Then** it has the prototype's prominent circular gauge, XP/status line, level indication, and compact metric badges. Any example-only gauge or badge is visibly marked as sample data; the real Task and Habit completion percentages are presented independently.
 4. **Given** the quick-access region is visible, **When** the user scans it, **Then** it contains exactly the prototype's six destinations in the prototype order: Prayer, Focus, Quran, Adhkar, Qiyam, and Counters. Finance remains in its own summary section and in navigation, rather than replacing Counters in this grid.
-5. **Given** the primary navigation is visible, **When** the user scans it, **Then** its five prototype destinations are Home, Tasks, Track, Finance, and More, in that order, with the active destination distinguishable without relying on color alone.
+5. **Given** the phone navigation is visible, **When** the user scans it, **Then** its five prototype destinations are Home, Tasks, Track, Finance, and More, in that order. On desktop the sidebar shows all current sections directly, without a More grouping. The active destination is distinguishable without relying on color alone.
 
 ---
 
@@ -92,7 +97,7 @@ As a user, I can follow the prototype's visible Task and navigation controls to 
 **Acceptance Scenarios**:
 
 1. **Given** an implemented Task appears in the daily timeline or urgent-and-important preview, **When** the user opens it or its owner view, **Then** the same Task appears with the same completion state and date; the Dashboard does not create a duplicate Task.
-2. **Given** Tasks, Habits, and Mind Maps are already implemented, **When** the user selects Tasks or opens More, **Then** Tasks opens from its primary destination and both Habits and Mind Maps are reachable from More, without extra Home cards or primary tabs.
+2. **Given** Tasks, Habits, and Mind Maps are already implemented, **When** the user navigates on a phone or desktop, **Then** all three owner screens remain reachable: Habits and Mind Maps are under More on phones and direct sidebar entries on desktop, without extra Home cards.
 3. **Given** a due Habit, **When** the user views its Dashboard progress and wants to complete it, **Then** the Dashboard directs them to the Habits owner screen and does not offer a Habit completion control on Home.
 4. **Given** an unfinished quick hub or future-data card, **When** the user opens it, **Then** it reaches the matching “Coming soon” destination rather than a functioning-looking but inert control.
 5. **Given** a visible quick-add affordance, **When** the user chooses a supported existing creation flow, **Then** it opens that feature's current form; unsupported creation is not offered as a working action.
@@ -122,7 +127,7 @@ As a user, I can follow the prototype's visible Task and navigation controls to 
 - **FR-009**: The urgent-and-important preview MUST preserve the prototype's compact card and matrix access while obeying Feature 006's approved scope of at most three incomplete Tasks scheduled today or overdue. It MUST show real Task identity and status.
 - **FR-010**: The financial summary MUST preserve the prototype's two-tile spending/savings composition and finance destination. Until Finance is implemented, amounts and progress MUST be visibly marked sample and lead to “Coming soon.”
 - **FR-011**: The counters snippet MUST follow the prototype's compact counters-card layout and preview limit. Until Counters is implemented, counts and controls MUST be visibly sample and MUST NOT change a real counter.
-- **FR-012**: Primary navigation MUST present the prototype's five destinations—Home, Tasks, Track, Finance, More—in that order. On phones it MUST be a persistent bottom control that respects safe areas; on larger screens it MUST use the previously approved sidebar arrangement with those same destinations and no additional primary destination. More MUST retain access to the implemented Habits and Mind Maps owner screens.
+- **FR-012**: Phone navigation MUST present the prototype's five destinations—Home, Tasks, Track, Finance, More—in that order as a persistent bottom control respecting safe areas; More MUST retain access to Habits and Mind Maps. On larger screens the sidebar MUST expose every current destination directly, including implemented owners and clearly marked coming-soon sections, without a More grouping.
 - **FR-013**: The Dashboard MUST remain usable at phone, tablet, and desktop widths without horizontal scrolling or obscured content. The phone composition MUST deliberately stack the prototype's cards, adapt its compact grids, and preserve readable text and reachable controls.
 - **FR-014**: Every user-facing label and sample/coming-soon state MUST be available in Arabic and English. Directional layout, navigation, timeline, focus order, and control labels MUST be correct in both directions and usable by touch, keyboard, and assistive technology.
 - **FR-015**: This UI pass MUST preserve the existing owner data and approved Task, Habit, XP, preview-identity, and offline rules. The earlier Habit completion shortcut on Today is intentionally replaced by owner-screen navigation under the clarified prototype layout; Habit completion behavior itself MUST remain available in Habits. The UI pass MUST NOT add a new data source, business record, reward rule, blended metric, account flow, or design work for an owning feature's separate screen.
@@ -138,12 +143,12 @@ As a user, I can follow the prototype's visible Task and navigation controls to 
 
 ### Measurable Outcomes
 
-- **SC-001**: A side-by-side review against the supplied Home, Header, and Navbar finds all eight Home groups in the prototype order, the six quick hubs in order, and all five primary navigation destinations in order, with no extra Home group.
+- **SC-001**: A side-by-side review against the supplied Home, Header, and Navbar finds all eight Home groups in the prototype order, the six quick hubs in order, and all five phone navigation destinations in order, with no extra Home group. Desktop navigation exposes each section directly.
 - **SC-002**: At 320, 390, and 430 logical-pixel phone widths, plus tablet and desktop widths, the entire Dashboard can be viewed without horizontal scrolling, clipped essential labels, overlapping cards, or content hidden by bottom navigation; the same remains true with text enlarged to at least 150%.
 - **SC-003**: In Arabic and English, 100% of inspected future-domain figures are visibly identified as sample and 100% of their controls open an explicit “Coming soon” destination; none changes a real Task, Habit, XP, or future-domain record.
 - **SC-004**: With known Task, Habit, and XP fixtures, 100% of live Dashboard values match their owning areas, Task and Habit percentages remain separate, and no sample value contributes to them.
-- **SC-005**: In a touch walkthrough on a phone and a keyboard-only walkthrough on a desktop, users can identify real versus sample content, open an implemented Task route, reach all five primary destinations, and find Habits and Mind Maps through More within three minutes without assistance.
-- **SC-006**: The Dashboard's section order, five primary destinations, and readable controls remain equivalent in Arabic right-to-left and English left-to-right layouts, including at 150% text size.
+- **SC-005**: In a touch walkthrough on a phone and a keyboard-only walkthrough on a desktop, users can identify real versus sample content, open an implemented Task route, reach all five phone destinations, and find Habits and Mind Maps through phone More or directly in the desktop sidebar within three minutes without assistance.
+- **SC-006**: The Dashboard's section order, five phone navigation destinations, direct desktop destinations, and readable controls remain equivalent in Arabic right-to-left and English left-to-right layouts, including at 150% text size.
 - **SC-007**: Across a set of month-boundary, year-boundary, and local-midnight dates, 100% of displayed Hijri dates match Umm al-Qura for the displayed Gregorian local date, the calendar name is visible, and an unavailable conversion never appears as a guessed date.
 - **SC-008**: With the same locally available fixture of 500 Tasks, 100 Habits, and 200 XP awards used for Feature 006, the Dashboard's first readable content appears within two seconds on a tested phone and desktop while offline; unfinished-feature previews do not delay that content.
 

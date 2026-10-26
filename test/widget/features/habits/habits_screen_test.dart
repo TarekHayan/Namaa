@@ -17,6 +17,150 @@ import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import '../../../support/habits_test_support.dart';
 
 void main() {
+  testWidgets('create a repeated habit and count toward its daily target', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final repository = _WidgetHabitRepository();
+    final clock = HabitsTestClock();
+    final ids = HabitsTestIds();
+    final cubit = HabitsCubit(
+      repository: repository,
+      commands: HabitCommands(
+        repository: repository,
+        session: const HabitsPreviewSession(),
+        nowUtc: clock.utcNow,
+        localCalendar: clock.captureLocalCalendar,
+        nextHabitId: ids.nextHabitId,
+        nextRevisionId: ids.nextRevisionId,
+        nextOperationId: ids.nextOperationId,
+      ),
+      localCalendar: clock.captureLocalCalendar,
+    );
+    addTearDown(() async {
+      await cubit.close();
+      await repository.close();
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        home: HabitsScreen(
+          cubit: cubit,
+          accountId: kHabitsPreviewAccountId,
+          stringsResolver: resolveHabitsStrings,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(kHabitAddButtonKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(kHabitRepeatedTypeKey));
+    await tester.enterText(find.byKey(kHabitNameFieldKey), 'Drink water');
+    await tester.enterText(find.byKey(kHabitDailyTargetKey), '٧');
+    await tester.ensureVisible(find.byKey(const Key('habit-weekday-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('habit-weekday-1')));
+    await tester.ensureVisible(find.byKey(kHabitSaveButtonKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(kHabitSaveButtonKey));
+    await tester.pumpAndSettle();
+    final habit = repository._habits.values.single;
+    expect(habit.dailyTarget, 7);
+    final plusOne = find.byKey(ValueKey('habit-increment-${habit.id}'));
+    await tester.ensureVisible(plusOne);
+    await tester.pumpAndSettle();
+    await tester.tap(plusOne);
+    await tester.pumpAndSettle();
+    expect(repository._days.values.single.count, 1);
+    final plusFive = find.byKey(ValueKey('habit-plus-five-${habit.id}'));
+    await tester.ensureVisible(plusFive);
+    await tester.pumpAndSettle();
+    await tester.tap(plusFive);
+    await tester.pumpAndSettle();
+    expect(repository._days.values.single.count, 6);
+    await tester.ensureVisible(plusOne);
+    await tester.pumpAndSettle();
+    await tester.tap(plusOne);
+    await tester.pumpAndSettle();
+    expect(repository._days.values.single.count, 7);
+    expect(repository._days.values.single.isCompleted, isTrue);
+    final decrement = find.byKey(ValueKey('habit-decrement-${habit.id}'));
+    await tester.ensureVisible(decrement);
+    await tester.pumpAndSettle();
+    await tester.tap(decrement);
+    await tester.pumpAndSettle();
+    expect(repository._days.values.single.count, 6);
+    expect(repository._days.values.single.isCompleted, isFalse);
+    final reset = find.byKey(ValueKey('habit-reset-${habit.id}'));
+    await tester.ensureVisible(reset);
+    await tester.pumpAndSettle();
+    await tester.tap(reset);
+    await tester.pumpAndSettle();
+    expect(repository._days.values.single.count, 0);
+  });
+
+  testWidgets('long habit titles fit mobile and desktop cards', (tester) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final repository = _WidgetHabitRepository();
+    final clock = HabitsTestClock();
+    final ids = HabitsTestIds();
+    final commands = HabitCommands(
+      repository: repository,
+      session: const HabitsPreviewSession(),
+      nowUtc: clock.utcNow,
+      localCalendar: clock.captureLocalCalendar,
+      nextHabitId: ids.nextHabitId,
+      nextRevisionId: ids.nextRevisionId,
+      nextOperationId: ids.nextOperationId,
+    );
+    const title =
+        'قراءة فصل طويل من الكتاب ومراجعة الملاحظات المكتوبة بعناية كل مساء';
+    await commands.createHabit(
+      const CreateHabitInput(name: title, weekdays: {1, 2, 3, 4, 5, 6, 7}),
+    );
+    final cubit = HabitsCubit(
+      repository: repository,
+      commands: commands,
+      localCalendar: clock.captureLocalCalendar,
+    );
+    addTearDown(() async {
+      await cubit.close();
+      await repository.close();
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ar'),
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        home: HabitsScreen(
+          cubit: cubit,
+          accountId: kHabitsPreviewAccountId,
+          stringsResolver: resolveHabitsStrings,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(kHabitsMobileLayoutKey), findsOneWidget);
+    expect(find.text(title), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    tester.view.physicalSize = const Size(1200, 800);
+    await tester.pumpAndSettle();
+    expect(find.byKey(kHabitsDesktopLayoutKey), findsOneWidget);
+    expect(find.text(title), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'new-Habit intent opens the owner form once; cancel creates nothing',
     (tester) async {
@@ -99,11 +243,17 @@ void main() {
     expect(find.byKey(kHabitsEmptyKey), findsOneWidget);
     await tester.tap(find.byKey(kHabitAddButtonKey));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(kHabitSaveButtonKey));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(kHabitSaveButtonKey));
     await tester.pumpAndSettle();
     expect(find.byKey(kHabitNameValidationKey), findsOneWidget);
     await tester.enterText(find.byKey(kHabitNameFieldKey), 'Reading');
+    await tester.ensureVisible(find.byKey(const Key('habit-weekday-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('habit-weekday-1')));
+    await tester.ensureVisible(find.byKey(kHabitSaveButtonKey));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(kHabitSaveButtonKey));
     await tester.pumpAndSettle();
     expect(find.text('Reading'), findsOneWidget);

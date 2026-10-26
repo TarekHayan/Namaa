@@ -1,18 +1,26 @@
+library;
+
 import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 
-import 'today_prayer_card.dart';
+import '../dashboard_preview_data.dart';
+import 'today_coming_soon_page.dart';
 
 const Key kTodayBottomNavigationKey = Key('today_bottom_navigation');
 const Key kTodayBottomTasksKey = Key('today_bottom_tasks');
-const Key kTodayBottomHabitsKey = Key('today_bottom_habits');
-const Key kTodayBottomPrayerKey = Key('today_bottom_prayer');
+const Key kTodayBottomTrackKey = Key('today_bottom_track');
+const Key kTodayBottomPrayerKey =
+    kTodayBottomTrackKey; // Alias for test compatibility
+const Key kTodayBottomFinanceKey = Key('today_bottom_finance');
 const Key kTodayBottomMoreKey = Key('today_bottom_more');
+const Key kTodayBottomHabitsKey = Key('today_bottom_habits');
 const Key kTodayMoreMindMapsKey = Key('today_more_mind_maps');
 const Key kTodayMorePreferencesKey = Key('today_more_preferences');
 
-/// Compact navigation for phone and smaller tablet widths.
+/// Prototype-aligned bottom navigation bar presenting five primary destinations:
+/// 1. Home, 2. Tasks, 3. Track, 4. Finance, 5. More.
+/// Habits and Mind Maps are accessible inside the More sheet.
 class TodayBottomNavigation extends StatelessWidget {
   const TodayBottomNavigation({
     super.key,
@@ -21,6 +29,9 @@ class TodayBottomNavigation extends StatelessWidget {
     required this.onHabits,
     required this.onMindMaps,
     required this.onPreferences,
+    this.onHome,
+    this.selectedIndex = 0,
+    this.onPreview,
   });
 
   final AppColors colors;
@@ -28,102 +39,154 @@ class TodayBottomNavigation extends StatelessWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback onPreferences;
+  final VoidCallback? onHome;
+  final int selectedIndex;
+  final void Function(BuildContext, String, DashboardPreviewFeature?)?
+  onPreview;
 
   @override
   Widget build(BuildContext context) {
     final copy = FoundationLocalizations.of(context);
-    return NavigationBarTheme(
-      data: NavigationBarThemeData(
-        backgroundColor: colors.navigationBackground,
-        indicatorColor: colors.accentSoft,
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          return IconThemeData(
-            color: states.contains(WidgetState.selected)
-                ? colors.primary
-                : colors.textSecondary,
-          );
-        }),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          return TextStyle(
-            color: states.contains(WidgetState.selected)
-                ? colors.primary
-                : colors.textSecondary,
-            fontWeight: states.contains(WidgetState.selected)
-                ? FontWeight.w700
-                : FontWeight.w500,
-          );
-        }),
-      ),
-      child: NavigationBar(
-        key: kTodayBottomNavigationKey,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 1:
-              onTasks();
-            case 2:
-              onHabits();
-            case 3:
-              _showPrayerPreview(context);
-            case 4:
-              _showMore(context);
-          }
-        },
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.wb_sunny_outlined),
-            selectedIcon: const Icon(Icons.wb_sunny_rounded),
-            label: copy.todayTitle,
-          ),
-          NavigationDestination(
-            key: kTodayBottomTasksKey,
-            icon: const Icon(Icons.check_circle_outline_rounded),
-            label: copy.tasksTitle,
-          ),
-          NavigationDestination(
-            key: kTodayBottomHabitsKey,
-            icon: const Icon(Icons.autorenew_rounded),
-            label: copy.habitsTitle,
-          ),
-          NavigationDestination(
-            key: kTodayBottomPrayerKey,
-            icon: const Icon(Icons.schedule_outlined),
-            label: copy.dashboardPrayerShort,
-          ),
-          NavigationDestination(
-            key: kTodayBottomMoreKey,
-            icon: const Icon(Icons.grid_view_rounded),
-            label: copy.dashboardMore,
-          ),
-        ],
-      ),
-    );
-  }
 
-  void _showPrayerPreview(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      backgroundColor: colors.surface,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.8,
+    return SafeArea(
+      top: false,
+      child: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          height: 68,
+          backgroundColor: colors.navigationBackground,
+          indicatorColor: colors.primary.withValues(alpha: 0.16),
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.focused)) {
+              return colors.primary.withValues(alpha: 0.24);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return colors.primary.withValues(alpha: 0.08);
+            }
+            return null;
+          }),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            return IconThemeData(
+              size: 22,
+              color: states.contains(WidgetState.selected)
+                  ? colors.primary
+                  : colors.textSecondary,
+            );
+          }),
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            final isSelected = states.contains(WidgetState.selected);
+            return TextStyle(
+              color: isSelected ? colors.primary : colors.textSecondary,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              fontSize: 11,
+              letterSpacing: isSelected ? 0.2 : 0.0,
+            );
+          }),
+        ),
+        child: NavigationBar(
+          key: kTodayBottomNavigationKey,
+          selectedIndex: selectedIndex,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          onDestinationSelected: (index) {
+            switch (index) {
+              case 0:
+                onHome?.call();
+                break;
+              case 1:
+                onTasks();
+                break;
+              case 2:
+                _showTrackPreview(context, copy);
+                break;
+              case 3:
+                _showFinancePreview(context, copy);
+                break;
+              case 4:
+                _showMore(context, copy);
+                break;
+            }
+          },
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.explore_outlined),
+              selectedIcon: const Icon(Icons.explore_rounded),
+              label: copy.dashboardHome,
+              tooltip: copy.dashboardHome,
             ),
-            child: SingleChildScrollView(
-              child: TodayPrayerCard(colors: colors),
+            NavigationDestination(
+              key: kTodayBottomTasksKey,
+              icon: const Icon(Icons.check_circle_outline_rounded),
+              selectedIcon: const Icon(Icons.check_circle_rounded),
+              label: copy.tasksTitle,
+              tooltip: copy.tasksTitle,
             ),
-          ),
+            NavigationDestination(
+              key: kTodayBottomTrackKey,
+              icon: const Icon(Icons.insights_outlined),
+              selectedIcon: const Icon(Icons.insights_rounded),
+              label: copy.dashboardTrack,
+              tooltip: copy.dashboardTrack,
+            ),
+            NavigationDestination(
+              key: kTodayBottomFinanceKey,
+              icon: const Icon(Icons.account_balance_wallet_outlined),
+              selectedIcon: const Icon(Icons.account_balance_wallet_rounded),
+              label: copy.dashboardFinance,
+              tooltip: copy.dashboardFinance,
+            ),
+            NavigationDestination(
+              key: kTodayBottomMoreKey,
+              icon: const Icon(Icons.grid_view_outlined),
+              selectedIcon: const Icon(Icons.grid_view_rounded),
+              label: copy.dashboardMore,
+              tooltip: copy.dashboardMore,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _showMore(BuildContext context) {
-    final copy = FoundationLocalizations.of(context);
+  void _showTrackPreview(BuildContext context, FoundationLocalizations copy) {
+    if (onPreview != null) {
+      onPreview!(
+        context,
+        copy.dashboardComingSoonTrackTitle,
+        DashboardPreviewFeature.prayer,
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TodayComingSoonPage(
+          title: copy.dashboardComingSoonTrackTitle,
+          feature: DashboardPreviewFeature.prayer,
+          colors: colors,
+        ),
+      ),
+    );
+  }
+
+  void _showFinancePreview(BuildContext context, FoundationLocalizations copy) {
+    if (onPreview != null) {
+      onPreview!(
+        context,
+        copy.dashboardComingSoonFinanceTitle,
+        DashboardPreviewFeature.finance,
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TodayComingSoonPage(
+          title: copy.dashboardComingSoonFinanceTitle,
+          feature: DashboardPreviewFeature.finance,
+          colors: colors,
+        ),
+      ),
+    );
+  }
+
+  void _showMore(BuildContext context, FoundationLocalizations copy) {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -142,37 +205,92 @@ class TodayBottomNavigation extends StatelessWidget {
                 copy.dashboardMore,
                 style: Theme.of(
                   sheetContext,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
+
+              // Habits Owner Destination
+              ListTile(
+                key: kTodayBottomHabitsKey,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.autorenew_rounded, color: colors.primary),
+                ),
+                title: Text(
+                  copy.habitsTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  onHabits();
+                },
+              ),
+
+              // Mind Maps Owner Destination
               ListTile(
                 key: kTodayMoreMindMapsKey,
-                leading: const Icon(Icons.hub_outlined),
-                title: Text(copy.mindMapsTitle),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.secondary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.hub_outlined, color: colors.secondary),
+                ),
+                title: Text(
+                  copy.mindMapsTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   onMindMaps();
                 },
               ),
+
+              // Preferences
               ListTile(
                 key: kTodayMorePreferencesKey,
-                leading: const Icon(Icons.settings_outlined),
-                title: Text(copy.todayPreferences),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.settings_outlined,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                title: Text(
+                  copy.todayPreferences,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   onPreferences();
                 },
               ),
-              const Divider(),
+
+              const SizedBox(height: 8),
+              Divider(color: colors.border),
               Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 4),
                 child: Text(
                   copy.dashboardPreviewTitle,
-                  style: Theme.of(
-                    sheetContext,
-                  ).textTheme.labelLarge?.copyWith(color: colors.textSecondary),
+                  style: Theme.of(sheetContext).textTheme.labelLarge?.copyWith(
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
+              _upcoming(copy.dashboardPrayer, Icons.schedule_rounded, copy),
               _upcoming(copy.dashboardQuran, Icons.menu_book_rounded, copy),
               _upcoming(
                 copy.dashboardAdhkarTitle,
@@ -185,6 +303,7 @@ class TodayBottomNavigation extends StatelessWidget {
                 Icons.account_balance_wallet_outlined,
                 copy,
               ),
+              _upcoming(copy.dashboardCounters, Icons.repeat_rounded, copy),
             ],
           ),
         ),

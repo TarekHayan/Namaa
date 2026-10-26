@@ -121,6 +121,54 @@ void main() {
     });
   }
 
+  test('repeated habit earns its streak only after reaching the target', () {
+    final repeated = Habit.create(
+      id: kHabitsTestHabitId,
+      accountId: kHabitsTestAccountA,
+      name: 'Water',
+      weekdays: {1, 2, 3, 4, 5, 6, 7},
+      revisionId: kHabitsTestRevisionId,
+      createdAt: created,
+      effectiveLocalDate: '2026-10-05',
+      utcOffsetMinutes: 120,
+      dailyTarget: 5,
+    );
+    final partial = HabitDay.restore(
+      accountId: kHabitsTestAccountA,
+      habitId: kHabitsTestHabitId,
+      localDate: today,
+      completedAt: null,
+      count: 4,
+      earnedWhileDue: false,
+      earnedAgainstRevisionId: null,
+      recordedUtcOffsetMinutes: 120,
+      updatedAt: DateTime.utc(2026, 10, 14, 10),
+    );
+    expect(
+      HabitStreakRules.currentStreak(
+        habit: repeated,
+        days: [partial],
+        todayLocalDate: today,
+      ),
+      0,
+    );
+    final completed = partial.changeCount(
+      count: 5,
+      target: 5,
+      at: DateTime.utc(2026, 10, 14, 11),
+      utcOffsetMinutes: 120,
+      revisionId: kHabitsTestRevisionId,
+    );
+    expect(
+      HabitStreakRules.currentStreak(
+        habit: repeated,
+        days: [completed],
+        todayLocalDate: today,
+      ),
+      1,
+    );
+  });
+
   test('duplicate day and foreign account or habit never inflate a streak', () {
     final monday = day('2026-10-12');
     expect(

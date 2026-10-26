@@ -12,6 +12,8 @@ environment:
 dependencies:
   # Local-first encrypted persistence (Constitution III/IX: Drift over SQLite).
   connectivity_plus: ^7.3.1
+  # Development-only device size, safe-area, and text-scale simulation.
+  device_preview: ^1.3.1
   drift: ^2.34.4
   drift_flutter: ^0.3.1
 

@@ -299,6 +299,12 @@ abstract class FoundationLocalizations {
   /// **'Tasks'**
   String get tasksTitle;
 
+  /// No description provided for @tasksEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a task to start organizing your day.'**
+  String get tasksEmptyHint;
+
   /// No description provided for @tasksFilterToday.
   ///
   /// In en, this message translates to:
@@ -533,6 +539,24 @@ abstract class FoundationLocalizations {
   /// **'Cancel'**
   String get taskCancel;
 
+  /// No description provided for @taskMoreDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'More details'**
+  String get taskMoreDetails;
+
+  /// No description provided for @taskLessDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Less details'**
+  String get taskLessDetails;
+
+  /// No description provided for @taskMatrixLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Eisenhower Matrix'**
+  String get taskMatrixLabel;
+
   /// No description provided for @taskTitleLabel.
   ///
   /// In en, this message translates to:
@@ -542,7 +566,7 @@ abstract class FoundationLocalizations {
   /// No description provided for @taskTitleHint.
   ///
   /// In en, this message translates to:
-  /// **'Task title'**
+  /// **'What would you like to accomplish today?'**
   String get taskTitleHint;
 
   /// No description provided for @taskDescriptionLabel.
@@ -554,7 +578,7 @@ abstract class FoundationLocalizations {
   /// No description provided for @taskDescriptionHint.
   ///
   /// In en, this message translates to:
-  /// **'Notes or details'**
+  /// **'Add optional notes or details...'**
   String get taskDescriptionHint;
 
   /// No description provided for @taskDurationLabel.
@@ -1796,13 +1820,13 @@ abstract class FoundationLocalizations {
   /// No description provided for @dashboardGreetingMorning.
   ///
   /// In en, this message translates to:
-  /// **'A calmer start to today'**
+  /// **'Good morning'**
   String get dashboardGreetingMorning;
 
   /// No description provided for @dashboardGreetingLater.
   ///
   /// In en, this message translates to:
-  /// **'Make space for what matters'**
+  /// **'Good evening'**
   String get dashboardGreetingLater;
 
   /// No description provided for @dashboardSubtitle.
@@ -1888,6 +1912,12 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'More'**
   String get dashboardMore;
+
+  /// No description provided for @dashboardQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick add'**
+  String get dashboardQuickAdd;
 
   /// No description provided for @dashboardPrayer.
   ///

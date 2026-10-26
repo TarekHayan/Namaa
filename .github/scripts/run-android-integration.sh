@@ -27,6 +27,7 @@ case "${ANDROID_SUITE:-}" in
       integration_test/habits_offline_sync_test.dart
       integration_test/habits_streak_history_test.dart
       integration_test/today_dashboard_test.dart
+      integration_test/today_performance_test.dart
       integration_test/today_sync_test.dart
     )
     ;;

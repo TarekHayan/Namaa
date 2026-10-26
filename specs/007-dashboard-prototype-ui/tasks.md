@@ -35,25 +35,25 @@
 
 ### Tests
 
-- [ ] T008 [P] [US1] Add failing widget assertions for exactly eight Home groups in order, six hub labels in order, five main labels in order, and no extra Habits/Explore group in test/widget/features/today/dashboard_prototype_contract_test.dart.
+- [X] T008 [P] [US1] Add failing widget assertions for exactly eight Home groups in order, six hub labels in order, five main labels in order, and no extra Habits/Explore group in test/widget/features/today/dashboard_prototype_contract_test.dart.
 - [X] T009 [P] [US1] Validate the proposed offline calendar package's source, license, supported dates, actual API, and several KACST month/year-boundary reference vectors; only then add the vetted version to pubspec.yaml and pubspec.lock and record evidence or a blocked adoption in specs/007-dashboard-prototype-ui/verification.md.
 - [X] T010 [US1] Add failing tests for official boundary vectors, unsupported dates, local-midnight/offset refresh, and no guessed fallback in test/unit/features/today/data/umm_al_qura_today_date_test.dart using the vetted reference from T009.
 
 ### Implementation
 
 - [X] T011 [US1] Implement a pure date-only adapter from TodayCalendar.localDate to verified Umm al-Qura fields or unavailable, without a second clock read or network access, in lib/features/today/data/umm_al_qura_today_date.dart.
-- [ ] T012 [US1] Build the prototype-role greeting/header with Namaa icon, same-sample Gregorian/Hijri date, calendar name, sample-tagged unowned badges, existing LocaleCubit language switch, and existing quick-add callbacks in lib/features/today/presentation/widgets/today_dashboard_header.dart.
-- [ ] T013 [US1] Build the progress hero with circular sample gauge, clearly tagged level/status, real XP, separate real Task/Habit ratios, and six prototype metric positions in lib/features/today/presentation/widgets/today_progress_hero.dart.
-- [ ] T014 [P] [US1] Adapt the next-prayer card to the prototype's next/following-prayer, location, time, countdown and sample roles in lib/features/today/presentation/widgets/today_prayer_card.dart.
-- [ ] T015 [P] [US1] Adapt the Quran Wird card to the prototype's title, progress and reading affordance with sample status in lib/features/today/presentation/widgets/today_quran_card.dart.
-- [ ] T016 [P] [US1] Build the six quick hubs in the exact Prayer, Focus, Quran, Adhkar, Qiyam, Counters order in lib/features/today/presentation/widgets/today_quick_hubs.dart.
-- [ ] T017 [P] [US1] Build the vertical-rail timeline from existing TodayAgenda Task references plus separately tagged sample events, preserving real Task time/order/status, in lib/features/today/presentation/widgets/today_timeline_section.dart.
-- [ ] T018 [P] [US1] Adapt the compact Do First card and matrix affordance around the existing three-item TodayPriority projection in lib/features/today/presentation/widgets/today_priority_section.dart.
-- [ ] T019 [P] [US1] Adapt the Finance summary to the prototype's two spending/savings tiles with sample amounts and destination in lib/features/today/presentation/widgets/today_finance_card.dart.
-- [ ] T020 [P] [US1] Build the prototype's compact sample Counters snippet with at most four entries in lib/features/today/presentation/widgets/today_counters_card.dart.
-- [ ] T021 [US1] Compose T012–T020 into exactly eight ordered Home groups using existing AppColors, ThmanyahSans and assets/images/namaa_icon.png; remove extra Home-only Habits/Explore panels without removing owner navigation in lib/features/today/presentation/today_dashboard_view.dart.
-- [ ] T022 [US1] Align visible labels and positions to Home, Tasks, Track, Finance, More in lib/features/today/presentation/widgets/today_bottom_navigation.dart and lib/features/today/presentation/widgets/today_navigation_sidebar.dart; preserve callbacks for US4 routing.
-- [ ] T023 [US1] Run the focused US1 widget/date tests and record a side-by-side large-screen prototype comparison plus unresolved mismatches in specs/007-dashboard-prototype-ui/verification.md.
+- [X] T012 [US1] Build the prototype-role greeting/header with Namaa icon, same-sample Gregorian/Hijri date, calendar name, sample-tagged unowned badges, existing LocaleCubit language switch, and existing quick-add callbacks in lib/features/today/presentation/widgets/today_dashboard_header.dart.
+- [X] T013 [US1] Build the progress hero with circular sample gauge, clearly tagged level/status, real XP, separate real Task/Habit ratios, and six prototype metric positions in lib/features/today/presentation/widgets/today_progress_hero.dart.
+- [X] T014 [P] [US1] Adapt the next-prayer card to the prototype's next/following-prayer, location, time, countdown and sample roles in lib/features/today/presentation/widgets/today_prayer_card.dart.
+- [X] T015 [P] [US1] Adapt the Quran Wird card to the prototype's title, progress and reading affordance with sample status in lib/features/today/presentation/widgets/today_quran_card.dart.
+- [X] T016 [P] [US1] Build the six quick hubs in the exact Prayer, Focus, Quran, Adhkar, Qiyam, Counters order in lib/features/today/presentation/widgets/today_quick_hubs.dart.
+- [X] T017 [P] [US1] Build the vertical-rail timeline from existing TodayAgenda Task references plus separately tagged sample events, preserving real Task time/order/status, in lib/features/today/presentation/widgets/today_timeline_section.dart.
+- [X] T018 [P] [US1] Adapt the compact Do First card and matrix affordance around the existing three-item TodayPriority projection in lib/features/today/presentation/widgets/today_priority_section.dart.
+- [X] T019 [P] [US1] Adapt the Finance summary to the prototype's two spending/savings tiles with sample amounts and destination in lib/features/today/presentation/widgets/today_finance_card.dart.
+- [X] T020 [P] [US1] Build the prototype's compact sample Counters snippet with at most four entries in lib/features/today/presentation/widgets/today_counters_card.dart.
+- [X] T021 [US1] Compose T012–T020 into exactly eight ordered Home groups using existing AppColors, ThmanyahSans and assets/images/namaa_icon.png; remove extra Home-only Habits/Explore panels without removing owner navigation in lib/features/today/presentation/today_dashboard_view.dart.
+- [X] T022 [US1] Align visible labels and positions to Home, Tasks, Track, Finance, More in lib/features/today/presentation/widgets/today_bottom_navigation.dart and lib/features/today/presentation/widgets/today_navigation_sidebar.dart; preserve callbacks for US4 routing.
+- [X] T023 [US1] Run the focused US1 widget/date tests and record a side-by-side large-screen prototype comparison plus unresolved mismatches in specs/007-dashboard-prototype-ui/verification.md.
 
 **Checkpoint**: The reference inventory is recognizable and US1 passes independently; owner features are not redesigned.
 
@@ -65,15 +65,15 @@
 
 ### Tests
 
-- [ ] T024 [US2] Add failing viewport, text-scale, safe-area, keyboard/focus and RTL/LTR overflow assertions in test/widget/features/today/today_accessibility_test.dart.
+- [X] T024 [US2] Add failing viewport, text-scale, safe-area, keyboard/focus and RTL/LTR overflow assertions in test/widget/features/today/today_accessibility_test.dart.
 
 ### Implementation
 
-- [ ] T025 [US2] Refine the Dashboard shell to a readable single-column phone scroll, constrained large-screen content and bottom-inset clearance without changing section order in lib/features/today/presentation/today_dashboard_view.dart.
-- [ ] T026 [P] [US2] Make progress/hub grids and Finance/Counters tiles wrap or reduce columns based on available width and 150% text while retaining item order in lib/features/today/presentation/widgets/today_progress_hero.dart, lib/features/today/presentation/widgets/today_quick_hubs.dart, lib/features/today/presentation/widgets/today_finance_card.dart, and lib/features/today/presentation/widgets/today_counters_card.dart.
-- [ ] T027 [P] [US2] Make long bilingual header text, mixed-direction titles and the timeline rail use directional layout and readable wrapping in lib/features/today/presentation/widgets/today_dashboard_header.dart and lib/features/today/presentation/widgets/today_timeline_section.dart.
-- [ ] T028 [US2] Ensure persistent phone navigation respects gesture/safe areas, touch targets, visible focus and selected state beyond color in lib/features/today/presentation/widgets/today_bottom_navigation.dart.
-- [ ] T029 [US2] Run the focused responsive/accessibility widget checks and document 320/390/430 phone, tablet and desktop observations at normal/150% text in both languages in specs/007-dashboard-prototype-ui/verification.md.
+- [X] T025 [US2] Refine the Dashboard shell to a readable single-column phone scroll, constrained large-screen content and bottom-inset clearance without changing section order in lib/features/today/presentation/today_dashboard_view.dart.
+- [X] T026 [P] [US2] Make progress/hub grids and Finance/Counters tiles wrap or reduce columns based on available width and 150% text while retaining item order in lib/features/today/presentation/widgets/today_progress_hero.dart, lib/features/today/presentation/widgets/today_quick_hubs.dart, lib/features/today/presentation/widgets/today_finance_card.dart, and lib/features/today/presentation/widgets/today_counters_card.dart.
+- [X] T027 [P] [US2] Make long bilingual header text, mixed-direction titles and the timeline rail use directional layout and readable wrapping in lib/features/today/presentation/widgets/today_dashboard_header.dart and lib/features/today/presentation/widgets/today_timeline_section.dart.
+- [X] T028 [US2] Ensure persistent phone navigation respects gesture/safe areas, touch targets, visible focus and selected state beyond color in lib/features/today/presentation/widgets/today_bottom_navigation.dart.
+- [X] T029 [US2] Run the focused responsive/accessibility widget checks and document 320/390/430 phone, tablet and desktop observations at normal/150% text in both languages in specs/007-dashboard-prototype-ui/verification.md.
 
 **Checkpoint**: US2 independently meets the phone and accessibility layout contract.
 
@@ -85,38 +85,38 @@
 
 ### Tests
 
-- [ ] T030 [P] [US3] Add failing widget tests that inventory every sample figure and semantics label and verify no preview action claims a save in test/widget/features/today/today_dashboard_preview_cards_test.dart.
-- [ ] T031 [P] [US3] Add failing 10-Task/5-Habit/XP fixture checks for independent ratios, zero-denominator, loading, stale, unavailable and scope changes in test/widget/features/today/today_screen_test.dart.
+- [X] T030 [P] [US3] Add failing widget tests that inventory every sample figure and semantics label and verify no preview action claims a save in test/widget/features/today/today_dashboard_preview_cards_test.dart.
+- [X] T031 [P] [US3] Add failing 10-Task/5-Habit/XP fixture checks for independent ratios, zero-denominator, loading, stale, unavailable and scope changes in test/widget/features/today/today_screen_test.dart.
 
 ### Implementation
 
-- [ ] T032 [US3] Map TodayState's owner Task/Habit/XP sections and their available/empty/stale/unavailable statuses to T005 display provenance without a blended score or fake zero in lib/features/today/presentation/dashboard_presentation.dart.
-- [ ] T033 [P] [US3] Apply visible and semantic sample markers to ring, unowned level/streak and six metrics, while showing independent owner Task/Habit/XP states, in lib/features/today/presentation/widgets/today_progress_hero.dart.
-- [ ] T034 [P] [US3] Apply per-figure sample labels and non-saving preview behavior to prayer, Quran, finance, counters and sample timeline events in lib/features/today/presentation/widgets/today_prayer_card.dart, lib/features/today/presentation/widgets/today_quran_card.dart, lib/features/today/presentation/widgets/today_finance_card.dart, lib/features/today/presentation/widgets/today_counters_card.dart, and lib/features/today/presentation/widgets/today_timeline_section.dart.
-- [ ] T035 [US3] Bind the presentation projection without writing data; retain owner Task/Habit/XP isolation, TodayPriority's due/overdue three-item cap and live-source recovery in lib/features/today/presentation/today_dashboard_view.dart.
-- [ ] T036 [US3] Run the US3 widget and existing Today projection tests; record fixture values, provenance audit, offline read-only behavior, and any unresolved source states in specs/007-dashboard-prototype-ui/verification.md.
+- [X] T032 [US3] Map TodayState's owner Task/Habit/XP sections and their available/empty/stale/unavailable statuses to T005 display provenance without a blended score or fake zero in lib/features/today/presentation/dashboard_presentation.dart.
+- [X] T033 [P] [US3] Apply visible and semantic sample markers to ring, unowned level/streak and six metrics, while showing independent owner Task/Habit/XP states, in lib/features/today/presentation/widgets/today_progress_hero.dart.
+- [X] T034 [P] [US3] Apply per-figure sample labels and non-saving preview behavior to prayer, Quran, finance, counters and sample timeline events in lib/features/today/presentation/widgets/today_prayer_card.dart, lib/features/today/presentation/widgets/today_quran_card.dart, lib/features/today/presentation/widgets/today_finance_card.dart, lib/features/today/presentation/widgets/today_counters_card.dart, and lib/features/today/presentation/widgets/today_timeline_section.dart.
+- [X] T035 [US3] Bind the presentation projection without writing data; retain owner Task/Habit/XP isolation, TodayPriority's due/overdue three-item cap and live-source recovery in lib/features/today/presentation/today_dashboard_view.dart.
+- [X] T036 [US3] Run the US3 widget and existing Today projection tests; record fixture values, provenance audit, offline read-only behavior, and any unresolved source states in specs/007-dashboard-prototype-ui/verification.md.
 
 **Checkpoint**: US3 passes with correct owner numbers and 100% of future figures marked sample.
 
 ## Phase 6: User Story 4 — Reach implemented work (P2)
 
-**Goal**: Every visible control opens the correct existing owner or a matching coming-soon destination; Habits and Mind Maps live under More.
+**Goal**: Every visible control opens the correct existing owner or a matching coming-soon destination; Habits and Mind Maps live under More on phones and directly in the desktop sidebar.
 
 **Independent test**: Exercise header, timeline, Do First, each hub, Finance, Counters and both navigation layouts, then confirm owner records stay intact.
 
 ### Tests
 
-- [ ] T037 [P] [US4] Add failing owner/placeholder route tests for five main destinations, More → Habits/Mind Maps, each hub and preview card in test/widget/app/today_owner_navigation_test.dart and test/widget/features/today/dashboard_navigation_test.dart.
-- [ ] T038 [P] [US4] Add failing quick-add cancellation, existing Task opening/completion, and read-only Home Habit assertions in test/widget/app/today_creation_route_test.dart and test/widget/features/today/today_actions_test.dart.
+- [X] T037 [P] [US4] Add failing owner/placeholder route tests for five main destinations, More → Habits/Mind Maps, each hub and preview card in test/widget/app/today_owner_navigation_test.dart and test/widget/features/today/dashboard_navigation_test.dart.
+- [X] T038 [P] [US4] Add failing quick-add cancellation, existing Task opening/completion, and read-only Home Habit assertions in test/widget/app/today_creation_route_test.dart and test/widget/features/today/today_actions_test.dart.
 
 ### Implementation
 
-- [ ] T039 [P] [US4] Wire phone Home/Tasks/Track/Finance/More to the existing owner callbacks or T007 coming-soon page; put Habits and Mind Maps inside More in lib/features/today/presentation/widgets/today_bottom_navigation.dart.
-- [ ] T040 [P] [US4] Wire the same five destinations and More owner links in the desktop sidebar, removing the unapproved XP-to-level inference, in lib/features/today/presentation/widgets/today_navigation_sidebar.dart.
-- [ ] T041 [US4] Connect the header/hub/card callbacks and existing owner routes from TodayScreen without bypassing app_router.dart account/preview gates in lib/features/today/presentation/today_screen.dart and lib/features/today/presentation/today_dashboard_view.dart.
-- [ ] T042 [US4] Keep quick add on current Task/Habit forms, real timeline/Do First Task actions on canonical Task callbacks, and Home Habit progress read-only with owner navigation in lib/features/today/presentation/widgets/today_dashboard_header.dart, lib/features/today/presentation/widgets/today_timeline_section.dart, and lib/features/today/presentation/widgets/today_priority_section.dart.
-- [ ] T043 [US4] Replace superseded Home Habit-tab/completion assertions with More → Habits owner-flow checks while retaining Habit domain/action assertions in test/widget/features/today/today_actions_test.dart and test/widget/features/today/today_accessibility_test.dart.
-- [ ] T044 [US4] Run the focused route/creation/action suites and document phone touch and desktop keyboard journeys, including all five destinations and both More owner links, in specs/007-dashboard-prototype-ui/verification.md.
+- [X] T039 [P] [US4] Wire phone Home/Tasks/Track/Finance/More to the existing owner callbacks or T007 coming-soon page; put Habits and Mind Maps inside More in lib/features/today/presentation/widgets/today_bottom_navigation.dart.
+- [X] T040 [P] [US4] Wire direct owner and coming-soon destinations in the desktop sidebar without a More grouping, removing the unapproved XP-to-level inference, in lib/features/today/presentation/widgets/today_navigation_sidebar.dart.
+- [X] T041 [US4] Connect the header/hub/card callbacks and existing owner routes from TodayScreen without bypassing app_router.dart account/preview gates in lib/features/today/presentation/today_screen.dart and lib/features/today/presentation/today_dashboard_view.dart.
+- [X] T042 [US4] Keep quick add on current Task/Habit forms, real timeline/Do First Task actions on canonical Task callbacks, and Home Habit progress read-only with owner navigation in lib/features/today/presentation/widgets/today_dashboard_header.dart, lib/features/today/presentation/widgets/today_timeline_section.dart, and lib/features/today/presentation/widgets/today_priority_section.dart.
+- [X] T043 [US4] Replace superseded Home Habit-tab/completion assertions with More → Habits owner-flow checks while retaining Habit domain/action assertions in test/widget/features/today/today_actions_test.dart and test/widget/features/today/today_accessibility_test.dart.
+- [X] T044 [US4] Run the focused route/creation/action suites and document phone touch and desktop keyboard journeys, including the five phone destinations, both phone More owner links, and direct desktop destinations, in specs/007-dashboard-prototype-ui/verification.md.
 
 **Checkpoint**: Every visible action has an honest destination and existing owner data survives round trips.
 
@@ -124,11 +124,11 @@
 
 **Purpose**: Close the explicit success criteria and the constitution's UI/target gates without repetitive full-device runs after each edit.
 
-- [ ] T045 [P] Extend Arabic/English theme, directionality, semantic labels, focus order and 150% text regressions for the final Dashboard in test/widget/app/localization_and_directionality_test.dart.
-- [ ] T046 [P] Update the existing Dashboard integration journey to assert preview entry without public sign-in, no sample-induced mutation, owner Task/Habit/Map access and offline return in integration_test/today_dashboard_test.dart.
-- [ ] T047 [P] Reuse the 500-Task/100-Habit/200-XP fixture to measure first readable Dashboard content under two seconds offline on a phone and desktop in integration_test/today_performance_test.dart; record device/build/timing evidence in specs/007-dashboard-prototype-ui/verification.md.
-- [ ] T048 Run flutter analyze, formatting, focused suites and the repository's established quality/database plus Android, iOS, Windows, macOS and Linux integration gate before merge; record real results, failures and platform coverage in specs/007-dashboard-prototype-ui/verification.md.
-- [ ] T049 Compare the final UI with prototype.zip and audit FR-001–FR-015/SC-001–SC-008, the three-minute touch/keyboard journeys, Umm al-Qura reference vectors and constitution compliance; record evidence or unresolved blockers without claiming completion in specs/007-dashboard-prototype-ui/verification.md.
+- [X] T045 [P] Extend Arabic/English theme, directionality, semantic labels, focus order and 150% text regressions for the final Dashboard in test/widget/app/localization_and_directionality_test.dart.
+- [X] T046 [P] Update the existing Dashboard integration journey to assert preview entry without public sign-in, no sample-induced mutation, owner Task/Habit/Map access and offline return in integration_test/today_dashboard_test.dart. The corrected counter-action journey passed on Windows; other targets are part of T048.
+- [ ] T047 [P] Reuse the 500-Task/100-Habit/200-XP fixture to measure first readable Dashboard content under two seconds offline on a phone and desktop in integration_test/today_performance_test.dart; record device/build/timing evidence in specs/007-dashboard-prototype-ui/verification.md. Corrected Windows results are recorded; a phone-device run is pending.
+- [ ] T048 Run flutter analyze, formatting, focused suites and the repository's established quality/database plus Android, iOS, Windows, macOS and Linux integration gate before merge; record real results, failures and platform coverage in specs/007-dashboard-prototype-ui/verification.md. Cross-platform results for 007 are pending.
+- [ ] T049 Compare the final UI with prototype.zip and audit FR-001–FR-015/SC-001–SC-008, the three-minute touch/keyboard journeys, Umm al-Qura reference vectors and constitution compliance; record evidence or unresolved blockers without claiming completion in specs/007-dashboard-prototype-ui/verification.md. Final audit follows the gate.
 
 ## Dependencies and execution order
 

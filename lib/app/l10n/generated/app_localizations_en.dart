@@ -114,6 +114,9 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get tasksTitle => 'Tasks';
 
   @override
+  String get tasksEmptyHint => 'Add a task to start organizing your day.';
+
+  @override
   String get tasksFilterToday => 'Today';
 
   @override
@@ -233,16 +236,25 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get taskCancel => 'Cancel';
 
   @override
+  String get taskMoreDetails => 'More details';
+
+  @override
+  String get taskLessDetails => 'Less details';
+
+  @override
+  String get taskMatrixLabel => 'Eisenhower Matrix';
+
+  @override
   String get taskTitleLabel => 'Title';
 
   @override
-  String get taskTitleHint => 'Task title';
+  String get taskTitleHint => 'What would you like to accomplish today?';
 
   @override
   String get taskDescriptionLabel => 'Description';
 
   @override
-  String get taskDescriptionHint => 'Notes or details';
+  String get taskDescriptionHint => 'Add optional notes or details...';
 
   @override
   String get taskDurationLabel => 'Estimated Duration (minutes)';
@@ -879,10 +891,10 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get todayOpenOverdue => 'Open overdue tasks';
 
   @override
-  String get dashboardGreetingMorning => 'A calmer start to today';
+  String get dashboardGreetingMorning => 'Good morning';
 
   @override
-  String get dashboardGreetingLater => 'Make space for what matters';
+  String get dashboardGreetingLater => 'Good evening';
 
   @override
   String get dashboardSubtitle =>
@@ -927,6 +939,9 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get dashboardMore => 'More';
+
+  @override
+  String get dashboardQuickAdd => 'Quick add';
 
   @override
   String get dashboardPrayer => 'Prayer times';

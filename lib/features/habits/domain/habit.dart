@@ -36,6 +36,7 @@ final class HabitScheduleRevision {
     required this.effectiveLocalDate,
     required this.utcOffsetMinutes,
     required Iterable<int> weekdays,
+    this.dailyTarget = 1,
   }) : weekdays = List<int>.unmodifiable(weekdays.toSet().toList()..sort()) {
     if (revisionId.trim().isEmpty) {
       throw ArgumentError.value(revisionId, 'revisionId');
@@ -47,6 +48,9 @@ final class HabitScheduleRevision {
         this.weekdays.any((day) => day < 1 || day > 7)) {
       throw ArgumentError.value(this.weekdays, 'weekdays');
     }
+    if (dailyTarget < 1 || dailyTarget > 9999) {
+      throw ArgumentError.value(dailyTarget, 'dailyTarget');
+    }
   }
 
   final String revisionId;
@@ -54,6 +58,7 @@ final class HabitScheduleRevision {
   final String effectiveLocalDate;
   final int utcOffsetMinutes;
   final List<int> weekdays;
+  final int dailyTarget;
 }
 
 /// Account-owned metadata; day actions are stored independently.
@@ -79,6 +84,7 @@ final class Habit {
     required String effectiveLocalDate,
     required int utcOffsetMinutes,
     int? reminderMinuteOfDay,
+    int dailyTarget = 1,
   }) => Habit.restore(
     id: id,
     accountId: accountId,
@@ -90,6 +96,7 @@ final class Habit {
         effectiveLocalDate: effectiveLocalDate,
         utcOffsetMinutes: utcOffsetMinutes,
         weekdays: weekdays,
+        dailyTarget: dailyTarget,
       ),
     ],
     reminderMinuteOfDay: reminderMinuteOfDay,
@@ -166,6 +173,8 @@ final class Habit {
   final DateTime? deletedAt;
   bool get isDeleted => deletedAt != null;
   HabitScheduleRevision get currentRevision => scheduleRevisions.last;
+  int get dailyTarget => currentRevision.dailyTarget;
+  bool get hasRepetitions => dailyTarget > 1;
 
   Habit edit({
     required String name,
@@ -175,15 +184,18 @@ final class Habit {
     required DateTime editedAt,
     required String effectiveLocalDate,
     required int utcOffsetMinutes,
+    int? dailyTarget,
   }) {
     if (isDeleted) throw StateError('Cannot edit a deleted habit');
     validateHabitUtc(editedAt, 'editedAt');
     parseHabitLocalDate(effectiveLocalDate);
     validateHabitOffset(utcOffsetMinutes);
     final selected = weekdays.toSet();
+    final target = dailyTarget ?? currentRevision.dailyTarget;
     final scheduleChanged =
         selected.length != currentRevision.weekdays.length ||
-        !selected.containsAll(currentRevision.weekdays);
+        !selected.containsAll(currentRevision.weekdays) ||
+        target != currentRevision.dailyTarget;
     final version = editedAt.isAfter(updatedAt)
         ? editedAt
         : updatedAt.add(const Duration(microseconds: 1));
@@ -200,6 +212,7 @@ final class Habit {
             effectiveLocalDate: effectiveLocalDate,
             utcOffsetMinutes: utcOffsetMinutes,
             weekdays: selected,
+            dailyTarget: target,
           ),
       ],
       reminderMinuteOfDay: reminderMinuteOfDay,

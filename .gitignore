@@ -61,6 +61,12 @@ supabase/.branches/
 devtools_options.yaml
 node_modules/
 
+# Extracted UI prototype is a local design reference, not Flutter app source.
+/prototype/
+
+# Extracted UI prototype is a local design reference, not Flutter app source.
+/prototype/
+
 # Local staging credentials used to populate GitHub Actions repository secrets.
 # Never commit the populated file.
 .secrets/*.env

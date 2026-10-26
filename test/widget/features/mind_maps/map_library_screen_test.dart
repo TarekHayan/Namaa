@@ -7,8 +7,10 @@ import 'package:namma_project/app/l10n/mind_maps_strings_adapter.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/mind_maps/application/map_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_repository.dart';
+import 'package:namma_project/features/mind_maps/presentation/map_editor_screen.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_screen.dart';
+import 'package:namma_project/features/mind_maps/presentation/map_library_state.dart';
 
 import '../../../support/mind_maps_test_support.dart';
 
@@ -34,12 +36,19 @@ void main() {
   Future<void> open(
     WidgetTester tester, {
     Locale locale = const Locale('en'),
+    double textScale = 1,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: locale,
         supportedLocales: FoundationLocalizations.supportedLocales,
         localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: MapLibraryScreen(
           cubit: cubit,
           ownerId: kMindMapsTestAccountA,
@@ -62,6 +71,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Biology'), findsOneWidget);
       expect(find.textContaining('Nodes: 1'), findsOneWidget);
+      final mapId = (cubit.state as MapLibraryReady).maps.single.map.id;
 
       await tester.enterText(find.byKey(kMapLibrarySearchKey), 'unmatched');
       await tester.pumpAndSettle();
@@ -77,6 +87,8 @@ void main() {
               'mind-map-rename-',
             ),
       );
+      await tester.tap(find.byKey(ValueKey('mind-map-menu-$mapId')));
+      await tester.pumpAndSettle();
       await tester.tap(rename);
       await tester.pumpAndSettle();
       await tester.enterText(
@@ -100,11 +112,15 @@ void main() {
               'mind-map-delete-',
             ),
       );
+      await tester.tap(find.byKey(ValueKey('mind-map-menu-$mapId')));
+      await tester.pumpAndSettle();
       await tester.tap(delete);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(find.text('Biology notes'), findsOneWidget);
+      await tester.tap(find.byKey(ValueKey('mind-map-menu-$mapId')));
+      await tester.pumpAndSettle();
       await tester.tap(delete);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(kMapLibraryConfirmDeleteKey));
@@ -130,6 +146,31 @@ void main() {
     expect(find.byKey(kMapLibraryEmptyKey), findsOneWidget);
   });
 
+  testWidgets('an owned map opens its canvas directly', (tester) async {
+    await cubit.close();
+    cubit = MapLibraryCubit(
+      repository: repo,
+      commands: MapCommands(repository: repo, session: session),
+      session: session,
+    );
+    await open(tester);
+    await tester.tap(find.byKey(kMapLibraryCreateKey));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(kMapLibraryTitleFieldKey), 'Roadmap');
+    await tester.tap(find.byKey(kMapLibrarySaveKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Roadmap'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(kMindMapEditorKey), findsOneWidget);
+    expect(
+      tester.state<NavigatorState>(find.byType(Navigator)).canPop(),
+      isFalse,
+    );
+    session.signOut();
+    await tester.pumpAndSettle();
+    expect(find.byKey(kMindMapEditorKey), findsNothing);
+  });
+
   testWidgets('create dialog fits a small phone with the keyboard open', (
     tester,
   ) async {
@@ -152,6 +193,27 @@ void main() {
     await tester.tap(find.byKey(kMapLibrarySaveKey));
     await tester.pumpAndSettle();
     expect(find.text('خريطة صغيرة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('map cards fit a narrow phone with larger Arabic text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    await open(tester, locale: const Locale('ar'), textScale: 1.5);
+    await tester.tap(find.byKey(kMapLibraryCreateKey));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.enterText(find.byKey(kMapLibraryTitleFieldKey), 'خطة التعلم');
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(kMapLibrarySaveKey));
+    await tester.pumpAndSettle();
+    expect(find.byKey(kMapLibraryGridKey), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

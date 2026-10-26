@@ -106,6 +106,15 @@ final class HabitsCubit extends Cubit<HabitsState> {
     _commands.completeHabitToday(habitId, expectedAccountId: _accountId),
   );
 
+  Future<AppResult<HabitDay>> adjustToday(String habitId, int delta) =>
+      _capture(
+        _commands.adjustHabitToday(
+          habitId,
+          delta: delta,
+          expectedAccountId: _accountId,
+        ),
+      );
+
   Future<AppResult<HabitDay>> undoToday(String habitId) => _capture(
     _commands.undoHabitToday(habitId, expectedAccountId: _accountId),
   );

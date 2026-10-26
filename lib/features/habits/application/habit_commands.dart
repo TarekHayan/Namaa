@@ -16,10 +16,12 @@ final class CreateHabitInput {
     required this.name,
     required this.weekdays,
     this.reminderMinuteOfDay,
+    this.dailyTarget = 1,
   });
   final String name;
   final Set<int> weekdays;
   final int? reminderMinuteOfDay;
+  final int dailyTarget;
 }
 
 final class EditHabitInput {
@@ -82,6 +84,11 @@ final class HabitCommands {
         _error(AppFailureCategory.validation, 'habits.validation.reminder'),
       );
     }
+    if (input.dailyTarget < 1 || input.dailyTarget > 9999) {
+      return AppResult.failure(
+        _error(AppFailureCategory.validation, 'habits.validation.daily_target'),
+      );
+    }
     final account = await _account(expectedAccountId);
     if (account.failureOrNull case final failure?) {
       return AppResult.failure(failure);
@@ -99,6 +106,7 @@ final class HabitCommands {
         effectiveLocalDate: calendar.localDate,
         utcOffsetMinutes: calendar.utcOffsetMinutes,
         reminderMinuteOfDay: input.reminderMinuteOfDay,
+        dailyTarget: input.dailyTarget,
       );
       final checked = await _account(expectedAccountId);
       if (checked.valueOrNull != habit.accountId) {
@@ -333,6 +341,7 @@ final class HabitCommands {
             .revisionOn(calendar.localDate)!
             .revisionId,
         recordedUtcOffsetMinutes: calendar.utcOffsetMinutes,
+        count: habit.dailyTarget,
       );
       final commit = await _repository.commitDay(
         HabitDayWriteRequest(
@@ -341,6 +350,117 @@ final class HabitCommands {
           kind: previous.valueOrNull == null
               ? ChangeKind.create
               : ChangeKind.update,
+          queuedAt: now,
+        ),
+      );
+      final failure = commit.failureOrNull;
+      return failure == null
+          ? AppResult.success(day)
+          : AppResult.failure(failure);
+    });
+  }
+
+  /// Changes only today's count. Reaching the target earns today's completion.
+  Future<AppResult<HabitDay>> adjustHabitToday(
+    String habitId, {
+    required int delta,
+    String? expectedAccountId,
+    String? expectedLocalDate,
+  }) async {
+    if (delta == 0 || delta < -9999 || delta > 9999) {
+      return AppResult.failure(
+        _error(AppFailureCategory.validation, 'habits.validation.daily_target'),
+      );
+    }
+    final account = await _account(expectedAccountId);
+    if (account.failureOrNull case final failure?) {
+      return AppResult.failure(failure);
+    }
+    final owner = account.valueOrNull!;
+    final calendar = _localCalendar();
+    if (expectedLocalDate != null && expectedLocalDate != calendar.localDate) {
+      return AppResult.failure(_staleDay());
+    }
+    return _repository.runInTransaction(() async {
+      final habitResult = await _repository.readHabit(
+        accountId: owner,
+        habitId: habitId,
+      );
+      if (habitResult.failureOrNull case final failure?) {
+        return AppResult.failure(failure);
+      }
+      final habit = habitResult.valueOrNull;
+      if (habit == null || habit.isDeleted) {
+        return AppResult.failure(
+          _error(AppFailureCategory.notFound, 'habits.error.not_found'),
+        );
+      }
+      final previous = await _repository.readDay(
+        accountId: owner,
+        habitId: habitId,
+        localDate: calendar.localDate,
+      );
+      if (previous.failureOrNull case final failure?) {
+        return AppResult.failure(failure);
+      }
+      final prior = previous.valueOrNull;
+      if (delta > 0 && !habit.isDueOn(calendar.localDate)) {
+        return AppResult.failure(
+          _error(AppFailureCategory.validation, 'habits.validation.not_due'),
+        );
+      }
+      final target = habit.dailyTarget;
+      final currentCount = prior?.count ?? 0;
+      final nextCount = (currentCount + delta).clamp(0, target);
+      if (nextCount == currentCount && prior != null) {
+        return AppResult.success(prior);
+      }
+      if (nextCount == 0 && prior == null) {
+        return AppResult.failure(
+          _error(
+            AppFailureCategory.validation,
+            'habits.validation.not_completed',
+          ),
+        );
+      }
+      final checked = await _account(expectedAccountId);
+      if (checked.valueOrNull != owner) {
+        return AppResult.failure(
+          _error(AppFailureCategory.authorization, 'habits.error.account'),
+        );
+      }
+      if (_localCalendar().localDate != calendar.localDate) {
+        return AppResult.failure(_staleDay());
+      }
+      final requested = _nowUtc();
+      final now = prior != null && !requested.isAfter(prior.updatedAt)
+          ? prior.updatedAt.add(const Duration(microseconds: 1))
+          : requested;
+      final base =
+          prior ??
+          HabitDay.restore(
+            accountId: owner,
+            habitId: habitId,
+            localDate: calendar.localDate,
+            completedAt: null,
+            count: 0,
+            earnedWhileDue: false,
+            earnedAgainstRevisionId: null,
+            recordedUtcOffsetMinutes: calendar.utcOffsetMinutes,
+            updatedAt: now,
+          );
+      final day = base.changeCount(
+        count: nextCount,
+        target: target,
+        at: now,
+        utcOffsetMinutes: calendar.utcOffsetMinutes,
+        revisionId: habit.revisionOn(calendar.localDate)!.revisionId,
+      );
+      final commit = await _repository.commitDay(
+        HabitDayWriteRequest(
+          day: day,
+          operationId: _nextOperationId(),
+          kind: prior == null ? ChangeKind.create : ChangeKind.update,
           queuedAt: now,
         ),
       );
@@ -388,7 +508,7 @@ final class HabitCommands {
         return AppResult.failure(failure);
       }
       final current = previous.valueOrNull;
-      if (current == null || !current.isCompleted) {
+      if (current == null || current.count == 0) {
         return AppResult.failure(
           _error(
             AppFailureCategory.validation,

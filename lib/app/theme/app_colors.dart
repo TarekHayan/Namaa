@@ -3,7 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 
-/// Reference tokens for building screens later; not applied to [ThemeData].
+/// Reference tokens shared by the app theme and feature screens.
 @immutable
 final class AppColors {
   const AppColors({

@@ -4873,6 +4873,18 @@ class $HabitDayRecordsTable extends HabitDayRecords
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _dailyCountMeta = const VerificationMeta(
+    'dailyCount',
+  );
+  @override
+  late final GeneratedColumn<int> dailyCount = GeneratedColumn<int>(
+    'daily_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _earnedWhileDueMeta = const VerificationMeta(
     'earnedWhileDue',
   );
@@ -4926,6 +4938,7 @@ class $HabitDayRecordsTable extends HabitDayRecords
     habitId,
     localDate,
     completedAt,
+    dailyCount,
     earnedWhileDue,
     earnedAgainstRevisionId,
     recordedUtcOffsetMinutes,
@@ -4974,6 +4987,12 @@ class $HabitDayRecordsTable extends HabitDayRecords
           data['completed_at']!,
           _completedAtMeta,
         ),
+      );
+    }
+    if (data.containsKey('daily_count')) {
+      context.handle(
+        _dailyCountMeta,
+        dailyCount.isAcceptableOrUnknown(data['daily_count']!, _dailyCountMeta),
       );
     }
     if (data.containsKey('earned_while_due')) {
@@ -5040,6 +5059,10 @@ class $HabitDayRecordsTable extends HabitDayRecords
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       ),
+      dailyCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}daily_count'],
+      )!,
       earnedWhileDue: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}earned_while_due'],
@@ -5070,6 +5093,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
   final String habitId;
   final String localDate;
   final DateTime? completedAt;
+  final int dailyCount;
   final bool earnedWhileDue;
   final String? earnedAgainstRevisionId;
   final int recordedUtcOffsetMinutes;
@@ -5079,6 +5103,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     required this.habitId,
     required this.localDate,
     this.completedAt,
+    required this.dailyCount,
     required this.earnedWhileDue,
     this.earnedAgainstRevisionId,
     required this.recordedUtcOffsetMinutes,
@@ -5093,6 +5118,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
     }
+    map['daily_count'] = Variable<int>(dailyCount);
     map['earned_while_due'] = Variable<bool>(earnedWhileDue);
     if (!nullToAbsent || earnedAgainstRevisionId != null) {
       map['earned_against_revision_id'] = Variable<String>(
@@ -5114,6 +5140,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      dailyCount: Value(dailyCount),
       earnedWhileDue: Value(earnedWhileDue),
       earnedAgainstRevisionId: earnedAgainstRevisionId == null && nullToAbsent
           ? const Value.absent()
@@ -5133,6 +5160,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
       habitId: serializer.fromJson<String>(json['habitId']),
       localDate: serializer.fromJson<String>(json['localDate']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      dailyCount: serializer.fromJson<int>(json['dailyCount']),
       earnedWhileDue: serializer.fromJson<bool>(json['earnedWhileDue']),
       earnedAgainstRevisionId: serializer.fromJson<String?>(
         json['earnedAgainstRevisionId'],
@@ -5151,6 +5179,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
       'habitId': serializer.toJson<String>(habitId),
       'localDate': serializer.toJson<String>(localDate),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'dailyCount': serializer.toJson<int>(dailyCount),
       'earnedWhileDue': serializer.toJson<bool>(earnedWhileDue),
       'earnedAgainstRevisionId': serializer.toJson<String?>(
         earnedAgainstRevisionId,
@@ -5167,6 +5196,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     String? habitId,
     String? localDate,
     Value<DateTime?> completedAt = const Value.absent(),
+    int? dailyCount,
     bool? earnedWhileDue,
     Value<String?> earnedAgainstRevisionId = const Value.absent(),
     int? recordedUtcOffsetMinutes,
@@ -5176,6 +5206,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     habitId: habitId ?? this.habitId,
     localDate: localDate ?? this.localDate,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    dailyCount: dailyCount ?? this.dailyCount,
     earnedWhileDue: earnedWhileDue ?? this.earnedWhileDue,
     earnedAgainstRevisionId: earnedAgainstRevisionId.present
         ? earnedAgainstRevisionId.value
@@ -5192,6 +5223,9 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      dailyCount: data.dailyCount.present
+          ? data.dailyCount.value
+          : this.dailyCount,
       earnedWhileDue: data.earnedWhileDue.present
           ? data.earnedWhileDue.value
           : this.earnedWhileDue,
@@ -5212,6 +5246,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
           ..write('habitId: $habitId, ')
           ..write('localDate: $localDate, ')
           ..write('completedAt: $completedAt, ')
+          ..write('dailyCount: $dailyCount, ')
           ..write('earnedWhileDue: $earnedWhileDue, ')
           ..write('earnedAgainstRevisionId: $earnedAgainstRevisionId, ')
           ..write('recordedUtcOffsetMinutes: $recordedUtcOffsetMinutes, ')
@@ -5226,6 +5261,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     habitId,
     localDate,
     completedAt,
+    dailyCount,
     earnedWhileDue,
     earnedAgainstRevisionId,
     recordedUtcOffsetMinutes,
@@ -5239,6 +5275,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
           other.habitId == this.habitId &&
           other.localDate == this.localDate &&
           other.completedAt == this.completedAt &&
+          other.dailyCount == this.dailyCount &&
           other.earnedWhileDue == this.earnedWhileDue &&
           other.earnedAgainstRevisionId == this.earnedAgainstRevisionId &&
           other.recordedUtcOffsetMinutes == this.recordedUtcOffsetMinutes &&
@@ -5250,6 +5287,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
   final Value<String> habitId;
   final Value<String> localDate;
   final Value<DateTime?> completedAt;
+  final Value<int> dailyCount;
   final Value<bool> earnedWhileDue;
   final Value<String?> earnedAgainstRevisionId;
   final Value<int> recordedUtcOffsetMinutes;
@@ -5260,6 +5298,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     this.habitId = const Value.absent(),
     this.localDate = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.dailyCount = const Value.absent(),
     this.earnedWhileDue = const Value.absent(),
     this.earnedAgainstRevisionId = const Value.absent(),
     this.recordedUtcOffsetMinutes = const Value.absent(),
@@ -5271,6 +5310,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     required String habitId,
     required String localDate,
     this.completedAt = const Value.absent(),
+    this.dailyCount = const Value.absent(),
     required bool earnedWhileDue,
     this.earnedAgainstRevisionId = const Value.absent(),
     required int recordedUtcOffsetMinutes,
@@ -5287,6 +5327,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     Expression<String>? habitId,
     Expression<String>? localDate,
     Expression<DateTime>? completedAt,
+    Expression<int>? dailyCount,
     Expression<bool>? earnedWhileDue,
     Expression<String>? earnedAgainstRevisionId,
     Expression<int>? recordedUtcOffsetMinutes,
@@ -5298,6 +5339,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
       if (habitId != null) 'habit_id': habitId,
       if (localDate != null) 'local_date': localDate,
       if (completedAt != null) 'completed_at': completedAt,
+      if (dailyCount != null) 'daily_count': dailyCount,
       if (earnedWhileDue != null) 'earned_while_due': earnedWhileDue,
       if (earnedAgainstRevisionId != null)
         'earned_against_revision_id': earnedAgainstRevisionId,
@@ -5313,6 +5355,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     Value<String>? habitId,
     Value<String>? localDate,
     Value<DateTime?>? completedAt,
+    Value<int>? dailyCount,
     Value<bool>? earnedWhileDue,
     Value<String?>? earnedAgainstRevisionId,
     Value<int>? recordedUtcOffsetMinutes,
@@ -5324,6 +5367,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
       habitId: habitId ?? this.habitId,
       localDate: localDate ?? this.localDate,
       completedAt: completedAt ?? this.completedAt,
+      dailyCount: dailyCount ?? this.dailyCount,
       earnedWhileDue: earnedWhileDue ?? this.earnedWhileDue,
       earnedAgainstRevisionId:
           earnedAgainstRevisionId ?? this.earnedAgainstRevisionId,
@@ -5348,6 +5392,9 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     }
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (dailyCount.present) {
+      map['daily_count'] = Variable<int>(dailyCount.value);
     }
     if (earnedWhileDue.present) {
       map['earned_while_due'] = Variable<bool>(earnedWhileDue.value);
@@ -5378,6 +5425,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
           ..write('habitId: $habitId, ')
           ..write('localDate: $localDate, ')
           ..write('completedAt: $completedAt, ')
+          ..write('dailyCount: $dailyCount, ')
           ..write('earnedWhileDue: $earnedWhileDue, ')
           ..write('earnedAgainstRevisionId: $earnedAgainstRevisionId, ')
           ..write('recordedUtcOffsetMinutes: $recordedUtcOffsetMinutes, ')
@@ -10639,6 +10687,7 @@ typedef $$HabitDayRecordsTableCreateCompanionBuilder =
       required String habitId,
       required String localDate,
       Value<DateTime?> completedAt,
+      Value<int> dailyCount,
       required bool earnedWhileDue,
       Value<String?> earnedAgainstRevisionId,
       required int recordedUtcOffsetMinutes,
@@ -10651,6 +10700,7 @@ typedef $$HabitDayRecordsTableUpdateCompanionBuilder =
       Value<String> habitId,
       Value<String> localDate,
       Value<DateTime?> completedAt,
+      Value<int> dailyCount,
       Value<bool> earnedWhileDue,
       Value<String?> earnedAgainstRevisionId,
       Value<int> recordedUtcOffsetMinutes,
@@ -10684,6 +10734,11 @@ class $$HabitDayRecordsTableFilterComposer
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dailyCount => $composableBuilder(
+    column: $table.dailyCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10737,6 +10792,11 @@ class $$HabitDayRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get dailyCount => $composableBuilder(
+    column: $table.dailyCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get earnedWhileDue => $composableBuilder(
     column: $table.earnedWhileDue,
     builder: (column) => ColumnOrderings(column),
@@ -10778,6 +10838,11 @@ class $$HabitDayRecordsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dailyCount => $composableBuilder(
+    column: $table.dailyCount,
     builder: (column) => column,
   );
 
@@ -10841,6 +10906,7 @@ class $$HabitDayRecordsTableTableManager
                 Value<String> habitId = const Value.absent(),
                 Value<String> localDate = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> dailyCount = const Value.absent(),
                 Value<bool> earnedWhileDue = const Value.absent(),
                 Value<String?> earnedAgainstRevisionId = const Value.absent(),
                 Value<int> recordedUtcOffsetMinutes = const Value.absent(),
@@ -10851,6 +10917,7 @@ class $$HabitDayRecordsTableTableManager
                 habitId: habitId,
                 localDate: localDate,
                 completedAt: completedAt,
+                dailyCount: dailyCount,
                 earnedWhileDue: earnedWhileDue,
                 earnedAgainstRevisionId: earnedAgainstRevisionId,
                 recordedUtcOffsetMinutes: recordedUtcOffsetMinutes,
@@ -10863,6 +10930,7 @@ class $$HabitDayRecordsTableTableManager
                 required String habitId,
                 required String localDate,
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> dailyCount = const Value.absent(),
                 required bool earnedWhileDue,
                 Value<String?> earnedAgainstRevisionId = const Value.absent(),
                 required int recordedUtcOffsetMinutes,
@@ -10873,6 +10941,7 @@ class $$HabitDayRecordsTableTableManager
                 habitId: habitId,
                 localDate: localDate,
                 completedAt: completedAt,
+                dailyCount: dailyCount,
                 earnedWhileDue: earnedWhileDue,
                 earnedAgainstRevisionId: earnedAgainstRevisionId,
                 recordedUtcOffsetMinutes: recordedUtcOffsetMinutes,

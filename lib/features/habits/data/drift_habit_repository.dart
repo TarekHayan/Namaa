@@ -105,6 +105,7 @@ final class DriftHabitRepository
               habitId: day.habitId,
               localDate: day.localDate,
               completedAt: Value(day.completedAt),
+              dailyCount: Value(day.count),
               earnedWhileDue: day.earnedWhileDue,
               earnedAgainstRevisionId: Value(day.earnedAgainstRevisionId),
               recordedUtcOffsetMinutes: day.recordedUtcOffsetMinutes,
@@ -314,7 +315,9 @@ final class DriftHabitRepository
                       table.localDate.equals(day.localDate),
                 ))
                 .getSingleOrNull();
-        if (existing?.completedAt != null && day.isCompleted) return;
+        if (existing != null && !day.updatedAt.isAfter(existing.updatedAt)) {
+          return;
+        }
         await _database
             .into(_database.habitDayRecords)
             .insertOnConflictUpdate(
@@ -323,6 +326,7 @@ final class DriftHabitRepository
                 habitId: day.habitId,
                 localDate: day.localDate,
                 completedAt: Value(day.completedAt),
+                dailyCount: Value(day.count),
                 earnedWhileDue: day.earnedWhileDue,
                 earnedAgainstRevisionId: Value(day.earnedAgainstRevisionId),
                 recordedUtcOffsetMinutes: day.recordedUtcOffsetMinutes,
@@ -414,6 +418,7 @@ final class DriftHabitRepository
       'habitId': row.habitId,
       'localDate': row.localDate,
       'completedAt': row.completedAt?.toUtc().toIso8601String(),
+      'count': row.dailyCount,
       'earnedWhileDue': row.earnedWhileDue,
       'earnedAgainstRevisionId': row.earnedAgainstRevisionId,
       'recordedUtcOffsetMinutes': row.recordedUtcOffsetMinutes,

@@ -74,6 +74,7 @@ final class MapSettingsCommands {
         MindMapSettings(
           layout: layout,
           backgroundArgb: old.settings.backgroundArgb,
+          backgroundPattern: old.settings.backgroundPattern,
           defaultNode: old.settings.defaultNode,
           defaultConnection: old.settings.defaultConnection,
           spacing: spacing ?? old.settings.spacing,

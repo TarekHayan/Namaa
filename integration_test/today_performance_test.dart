@@ -162,7 +162,7 @@ void main() {
       currentLocalDate: () => DateTime(2026, 10, 12),
       nextOperationId: () => 'scale-action-${++sequence}',
     );
-    final startup = Stopwatch()..start();
+    final phoneStartup = Stopwatch()..start();
     final cubit = TodayCubit(
       scope: TodayScope.preview(
         taskOwnerId: kTasksPreviewAccountId,
@@ -175,16 +175,27 @@ void main() {
       xp: XpTodayAdapter(awards),
     );
     addTearDown(cubit.close);
+
     int? stateReadyMs;
+    final stateWatch = Stopwatch()..start();
     final readyWatch = cubit.stream.listen((state) {
       if (stateReadyMs == null &&
           state.tasks.value?.totalCount == 500 &&
           state.habits.value?.totalCount == 100 &&
           state.xp.value?.amount == 4000) {
-        stateReadyMs = startup.elapsedMilliseconds;
+        stateReadyMs = stateWatch.elapsedMilliseconds;
       }
     });
     addTearDown(readyWatch.cancel);
+
+    // 1. Phone viewport: first readable content appears under two seconds offline
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: FoundationLocalizations.localizationsDelegates,
@@ -199,7 +210,12 @@ void main() {
         ),
       ),
     );
-    final afterFirstPumpMs = startup.elapsedMilliseconds;
+    expect(find.byKey(kTodayScreenKey), findsOneWidget);
+    expect(find.text('68%'), findsOneWidget);
+    phoneStartup.stop();
+    final phoneFirstReadableMs = phoneStartup.elapsedMilliseconds;
+    expect(phoneStartup.elapsed, lessThanOrEqualTo(const Duration(seconds: 2)));
+
     await _until(
       tester,
       () =>
@@ -209,7 +225,56 @@ void main() {
           cubit.state.xp.value?.amount == 4000,
     );
     await tester.pump();
-    startup.stop();
+    expect(find.byKey(kTodayScreenKey), findsOneWidget);
+    expect(find.text('Task 1'), findsWidgets);
+
+    // 2. Desktop viewport: first readable content appears under two seconds offline
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1.0;
+    final desktopStartup = Stopwatch()..start();
+    final desktopCubit = TodayCubit(
+      scope: TodayScope.preview(
+        taskOwnerId: kTasksPreviewAccountId,
+        habitOwnerId: kHabitsPreviewAccountId,
+        generation: 1,
+      ),
+      calendar: _Clock(),
+      tasks: TasksTodayAdapter(tasks, completionService: completion),
+      habits: HabitsTodayAdapter(habits),
+      xp: XpTodayAdapter(awards),
+    );
+    addTearDown(desktopCubit.close);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        home: TodayScreen(
+          cubit: desktopCubit,
+          stringsResolver: resolveTodayStrings,
+          onTasks: () {},
+          onHabits: () {},
+          onMindMaps: () {},
+          onPreferences: () {},
+        ),
+      ),
+    );
+    expect(find.byKey(kTodayScreenKey), findsOneWidget);
+    expect(find.text('68%'), findsOneWidget);
+    desktopStartup.stop();
+    final desktopFirstReadableMs = desktopStartup.elapsedMilliseconds;
+    expect(
+      desktopStartup.elapsed,
+      lessThanOrEqualTo(const Duration(seconds: 2)),
+    );
+
+    await _until(
+      tester,
+      () =>
+          desktopCubit.state.tasks.value?.totalCount == 500 &&
+          desktopCubit.state.habits.value?.totalCount == 100 &&
+          desktopCubit.state.xp.value?.amount == 4000,
+    );
+    await tester.pump();
     expect(find.byKey(kTodayScreenKey), findsOneWidget);
 
     final action = Stopwatch()..start();
@@ -252,12 +317,10 @@ void main() {
           ? 'profile'
           : 'debug'} '
       'tasks=500 habits=100 awards=200 '
-      'state_ready_ms=$stateReadyMs first_pump_ms=$afterFirstPumpMs '
-      'initial_ms=${startup.elapsedMilliseconds} '
+      'state_ready_ms=$stateReadyMs phone_readable_ms=$phoneFirstReadableMs desktop_readable_ms=$desktopFirstReadableMs '
       'action_ms=${action.elapsedMilliseconds} '
       'owner_update_ms=${inbound.elapsedMilliseconds}',
     );
-    expect(startup.elapsed, lessThanOrEqualTo(const Duration(seconds: 2)));
     expect(action.elapsed, lessThanOrEqualTo(const Duration(seconds: 2)));
     expect(inbound.elapsed, lessThanOrEqualTo(const Duration(seconds: 2)));
   });

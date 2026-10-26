@@ -19,21 +19,27 @@ void main() {
       );
     });
 
-    test('uses the supplied local civil day and never samples another clock', () {
-      final beforeMidnight = TodayLocalDate(2024, 3, 10);
-      final afterMidnight = TodayLocalDate(2024, 3, 11);
+    test(
+      'uses the supplied local civil day and never samples another clock',
+      () {
+        final beforeMidnight = TodayLocalDate(2024, 3, 10);
+        final afterMidnight = TodayLocalDate(2024, 3, 11);
 
-      expect(
-        UmmAlQuraTodayDate.fromLocalDate(beforeMidnight),
-        isNot(UmmAlQuraTodayDate.fromLocalDate(afterMidnight)),
-      );
-    });
+        expect(
+          UmmAlQuraTodayDate.fromLocalDate(beforeMidnight),
+          isNot(UmmAlQuraTodayDate.fromLocalDate(afterMidnight)),
+        );
+      },
+    );
 
-    test('returns unavailable outside the verified table instead of guessing', () {
-      expect(
-        UmmAlQuraTodayDate.fromLocalDate(TodayLocalDate(1800, 1, 1)),
-        isNull,
-      );
-    });
+    test(
+      'returns unavailable outside the verified table instead of guessing',
+      () {
+        expect(
+          UmmAlQuraTodayDate.fromLocalDate(TodayLocalDate(1800, 1, 1)),
+          isNull,
+        );
+      },
+    );
   });
 }

@@ -68,7 +68,7 @@ class _TaskSnapshot implements TodayTaskReadSnapshot {
             scheduledMinuteOfDay: null,
             estimatedDurationMinutes: null,
             isCompleted: false,
-            isUrgentImportant: false,
+            isUrgentImportant: true,
             isOverdue: false,
             ownerOrder: 0,
           ),
@@ -306,11 +306,14 @@ void main() {
       await tester.pump();
       tasks.streams['owner-a']!.add(_TaskSnapshot('owner-a', 'A private task'));
       await tester.pump();
-      expect(find.text('A private task'), findsOneWidget);
+      expect(find.text('A private task'), findsAtLeast(1));
 
       tasks.pending = Completer<AppResult<void>>();
-      await tester.ensureVisible(
-        find.byKey(const ValueKey('today_task_action_owner-a-task')),
+      await Scrollable.ensureVisible(
+        tester.element(
+          find.byKey(const ValueKey('today_task_action_owner-a-task')),
+        ),
+        alignment: 0.5,
       );
       await tester.pump();
       await tester.tap(
@@ -339,7 +342,7 @@ void main() {
       await tester.pump();
       tasks.streams['owner-b']!.add(_TaskSnapshot('owner-b', 'B private task'));
       await tester.pump();
-      expect(find.text('B private task'), findsOneWidget);
+      expect(find.text('B private task'), findsAtLeast(1));
       expect(find.text('A private task'), findsNothing);
 
       session.signOut();

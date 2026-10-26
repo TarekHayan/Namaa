@@ -16,6 +16,12 @@ final class _AppTasksStrings implements TasksStrings {
   String get tasksSignInRequired => _l10n.tasksSignInRequired;
   @override
   String get tasksTitle => _l10n.tasksTitle;
+
+  @override
+  String get mindMapsTitle => _l10n.mindMapsTitle;
+
+  @override
+  String get tasksEmptyHint => _l10n.tasksEmptyHint;
   @override
   String get tasksFilterToday => _l10n.tasksFilterToday;
   @override
@@ -95,6 +101,12 @@ final class _AppTasksStrings implements TasksStrings {
   String get taskSave => _l10n.taskSave;
   @override
   String get taskCancel => _l10n.taskCancel;
+  @override
+  String get taskMoreDetails => _l10n.taskMoreDetails;
+  @override
+  String get taskLessDetails => _l10n.taskLessDetails;
+  @override
+  String get taskMatrixLabel => _l10n.taskMatrixLabel;
   @override
   String get taskTitleLabel => _l10n.taskTitleLabel;
   @override

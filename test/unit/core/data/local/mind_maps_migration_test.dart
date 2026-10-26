@@ -34,6 +34,9 @@ void main() {
     await db.rawExecute(
       'ALTER TABLE task_records DROP COLUMN completion_changed_at',
     );
+    await db.rawExecute(
+      'ALTER TABLE habit_day_records DROP COLUMN daily_count',
+    );
     return (db.resolvedPath, db);
   }
 
@@ -121,7 +124,11 @@ void main() {
     await seed(v4);
     await v4.close();
 
-    final v5 = await FoundationDatabase.openEncrypted(path: path, key: _key);
+    final v5 = await FoundationDatabase.openEncrypted(
+      path: path,
+      key: _key,
+      schemaVersion: 5,
+    );
     expect(v5.schemaVersion, 5);
     expect(await v5.journalStatusFor(5), 'completed');
     await expectOldRows(v5);
@@ -208,6 +215,32 @@ void main() {
     expect(raw, isNot(contains(sentinel)));
   });
 
+  test('v4 upgrades through map and habit counter migrations together', () async {
+    final (path, v4) = await installedV4();
+    await seed(v4);
+    await v4.close();
+
+    final current = await FoundationDatabase.openEncrypted(
+      path: path,
+      key: _key,
+    );
+    expect(current.schemaVersion, kFoundationSchemaVersion);
+    await expectOldRows(current);
+    expect(
+      await current.rawScalar(
+        "SELECT daily_count FROM habit_day_records WHERE habit_id = 'habit-before-maps'",
+      ),
+      0,
+    );
+    expect(
+      await current.rawScalar(
+        "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'mind_map_records'",
+      ),
+      1,
+    );
+    await current.close();
+  });
+
   test('failed v5 migration retains v4 rows and later retry recovers', () async {
     final (path, v4) = await installedV4();
     await seed(v4);
@@ -216,6 +249,7 @@ void main() {
       FoundationDatabase.openEncrypted(
         path: path,
         key: _key,
+        schemaVersion: 5,
         testMigrationHook: (migrator, from, to) async {
           expect((from, to), (4, 5));
           throw StateError('injected v5 failure');
@@ -249,6 +283,7 @@ void main() {
     final recovered = await FoundationDatabase.openEncrypted(
       path: path,
       key: _key,
+      schemaVersion: 5,
     );
     await expectOldRows(recovered);
     expect(await recovered.journalStatusFor(5), 'recovered');

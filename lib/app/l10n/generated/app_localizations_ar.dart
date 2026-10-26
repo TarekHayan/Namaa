@@ -109,6 +109,9 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get tasksTitle => 'المهام';
 
   @override
+  String get tasksEmptyHint => 'أضف مهمة جديدة لتبدأ تنظيم يومك.';
+
+  @override
   String get tasksFilterToday => 'اليوم';
 
   @override
@@ -228,16 +231,25 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get taskCancel => 'إلغاء';
 
   @override
+  String get taskMoreDetails => 'تفاصيل إضافية';
+
+  @override
+  String get taskLessDetails => 'إخفاء التفاصيل';
+
+  @override
+  String get taskMatrixLabel => 'مصفوفة آيزنهاور';
+
+  @override
   String get taskTitleLabel => 'العنوان';
 
   @override
-  String get taskTitleHint => 'عنوان المهمة';
+  String get taskTitleHint => 'ما الذي ترغب في إنجازه اليوم؟';
 
   @override
   String get taskDescriptionLabel => 'الوصف';
 
   @override
-  String get taskDescriptionHint => 'ملاحظات أو تفاصيل';
+  String get taskDescriptionHint => 'أضف ملاحظات أو تفاصيل اختيارية...';
 
   @override
   String get taskDurationLabel => 'المدة التقديرية (بالدقائق)';
@@ -872,10 +884,10 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get todayOpenOverdue => 'فتح المهام المتأخرة';
 
   @override
-  String get dashboardGreetingMorning => 'بداية هادئة ليومك';
+  String get dashboardGreetingMorning => 'صباح الخير';
 
   @override
-  String get dashboardGreetingLater => 'مساحة لما يستحق اهتمامك';
+  String get dashboardGreetingLater => 'مساء الخير';
 
   @override
   String get dashboardSubtitle => 'أولوياتك وإيقاع يومك في مكان واحد.';
@@ -919,6 +931,9 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get dashboardMore => 'المزيد';
+
+  @override
+  String get dashboardQuickAdd => 'إضافة سريعة';
 
   @override
   String get dashboardPrayer => 'مواقيت الصلاة';

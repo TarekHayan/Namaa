@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_hover_surface.dart';
+import 'package:namma_project/app/widgets/app_status_view.dart';
 import 'package:namma_project/core/application/navigation/owner_entry_intent.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
@@ -20,6 +24,9 @@ export 'task_editor.dart'
         kTaskTitleValidationKey,
         kTaskChecklistNewFieldKey,
         kTaskChecklistAddButtonKey,
+        kTaskMoreDetailsButtonKey,
+        kTaskInlineEditorKey,
+        kTaskInlineCancelKey,
         TaskEditor;
 
 const Key kTaskAddButtonKey = Key('task_add_button');
@@ -32,6 +39,8 @@ const Key kTasksConflictBannerKey = Key('tasks_conflict_banner');
 const Key kTasksSignedOutGuardKey = Key('tasks_signed_out_guard');
 const Key kTasksMobileLayoutKey = Key('tasks_mobile_layout');
 const Key kTasksDesktopLayoutKey = Key('tasks_desktop_layout');
+const Key kTasksListTabKey = Key('tasks_list_tab');
+const Key kTasksMindMapsTabKey = Key('tasks_mind_maps_tab');
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({
@@ -41,6 +50,7 @@ class TasksScreen extends StatefulWidget {
     required this.stringsResolver,
     this.session,
     this.entryIntent,
+    this.onMindMaps,
   });
 
   final TasksCubit cubit;
@@ -48,6 +58,7 @@ class TasksScreen extends StatefulWidget {
   final TasksStringsResolver stringsResolver;
   final CloudSessionPort? session;
   final OwnerEntryIntent? entryIntent;
+  final VoidCallback? onMindMaps;
 
   @override
   State<TasksScreen> createState() => _TasksScreenState();
@@ -55,6 +66,8 @@ class TasksScreen extends StatefulWidget {
 
 class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
   bool _intentConsumed = false;
+  bool _showAddForm = false;
+  DateTime? _inlineScheduledDate;
   @override
   void initState() {
     super.initState();
@@ -110,6 +123,9 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     return BlocBuilder<TasksCubit, TasksState>(
       bloc: widget.cubit,
       builder: (context, state) {
+        final colors = Theme.of(context).brightness == Brightness.dark
+            ? AppColors.dark
+            : AppColors.light;
         final entryIntent = widget.entryIntent;
         if (!_intentConsumed && state is TasksReady && entryIntent != null) {
           _intentConsumed = true;
@@ -122,14 +138,10 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
             switch (entryIntent) {
               case OwnerEntryIntent.newTask:
                 final now = DateTime.now();
-                TaskEditor.show(
-                  context,
-                  cubit: widget.cubit,
-                  stringsResolver: widget.stringsResolver,
-                  accountId: accountId,
-                  session: widget.session,
-                  initialScheduledDate: DateTime(now.year, now.month, now.day),
-                );
+                setState(() {
+                  _inlineScheduledDate = DateTime(now.year, now.month, now.day);
+                  _showAddForm = true;
+                });
               case OwnerEntryIntent.taskMatrix:
                 widget.cubit.showMatrix();
               case OwnerEntryIntent.taskOverdue:
@@ -140,62 +152,25 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
           });
         }
         return Scaffold(
+          backgroundColor: colors.background,
           appBar: AppBar(
-            title: Text(l10n.tasksTitle),
-            actions: [
-              IconButton(
-                key: kTasksMatrixToggleKey,
-                icon: Icon(
-                  state is TasksReady && state.viewMode == TasksViewMode.matrix
-                      ? Icons.view_list
-                      : Icons.grid_view,
-                ),
-                tooltip:
-                    state is TasksReady &&
-                        state.viewMode == TasksViewMode.matrix
-                    ? l10n.tasksViewList
-                    : l10n.tasksViewMatrix,
-                onPressed: () {
-                  if (state is TasksReady) {
-                    if (state.viewMode == TasksViewMode.list) {
-                      widget.cubit.showMatrix();
-                    } else {
-                      widget.cubit.showList();
-                    }
-                  }
-                },
+            backgroundColor: colors.background,
+            surfaceTintColor: Colors.transparent,
+            title: Text(
+              l10n.tasksTitle,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
               ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton(
-            key: kTaskAddButtonKey,
-            onPressed: () => TaskEditor.show(
-              context,
-              cubit: widget.cubit,
-              stringsResolver: widget.stringsResolver,
-              accountId: accountId,
-              session: widget.session,
             ),
-            child: const Icon(Icons.add),
           ),
           body: switch (state) {
-            TasksInitial() ||
-            TasksLoading() => const Center(child: CircularProgressIndicator()),
-            TasksFailure() => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l10n.tasksFailure,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () => widget.cubit.load(accountId),
-                    child: Text(l10n.retry),
-                  ),
-                ],
-              ),
+            TasksInitial() || TasksLoading() => const AppStatusView.loading(),
+            TasksFailure() => AppStatusView.error(
+              title: l10n.tasksFailure,
+              actionLabel: l10n.retry,
+              onAction: () => widget.cubit.load(accountId),
             ),
             TasksReady() => LayoutBuilder(
               builder: (context, constraints) {
@@ -220,23 +195,208 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     bool isDesktop,
   ) {
     final l10n = widget.stringsResolver(context);
+    final colors = _colors(context);
     final showConflictBanner =
         state.syncStatus == TasksSyncStatus.recoverableFailure ||
         state.conflicts.isNotEmpty;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (showConflictBanner) _buildConflictBanner(context, state, l10n),
-        _buildControls(context, state, l10n),
-        Expanded(
-          child: state.viewMode == TasksViewMode.matrix
-              ? _buildMatrixView(context, state, l10n, isDesktop)
-              : _buildListView(context, state, l10n),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1220),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 24 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 12),
+              _buildTopBar(context, state, l10n, colors, isDesktop),
+              if (showConflictBanner)
+                _buildConflictBanner(context, state, l10n),
+              const SizedBox(height: 12),
+              _buildControls(context, state, l10n, colors),
+              const SizedBox(height: 14),
+              Expanded(
+                child: _showAddForm
+                    ? _buildInlineCreateView(context, state, l10n, isDesktop)
+                    : state.viewMode == TasksViewMode.matrix
+                    ? _buildMatrixView(context, state, l10n, isDesktop)
+                    : _buildListView(context, state, l10n),
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
+
+  Widget _buildInlineCreateView(
+    BuildContext context,
+    TasksReady state,
+    TasksStrings l10n,
+    bool isDesktop,
+  ) {
+    final editor = TaskEditor(
+      key: const ValueKey('new_task_inline_form'),
+      cubit: widget.cubit,
+      stringsResolver: widget.stringsResolver,
+      accountId: widget.accountId!,
+      session: widget.session,
+      initialScheduledDate: _inlineScheduledDate,
+      inline: true,
+      onFinished: () {
+        if (mounted) {
+          setState(() {
+            _showAddForm = false;
+            _inlineScheduledDate = null;
+          });
+        }
+      },
+    );
+
+    if (state.viewMode == TasksViewMode.matrix) {
+      return SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            editor,
+            const SizedBox(height: 20),
+            _buildMatrixView(context, state, l10n, isDesktop, shrinkWrap: true),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          editor,
+          const SizedBox(height: 20),
+          if (state.visibleTasks.isEmpty)
+            _buildEmptyCard(context, l10n)
+          else
+            for (final task in state.visibleTasks)
+              _buildTaskCard(context, task, l10n),
+        ],
+      ),
+    );
+  }
+
+  AppColors _colors(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+      ? AppColors.dark
+      : AppColors.light;
+
+  Widget _buildTopBar(
+    BuildContext context,
+    TasksReady state,
+    TasksStrings l10n,
+    AppColors colors,
+    bool isDesktop,
+  ) {
+    final modes = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: colors.surfaceSecondary,
+          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _modeButton(
+              key: kTasksListTabKey,
+              icon: Icons.view_list_rounded,
+              label: l10n.tasksViewList,
+              selected: state.viewMode == TasksViewMode.list,
+              colors: colors,
+              onTap: widget.cubit.showList,
+            ),
+            _modeButton(
+              key: kTasksMatrixToggleKey,
+              icon: Icons.grid_view_rounded,
+              label: l10n.tasksViewMatrix,
+              selected: state.viewMode == TasksViewMode.matrix,
+              colors: colors,
+              onTap: widget.cubit.showMatrix,
+            ),
+            if (widget.onMindMaps != null)
+              _modeButton(
+                key: kTasksMindMapsTabKey,
+                icon: Icons.hub_outlined,
+                label: l10n.mindMapsTitle,
+                selected: false,
+                colors: colors,
+                onTap: widget.onMindMaps!,
+              ),
+          ],
+        ),
+      ),
+    );
+    final addButton = AppButton(
+      key: kTaskAddButtonKey,
+      onPressed: () => setState(() {
+        _showAddForm = !_showAddForm;
+        _inlineScheduledDate = null;
+      }),
+      icon: Icons.add_rounded,
+      label: l10n.taskCreate,
+    );
+    if (isDesktop) {
+      return Row(
+        children: [
+          Flexible(child: modes),
+          const SizedBox(width: 12),
+          addButton,
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [modes, const SizedBox(height: 10), addButton],
+    );
+  }
+
+  Widget _modeButton({
+    required Key key,
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required AppColors colors,
+    required VoidCallback onTap,
+  }) => InkWell(
+    key: key,
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: selected ? colors.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: selected ? Colors.white : colors.textSecondary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : colors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Widget _buildConflictBanner(
     BuildContext context,
@@ -282,77 +442,155 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     BuildContext context,
     TasksReady state,
     TasksStrings l10n,
+    AppColors colors,
   ) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        children: [
-          FilterChip(
-            label: Text(l10n.tasksFilterToday),
-            selected: state.filter == TaskListFilter.today,
-            onSelected: (_) => widget.cubit.selectFilter(TaskListFilter.today),
+    final category = PopupMenuButton<Object>(
+      key: kTasksCategoryFilterKey,
+      tooltip: l10n.tasksCategoryFilter,
+      initialValue: state.selectedCategory,
+      onSelected: (selection) => widget.cubit.selectCategory(
+        selection is TaskCategory ? selection : null,
+      ),
+      itemBuilder: (context) => [
+        PopupMenuItem<Object>(
+          value: 'all',
+          child: Text(l10n.tasksAllCategories),
+        ),
+        const PopupMenuDivider(),
+        for (final cat in TaskCategory.values)
+          PopupMenuItem<Object>(
+            key: ValueKey<String>('category-${cat.name}'),
+            value: cat,
+            child: Text(_localizedCategory(cat, l10n)),
           ),
-          const SizedBox(width: 8),
-          FilterChip(
-            key: kTasksOverdueFilterKey,
-            label: Text(l10n.tasksFilterOverdue),
-            selected: state.filter == TaskListFilter.overdue,
-            onSelected: (_) =>
-                widget.cubit.selectFilter(TaskListFilter.overdue),
-          ),
-          const SizedBox(width: 8),
-          FilterChip(
-            key: kTasksHistoryFilterKey,
-            label: Text(l10n.tasksFilterHistory),
-            selected: state.filter == TaskListFilter.completed,
-            onSelected: (_) =>
-                widget.cubit.selectFilter(TaskListFilter.completed),
-          ),
-          const SizedBox(width: 8),
-          FilterChip(
-            label: Text(l10n.tasksFilterUrgent),
-            selected: state.filter == TaskListFilter.urgent,
-            onSelected: (_) => widget.cubit.selectFilter(TaskListFilter.urgent),
-          ),
-          const SizedBox(width: 8),
-          FilterChip(
-            key: kTasksAllFilterKey,
-            label: Text(l10n.tasksFilterAll),
-            selected: state.filter == TaskListFilter.all,
-            onSelected: (_) => widget.cubit.selectFilter(TaskListFilter.all),
-          ),
-          const SizedBox(width: 16),
-          PopupMenuButton<Object>(
-            key: kTasksCategoryFilterKey,
-            tooltip: l10n.tasksCategoryFilter,
-            initialValue: state.selectedCategory,
-            onSelected: (selection) => widget.cubit.selectCategory(
-              selection is TaskCategory ? selection : null,
-            ),
-            itemBuilder: (context) => [
-              PopupMenuItem<Object>(
-                value: 'all',
-                child: Text(l10n.tasksAllCategories),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: colors.surfaceSecondary,
+          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.filter_list_rounded, size: 16, color: colors.textMuted),
+            const SizedBox(width: 6),
+            Text(
+              state.selectedCategory != null
+                  ? _localizedCategory(state.selectedCategory!, l10n)
+                  : l10n.tasksCategoryFilter,
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
               ),
-              const PopupMenuDivider(),
-              for (final cat in TaskCategory.values)
-                PopupMenuItem<Object>(
-                  key: ValueKey<String>('category-${cat.name}'),
-                  value: cat,
-                  child: Text(_localizedCategory(cat, l10n)),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (state.viewMode == TasksViewMode.matrix) {
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: category,
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _filterChip(
+                  l10n.tasksFilterToday,
+                  TaskListFilter.today,
+                  state,
+                  colors,
                 ),
-            ],
-            child: Chip(
-              avatar: const Icon(Icons.filter_list, size: 18),
-              label: Text(
-                state.selectedCategory != null
-                    ? _localizedCategory(state.selectedCategory!, l10n)
-                    : l10n.tasksCategoryFilter,
-              ),
+                const SizedBox(width: 8),
+                _filterChip(
+                  l10n.tasksFilterUrgent,
+                  TaskListFilter.urgent,
+                  state,
+                  colors,
+                ),
+                const SizedBox(width: 8),
+                _filterChip(
+                  l10n.tasksFilterAll,
+                  TaskListFilter.all,
+                  state,
+                  colors,
+                  key: kTasksAllFilterKey,
+                ),
+                const SizedBox(width: 8),
+                _filterChip(
+                  l10n.tasksFilterCompleted,
+                  TaskListFilter.completed,
+                  state,
+                  colors,
+                ),
+                const SizedBox(width: 8),
+                Container(width: 1, height: 22, color: colors.border),
+                const SizedBox(width: 8),
+                _filterChip(
+                  l10n.tasksFilterOverdue,
+                  TaskListFilter.overdue,
+                  state,
+                  colors,
+                  key: kTasksOverdueFilterKey,
+                ),
+                const SizedBox(width: 8),
+                _filterChip(
+                  l10n.tasksFilterHistory,
+                  TaskListFilter.completed,
+                  state,
+                  colors,
+                  key: kTasksHistoryFilterKey,
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+        const SizedBox(width: 8),
+        category,
+      ],
+    );
+  }
+
+  Widget _filterChip(
+    String label,
+    TaskListFilter filter,
+    TasksReady state,
+    AppColors colors, {
+    Key? key,
+  }) {
+    final selected = state.filter == filter;
+    return InkWell(
+      key: key,
+      onTap: () => widget.cubit.selectFilter(filter),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? colors.accentSoft : colors.surfaceSecondary,
+          border: Border.all(
+            color: selected
+                ? colors.primary.withValues(alpha: 0.45)
+                : colors.border,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          style: TextStyle(
+            color: selected ? colors.primary : colors.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
     );
   }
@@ -363,16 +601,11 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     TasksStrings l10n,
   ) {
     if (state.visibleTasks.isEmpty) {
-      return Center(
-        child: Text(
-          l10n.tasksEmpty,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-      );
+      return Center(child: _buildEmptyCard(context, l10n));
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.only(bottom: 24),
       itemCount: state.visibleTasks.length,
       itemBuilder: (context, index) {
         final task = state.visibleTasks[index];
@@ -381,12 +614,53 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     );
   }
 
+  Widget _buildEmptyCard(BuildContext context, TasksStrings l10n) {
+    final compact = MediaQuery.sizeOf(context).width < 360;
+    return Card(
+      color: _colors(context).surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(28),
+        side: BorderSide(color: _colors(context).border),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(compact ? 16 : 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.task_alt_rounded,
+              size: 32,
+              color: _colors(context).primary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.tasksEmpty,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.tasksEmptyHint,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: _colors(context).textMuted,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMatrixView(
     BuildContext context,
     TasksReady state,
     TasksStrings l10n,
-    bool isDesktop,
-  ) {
+    bool isDesktop, {
+    bool shrinkWrap = false,
+  }) {
     final quadrants = [
       (
         EisenhowerQuadrant.urgentImportant,
@@ -417,12 +691,17 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
 
     if (isDesktop) {
       return GridView.count(
+        shrinkWrap: shrinkWrap,
+        physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
         crossAxisCount: 2,
-        padding: const EdgeInsets.all(16.0),
-        childAspectRatio: 1.2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        mainAxisExtent: 260,
+        padding: const EdgeInsets.only(bottom: 24),
         children: quadrants.map((q) {
           return _buildQuadrantSection(
             context,
+            q.$1,
             q.$2,
             q.$3,
             q.$4,
@@ -434,10 +713,13 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16.0),
+      shrinkWrap: shrinkWrap,
+      physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
+      padding: const EdgeInsets.only(bottom: 24),
       children: quadrants.map((q) {
         return _buildQuadrantSection(
           context,
+          q.$1,
           q.$2,
           q.$3,
           q.$4,
@@ -450,6 +732,7 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
 
   Widget _buildQuadrantSection(
     BuildContext context,
+    EisenhowerQuadrant quadrant,
     String shortLabel,
     String fullLabel,
     List<Task> tasks,
@@ -457,31 +740,102 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     required bool constrainTaskList,
   }) {
     final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              shortLabel,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+    final colors = _colors(context);
+    final (accent, quadrantIcon) = switch (quadrant) {
+      EisenhowerQuadrant.urgentImportant => (colors.error, Icons.bolt_rounded),
+      EisenhowerQuadrant.notUrgentImportant => (
+        colors.primary,
+        Icons.calendar_today_rounded,
+      ),
+      EisenhowerQuadrant.urgentNotImportant => (
+        colors.warning,
+        Icons.people_outline_rounded,
+      ),
+      EisenhowerQuadrant.notUrgentNotImportant => (
+        colors.textMuted,
+        Icons.cleaning_services_rounded,
+      ),
+    };
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 240),
+      child: Card(
+        color: Color.alphaBlend(accent.withValues(alpha: 0.04), colors.surface),
+        margin: EdgeInsets.only(bottom: constrainTaskList ? 0 : 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+          side: BorderSide(
+            color: Color.alphaBlend(
+              accent.withValues(alpha: 0.25),
+              colors.border,
             ),
-            Text(
-              fullLabel,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            width: 1.2,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(quadrantIcon, size: 16, color: accent),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          shortLabel,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: accent,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          fullLabel,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.textMuted,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: accent.withValues(alpha: 0.2)),
+                    ),
+                    child: Text(
+                      '${tasks.length}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const Divider(),
-            if (constrainTaskList)
-              Expanded(child: _buildQuadrantTasks(context, tasks, l10n))
-            else
-              _buildQuadrantTasks(context, tasks, l10n, shrinkWrap: true),
-          ],
+              const SizedBox(height: 8),
+              Divider(color: colors.border),
+              if (constrainTaskList)
+                Expanded(child: _buildQuadrantTasks(context, tasks, l10n))
+              else
+                _buildQuadrantTasks(context, tasks, l10n, shrinkWrap: true),
+            ],
+          ),
         ),
       ),
     );
@@ -509,7 +863,106 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
       physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
       itemCount: tasks.length,
       itemBuilder: (context, index) =>
-          _buildTaskCard(context, tasks[index], l10n, isMatrix: true),
+          _buildMatrixTaskCard(context, tasks[index], l10n),
+    );
+  }
+
+  Widget _buildMatrixTaskCard(
+    BuildContext context,
+    Task task,
+    TasksStrings l10n,
+  ) {
+    final colors = _colors(context);
+    return Container(
+      key: ValueKey<String>('matrix-task-${task.id}'),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.surfaceSecondary,
+        border: Border.all(color: colors.border),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            key: ValueKey<String>(
+              task.isCompleted
+                  ? 'task-reopen-${task.id}'
+                  : 'task-complete-${task.id}',
+            ),
+            visualDensity: VisualDensity.compact,
+            tooltip: task.isCompleted ? l10n.taskReopen : l10n.taskComplete,
+            onPressed: () => _changeCompletion(context, task, l10n),
+            icon: Icon(
+              task.isCompleted
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color: task.isCompleted ? colors.primary : colors.textMuted,
+              size: 20,
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                if (task.scheduledTime != null ||
+                    task.estimatedDurationMinutes != null)
+                  Text(
+                    [
+                      if (task.scheduledTime != null)
+                        MaterialLocalizations.of(context).formatTimeOfDay(
+                          TimeOfDay.fromDateTime(task.scheduledTime!),
+                        ),
+                      if (task.estimatedDurationMinutes != null)
+                        '${task.estimatedDurationMinutes} ${l10n.taskDurationUnit}',
+                    ].join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 10, color: colors.textMuted),
+                  ),
+              ],
+            ),
+          ),
+          PopupMenuButton<EisenhowerQuadrant>(
+            key: ValueKey<String>('task-move-${task.id}'),
+            tooltip: l10n.tasksViewMatrix,
+            icon: Icon(
+              Icons.swap_horiz_rounded,
+              color: colors.textMuted,
+              size: 19,
+            ),
+            onSelected: (quadrant) => _moveTask(context, task, quadrant, l10n),
+            itemBuilder: (_) => [
+              for (final quadrant in EisenhowerQuadrant.values)
+                PopupMenuItem(
+                  value: quadrant,
+                  child: Text(_quadrantLabel(quadrant, l10n)),
+                ),
+            ],
+          ),
+          IconButton(
+            key: ValueKey<String>('task-delete-${task.id}'),
+            tooltip: l10n.taskDelete,
+            visualDensity: VisualDensity.compact,
+            onPressed: () => _deleteTask(context, task, l10n),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              color: colors.textMuted,
+              size: 18,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -520,104 +973,202 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     bool isMatrix = false,
   }) {
     final theme = Theme.of(context);
+    final colors = _colors(context);
     final cardKey = isMatrix
         ? ValueKey<String>('matrix-task-${task.id}')
         : ValueKey<String>('task-${task.id}');
 
-    return Card(
-      key: cardKey,
-      margin: const EdgeInsets.symmetric(vertical: 4.0),
-      child: ListTile(
-        leading: IconButton(
-          key: ValueKey<String>(
-            task.isCompleted
-                ? 'task-reopen-${task.id}'
-                : 'task-complete-${task.id}',
-          ),
-          icon: Icon(
-            task.isCompleted
-                ? Icons.check_circle
-                : Icons.radio_button_unchecked,
-          ),
-          color: task.isCompleted ? theme.colorScheme.primary : null,
-          tooltip: task.isCompleted ? l10n.taskReopen : l10n.taskComplete,
-          onPressed: () => _changeCompletion(context, task, l10n),
+    return AppHoverSurface(
+      radius: 18,
+      child: Card(
+        key: cardKey,
+        color: isMatrix ? colors.surfaceSecondary : colors.surface,
+        margin: const EdgeInsets.only(bottom: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: colors.border),
         ),
-        title: Text(task.title),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (task.description != null && task.description!.isNotEmpty)
-              Text(
-                task.description!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+        child: Padding(
+          padding: EdgeInsets.all(isMatrix ? 8 : 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                key: ValueKey<String>(
+                  task.isCompleted
+                      ? 'task-reopen-${task.id}'
+                      : 'task-complete-${task.id}',
+                ),
+                icon: Icon(
+                  task.isCompleted
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 23,
+                ),
+                color: task.isCompleted ? colors.primary : colors.textMuted,
+                tooltip: task.isCompleted ? l10n.taskReopen : l10n.taskComplete,
+                onPressed: () => _changeCompletion(context, task, l10n),
               ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 8,
-              children: [
-                Text(
-                  _localizedCategory(task.category, l10n),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.primary,
+              const SizedBox(width: 2),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 7),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w800,
+                          decoration: task.isCompleted
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                      ),
+                      if (task.description != null &&
+                          task.description!.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          task.description!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 6),
+                      Text(
+                        [
+                          if (task.scheduledTime != null)
+                            MaterialLocalizations.of(context).formatTimeOfDay(
+                              TimeOfDay.fromDateTime(task.scheduledTime!),
+                            ),
+                          if (task.estimatedDurationMinutes != null)
+                            '${task.estimatedDurationMinutes} ${l10n.taskDurationUnit}',
+                          _quadrantLabel(task.quadrant, l10n),
+                          '+${task.completionXp} XP',
+                        ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                      if (task.completedAt != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.taskCompletedAt(
+                            _localizedTimestamp(context, task.completedAt!),
+                          ),
+                          key: ValueKey<String>('task-completed-at-${task.id}'),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (task.estimatedDurationMinutes != null)
-                  Text(
-                    '${task.estimatedDurationMinutes} ${l10n.taskDurationUnit}',
-                    style: theme.textTheme.labelSmall,
+              ),
+              const SizedBox(width: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    key: ValueKey<String>('task-edit-${task.id}'),
+                    icon: const Icon(Icons.edit_outlined, size: 19),
+                    tooltip: l10n.taskEdit,
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
+                    onPressed: () => TaskEditor.show(
+                      context,
+                      cubit: widget.cubit,
+                      stringsResolver: widget.stringsResolver,
+                      initialTask: task,
+                      accountId: widget.accountId!,
+                      session: widget.session,
+                    ),
                   ),
-              ],
-            ),
-            if (task.completedAt != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                l10n.taskCompletedAt(
-                  _localizedTimestamp(context, task.completedAt!),
-                ),
-                key: ValueKey<String>('task-completed-at-${task.id}'),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                  IconButton(
+                    key: ValueKey<String>('task-delete-${task.id}'),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 19),
+                    tooltip: l10n.taskDelete,
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
+                    onPressed: () => _deleteTask(context, task, l10n),
+                  ),
+                  if (isMatrix)
+                    PopupMenuButton<EisenhowerQuadrant>(
+                      key: ValueKey<String>('task-move-${task.id}'),
+                      tooltip: l10n.tasksViewMatrix,
+                      icon: const Icon(Icons.swap_horiz_rounded, size: 20),
+                      onSelected: (quadrant) =>
+                          _moveTask(context, task, quadrant, l10n),
+                      itemBuilder: (_) => [
+                        for (final quadrant in EisenhowerQuadrant.values)
+                          PopupMenuItem(
+                            value: quadrant,
+                            child: Text(_quadrantLabel(quadrant, l10n)),
+                          ),
+                      ],
+                    ),
+                ],
               ),
             ],
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              key: ValueKey<String>('task-edit-${task.id}'),
-              icon: const Icon(Icons.edit_outlined, size: 20),
-              tooltip: l10n.taskEdit,
-              onPressed: () => TaskEditor.show(
-                context,
-                cubit: widget.cubit,
-                stringsResolver: widget.stringsResolver,
-                initialTask: task,
-                accountId: widget.accountId!,
-                session: widget.session,
-              ),
-            ),
-            IconButton(
-              key: ValueKey<String>('task-delete-${task.id}'),
-              icon: const Icon(Icons.delete_outline, size: 20),
-              tooltip: l10n.taskDelete,
-              onPressed: () async {
-                final result = await widget.cubit.deleteTask(task.id);
-                if (result.failureOrNull != null && context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(l10n.tasksFailure)));
-                }
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
+
+  Future<void> _deleteTask(
+    BuildContext context,
+    Task task,
+    TasksStrings l10n,
+  ) async {
+    final result = await widget.cubit.deleteTask(task.id);
+    if (result.failureOrNull != null && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.tasksFailure)));
+    }
+  }
+
+  Future<void> _moveTask(
+    BuildContext context,
+    Task task,
+    EisenhowerQuadrant quadrant,
+    TasksStrings l10n,
+  ) async {
+    final result = await widget.cubit.moveTask(
+      taskId: task.id,
+      quadrant: quadrant,
+    );
+    if (result.failureOrNull != null && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.tasksFailure)));
+    }
+  }
+
+  String _quadrantLabel(EisenhowerQuadrant quadrant, TasksStrings l10n) =>
+      switch (quadrant) {
+        EisenhowerQuadrant.urgentImportant => l10n.quadrantDo,
+        EisenhowerQuadrant.notUrgentImportant => l10n.quadrantSchedule,
+        EisenhowerQuadrant.urgentNotImportant => l10n.quadrantDelegate,
+        EisenhowerQuadrant.notUrgentNotImportant => l10n.quadrantEliminate,
+      };
 
   Future<void> _changeCompletion(
     BuildContext context,

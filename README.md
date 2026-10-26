@@ -11,6 +11,13 @@ trial data.
 Release builds keep the normal account boundary. To exercise that boundary in
 a debug run, pass `--dart-define=NAMAA_TASKS_PREVIEW=false`.
 
+## Preview screen sizes
+
+Run `flutter run` in debug mode. The Device Preview toolbar lets you switch
+between phone, tablet, and desktop sizes, rotate the device, and change text
+scale while using the app. It is off in release builds. To hide it during a
+debug run, pass `--dart-define=NAMAA_DEVICE_PREVIEW=false`.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

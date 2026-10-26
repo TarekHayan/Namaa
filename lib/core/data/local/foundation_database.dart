@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 5;
+const int kFoundationSchemaVersion = 6;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -230,6 +230,7 @@ class HabitDayRecords extends Table {
   TextColumn get habitId => text()();
   TextColumn get localDate => text()();
   DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get dailyCount => integer().withDefault(const Constant(0))();
   BoolColumn get earnedWhileDue => boolean()();
   TextColumn get earnedAgainstRevisionId => text().nullable()();
   IntColumn get recordedUtcOffsetMinutes => integer()();
@@ -542,6 +543,15 @@ class FoundationDatabase extends _$FoundationDatabase {
           mindMapSideLinksOwnerUpdated,
         ]) {
           await _createIndexIfMissing(migrator, index);
+        }
+      }
+      if (to >= 6 && from < 6) {
+        if (from >= 4) {
+          await migrator.addColumn(habitDayRecords, habitDayRecords.dailyCount);
+          await customUpdate(
+            'UPDATE habit_day_records SET daily_count = 1 '
+            'WHERE completed_at IS NOT NULL',
+          );
         }
       }
       await _recordJournalComplete(to);

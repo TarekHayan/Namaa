@@ -105,12 +105,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(kTaskTitleFieldKey), findsOneWidget);
       final editor = tester.widget<TaskEditor>(find.byType(TaskEditor));
+      expect(editor.inline, isTrue);
       final now = DateTime.now();
       expect(
         editor.initialScheduledDate,
         DateTime(now.year, now.month, now.day),
       );
-      Navigator.of(tester.element(find.byType(TaskEditor))).pop();
+      await tester.tap(find.byKey(kTaskInlineCancelKey));
       await tester.pumpAndSettle();
       expect(find.byKey(kTaskTitleFieldKey), findsNothing);
       expect(repository.tasks, isEmpty);
@@ -143,6 +144,10 @@ void main() {
     await tester.tap(find.byKey(kTaskAddButtonKey));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(kTaskInlineEditorKey), findsOneWidget);
+    expect(find.byKey(kTaskScheduledDateButtonKey), findsNothing);
+    await tester.tap(find.byKey(kTaskMoreDetailsButtonKey));
+    await tester.pumpAndSettle();
     expect(find.byKey(kTaskScheduledDateButtonKey), findsOneWidget);
     expect(find.byKey(kTaskScheduledTimeButtonKey), findsOneWidget);
     expect(find.byKey(kTaskDeadlineButtonKey), findsOneWidget);
@@ -280,6 +285,96 @@ void main() {
       });
     },
   );
+
+  taskTestWidgets(
+    'prototype tabs open Mind Maps and matrix moves a real task',
+    (tester) async {
+      final task = _task(id: 'move-id', title: 'Move me');
+      repository.replace(<Task>[task]);
+      var mindMapsOpened = false;
+      await _pumpTasks(
+        tester,
+        cubit: cubit,
+        onMindMaps: () => mindMapsOpened = true,
+      );
+
+      expect(find.byKey(kTasksListTabKey), findsOneWidget);
+      await tester.tap(find.byKey(kTasksMindMapsTabKey));
+      expect(mindMapsOpened, isTrue);
+      await tester.tap(find.byKey(kTasksMatrixToggleKey));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey<String>('matrix-task-move-id')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey<String>('task-move-move-id')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Schedule').last);
+      await tester.pumpAndSettle();
+      expect(
+        repository.tasks.single.quadrant,
+        EisenhowerQuadrant.notUrgentImportant,
+      );
+    },
+  );
+
+  taskTestWidgets('narrow Arabic task layouts fit at 150% text', (
+    tester,
+  ) async {
+    repository.replace(<Task>[
+      _task(id: 'narrow', title: 'مهمة طويلة للتأكد من عرض النص على الهاتف'),
+    ]);
+    await _pumpTasks(
+      tester,
+      cubit: cubit,
+      size: const Size(320, 700),
+      locale: const Locale('ar'),
+      onMindMaps: () {},
+      textScaleFactor: 1.5,
+    );
+    expect(find.byKey(const ValueKey<String>('task-narrow')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(kTasksMatrixToggleKey));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<String>('matrix-task-narrow')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  taskTestWidgets('new task card stays usable on a narrow Arabic phone', (
+    tester,
+  ) async {
+    await _pumpTasks(
+      tester,
+      cubit: cubit,
+      size: const Size(320, 700),
+      locale: const Locale('ar'),
+      textScaleFactor: 1.5,
+    );
+    await tester.tap(find.byKey(kTaskAddButtonKey));
+    await tester.pumpAndSettle();
+    expect(find.byKey(kTaskInlineEditorKey), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.enterText(find.byKey(kTaskTitleFieldKey), 'مهمة جديدة');
+    await tester.scrollUntilVisible(
+      find.byKey(kTaskSaveButtonKey),
+      250,
+      scrollable: find
+          .ancestor(
+            of: find.byKey(kTaskInlineEditorKey),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(find.byKey(kTaskSaveButtonKey));
+    await tester.pumpAndSettle();
+    expect(repository.tasks.single.title, 'مهمة جديدة');
+    expect(tester.takeException(), isNull);
+  });
 
   taskTestWidgets(
     'recoverable conflict remains visible beside local Task state',
@@ -431,6 +526,8 @@ Future<void> _pumpTasks(
   Locale locale = const Locale('en'),
   CloudSessionPort? session,
   OwnerEntryIntent? entryIntent,
+  VoidCallback? onMindMaps,
+  double textScaleFactor = 1,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -440,6 +537,14 @@ Future<void> _pumpTasks(
   await tester.pumpWidget(
     MaterialApp(
       locale: locale,
+      builder: textScaleFactor == 1
+          ? null
+          : (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(textScaleFactor)),
+              child: child!,
+            ),
       supportedLocales: FoundationLocalizations.supportedLocales,
       localizationsDelegates: FoundationLocalizations.localizationsDelegates,
       home: TasksScreen(
@@ -448,6 +553,7 @@ Future<void> _pumpTasks(
         stringsResolver: resolveTasksStrings,
         session: session,
         entryIntent: entryIntent,
+        onMindMaps: onMindMaps,
       ),
     ),
   );

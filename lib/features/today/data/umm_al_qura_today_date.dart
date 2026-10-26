@@ -28,8 +28,6 @@ final class UmmAlQuraTodayDate {
       );
     } on ArgumentError {
       return null;
-    } on RangeError {
-      return null;
     }
   }
 

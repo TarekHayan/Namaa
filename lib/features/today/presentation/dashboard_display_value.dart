@@ -27,8 +27,8 @@ final class DashboardDisplayValue<T> {
   const DashboardDisplayValue.loading()
     : this._(provenance: DashboardValueProvenance.loading);
 
-  const DashboardDisplayValue.empty()
-    : this._(provenance: DashboardValueProvenance.empty);
+  const DashboardDisplayValue.empty([T? value])
+    : this._(provenance: DashboardValueProvenance.empty, value: value);
 
   const DashboardDisplayValue.stale(T value)
     : this._(provenance: DashboardValueProvenance.stale, value: value);
@@ -43,10 +43,15 @@ final class DashboardDisplayValue<T> {
     DashboardValueProvenance.live ||
     DashboardValueProvenance.sample ||
     DashboardValueProvenance.stale => true,
+    DashboardValueProvenance.empty => value != null,
     DashboardValueProvenance.loading ||
-    DashboardValueProvenance.empty ||
     DashboardValueProvenance.unavailable => false,
   };
 
   bool get isSample => provenance == DashboardValueProvenance.sample;
+  bool get isLive => provenance == DashboardValueProvenance.live;
+  bool get isLoading => provenance == DashboardValueProvenance.loading;
+  bool get isEmpty => provenance == DashboardValueProvenance.empty;
+  bool get isStale => provenance == DashboardValueProvenance.stale;
+  bool get isUnavailable => provenance == DashboardValueProvenance.unavailable;
 }
