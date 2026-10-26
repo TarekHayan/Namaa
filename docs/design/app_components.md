@@ -3,6 +3,14 @@
 Shared presentation code lives in `lib/app/theme/` and `lib/app/widgets/`.
 Feature logic and localization stay with each feature; callers pass translated
 labels and messages into the components.
+The architecture check classifies these shared theme and widget files, plus
+generated localization resources under `lib/app/l10n/generated/`, as
+presentation resources. Feature views may import them; app composition,
+navigation wiring, and data adapters remain outside feature presentation.
+The architecture check classifies these shared theme and widget files, plus
+generated localization resources under `lib/app/l10n/generated/`, as
+presentation resources. Feature views may import them; app composition,
+navigation wiring, and data adapters remain outside feature presentation.
 
 ## Theme and type
 

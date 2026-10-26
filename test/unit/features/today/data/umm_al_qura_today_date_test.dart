@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:namma_project/features/today/data/umm_al_qura_today_date.dart';
 import 'package:namma_project/features/today/domain/today_calendar.dart';
+import 'package:namma_project/features/today/presentation/umm_al_qura_today_date.dart';
 
 void main() {
   group('UmmAlQuraTodayDate', () {

@@ -8,11 +8,11 @@ import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
 
-import '../../data/umm_al_qura_today_date.dart';
 import '../dashboard_preview_data.dart';
 import '../today_dashboard_view.dart';
 import '../today_state.dart';
 import '../today_strings.dart';
+import '../umm_al_qura_today_date.dart';
 
 /// Transparent controls and a generic, time-of-day greeting. The user's name
 /// can be added here when authentication provides a verified profile.
