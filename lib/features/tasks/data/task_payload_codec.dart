@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:namma_project/features/tasks/domain/checklist_item.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 /// Stable JSON codec for local outbox and remote Task aggregate payloads.
 final class TaskPayloadCodec {
@@ -30,7 +31,8 @@ final class TaskPayloadCodec {
     ],
     'completedAt': task.completedAt?.toUtc().toIso8601String(),
     'completionChangedAt': task.completionChangedAt.toIso8601String(),
-    'completionXp': task.completionXp,
+    // Kept in the wire payload for the server contract; never read back.
+    'completionXp': kTaskCompletionXp,
     'createdAt': task.createdAt.toUtc().toIso8601String(),
     'updatedAt': task.updatedAt.toUtc().toIso8601String(),
     'deletedAt': task.deletedAt?.toUtc().toIso8601String(),
@@ -66,7 +68,6 @@ final class TaskPayloadCodec {
           decoded,
           'completionChangedAt',
         ),
-        completionXp: _integer(decoded, 'completionXp'),
         createdAt: _utcDateTime(decoded, 'createdAt'),
         updatedAt: _utcDateTime(decoded, 'updatedAt'),
         deletedAt: _nullableUtcDateTime(decoded, 'deletedAt'),

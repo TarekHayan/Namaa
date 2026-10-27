@@ -22,7 +22,6 @@ final class CreateTaskInput {
     this.quadrant = EisenhowerQuadrant.urgentImportant,
     this.estimatedDurationMinutes = 30,
     this.checklistItems = const <ChecklistItem>[],
-    this.completionXp = 20,
   });
 
   final String title;
@@ -35,7 +34,6 @@ final class CreateTaskInput {
   final EisenhowerQuadrant quadrant;
   final int? estimatedDurationMinutes;
   final List<ChecklistItem> checklistItems;
-  final int completionXp;
 }
 
 final class EditTaskInput {
@@ -131,7 +129,6 @@ final class TaskCommands {
         quadrant: input.quadrant,
         estimatedDurationMinutes: input.estimatedDurationMinutes,
         checklistItems: input.checklistItems,
-        completionXp: input.completionXp,
         createdAt: now,
       );
       return _commit(task, ChangeKind.create, now);

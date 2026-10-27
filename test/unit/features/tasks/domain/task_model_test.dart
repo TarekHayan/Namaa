@@ -5,6 +5,7 @@ import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/domain/checklist_item.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/tasks/domain/task_rules.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 import '../../../../support/tasks_test_support.dart';
 
@@ -20,7 +21,6 @@ void main() {
     int? targetDeadlineUtcOffsetMinutes,
     int? estimatedDurationMinutes,
     List<ChecklistItem> checklistItems = const <ChecklistItem>[],
-    int completionXp = 20,
   }) => Task.create(
     id: kTasksTestTaskId,
     accountId: kTasksTestAccountA,
@@ -32,7 +32,6 @@ void main() {
     targetDeadlineUtcOffsetMinutes: targetDeadlineUtcOffsetMinutes,
     estimatedDurationMinutes: estimatedDurationMinutes,
     checklistItems: checklistItems,
-    completionXp: completionXp,
     createdAt: createdAt,
   );
 
@@ -56,14 +55,12 @@ void main() {
       expect(task.category, TaskCategory.work);
       expect(task.quadrant, EisenhowerQuadrant.urgentImportant);
       expect(task.estimatedDurationMinutes, 30);
-      expect(task.completionXp, 20);
       expect(task.checklistItems, isEmpty);
     });
 
     test('rejects blank titles and invalid numeric snapshots', () {
       expect(() => buildTask(title: ' \n\t '), throwsArgumentError);
       expect(() => buildTask(estimatedDurationMinutes: 0), throwsArgumentError);
-      expect(() => buildTask(completionXp: -1), throwsArgumentError);
     });
   });
 
@@ -89,7 +86,7 @@ void main() {
       ]);
     });
 
-    test('preserves supported optional values and the reward snapshot', () {
+    test('preserves supported optional values', () {
       final scheduledTime = DateTime(2026, 10, 8, 14, 30);
       final deadline = DateTime.utc(2026, 10, 9, 18);
       const item = ChecklistItem(
@@ -106,7 +103,6 @@ void main() {
         targetDeadlineUtcOffsetMinutes: 120,
         estimatedDurationMinutes: 45,
         checklistItems: const <ChecklistItem>[item],
-        completionXp: 35,
       );
 
       expect(task.description, 'Use the current project notes');
@@ -115,19 +111,6 @@ void main() {
       expect(task.targetDeadlineUtcOffsetMinutes, 120);
       expect(task.estimatedDurationMinutes, 45);
       expect(task.checklistItems, const <ChecklistItem>[item]);
-      expect(task.completionXp, 35);
-    });
-
-    test('keeps the creation reward snapshot when other fields change', () {
-      final task = buildTask(completionXp: 35);
-      final changed = task.copyWith(
-        title: 'Updated title',
-        quadrant: EisenhowerQuadrant.notUrgentImportant,
-        updatedAt: createdAt.add(const Duration(minutes: 1)),
-      );
-
-      expect(changed.id, task.id);
-      expect(changed.completionXp, 35);
     });
   });
 
@@ -253,6 +236,21 @@ void main() {
   group('Task payload codec', () {
     const codec = TaskPayloadCodec();
 
+    test('the reward is the shared constant, whatever a payload says', () {
+      final task = buildTask();
+      final encoded = jsonDecode(codec.encode(task)) as Map<String, dynamic>;
+      expect(encoded['completionXp'], kTaskCompletionXp);
+
+      // Older builds and other clients may send any value; it is never read.
+      final legacy = jsonEncode(<String, dynamic>{
+        ...encoded,
+        'completionXp': 35,
+      });
+      final decoded = codec.decode(legacy);
+      expect(decoded, task);
+      expect(codec.encode(decoded), codec.encode(task));
+    });
+
     test('round-trips all optional values, checklist order and tombstone', () {
       final deletedAt = createdAt.add(const Duration(hours: 2));
       final source = Task.create(
@@ -277,7 +275,6 @@ void main() {
           ),
         ],
         completedAt: DateTime.utc(2026, 10, 8, 10),
-        completionXp: 35,
         createdAt: createdAt,
         updatedAt: deletedAt,
         deletedAt: deletedAt,

@@ -19,7 +19,8 @@ void main() {
         builder: (_) => const _PreviewApp(),
       ),
     );
-    await tester.pumpAndSettle();
+    // DevicePreview keeps an animation active, so settling never completes.
+    await tester.pump();
 
     final previewContext = tester.element(
       find.byKey(const Key('preview_content')),

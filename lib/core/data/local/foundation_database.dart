@@ -558,9 +558,18 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 7 && from < 7) {
-        // Earlier test schemas are created from the latest table declaration.
-        if (from >= 6) {
-          await migrator.addColumn(pendingChanges, pendingChanges.baseUpdatedAt);
+        // Installed v1-v6 databases all have pending_changes. Test fixtures
+        // created with the latest declaration may already have this column.
+        final columns = await customSelect(
+          'PRAGMA table_info(pending_changes)',
+        ).get();
+        if (!columns.any(
+          (row) => row.read<String>('name') == 'base_updated_at',
+        )) {
+          await migrator.addColumn(
+            pendingChanges,
+            pendingChanges.baseUpdatedAt,
+          );
         }
       }
       await _recordJournalComplete(to);

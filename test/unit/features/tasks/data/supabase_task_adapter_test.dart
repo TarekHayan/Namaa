@@ -164,9 +164,10 @@ void main() {
         final base = now.subtract(const Duration(minutes: 1));
         await adapter.dispatchChange(change(baseUpdatedAt: base));
 
+        expect(gateway.applied.single.baseUpdatedAt, base);
         expect(
-          gateway.applied.single.payload['_syncBaseUpdatedAt'],
-          base.toIso8601String(),
+          gateway.applied.single.payload,
+          isNot(contains('_syncBaseUpdatedAt')),
         );
         expect(
           gateway.applied.single.payload['title'],
@@ -384,6 +385,7 @@ final class _AppliedCall {
     required this.payload,
     required this.updatedAt,
     required this.sentOwnerField,
+    this.baseUpdatedAt,
   });
 
   final String expectedAccountId;
@@ -393,6 +395,7 @@ final class _AppliedCall {
   final Map<String, dynamic> payload;
   final DateTime updatedAt;
   final bool sentOwnerField;
+  final DateTime? baseUpdatedAt;
 }
 
 final class _FakeTaskGateway implements SupabaseTaskGateway {
@@ -412,6 +415,7 @@ final class _FakeTaskGateway implements SupabaseTaskGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   }) async {
     applied.add(
       _AppliedCall(
@@ -421,6 +425,7 @@ final class _FakeTaskGateway implements SupabaseTaskGateway {
         kind: kind,
         payload: payload,
         updatedAt: updatedAt,
+        baseUpdatedAt: baseUpdatedAt,
         sentOwnerField: false,
       ),
     );

@@ -59,6 +59,9 @@ final class TasksMapLinkAdapter implements MapTaskLinkPort {
     StreamSubscription<List<Task>>? tasksSubscription;
     StreamSubscription<CloudSessionSnapshot>? sessionSubscription;
     var active = true;
+    // Each Task list waits on a session check before it is published. A newer
+    // list can finish that check first, so only the newest list may publish.
+    var latestEmission = 0;
     controller = StreamController<List<MapLinkedTask>>(
       onListen: () async {
         if (!await _current(expectedOwner) || !active) {
@@ -76,8 +79,11 @@ final class TasksMapLinkAdapter implements MapTaskLinkPort {
         tasksSubscription = _repository.watchTasks(expectedOwner).listen((
           tasks,
         ) async {
+          final emission = ++latestEmission;
           if (!active) return;
-          if (!await _current(expectedOwner)) {
+          final current = await _current(expectedOwner);
+          if (!active || emission != latestEmission) return;
+          if (!current) {
             controller.add(const []);
             return;
           }

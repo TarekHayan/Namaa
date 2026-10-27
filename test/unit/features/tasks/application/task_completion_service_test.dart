@@ -7,6 +7,7 @@ import 'package:namma_project/features/tasks/application/task_completion_unit_of
 import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/domain/checklist_item.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 import '../../../../support/tasks_test_support.dart';
 
@@ -61,7 +62,7 @@ void main() {
       expect(commit.firstAward?.accountId, kTasksTestAccountA);
       expect(commit.firstAward?.source, 'task_done');
       expect(commit.firstAward?.sourceId, kTasksTestTaskId);
-      expect(commit.firstAward?.amount, completed.completionXp);
+      expect(commit.firstAward?.amount, kTaskCompletionXp);
       expect(commit.firstAward?.awardedAt, clock.utcNow());
     },
   );
@@ -225,7 +226,6 @@ Task _task({
   title: 'Completion service',
   scheduledDate: DateTime(2026, 10, 11),
   checklistItems: checklistItems,
-  completionXp: 35,
   createdAt: DateTime.utc(2026, 10, 11, 8),
 );
 

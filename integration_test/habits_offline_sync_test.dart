@@ -88,6 +88,7 @@ void main() {
             (await outbox.acknowledgeChange(
               change.operationId,
               change.operationId,
+              change.versionTimestamp,
             )).failureOrNull,
             isNull,
           );
@@ -232,10 +233,9 @@ void main() {
         )).valueOrNull?.isDeleted,
         isTrue,
       );
-      expect(
-        await dbB.rawScalar('SELECT count(*) FROM conflict_records'),
-        greaterThan(0),
-      );
+      // Both devices have sent their changes; an incoming server snapshot is
+      // not a local pending edit and must not create a synthetic conflict.
+      expect(await dbB.rawScalar('SELECT count(*) FROM conflict_records'), 0);
 
       for (var trial = 0; trial < 10; trial++) {
         await dbA.close();

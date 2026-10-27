@@ -33,6 +33,7 @@ abstract interface class SupabaseMapGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   });
   Future<MapRemotePage> fetchPage({
     required String expectedOwnerId,
@@ -65,10 +66,11 @@ final class SupabaseMapGatewayImpl implements SupabaseMapGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   }) async {
     _checkOwner(expectedOwnerId);
     final result = await _client.rpc<dynamic>(
-      'apply_mind_map_change',
+      'apply_mind_map_change_v2',
       params: {
         'p_entity_type': entityType,
         'p_map_id': mapId,
@@ -77,6 +79,7 @@ final class SupabaseMapGatewayImpl implements SupabaseMapGateway {
         'p_operation_id': operationId,
         'p_updated_at': updatedAt.toUtc().toIso8601String(),
         'p_kind': kind,
+        'p_base_updated_at': baseUpdatedAt?.toUtc().toIso8601String(),
       },
     );
     _checkOwner(expectedOwnerId);
@@ -189,16 +192,11 @@ final class SupabaseMapSyncAdapter implements CloudSyncPort {
         entityType: change.entityType,
         mapId: mapId,
         entityId: change.entityId,
-        payload: {
-          ...payload,
-          if (change.baseUpdatedAt != null)
-            '_syncBaseUpdatedAt': change.baseUpdatedAt!
-                .toUtc()
-                .toIso8601String(),
-        },
+        payload: payload,
         operationId: change.operationId,
         kind: change.kind.name,
         updatedAt: change.versionTimestamp,
+        baseUpdatedAt: change.baseUpdatedAt,
       );
       if (row['owner'] != change.accountId ||
           row['operation_id'] != change.operationId ||

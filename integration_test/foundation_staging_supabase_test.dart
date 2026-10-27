@@ -309,6 +309,7 @@ void main() {
           (await outbox.acknowledgeChange(
             change.operationId,
             change.operationId,
+            change.versionTimestamp,
           )).failureOrNull,
           isNull,
         );

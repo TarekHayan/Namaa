@@ -47,7 +47,6 @@ void main() {
         title: 'One shared task',
         scheduledDate: DateTime(2026, 10, 19),
         createdAt: DateTime.utc(2026, 10, 18),
-        completionXp: 25,
       );
       expect(
         (await tasks().commitTask(
@@ -234,7 +233,7 @@ void main() {
       ).watchAwards(kTasksPreviewAccountId).first;
       expect(awards, hasLength(1));
       expect(awards.single.source, kTaskDoneAwardSource);
-      expect(awards.single.amount, 25);
+      expect(awards.single.amount, kTaskCompletionXp);
     },
   );
 }

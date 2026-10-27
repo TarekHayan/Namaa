@@ -11,6 +11,7 @@ import 'package:namma_project/features/tasks/presentation/task_editor.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_strings.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 export 'task_editor.dart'
     show
@@ -1050,7 +1051,7 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                           if (task.estimatedDurationMinutes != null)
                             '${task.estimatedDurationMinutes} ${l10n.taskDurationUnit}',
                           _quadrantLabel(task.quadrant, l10n),
-                          '+${task.completionXp} XP',
+                          '+$kTaskCompletionXp XP',
                         ].join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

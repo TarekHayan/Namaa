@@ -90,7 +90,6 @@ void main() {
         title: 'Today bridge',
         scheduledDate: DateTime(2026, 10, 12),
         createdAt: DateTime.utc(2026, 10, 11),
-        completionXp: 25,
       );
       final repository = _Repository([task]);
       final unit = _CompletionUnit(repository);

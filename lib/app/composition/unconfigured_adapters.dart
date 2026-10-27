@@ -55,6 +55,7 @@ class UnconfiguredLocalStore implements LocalStorePort {
   Future<AppResult<void>> acknowledgeChange(
     String operationId,
     String acknowledgementId,
+    DateTime acknowledgedVersion,
   ) async => AppResult<void>.failure(_unconfiguredFailure());
 
   @override

@@ -214,6 +214,7 @@ abstract interface class LocalStorePort {
   Future<AppResult<void>> acknowledgeChange(
     String operationId,
     String acknowledgementId,
+    DateTime acknowledgedVersion,
   );
 
   /// Persists a recoverable dispatch failure: the operation returns to

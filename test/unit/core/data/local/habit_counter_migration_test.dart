@@ -21,6 +21,10 @@ void main() {
         await database.rawExecute(
           'ALTER TABLE habit_day_records DROP COLUMN daily_count',
         );
+        // Installed v5 outboxes predate base-version tracking too.
+        await database.rawExecute(
+          'ALTER TABLE pending_changes DROP COLUMN base_updated_at',
+        );
         await database.rawExecute('''
         INSERT INTO habit_day_records
           (account_id, habit_id, local_date, completed_at,
@@ -36,8 +40,15 @@ void main() {
         await database.close();
         database = await FoundationDatabase.openEncrypted(path: file, key: key);
 
-        expect(database.schemaVersion, 6);
-        expect(await database.journalStatusFor(6), 'completed');
+        expect(database.schemaVersion, 7);
+        expect(await database.journalStatusFor(7), 'completed');
+        final outboxColumns = await database
+            .customSelect('PRAGMA table_info(pending_changes)')
+            .get();
+        expect(
+          outboxColumns.map((row) => row.read<String>('name')),
+          contains('base_updated_at'),
+        );
         expect(
           await database.rawScalar('''
           SELECT daily_count FROM habit_day_records

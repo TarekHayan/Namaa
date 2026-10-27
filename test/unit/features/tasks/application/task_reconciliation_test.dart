@@ -97,6 +97,83 @@ void main() {
   );
 
   test(
+    'a queued edit made on top of the remote version is not a conflict',
+    () async {
+      // Edit made while a sync pass was between its upload and its download:
+      // the snapshot still holds the version this edit started from.
+      final remote = _task(title: 'Synced', updatedAt: baseTime);
+      final edited = baseTime.add(const Duration(minutes: 2));
+      repository
+        ..current = _task(title: 'Edited during sync', updatedAt: edited)
+        ..pending = true;
+      localStore.pendingChanges = [
+        _queued('op-edit', version: edited, base: baseTime),
+      ];
+
+      final result = await reconciler.reconcile(
+        accountId: kTasksTestAccountA,
+        remoteTasks: <Task>[remote],
+      );
+
+      expect(result.valueOrNull?.conflictsRecorded, 0);
+      expect(localStore.conflicts, isEmpty);
+      expect(repository.current?.title, 'Edited during sync');
+    },
+  );
+
+  test(
+    'a remote echo of a queued upload whose ack was lost is not a conflict',
+    () async {
+      final firstUpload = baseTime.add(const Duration(minutes: 1));
+      final secondEdit = baseTime.add(const Duration(minutes: 2));
+      repository
+        ..current = _task(title: 'Second', updatedAt: secondEdit)
+        ..pending = true;
+      localStore.pendingChanges = [
+        _queued('op-1', version: firstUpload, base: baseTime),
+        _queued('op-2', version: secondEdit, base: firstUpload),
+      ];
+
+      final result = await reconciler.reconcile(
+        accountId: kTasksTestAccountA,
+        remoteTasks: <Task>[_task(title: 'First', updatedAt: firstUpload)],
+      );
+
+      expect(result.valueOrNull?.conflictsRecorded, 0);
+      expect(repository.current?.title, 'Second');
+    },
+  );
+
+  test(
+    'a remote version the queued edit never saw is still a conflict',
+    () async {
+      final edited = baseTime.add(const Duration(minutes: 2));
+      repository
+        ..current = _task(title: 'Local edit', updatedAt: edited)
+        ..pending = true;
+      localStore.pendingChanges = [
+        _queued('op-edit', version: edited, base: baseTime),
+      ];
+      final otherDevice = _task(
+        title: 'Other device',
+        updatedAt: baseTime.add(const Duration(minutes: 1)),
+      );
+
+      final result = await reconciler.reconcile(
+        accountId: kTasksTestAccountA,
+        remoteTasks: <Task>[otherDevice],
+      );
+
+      expect(result.valueOrNull?.conflictsRecorded, 1);
+      expect(repository.current?.title, 'Local edit');
+      expect(
+        localStore.conflicts.single.retainedVersion.payload,
+        contains('Other device'),
+      );
+    },
+  );
+
+  test(
     'newest UTC Task becomes active and older remote remains visible',
     () async {
       final local = _task(
@@ -159,33 +236,31 @@ void main() {
     },
   );
 
-  test(
-    'equal timestamps retain both versions without selecting a winner',
-    () async {
-      final local = _task(title: 'Local equal', updatedAt: baseTime);
-      final remote = _task(title: 'Remote equal', updatedAt: baseTime);
-      repository
-        ..current = local
-        ..pending = true;
+  test('equal timestamps with a queued edit retain both versions', () async {
+    final local = _task(title: 'Local equal', updatedAt: baseTime);
+    final remote = _task(title: 'Remote equal', updatedAt: baseTime);
+    repository
+      ..current = local
+      ..pending = true;
+    localStore.pendingChanges = [_queued('equal-edit', version: baseTime)];
 
-      final result = await reconciler.reconcile(
-        accountId: kTasksTestAccountA,
-        remoteTasks: <Task>[remote],
-      );
+    final result = await reconciler.reconcile(
+      accountId: kTasksTestAccountA,
+      remoteTasks: <Task>[remote],
+    );
 
-      expect(result.valueOrNull?.equalTimestampConflicts, 1);
-      expect(repository.current?.title, 'Local equal');
-      expect(localStore.conflicts, hasLength(1));
-      expect(
-        localStore.conflicts.single.activeVersion.payload,
-        contains('Local equal'),
-      );
-      expect(
-        localStore.conflicts.single.retainedVersion.payload,
-        contains('Remote equal'),
-      );
-    },
-  );
+    expect(result.valueOrNull?.equalTimestampConflicts, 1);
+    expect(repository.current?.title, 'Local equal');
+    expect(localStore.conflicts, hasLength(1));
+    expect(
+      localStore.conflicts.single.activeVersion.payload,
+      contains('Local equal'),
+    );
+    expect(
+      localStore.conflicts.single.retainedVersion.payload,
+      contains('Remote equal'),
+    );
+  });
 
   test(
     'newer delete competes with edit and retains the edited loser',
@@ -290,8 +365,27 @@ final class _MemoryTaskRepository implements TaskRepository {
   );
 }
 
+PendingChangeRecord _queued(
+  String operationId, {
+  required DateTime version,
+  DateTime? base,
+}) => PendingChangeRecord(
+  operationId: operationId,
+  accountId: kTasksTestAccountA,
+  entityType: 'task',
+  entityId: kTasksTestTaskId,
+  kind: ChangeKind.update,
+  state: PendingChangeState.pending,
+  attemptCount: 0,
+  serializedChange: '{}',
+  createdAt: version,
+  versionTimestamp: version,
+  baseUpdatedAt: base,
+);
+
 final class _ConflictStore implements LocalStorePort {
   final List<ConflictRecordInput> conflicts = <ConflictRecordInput>[];
+  List<PendingChangeRecord> pendingChanges = const <PendingChangeRecord>[];
 
   @override
   Future<AppResult<void>> recordConflict(ConflictRecordInput conflict) async {
@@ -309,6 +403,7 @@ final class _ConflictStore implements LocalStorePort {
   Future<AppResult<void>> acknowledgeChange(
     String operationId,
     String acknowledgementId,
+    DateTime acknowledgedVersion,
   ) async => AppResult<void>.success(null);
 
   @override
@@ -330,9 +425,7 @@ final class _ConflictStore implements LocalStorePort {
   @override
   Future<AppResult<List<PendingChangeRecord>>> readPendingChanges(
     String accountId,
-  ) async => AppResult<List<PendingChangeRecord>>.success(
-    const <PendingChangeRecord>[],
-  );
+  ) async => AppResult<List<PendingChangeRecord>>.success(pendingChanges);
 
   @override
   Future<AppResult<String?>> readPreference(String key) async =>

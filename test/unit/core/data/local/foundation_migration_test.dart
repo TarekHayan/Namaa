@@ -34,6 +34,9 @@ void main() {
     ]) {
       await db.rawExecute('DROP TABLE IF EXISTS $table');
     }
+    await db.rawExecute(
+      'ALTER TABLE pending_changes DROP COLUMN base_updated_at',
+    );
     return db;
   }
 
@@ -64,6 +67,13 @@ void main() {
       expect(
         await current.journalStatusFor(kFoundationSchemaVersion),
         'completed',
+      );
+      final columns = await current
+          .customSelect('PRAGMA table_info(pending_changes)')
+          .get();
+      expect(
+        columns.map((row) => row.read<String>('name')),
+        contains('base_updated_at'),
       );
       await current.close();
     },

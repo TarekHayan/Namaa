@@ -14,7 +14,6 @@ void main() {
     title: 'Finish the report',
     scheduledDate: DateTime(2026, 10, 11),
     checklistItems: checklistItems,
-    completionXp: 35,
     createdAt: createdAt,
   );
 
@@ -28,10 +27,9 @@ void main() {
     expect(completed.updatedAt, firstCompletion);
     expect(completed.completionChangedAt, firstCompletion);
     expect(completed.isCompleted, isTrue);
-    expect(completed.completionXp, 35);
   });
 
-  test('reopening clears completion and preserves the reward snapshot', () {
+  test('reopening clears completion and keeps identity', () {
     final completed = openTask().complete(firstCompletion);
 
     final reopened = completed.reopen(reopenedAt);
@@ -39,7 +37,6 @@ void main() {
     expect(reopened.completedAt, isNull);
     expect(reopened.updatedAt, reopenedAt);
     expect(reopened.completionChangedAt, reopenedAt);
-    expect(reopened.completionXp, completed.completionXp);
     expect(reopened.id, completed.id);
   });
 

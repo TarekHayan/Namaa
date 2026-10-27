@@ -1,6 +1,6 @@
 -- Ordinary sequential edits do not become conflicts. A stale base does.
 begin;
-select plan(11);
+select plan(16);
 
 insert into auth.users(instance_id,id,aud,role,email,encrypted_password,created_at,updated_at)
 values ('00000000-0000-0000-0000-000000000000',
@@ -16,11 +16,14 @@ select is((select conflict_detected from public.apply_task_change(
   '{"title":"First","completionXp":1000000}'::jsonb,
   'task-create','2026-10-12T08:00:00Z','create')),
   false,'new task has no conflict');
-select is((select conflict_detected from public.apply_task_change(
+select is((select conflict_detected from public.apply_task_change_v2(
   '11111111-1111-4111-8111-111111111111',
-  '{"title":"Second","completedAt":"2026-10-12T09:00:00Z","completionXp":1000000,"_syncBaseUpdatedAt":"2026-10-12T08:00:00Z"}'::jsonb,
-  'task-sequential','2026-10-12T09:00:00Z','update')),
+  '{"title":"Second","completedAt":"2026-10-12T09:00:00Z","completionXp":1000000}'::jsonb,
+  'task-sequential','2026-10-12T09:00:00Z','update','2026-10-12T08:00:00Z')),
   false,'sequential task edit has no conflict');
+select ok(not (select payload ? '_syncBaseUpdatedAt' from public.tasks
+  where id='11111111-1111-4111-8111-111111111111'),
+  'Task sync metadata is not persisted');
 select is((select conflict_detected from public.apply_task_change(
   '11111111-1111-4111-8111-111111111111',
   '{"title":"Stale","_syncBaseUpdatedAt":"2026-10-12T08:00:00Z"}'::jsonb,
@@ -45,12 +48,28 @@ select is((select conflict_detected from public.apply_habit_change(
       'weekdays',jsonb_build_array(1)))),
   'habit-create','2026-10-12T08:00:00Z','create')),
   false,'new habit has no conflict');
-select is((select conflict_detected from public.apply_habit_change(
+select is((select conflict_detected from public.apply_habit_change_v2(
   '22222222-2222-4222-8222-222222222222',
   (select payload from public.habits where id='22222222-2222-4222-8222-222222222222')
-    || '{"name":"Write","updatedAt":"2026-10-12T09:00:00Z","_syncBaseUpdatedAt":"2026-10-12T08:00:00Z"}'::jsonb,
-  'habit-sequential','2026-10-12T09:00:00Z','update')),
+    || '{"name":"Write","updatedAt":"2026-10-12T09:00:00Z"}'::jsonb,
+  'habit-sequential','2026-10-12T09:00:00Z','update','2026-10-12T08:00:00Z')),
   false,'sequential habit edit has no conflict');
+select ok(not (select payload ? '_syncBaseUpdatedAt' from public.habits
+  where id='22222222-2222-4222-8222-222222222222'),
+  'Habit sync metadata is not persisted');
+select is((select conflict_detected from public.apply_habit_day_change_v2(
+  '22222222-2222-4222-8222-222222222222','2026-10-12',
+  jsonb_build_object(
+    'accountId','76666666-6666-4666-8666-666666666666',
+    'habitId','22222222-2222-4222-8222-222222222222',
+    'localDate','2026-10-12','completedAt','2026-10-12T09:15:00Z',
+    'earnedWhileDue',true,'earnedAgainstRevisionId','r1',
+    'recordedUtcOffsetMinutes',120,'updatedAt','2026-10-12T09:15:00Z'),
+  'day-create','2026-10-12T09:15:00Z','create',null)),
+  false,'versioned Habit day RPC accepts a new day');
+select ok(not (select payload ? '_syncBaseUpdatedAt' from public.habit_days
+  where habit_id='22222222-2222-4222-8222-222222222222'),
+  'Habit day sync metadata is not persisted');
 select is((select conflict_detected from public.apply_habit_change(
   '22222222-2222-4222-8222-222222222222',
   (select payload from public.habits where id='22222222-2222-4222-8222-222222222222')
@@ -69,13 +88,16 @@ select is((select conflict_detected from public.apply_mind_map_change(
     'deletedAt',null),
   'map-create','2026-10-12T08:00:00Z','create')),
   false,'new map has no conflict');
-select is((select conflict_detected from public.apply_mind_map_change(
+select is((select conflict_detected from public.apply_mind_map_change_v2(
   'mind_map','33333333-3333-4333-8333-333333333333',
   '33333333-3333-4333-8333-333333333333',
   (select payload from public.mind_maps where id='33333333-3333-4333-8333-333333333333')
-    || '{"title":"Updated","revisionId":"r2","updatedAt":"2026-10-12T09:00:00Z","_syncBaseUpdatedAt":"2026-10-12T08:00:00Z"}'::jsonb,
-  'map-sequential','2026-10-12T09:00:00Z','update')),
+    || '{"title":"Updated","revisionId":"r2","updatedAt":"2026-10-12T09:00:00Z"}'::jsonb,
+  'map-sequential','2026-10-12T09:00:00Z','update','2026-10-12T08:00:00Z')),
   false,'sequential map edit has no conflict');
+select ok(not (select payload ? '_syncBaseUpdatedAt' from public.mind_maps
+  where id='33333333-3333-4333-8333-333333333333'),
+  'Map sync metadata is not persisted');
 select is((select conflict_detected from public.apply_mind_map_change(
   'mind_map','33333333-3333-4333-8333-333333333333',
   '33333333-3333-4333-8333-333333333333',

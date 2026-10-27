@@ -26,6 +26,7 @@ abstract interface class SupabaseHabitGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   });
   Future<HabitRemotePage> fetchHabitPage({
     required String expectedAccountId,
@@ -62,11 +63,12 @@ final class SupabaseHabitGatewayImpl implements SupabaseHabitGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   }) async {
     _checkAccount(expectedAccountId);
     final isDay = entityType == kHabitDayEntityType;
     final result = await _client.rpc<dynamic>(
-      isDay ? 'apply_habit_day_change' : 'apply_habit_change',
+      isDay ? 'apply_habit_day_change_v2' : 'apply_habit_change_v2',
       params: isDay
           ? <String, Object?>{
               'p_habit_id': habitId,
@@ -75,6 +77,7 @@ final class SupabaseHabitGatewayImpl implements SupabaseHabitGateway {
               'p_operation_id': operationId,
               'p_updated_at': updatedAt.toUtc().toIso8601String(),
               'p_kind': kind,
+              'p_base_updated_at': baseUpdatedAt?.toUtc().toIso8601String(),
             }
           : <String, Object?>{
               'p_id': habitId,
@@ -82,6 +85,7 @@ final class SupabaseHabitGatewayImpl implements SupabaseHabitGateway {
               'p_operation_id': operationId,
               'p_updated_at': updatedAt.toUtc().toIso8601String(),
               'p_kind': kind,
+              'p_base_updated_at': baseUpdatedAt?.toUtc().toIso8601String(),
             },
     );
     _checkAccount(expectedAccountId);
@@ -190,16 +194,11 @@ final class SupabaseHabitSyncAdapter implements CloudSyncPort {
         entityType: change.entityType,
         habitId: habitId,
         localDate: localDate,
-        payload: {
-          ...decoded,
-          if (change.baseUpdatedAt != null)
-            '_syncBaseUpdatedAt': change.baseUpdatedAt!
-                .toUtc()
-                .toIso8601String(),
-        },
+        payload: decoded,
         operationId: change.operationId,
         kind: change.kind.name,
         updatedAt: change.versionTimestamp,
+        baseUpdatedAt: change.baseUpdatedAt,
       );
       if (row['owner'] != change.accountId ||
           row['operation_id'] != change.operationId ||

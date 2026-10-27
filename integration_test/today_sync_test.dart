@@ -175,7 +175,6 @@ void main() {
         title: 'Today sync $taskId',
         scheduledDate: DateTime(today.year, today.month, today.day),
         createdAt: DateTime.now().toUtc().subtract(const Duration(minutes: 2)),
-        completionXp: 25,
       );
       expect(
         (await tasksA.commitTask(

@@ -177,7 +177,6 @@ void main() {
         title: 'Offline task',
         scheduledDate: DateTime(2026, 10, 12),
         createdAt: DateTime.utc(2026, 10, 11, 8),
-        completionXp: 25,
       );
       expect(
         (await DriftTaskRepository(

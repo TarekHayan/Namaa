@@ -278,6 +278,7 @@ final class _AccountTaskGateway implements SupabaseTaskGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   }) async {
     if (expectedAccountId != accountId) {
       throw StateError('Authenticated account changed before Task upload');

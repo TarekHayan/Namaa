@@ -19,7 +19,6 @@ final class Task {
     required this.category,
     required this.quadrant,
     required this.checklistItems,
-    required this.completionXp,
     required this.createdAt,
     required this.updatedAt,
     this.description,
@@ -48,7 +47,6 @@ final class Task {
     List<ChecklistItem> checklistItems = const <ChecklistItem>[],
     DateTime? completedAt,
     DateTime? completionChangedAt,
-    int completionXp = 20,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) => Task.restore(
@@ -66,7 +64,6 @@ final class Task {
     checklistItems: checklistItems,
     completedAt: completedAt,
     completionChangedAt: completionChangedAt,
-    completionXp: completionXp,
     createdAt: createdAt,
     updatedAt: updatedAt,
     deletedAt: deletedAt,
@@ -89,7 +86,6 @@ final class Task {
     List<ChecklistItem> checklistItems = const <ChecklistItem>[],
     DateTime? completedAt,
     DateTime? completionChangedAt,
-    int completionXp = 20,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) {
@@ -104,13 +100,6 @@ final class Task {
         estimatedDurationMinutes,
         'estimatedDurationMinutes',
         'must be positive when present',
-      );
-    }
-    if (completionXp < 0) {
-      throw ArgumentError.value(
-        completionXp,
-        'completionXp',
-        'must not be negative',
       );
     }
     if (targetDeadline == null && targetDeadlineUtcOffsetMinutes != null) {
@@ -176,7 +165,6 @@ final class Task {
       checklistItems: List<ChecklistItem>.unmodifiable(checklistItems),
       completedAt: normalizedCompletedAt,
       completionChangedAt: normalizedCompletionChangedAt,
-      completionXp: completionXp,
       createdAt: createdAt,
       updatedAt: normalizedUpdatedAt,
       deletedAt: normalizedDeletedAt,
@@ -199,7 +187,6 @@ final class Task {
   final List<ChecklistItem> checklistItems;
   final DateTime? completedAt;
   final DateTime completionChangedAt;
-  final int completionXp;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -220,7 +207,6 @@ final class Task {
     List<ChecklistItem>? checklistItems,
     Object? completedAt = _unchanged,
     DateTime? completionChangedAt,
-    int? completionXp,
     DateTime? updatedAt,
     Object? deletedAt = _unchanged,
   }) => Task.restore(
@@ -251,7 +237,6 @@ final class Task {
         ? this.completedAt
         : completedAt as DateTime?,
     completionChangedAt: completionChangedAt ?? this.completionChangedAt,
-    completionXp: completionXp ?? this.completionXp,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: identical(deletedAt, _unchanged)
@@ -450,7 +435,6 @@ final class Task {
           _listEquals(checklistItems, other.checklistItems) &&
           completedAt == other.completedAt &&
           completionChangedAt == other.completionChangedAt &&
-          completionXp == other.completionXp &&
           createdAt == other.createdAt &&
           updatedAt == other.updatedAt &&
           deletedAt == other.deletedAt;
@@ -471,7 +455,6 @@ final class Task {
     ...checklistItems,
     completedAt,
     completionChangedAt,
-    completionXp,
     createdAt,
     updatedAt,
     deletedAt,

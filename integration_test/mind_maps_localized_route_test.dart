@@ -61,7 +61,6 @@ void main() {
       title: 'Review Namaa خطة',
       scheduledDate: DateTime(2026, 10, 19),
       createdAt: DateTime.utc(2026, 10, 19),
-      completionXp: 25,
     );
     expect(
       (await tasks.commitTask(
@@ -309,7 +308,6 @@ void main() {
       title: 'Keyboard Task',
       scheduledDate: DateTime(2026, 10, 19),
       createdAt: DateTime.utc(2026, 10, 19),
-      completionXp: 25,
     );
     expect(
       (await tasks.commitTask(

@@ -1,6 +1,5 @@
-import 'dart:convert';
-
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/sync_versions.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
@@ -52,6 +51,12 @@ final class TaskReconciler implements TaskReconciliationPort {
     var conflictsRecorded = 0;
     var equalTimestampConflicts = 0;
 
+    final pendingRead = await _localStore.readPendingChanges(accountId);
+    if (pendingRead.failureOrNull case final failure?) {
+      return AppResult<TaskReconciliationSummary>.failure(failure);
+    }
+    final pendingVersions = PendingSyncVersions.index(pendingRead.valueOrNull!);
+
     for (final remote in remoteTasks) {
       final localResult = await _repository.readTask(
         accountId: accountId,
@@ -99,7 +104,15 @@ final class TaskReconciler implements TaskReconciliationPort {
             );
           }
           imported++;
+          continue;
         }
+      } else if (!remote.updatedAt.isAtSameMomentAs(local.updatedAt) &&
+          (pendingVersions[(kTaskEntityType, remote.id)]?.knows(
+                remote.updatedAt,
+              ) ??
+              false)) {
+        // Remote is the version the queued edit started from (or that edit's
+        // own upload). Nothing clashed: keep local and let the outbox send it.
         continue;
       }
 
@@ -131,8 +144,15 @@ final class TaskReconciler implements TaskReconciliationPort {
 
       final conflict = await _localStore.recordConflict(
         ConflictRecordInput(
-          conflictId:
-              'task-inbound-$accountId-${remote.id}-${_conflictFingerprint(active.payload, retained.payload, active.versionTimestamp, retained.versionTimestamp)}',
+          conflictId: syncConflictId(
+            accountId: accountId,
+            entityType: kTaskEntityType,
+            entityId: remote.id,
+            activeAt: active.versionTimestamp,
+            retainedAt: retained.versionTimestamp,
+            activePayload: active.payload,
+            retainedPayload: retained.payload,
+          ),
           accountId: accountId,
           entityType: kTaskEntityType,
           entityId: remote.id,
@@ -178,26 +198,6 @@ final class TaskReconciler implements TaskReconciliationPort {
   );
 
   static DateTime _utcNow() => DateTime.now().toUtc();
-
-  static String _conflictFingerprint(
-    String active,
-    String retained,
-    DateTime activeAt,
-    DateTime retainedAt,
-  ) {
-    final bytes = utf8.encode(
-      '${activeAt.toUtc().toIso8601String()}|$active|'
-      '${retainedAt.toUtc().toIso8601String()}|$retained',
-    );
-    var first = 0x811c9dc5;
-    var second = 0x9e3779b9;
-    for (final byte in bytes) {
-      first = ((first ^ byte) * 0x01000193) & 0xffffffff;
-      second = ((second ^ byte) * 0x85ebca6b) & 0xffffffff;
-    }
-    return '${first.toRadixString(16).padLeft(8, '0')}'
-        '${second.toRadixString(16).padLeft(8, '0')}';
-  }
 
   static AppFailure _failure(AppFailureCategory category, String messageKey) =>
       AppFailure.blocking(

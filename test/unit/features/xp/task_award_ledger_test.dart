@@ -67,7 +67,7 @@ void main() {
           accountId: task.accountId,
           source: kTaskDoneAwardSource,
           sourceId: task.id,
-          amount: task.completionXp + 1,
+          amount: kTaskCompletionXp + 1,
           awardedAt: completedAt,
         ),
         operationId: 'invalid-award',
@@ -198,7 +198,7 @@ void main() {
 
     final accountAwards = await awards.watchAwards(kTasksTestAccountA).first;
     expect(accountAwards, hasLength(1));
-    expect(accountAwards.single.amount, _task().completionXp);
+    expect(accountAwards.single.amount, kTaskCompletionXp);
   });
 
   test(
@@ -266,7 +266,6 @@ Task _task() => Task.create(
   accountId: kTasksTestAccountA,
   title: 'Rewarded task',
   scheduledDate: DateTime(2026, 10, 11),
-  completionXp: 35,
   createdAt: DateTime.utc(2026, 10, 11, 8),
 );
 
@@ -287,7 +286,7 @@ TaskCompletionAward _awardFromTask(Task task, DateTime awardedAt) =>
       accountId: task.accountId,
       source: kTaskDoneAwardSource,
       sourceId: task.id,
-      amount: task.completionXp,
+      amount: kTaskCompletionXp,
       awardedAt: awardedAt,
     );
 
