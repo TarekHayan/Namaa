@@ -420,6 +420,7 @@ void main() {
             expect(habits.completed, isTrue);
             expect(cubit.state.habits.value?.completedCount, 1);
           }
+
           final taskAction = find.byKey(
             const ValueKey('today_task_action_task'),
           );

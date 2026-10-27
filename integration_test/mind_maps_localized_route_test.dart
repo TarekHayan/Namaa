@@ -404,7 +404,9 @@ void main() {
     await tester.pumpAndSettle();
     final graph = (await maps.watchGraphs(kTasksPreviewAccountId).first).single;
     final card = find.byKey(ValueKey('mind-map-${graph.map.id}'));
-    await enter(find.descendant(of: card, matching: find.byType(InkWell)).first);
+    await enter(
+      find.descendant(of: card, matching: find.byType(InkWell)).first,
+    );
     expect(find.byKey(kMindMapEditorKey), findsOneWidget);
     await enter(
       find.byKey(ValueKey('mind-map-canvas-node-${graph.nodes.single.id}')),
