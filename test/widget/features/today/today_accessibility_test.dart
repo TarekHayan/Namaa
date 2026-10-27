@@ -409,6 +409,17 @@ void main() {
             findsOneWidget,
           );
           final clock = Stopwatch()..start();
+          Future<void> waitForHabitCompletion() async {
+            for (var attempt = 0; attempt < 40; attempt++) {
+              if (habits.completed &&
+                  cubit.state.habits.value?.completedCount == 1) {
+                return;
+              }
+              await tester.pump(const Duration(milliseconds: 100));
+            }
+            expect(habits.completed, isTrue);
+            expect(cubit.state.habits.value?.completedCount, 1);
+          }
           final taskAction = find.byKey(
             const ValueKey('today_task_action_task'),
           );
@@ -436,6 +447,7 @@ void main() {
               tester,
               find.byKey(const ValueKey('habit-complete-habit')),
             );
+            await waitForHabitCompletion();
             await _activateByKeyboard(tester, find.byType(BackButton));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTodayScreenKey), findsOneWidget);
@@ -470,7 +482,7 @@ void main() {
             await tester.tap(
               find.byKey(const ValueKey('habit-complete-habit')),
             );
-            await tester.pump();
+            await waitForHabitCompletion();
             await tester.tap(find.byType(BackButton));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTodayScreenKey), findsOneWidget);

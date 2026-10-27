@@ -391,6 +391,8 @@ void main() {
     await waitForPreviewHabit(completed: true);
     expect(find.text('Preview reading'), findsOneWidget);
     expect(find.byIcon(Icons.undo), findsOneWidget);
+    await tester.ensureVisible(find.byIcon(Icons.undo));
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.undo));
     await waitForPreviewHabit(completed: false);
     expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);

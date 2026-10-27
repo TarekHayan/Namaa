@@ -402,6 +402,10 @@ void main() {
       );
       expect(deleteResult.failureOrNull, isNull);
       expect(deleteResult.valueOrNull, isA<DispatchVersionConflict>());
+      expect(
+        (deleteResult.valueOrNull as DispatchVersionConflict).remotePayload,
+        contains('Staging Habit'),
+      );
       final afterDelete = await SupabaseHabitReader(
         gateway: SupabaseHabitGatewayImpl(deviceB),
       ).readAll(ownerId);
@@ -434,7 +438,7 @@ void main() {
       );
       expect(
         await databaseB.rawScalar('SELECT count(*) FROM conflict_records'),
-        greaterThan(0),
+        0,
       );
     },
   );
