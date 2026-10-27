@@ -109,6 +109,14 @@ final class MapReconciler implements MapReconciliationPort {
               as String,
         ).toUtc();
         final comparison = record.updatedAt.compareTo(localAt);
+        final pending = await _store.hasPendingChange(
+          ownerId: ownerId,
+          entityType: record.type,
+          entityId: record.id,
+        );
+        if (pending.failureOrNull case final failure?) {
+          return AppResult.failure(failure);
+        }
         if (comparison > 0) {
           final allowed = await _allowRelationship(ownerId, record);
           if (allowed.failureOrNull case final failure?) {
@@ -118,6 +126,19 @@ final class MapReconciler implements MapReconciliationPort {
             conflicts++;
             continue;
           }
+        }
+        if (pending.valueOrNull != true) {
+          if (comparison > 0) {
+            final applied = await _store.applyInbound(
+              entityType: record.type,
+              payload: record.payload,
+            );
+            if (applied.failureOrNull case final failure?) {
+              return AppResult.failure(failure);
+            }
+            imported++;
+          }
+          continue;
         }
         final recorded = await _recordConflict(
           id: _conflictId(

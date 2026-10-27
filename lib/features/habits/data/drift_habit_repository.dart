@@ -282,6 +282,7 @@ final class DriftHabitRepository
           payload: payload,
           queuedAt: request.queuedAt,
           version: habit.updatedAt,
+          baseUpdatedAt: existing?.updatedAt,
         );
       });
       return const AppResult.success(null);
@@ -342,6 +343,7 @@ final class DriftHabitRepository
           payload: payload,
           queuedAt: request.queuedAt,
           version: day.updatedAt,
+          baseUpdatedAt: existing?.updatedAt,
         );
       });
       return const AppResult.success(null);
@@ -383,6 +385,7 @@ final class DriftHabitRepository
     required String payload,
     required DateTime queuedAt,
     required DateTime version,
+    DateTime? baseUpdatedAt,
   }) => _database
       .into(_database.pendingChanges)
       .insert(
@@ -396,6 +399,7 @@ final class DriftHabitRepository
           serializedChange: payload,
           createdAt: queuedAt,
           versionTimestamp: version,
+          baseUpdatedAt: Value(baseUpdatedAt),
         ),
       );
 

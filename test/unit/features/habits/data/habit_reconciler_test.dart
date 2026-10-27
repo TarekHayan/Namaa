@@ -40,6 +40,47 @@ void main() {
     path.dispose();
   });
 
+  test('remote habit edit without a pending write is not a conflict', () async {
+    final local = Habit.create(
+      id: kHabitsTestHabitId,
+      accountId: kHabitsTestAccountA,
+      name: 'Read',
+      weekdays: {1},
+      revisionId: kHabitsTestRevisionId,
+      createdAt: at,
+      effectiveLocalDate: '2026-10-12',
+      utcOffsetMinutes: 120,
+    );
+    expect((await repository.applyInboundHabit(local)).failureOrNull, isNull);
+    final remote = local.edit(
+      name: 'Read books',
+      weekdays: {1},
+      reminderMinuteOfDay: null,
+      revisionId: 'remote-r2',
+      editedAt: at.add(const Duration(minutes: 1)),
+      effectiveLocalDate: '2026-10-12',
+      utcOffsetMinutes: 120,
+    );
+
+    final result = await reconciler.reconcile(
+      accountId: local.accountId,
+      remote: HabitRemoteSnapshot(habits: [remote], days: []),
+    );
+
+    expect(result.valueOrNull?.conflictsRecorded, 0);
+    expect(
+      (await repository.readHabit(
+        accountId: local.accountId,
+        habitId: local.id,
+      )).valueOrNull?.name,
+      'Read books',
+    );
+    expect(
+      await database.rawScalar('SELECT count(*) FROM conflict_records'),
+      0,
+    );
+  });
+
   test(
     'newest winner and equal-time loser are atomic; pending is retained',
     () async {

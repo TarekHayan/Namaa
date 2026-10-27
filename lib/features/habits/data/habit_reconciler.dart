@@ -63,6 +63,25 @@ final class HabitReconciler implements HabitReconciliationPort {
         final localPayload = _codec.encodeHabit(local);
         if (localPayload != remotePayload) {
           final comparison = habit.updatedAt.compareTo(local.updatedAt);
+          final pending = await _store.hasPendingChange(
+            accountId: accountId,
+            entityType: kHabitEntityType,
+            entityId: habit.id,
+          );
+          if (pending.failureOrNull case final failure?) {
+            return AppResult.failure(failure);
+          }
+          if (pending.valueOrNull != true) {
+            if (comparison > 0) {
+              final applied = await _store.applyInboundHabit(habit);
+              if (applied.failureOrNull case final failure?) {
+                return AppResult.failure(failure);
+              }
+              imported++;
+            }
+            parents[habit.id] = comparison > 0 ? habit : local;
+            continue;
+          }
           final recorded = await _recordConflict(
             accountId: accountId,
             entityType: kHabitEntityType,
@@ -124,6 +143,24 @@ final class HabitReconciler implements HabitReconciliationPort {
           final localPayload = _codec.encodeDay(local);
           if (localPayload != remotePayload) {
             final comparison = day.updatedAt.compareTo(local.updatedAt);
+            final pending = await _store.hasPendingChange(
+              accountId: accountId,
+              entityType: kHabitDayEntityType,
+              entityId: '${day.habitId}:${day.localDate}',
+            );
+            if (pending.failureOrNull case final failure?) {
+              return AppResult.failure(failure);
+            }
+            if (pending.valueOrNull != true && !parent.isDeleted) {
+              if (comparison > 0) {
+                final applied = await _store.applyInboundDay(day);
+                if (applied.failureOrNull case final failure?) {
+                  return AppResult.failure(failure);
+                }
+                imported++;
+              }
+              continue;
+            }
             final recorded = await _recordConflict(
               accountId: accountId,
               entityType: kHabitDayEntityType,

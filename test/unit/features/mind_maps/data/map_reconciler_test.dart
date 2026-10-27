@@ -70,7 +70,7 @@ void main() {
   });
 
   test(
-    'different nodes merge while older same-node version is retained',
+    'different nodes merge without a false conflict for an old snapshot',
     () async {
       final local = _node(
         '00000000-0000-4000-8102-000000000002',
@@ -93,7 +93,7 @@ void main() {
       );
       expect(result.failureOrNull, isNull);
       expect(result.valueOrNull!.imported, 1);
-      expect(result.valueOrNull!.conflictsRecorded, 1);
+      expect(result.valueOrNull!.conflictsRecorded, 0);
       final graph = (await repo.readGraph(
         ownerId: map.ownerId,
         mapId: map.id,
@@ -102,52 +102,44 @@ void main() {
         graph.nodes.map((node) => node.title),
         containsAll(['Center', 'Local edit', 'Independent remote']),
       );
-      expect(
-        (await repo.watchConflicts(map.ownerId, map.id).first)
-            .single
-            .retainedLabel,
-        'Old remote',
-      );
+      expect(await repo.watchConflicts(map.ownerId, map.id).first, isEmpty);
     },
   );
 
-  test(
-    'newer node tombstone wins and equal-time mismatch stays unresolved',
-    () async {
-      final local = _node('00000000-0000-4000-8102-000000000002', 'Local', _at);
-      await repo.applyInbound(
-        entityType: kMindMapNodeEntityType,
-        payload: _codec.encodeNode(local),
-      );
-      final equal = _node(local.id, 'Other', _at);
-      final tied = await reconciler.reconcile(
+  test('newer node tombstone wins without a pending local edit', () async {
+    final local = _node('00000000-0000-4000-8102-000000000002', 'Local', _at);
+    await repo.applyInbound(
+      entityType: kMindMapNodeEntityType,
+      payload: _codec.encodeNode(local),
+    );
+    final equal = _node(local.id, 'Other', _at);
+    final tied = await reconciler.reconcile(
+      ownerId: map.ownerId,
+      remote: _snapshot(maps: [map], nodes: [center, equal]),
+    );
+    expect(tied.failureOrNull, isNull);
+    expect(tied.valueOrNull!.equalTimestampConflicts, 0);
+    expect(
+      (await repo.readGraph(
         ownerId: map.ownerId,
-        remote: _snapshot(maps: [map], nodes: [center, equal]),
-      );
-      expect(tied.failureOrNull, isNull);
-      expect(tied.valueOrNull!.equalTimestampConflicts, 1);
-      expect(
-        (await repo.readGraph(
-          ownerId: map.ownerId,
-          mapId: map.id,
-        )).valueOrNull!.nodes.last.title,
-        'Local',
-      );
-      final deleted = _node(local.id, 'Deleted', _later, deleted: true);
-      final resolved = await reconciler.reconcile(
+        mapId: map.id,
+      )).valueOrNull!.nodes.last.title,
+      'Local',
+    );
+    final deleted = _node(local.id, 'Deleted', _later, deleted: true);
+    final resolved = await reconciler.reconcile(
+      ownerId: map.ownerId,
+      remote: _snapshot(maps: [map], nodes: [center, deleted]),
+    );
+    expect(resolved.failureOrNull, isNull);
+    expect(
+      (await repo.readGraph(
         ownerId: map.ownerId,
-        remote: _snapshot(maps: [map], nodes: [center, deleted]),
-      );
-      expect(resolved.failureOrNull, isNull);
-      expect(
-        (await repo.readGraph(
-          ownerId: map.ownerId,
-          mapId: map.id,
-        )).valueOrNull!.nodes,
-        hasLength(1),
-      );
-    },
-  );
+        mapId: map.id,
+      )).valueOrNull!.nodes,
+      hasLength(1),
+    );
+  });
 
   test('newer side role replaces local parent pair atomically', () async {
     final branch = _node('00000000-0000-4000-8102-000000000002', 'Branch', _at);

@@ -88,6 +88,21 @@ final class TaskReconciler implements TaskReconciliationPort {
         continue;
       }
 
+      // A remote snapshot is an ordinary update unless this device still has
+      // an unacknowledged edit to the same Task. Preserve that edit for upload.
+      if (pending.valueOrNull != true) {
+        if (remote.updatedAt.isAfter(local.updatedAt)) {
+          final applied = await _repository.applyInboundTask(remote);
+          if (applied.failureOrNull != null) {
+            return AppResult<TaskReconciliationSummary>.failure(
+              applied.failureOrNull!,
+            );
+          }
+          imported++;
+        }
+        continue;
+      }
+
       final detectedAt = _detectedAt();
       if (!detectedAt.isUtc) {
         return AppResult<TaskReconciliationSummary>.failure(

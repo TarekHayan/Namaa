@@ -189,7 +189,13 @@ final class SupabaseMapSyncAdapter implements CloudSyncPort {
         entityType: change.entityType,
         mapId: mapId,
         entityId: change.entityId,
-        payload: payload,
+        payload: {
+          ...payload,
+          if (change.baseUpdatedAt != null)
+            '_syncBaseUpdatedAt': change.baseUpdatedAt!
+                .toUtc()
+                .toIso8601String(),
+        },
         operationId: change.operationId,
         kind: change.kind.name,
         updatedAt: change.versionTimestamp,

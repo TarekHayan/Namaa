@@ -43,6 +43,26 @@ void main() {
   });
 
   test(
+    'remote update without a pending local edit is not a conflict',
+    () async {
+      repository.current = _task(title: 'Old', updatedAt: baseTime);
+      final remote = _task(
+        title: 'From another device',
+        updatedAt: baseTime.add(const Duration(minutes: 1)),
+      );
+
+      final result = await reconciler.reconcile(
+        accountId: kTasksTestAccountA,
+        remoteTasks: [remote],
+      );
+
+      expect(result.valueOrNull?.conflictsRecorded, 0);
+      expect(repository.current?.title, 'From another device');
+      expect(localStore.conflicts, isEmpty);
+    },
+  );
+
+  test(
     'pending local change is never silently discarded by inbound state',
     () async {
       final local = _task(title: 'Pending local', updatedAt: baseTime);
@@ -84,7 +104,9 @@ void main() {
         updatedAt: baseTime.add(const Duration(minutes: 5)),
       );
       final remote = _task(title: 'Older remote', updatedAt: baseTime);
-      repository.current = local;
+      repository
+        ..current = local
+        ..pending = true;
 
       final result = await reconciler.reconcile(
         accountId: kTasksTestAccountA,
@@ -116,7 +138,9 @@ void main() {
         title: 'Newer remote',
         updatedAt: baseTime.add(const Duration(minutes: 5)),
       );
-      repository.current = local;
+      repository
+        ..current = local
+        ..pending = true;
 
       await reconciler.reconcile(
         accountId: kTasksTestAccountA,
@@ -140,7 +164,9 @@ void main() {
     () async {
       final local = _task(title: 'Local equal', updatedAt: baseTime);
       final remote = _task(title: 'Remote equal', updatedAt: baseTime);
-      repository.current = local;
+      repository
+        ..current = local
+        ..pending = true;
 
       final result = await reconciler.reconcile(
         accountId: kTasksTestAccountA,
@@ -169,7 +195,9 @@ void main() {
         title: 'Prior remote value',
         updatedAt: baseTime.add(const Duration(minutes: 2)),
       ).markDeleted(baseTime.add(const Duration(minutes: 2)));
-      repository.current = localEdit;
+      repository
+        ..current = localEdit
+        ..pending = true;
 
       await reconciler.reconcile(
         accountId: kTasksTestAccountA,

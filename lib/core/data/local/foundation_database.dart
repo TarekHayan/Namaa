@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 6;
+const int kFoundationSchemaVersion = 7;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -78,6 +78,9 @@ class PendingChanges extends Table {
   TextColumn get acknowledgementId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get versionTimestamp => dateTime()();
+
+  /// Version observed immediately before the local mutation.
+  DateTimeColumn get baseUpdatedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {operationId};
@@ -552,6 +555,12 @@ class FoundationDatabase extends _$FoundationDatabase {
             'UPDATE habit_day_records SET daily_count = 1 '
             'WHERE completed_at IS NOT NULL',
           );
+        }
+      }
+      if (to >= 7 && from < 7) {
+        // Earlier test schemas are created from the latest table declaration.
+        if (from >= 6) {
+          await migrator.addColumn(pendingChanges, pendingChanges.baseUpdatedAt);
         }
       }
       await _recordJournalComplete(to);

@@ -20,6 +20,7 @@ void main() {
     ChangeKind kind = ChangeKind.update,
     String? payload,
     DateTime? versionTimestamp,
+    DateTime? baseUpdatedAt,
   }) => OutboundChange(
     operationId: operationId,
     accountId: kTasksTestAccountA,
@@ -28,6 +29,7 @@ void main() {
     kind: kind,
     payload: payload ?? codec.encode(_task(updatedAt: versionTimestamp ?? now)),
     versionTimestamp: versionTimestamp ?? now,
+    baseUpdatedAt: baseUpdatedAt,
   );
 
   group('Task outbound RPC adapter', () {
@@ -151,6 +153,25 @@ void main() {
         expect(gateway.applied.last.operationId, 'reopen-operation');
         expect(gateway.applied.last.payload['completedAt'], isNull);
         expect(gateway.applied.last.payload['completionXp'], 20);
+      },
+    );
+
+    test(
+      'forwards the observed base version without changing Task fields',
+      () async {
+        final gateway = _FakeTaskGateway();
+        final adapter = SupabaseTaskSyncAdapter(gateway: gateway);
+        final base = now.subtract(const Duration(minutes: 1));
+        await adapter.dispatchChange(change(baseUpdatedAt: base));
+
+        expect(
+          gateway.applied.single.payload['_syncBaseUpdatedAt'],
+          base.toIso8601String(),
+        );
+        expect(
+          gateway.applied.single.payload['title'],
+          _task(updatedAt: now).title,
+        );
       },
     );
 

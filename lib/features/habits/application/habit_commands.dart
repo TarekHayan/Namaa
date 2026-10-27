@@ -148,54 +148,56 @@ final class HabitCommands {
       return AppResult.failure(failure);
     }
     final owner = account.valueOrNull!;
-    final existing = await _repository.readHabit(
-      accountId: owner,
-      habitId: input.habitId,
-    );
-    if (existing.failureOrNull case final failure?) {
-      return AppResult.failure(failure);
-    }
-    final current = existing.valueOrNull;
-    if (current == null || current.isDeleted) {
-      return AppResult.failure(
-        _error(AppFailureCategory.notFound, 'habits.error.not_found'),
+    return _repository.runInTransaction(() async {
+      final existing = await _repository.readHabit(
+        accountId: owner,
+        habitId: input.habitId,
       );
-    }
-    try {
-      final requested = _nowUtc();
-      final calendar = _localCalendar();
-      final updated = current.edit(
-        name: input.name,
-        weekdays: input.weekdays,
-        reminderMinuteOfDay: input.reminderMinuteOfDay,
-        revisionId: _nextRevisionId(),
-        editedAt: requested,
-        effectiveLocalDate: calendar.localDate,
-        utcOffsetMinutes: calendar.utcOffsetMinutes,
-      );
-      final checked = await _account(expectedAccountId);
-      if (checked.valueOrNull != owner) {
+      if (existing.failureOrNull case final failure?) {
+        return AppResult.failure(failure);
+      }
+      final current = existing.valueOrNull;
+      if (current == null || current.isDeleted) {
         return AppResult.failure(
-          _error(AppFailureCategory.authorization, 'habits.error.account'),
+          _error(AppFailureCategory.notFound, 'habits.error.not_found'),
         );
       }
-      final commit = await _repository.commitHabit(
-        HabitWriteRequest(
-          habit: updated,
-          operationId: _nextOperationId(),
-          kind: ChangeKind.update,
-          queuedAt: updated.updatedAt,
-        ),
-      );
-      final failure = commit.failureOrNull;
-      return failure == null
-          ? AppResult.success(updated)
-          : AppResult.failure(failure);
-    } on ArgumentError {
-      return AppResult.failure(
-        _error(AppFailureCategory.validation, 'habits.validation.invalid'),
-      );
-    }
+      try {
+        final requested = _nowUtc();
+        final calendar = _localCalendar();
+        final updated = current.edit(
+          name: input.name,
+          weekdays: input.weekdays,
+          reminderMinuteOfDay: input.reminderMinuteOfDay,
+          revisionId: _nextRevisionId(),
+          editedAt: requested,
+          effectiveLocalDate: calendar.localDate,
+          utcOffsetMinutes: calendar.utcOffsetMinutes,
+        );
+        final checked = await _account(expectedAccountId);
+        if (checked.valueOrNull != owner) {
+          return AppResult.failure(
+            _error(AppFailureCategory.authorization, 'habits.error.account'),
+          );
+        }
+        final commit = await _repository.commitHabit(
+          HabitWriteRequest(
+            habit: updated,
+            operationId: _nextOperationId(),
+            kind: ChangeKind.update,
+            queuedAt: updated.updatedAt,
+          ),
+        );
+        final failure = commit.failureOrNull;
+        return failure == null
+            ? AppResult.success(updated)
+            : AppResult.failure(failure);
+      } on ArgumentError {
+        return AppResult.failure(
+          _error(AppFailureCategory.validation, 'habits.validation.invalid'),
+        );
+      }
+    });
   }
 
   Future<AppResult<Habit>> deleteHabit(
@@ -216,38 +218,40 @@ final class HabitCommands {
       return AppResult.failure(failure);
     }
     final owner = account.valueOrNull!;
-    final existing = await _repository.readHabit(
-      accountId: owner,
-      habitId: habitId,
-    );
-    if (existing.failureOrNull case final failure?) {
-      return AppResult.failure(failure);
-    }
-    final current = existing.valueOrNull;
-    if (current == null || current.isDeleted) {
-      return AppResult.failure(
-        _error(AppFailureCategory.notFound, 'habits.error.not_found'),
+    return _repository.runInTransaction(() async {
+      final existing = await _repository.readHabit(
+        accountId: owner,
+        habitId: habitId,
       );
-    }
-    final deleted = current.delete(_nowUtc());
-    final checked = await _account(expectedAccountId);
-    if (checked.valueOrNull != owner) {
-      return AppResult.failure(
-        _error(AppFailureCategory.authorization, 'habits.error.account'),
+      if (existing.failureOrNull case final failure?) {
+        return AppResult.failure(failure);
+      }
+      final current = existing.valueOrNull;
+      if (current == null || current.isDeleted) {
+        return AppResult.failure(
+          _error(AppFailureCategory.notFound, 'habits.error.not_found'),
+        );
+      }
+      final deleted = current.delete(_nowUtc());
+      final checked = await _account(expectedAccountId);
+      if (checked.valueOrNull != owner) {
+        return AppResult.failure(
+          _error(AppFailureCategory.authorization, 'habits.error.account'),
+        );
+      }
+      final commit = await _repository.commitHabit(
+        HabitWriteRequest(
+          habit: deleted,
+          operationId: _nextOperationId(),
+          kind: ChangeKind.delete,
+          queuedAt: deleted.updatedAt,
+        ),
       );
-    }
-    final commit = await _repository.commitHabit(
-      HabitWriteRequest(
-        habit: deleted,
-        operationId: _nextOperationId(),
-        kind: ChangeKind.delete,
-        queuedAt: deleted.updatedAt,
-      ),
-    );
-    final failure = commit.failureOrNull;
-    return failure == null
-        ? AppResult.success(deleted)
-        : AppResult.failure(failure);
+      final failure = commit.failureOrNull;
+      return failure == null
+          ? AppResult.success(deleted)
+          : AppResult.failure(failure);
+    });
   }
 
   AppFailure? _validateFields(

@@ -64,6 +64,13 @@ void main() {
       expect(edited.reminderMinuteOfDay, 480);
       expect(edited.isDueOn(clock.localDate), isFalse);
       expect(edited.scheduleRevisions, hasLength(2));
+      expect(
+        await database.rawScalar(
+          "SELECT count(*) FROM pending_changes WHERE entity_type = 'habit' "
+          'AND base_updated_at IS NOT NULL',
+        ),
+        1,
+      );
       expect(edited.currentRevision.effectiveAt, clock.utcNow());
       expect((await commands.undoHabitToday(habit.id)).failureOrNull, isNull);
       expect(
@@ -112,6 +119,13 @@ void main() {
         isTrue,
       );
       expect(
+        await database.rawScalar(
+          "SELECT count(*) FROM pending_changes WHERE entity_type = 'habit' "
+          'AND base_updated_at IS NOT NULL',
+        ),
+        1,
+      );
+      expect(
         (await repository.readHabit(
           accountId: kTasksPreviewAccountId,
           habitId: habit.id,
@@ -129,6 +143,43 @@ void main() {
         )).failureOrNull?.category,
         AppFailureCategory.notFound,
       );
+    },
+  );
+
+  test(
+    'concurrent edit and delete preserve the last committed habit version',
+    () async {
+      final habit = (await commands.createHabit(
+        const CreateHabitInput(name: 'Read', weekdays: {DateTime.monday}),
+      )).valueOrNull!;
+
+      final edit = commands.editHabit(
+        EditHabitInput(
+          habitId: habit.id,
+          name: 'Read books',
+          weekdays: {DateTime.monday},
+          reminderMinuteOfDay: null,
+        ),
+      );
+      final delete = commands.deleteHabit(habit.id, confirmed: true);
+      final edited = await edit;
+      final deleted = await delete;
+      final stored = (await repository.readHabit(
+        accountId: kTasksPreviewAccountId,
+        habitId: habit.id,
+      )).valueOrNull!;
+
+      expect(deleted.failureOrNull, isNull);
+      expect(stored.isDeleted, isTrue);
+      if (edited.failureOrNull == null) {
+        expect(stored.name, 'Read books');
+        expect(
+          stored.scheduleRevisions.length,
+          edited.valueOrNull!.scheduleRevisions.length,
+        );
+      } else {
+        expect(edited.failureOrNull?.category, AppFailureCategory.notFound);
+      }
     },
   );
 }

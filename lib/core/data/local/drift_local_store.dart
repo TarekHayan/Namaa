@@ -416,5 +416,6 @@ class DriftLocalStore implements LocalStorePort {
     serializedChange: row.serializedChange,
     createdAt: row.createdAt,
     versionTimestamp: row.versionTimestamp,
+    baseUpdatedAt: row.baseUpdatedAt,
   );
 }

@@ -840,6 +840,18 @@ class $PendingChangesTable extends PendingChanges
         type: DriftSqlType.dateTime,
         requiredDuringInsert: true,
       );
+  static const VerificationMeta _baseUpdatedAtMeta = const VerificationMeta(
+    'baseUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> baseUpdatedAt =
+      GeneratedColumn<DateTime>(
+        'base_updated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     operationId,
@@ -854,6 +866,7 @@ class $PendingChangesTable extends PendingChanges
     acknowledgementId,
     createdAt,
     versionTimestamp,
+    baseUpdatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -959,6 +972,15 @@ class $PendingChangesTable extends PendingChanges
     } else if (isInserting) {
       context.missing(_versionTimestampMeta);
     }
+    if (data.containsKey('base_updated_at')) {
+      context.handle(
+        _baseUpdatedAtMeta,
+        baseUpdatedAt.isAcceptableOrUnknown(
+          data['base_updated_at']!,
+          _baseUpdatedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1020,6 +1042,10 @@ class $PendingChangesTable extends PendingChanges
         DriftSqlType.dateTime,
         data['${effectivePrefix}version_timestamp'],
       )!,
+      baseUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}base_updated_at'],
+      ),
     );
   }
 
@@ -1047,6 +1073,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
   final String? acknowledgementId;
   final DateTime createdAt;
   final DateTime versionTimestamp;
+
+  /// Version observed immediately before the local mutation.
+  final DateTime? baseUpdatedAt;
   const PendingChange({
     required this.operationId,
     required this.accountId,
@@ -1060,6 +1089,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
     this.acknowledgementId,
     required this.createdAt,
     required this.versionTimestamp,
+    this.baseUpdatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1088,6 +1118,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['version_timestamp'] = Variable<DateTime>(versionTimestamp);
+    if (!nullToAbsent || baseUpdatedAt != null) {
+      map['base_updated_at'] = Variable<DateTime>(baseUpdatedAt);
+    }
     return map;
   }
 
@@ -1109,6 +1142,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
           : Value(acknowledgementId),
       createdAt: Value(createdAt),
       versionTimestamp: Value(versionTimestamp),
+      baseUpdatedAt: baseUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(baseUpdatedAt),
     );
   }
 
@@ -1138,6 +1174,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       versionTimestamp: serializer.fromJson<DateTime>(json['versionTimestamp']),
+      baseUpdatedAt: serializer.fromJson<DateTime?>(json['baseUpdatedAt']),
     );
   }
   @override
@@ -1160,6 +1197,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
       'acknowledgementId': serializer.toJson<String?>(acknowledgementId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'versionTimestamp': serializer.toJson<DateTime>(versionTimestamp),
+      'baseUpdatedAt': serializer.toJson<DateTime?>(baseUpdatedAt),
     };
   }
 
@@ -1176,6 +1214,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
     Value<String?> acknowledgementId = const Value.absent(),
     DateTime? createdAt,
     DateTime? versionTimestamp,
+    Value<DateTime?> baseUpdatedAt = const Value.absent(),
   }) => PendingChange(
     operationId: operationId ?? this.operationId,
     accountId: accountId ?? this.accountId,
@@ -1193,6 +1232,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
         : this.acknowledgementId,
     createdAt: createdAt ?? this.createdAt,
     versionTimestamp: versionTimestamp ?? this.versionTimestamp,
+    baseUpdatedAt: baseUpdatedAt.present
+        ? baseUpdatedAt.value
+        : this.baseUpdatedAt,
   );
   PendingChange copyWithCompanion(PendingChangesCompanion data) {
     return PendingChange(
@@ -1222,6 +1264,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
       versionTimestamp: data.versionTimestamp.present
           ? data.versionTimestamp.value
           : this.versionTimestamp,
+      baseUpdatedAt: data.baseUpdatedAt.present
+          ? data.baseUpdatedAt.value
+          : this.baseUpdatedAt,
     );
   }
 
@@ -1239,7 +1284,8 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
           ..write('serializedChange: $serializedChange, ')
           ..write('acknowledgementId: $acknowledgementId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('versionTimestamp: $versionTimestamp')
+          ..write('versionTimestamp: $versionTimestamp, ')
+          ..write('baseUpdatedAt: $baseUpdatedAt')
           ..write(')'))
         .toString();
   }
@@ -1258,6 +1304,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
     acknowledgementId,
     createdAt,
     versionTimestamp,
+    baseUpdatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -1274,7 +1321,8 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
           other.serializedChange == this.serializedChange &&
           other.acknowledgementId == this.acknowledgementId &&
           other.createdAt == this.createdAt &&
-          other.versionTimestamp == this.versionTimestamp);
+          other.versionTimestamp == this.versionTimestamp &&
+          other.baseUpdatedAt == this.baseUpdatedAt);
 }
 
 class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
@@ -1290,6 +1338,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
   final Value<String?> acknowledgementId;
   final Value<DateTime> createdAt;
   final Value<DateTime> versionTimestamp;
+  final Value<DateTime?> baseUpdatedAt;
   final Value<int> rowid;
   const PendingChangesCompanion({
     this.operationId = const Value.absent(),
@@ -1304,6 +1353,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     this.acknowledgementId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.versionTimestamp = const Value.absent(),
+    this.baseUpdatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PendingChangesCompanion.insert({
@@ -1319,6 +1369,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     this.acknowledgementId = const Value.absent(),
     required DateTime createdAt,
     required DateTime versionTimestamp,
+    this.baseUpdatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : operationId = Value(operationId),
        accountId = Value(accountId),
@@ -1342,6 +1393,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     Expression<String>? acknowledgementId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? versionTimestamp,
+    Expression<DateTime>? baseUpdatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1358,6 +1410,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
       if (acknowledgementId != null) 'acknowledgement_id': acknowledgementId,
       if (createdAt != null) 'created_at': createdAt,
       if (versionTimestamp != null) 'version_timestamp': versionTimestamp,
+      if (baseUpdatedAt != null) 'base_updated_at': baseUpdatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1375,6 +1428,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     Value<String?>? acknowledgementId,
     Value<DateTime>? createdAt,
     Value<DateTime>? versionTimestamp,
+    Value<DateTime?>? baseUpdatedAt,
     Value<int>? rowid,
   }) {
     return PendingChangesCompanion(
@@ -1390,6 +1444,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
       acknowledgementId: acknowledgementId ?? this.acknowledgementId,
       createdAt: createdAt ?? this.createdAt,
       versionTimestamp: versionTimestamp ?? this.versionTimestamp,
+      baseUpdatedAt: baseUpdatedAt ?? this.baseUpdatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1437,6 +1492,9 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     if (versionTimestamp.present) {
       map['version_timestamp'] = Variable<DateTime>(versionTimestamp.value);
     }
+    if (baseUpdatedAt.present) {
+      map['base_updated_at'] = Variable<DateTime>(baseUpdatedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1458,6 +1516,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
           ..write('acknowledgementId: $acknowledgementId, ')
           ..write('createdAt: $createdAt, ')
           ..write('versionTimestamp: $versionTimestamp, ')
+          ..write('baseUpdatedAt: $baseUpdatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8665,6 +8724,7 @@ typedef $$PendingChangesTableCreateCompanionBuilder =
       Value<String?> acknowledgementId,
       required DateTime createdAt,
       required DateTime versionTimestamp,
+      Value<DateTime?> baseUpdatedAt,
       Value<int> rowid,
     });
 typedef $$PendingChangesTableUpdateCompanionBuilder =
@@ -8681,6 +8741,7 @@ typedef $$PendingChangesTableUpdateCompanionBuilder =
       Value<String?> acknowledgementId,
       Value<DateTime> createdAt,
       Value<DateTime> versionTimestamp,
+      Value<DateTime?> baseUpdatedAt,
       Value<int> rowid,
     });
 
@@ -8754,6 +8815,11 @@ class $$PendingChangesTableFilterComposer
     column: $table.versionTimestamp,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$PendingChangesTableOrderingComposer
@@ -8824,6 +8890,11 @@ class $$PendingChangesTableOrderingComposer
     column: $table.versionTimestamp,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PendingChangesTableAnnotationComposer
@@ -8884,6 +8955,11 @@ class $$PendingChangesTableAnnotationComposer
     column: $table.versionTimestamp,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$PendingChangesTableTableManager
@@ -8935,6 +9011,7 @@ class $$PendingChangesTableTableManager
                 Value<String?> acknowledgementId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> versionTimestamp = const Value.absent(),
+                Value<DateTime?> baseUpdatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PendingChangesCompanion(
                 operationId: operationId,
@@ -8949,6 +9026,7 @@ class $$PendingChangesTableTableManager
                 acknowledgementId: acknowledgementId,
                 createdAt: createdAt,
                 versionTimestamp: versionTimestamp,
+                baseUpdatedAt: baseUpdatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8965,6 +9043,7 @@ class $$PendingChangesTableTableManager
                 Value<String?> acknowledgementId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime versionTimestamp,
+                Value<DateTime?> baseUpdatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PendingChangesCompanion.insert(
                 operationId: operationId,
@@ -8979,6 +9058,7 @@ class $$PendingChangesTableTableManager
                 acknowledgementId: acknowledgementId,
                 createdAt: createdAt,
                 versionTimestamp: versionTimestamp,
+                baseUpdatedAt: baseUpdatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

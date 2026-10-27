@@ -134,6 +134,13 @@ final class DriftTaskRepository implements TaskRepository {
           return;
         }
 
+        final existingTask =
+            await (_database.select(_database.taskRecords)..where(
+                  (table) =>
+                      table.accountId.equals(task.accountId) &
+                      table.taskId.equals(task.id),
+                ))
+                .getSingleOrNull();
         await _database
             .into(_database.taskRecords)
             .insertOnConflictUpdate(_toCompanion(task));
@@ -150,6 +157,7 @@ final class DriftTaskRepository implements TaskRepository {
                 serializedChange: payload,
                 createdAt: request.queuedAt,
                 versionTimestamp: task.updatedAt,
+                baseUpdatedAt: Value(existingTask?.updatedAt),
               ),
             );
       });

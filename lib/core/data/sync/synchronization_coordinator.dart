@@ -77,6 +77,7 @@ class SynchronizationCoordinator implements PendingSynchronizationEngine {
           kind: record.kind,
           payload: record.serializedChange,
           versionTimestamp: record.versionTimestamp,
+          baseUpdatedAt: record.baseUpdatedAt,
         ),
       );
 

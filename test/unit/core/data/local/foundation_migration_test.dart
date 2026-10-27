@@ -69,6 +69,32 @@ void main() {
     },
   );
 
+  test('v6 outbox gains a nullable base version during upgrade', () async {
+    final v6 = await FoundationDatabase.openEncrypted(
+      path: tempPath.allocate(),
+      key: _testKey,
+      schemaVersion: 6,
+    );
+    await v6.rawExecute(
+      'ALTER TABLE pending_changes DROP COLUMN base_updated_at',
+    );
+    final path = v6.resolvedPath;
+    await v6.close();
+
+    final current = await FoundationDatabase.openEncrypted(
+      path: path,
+      key: _testKey,
+    );
+    final columns = await current
+        .customSelect('PRAGMA table_info(pending_changes)')
+        .get();
+    expect(
+      columns.map((row) => row.read<String>('name')),
+      contains('base_updated_at'),
+    );
+    await current.close();
+  });
+
   test(
     'an injected migration failure retains prior data and records the failure',
     () async {
