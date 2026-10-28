@@ -348,9 +348,17 @@ void main() {
         (tester) async {
           tester.view.physicalSize = const Size(360, 760);
           tester.view.devicePixelRatio = 1;
+          // A device reports its safe area in physical pixels. With the ratio
+          // forced to 1 an iPhone's 62pt notch would be read as 186pt, which
+          // made the header 302pt tall and cover the task action on CI. Pin a
+          // realistic phone inset so every target lays out the same screen.
+          tester.view.padding = const FakeViewPadding(top: 47, bottom: 34);
+          tester.view.viewPadding = const FakeViewPadding(top: 47, bottom: 34);
           addTearDown(() {
             tester.view.resetPhysicalSize();
             tester.view.resetDevicePixelRatio();
+            tester.view.resetPadding();
+            tester.view.resetViewPadding();
           });
           final semantics = tester.ensureSemantics();
           final tasks = _Tasks();
