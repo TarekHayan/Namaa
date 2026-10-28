@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +35,7 @@ import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
 import 'package:namma_project/features/today/presentation/widgets/today_bottom_navigation.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_dashboard_header.dart';
 import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 import 'package:namma_project/features/xp/application/award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
@@ -288,6 +290,50 @@ Future<void> _activateByKeyboard(WidgetTester tester, Finder target) async {
   await tester.pump();
 }
 
+/// Describes what receives a tap at [target]'s center, for device runs where
+/// a control is laid out but another layer covers it.
+String _whatCovers(WidgetTester tester, Finder target) {
+  final box = tester.renderObject<RenderBox>(target);
+  final rect = box.localToGlobal(Offset.zero) & box.size;
+  final view = tester.view;
+  final result = HitTestResult();
+  tester.binding.hitTestInView(result, rect.center, view.viewId);
+  String describe(HitTestTarget hit) {
+    if (hit is! RenderObject) return hit.runtimeType.toString();
+    // Owner widgets work in every build mode; debugCreator needs debug.
+    final owners = find
+        .byElementPredicate((element) => element.renderObject == hit)
+        .evaluate()
+        .map((element) {
+          final widget = element.widget;
+          return widget.key == null
+              ? '${widget.runtimeType}'
+              : '${widget.runtimeType}(${widget.key})';
+        })
+        .take(2)
+        .join('/');
+    return '${hit.runtimeType}${owners.isEmpty ? '' : '<$owners>'}';
+  }
+
+  final hits = result.path.map((entry) => describe(entry.target)).take(10);
+  final headers = find.byType(TodayDashboardHeader).evaluate();
+  final header = headers.isEmpty
+      ? 'none'
+      : '${tester.getRect(find.byType(TodayDashboardHeader).first)}';
+  final reachesTarget = result.path.any((entry) => entry.target == box);
+  final padding = view.padding;
+  return 'target=$rect center=${rect.center} '
+      'reachesTarget=$reachesTarget '
+      'view=${view.physicalSize / view.devicePixelRatio} '
+      'dpr=${view.devicePixelRatio} '
+      'physicalPadding=(l${padding.left} t${padding.top} '
+      'r${padding.right} b${padding.bottom}) '
+      'mediaPadding=${MediaQuery.paddingOf(tester.element(target))} '
+      'textScale=${MediaQuery.textScalerOf(tester.element(target))} '
+      'header=$header '
+      'hits(top first)=[${hits.join(', ')}]';
+}
+
 Future<void> _finishRouteTransition(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
@@ -475,11 +521,12 @@ void main() {
               alignment: 0.5,
             );
             await tester.pumpAndSettle();
-            expect(
-              taskAction.hitTestable(),
-              findsOneWidget,
-              reason: 'Task action must be tappable, not covered or moving',
-            );
+            if (taskAction.hitTestable().evaluate().isEmpty) {
+              fail(
+                'Task action is laid out but not tappable: '
+                '${_whatCovers(tester, taskAction)}',
+              );
+            }
             await tester.tap(taskAction);
             await waitForTaskCompletion();
 
