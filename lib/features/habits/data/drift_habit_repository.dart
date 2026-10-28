@@ -105,6 +105,7 @@ final class DriftHabitRepository
               habitId: day.habitId,
               localDate: day.localDate,
               completedAt: Value(day.completedAt),
+              dailyCount: Value(day.count),
               earnedWhileDue: day.earnedWhileDue,
               earnedAgainstRevisionId: Value(day.earnedAgainstRevisionId),
               recordedUtcOffsetMinutes: day.recordedUtcOffsetMinutes,
@@ -281,6 +282,7 @@ final class DriftHabitRepository
           payload: payload,
           queuedAt: request.queuedAt,
           version: habit.updatedAt,
+          baseUpdatedAt: existing?.updatedAt,
         );
       });
       return const AppResult.success(null);
@@ -314,7 +316,9 @@ final class DriftHabitRepository
                       table.localDate.equals(day.localDate),
                 ))
                 .getSingleOrNull();
-        if (existing?.completedAt != null && day.isCompleted) return;
+        if (existing != null && !day.updatedAt.isAfter(existing.updatedAt)) {
+          return;
+        }
         await _database
             .into(_database.habitDayRecords)
             .insertOnConflictUpdate(
@@ -323,6 +327,7 @@ final class DriftHabitRepository
                 habitId: day.habitId,
                 localDate: day.localDate,
                 completedAt: Value(day.completedAt),
+                dailyCount: Value(day.count),
                 earnedWhileDue: day.earnedWhileDue,
                 earnedAgainstRevisionId: Value(day.earnedAgainstRevisionId),
                 recordedUtcOffsetMinutes: day.recordedUtcOffsetMinutes,
@@ -338,6 +343,7 @@ final class DriftHabitRepository
           payload: payload,
           queuedAt: request.queuedAt,
           version: day.updatedAt,
+          baseUpdatedAt: existing?.updatedAt,
         );
       });
       return const AppResult.success(null);
@@ -379,6 +385,7 @@ final class DriftHabitRepository
     required String payload,
     required DateTime queuedAt,
     required DateTime version,
+    DateTime? baseUpdatedAt,
   }) => _database
       .into(_database.pendingChanges)
       .insert(
@@ -392,6 +399,7 @@ final class DriftHabitRepository
           serializedChange: payload,
           createdAt: queuedAt,
           versionTimestamp: version,
+          baseUpdatedAt: Value(baseUpdatedAt),
         ),
       );
 
@@ -414,6 +422,7 @@ final class DriftHabitRepository
       'habitId': row.habitId,
       'localDate': row.localDate,
       'completedAt': row.completedAt?.toUtc().toIso8601String(),
+      'count': row.dailyCount,
       'earnedWhileDue': row.earnedWhileDue,
       'earnedAgainstRevisionId': row.earnedAgainstRevisionId,
       'recordedUtcOffsetMinutes': row.recordedUtcOffsetMinutes,

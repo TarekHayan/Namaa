@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/sync_versions.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
@@ -74,6 +75,13 @@ final class MapReconciler implements MapReconciliationPort {
             link.updatedAt,
           ),
       ];
+      final pendingRead = await _localStore.readPendingChanges(ownerId);
+      if (pendingRead.failureOrNull case final failure?) {
+        return AppResult.failure(failure);
+      }
+      final pendingVersions = PendingSyncVersions.index(
+        pendingRead.valueOrNull!,
+      );
       for (final record in records) {
         final read = await _store.readPayload(
           ownerId: ownerId,
@@ -109,6 +117,23 @@ final class MapReconciler implements MapReconciliationPort {
               as String,
         ).toUtc();
         final comparison = record.updatedAt.compareTo(localAt);
+        final pending = await _store.hasPendingChange(
+          ownerId: ownerId,
+          entityType: record.type,
+          entityId: record.id,
+        );
+        if (pending.failureOrNull case final failure?) {
+          return AppResult.failure(failure);
+        }
+        if (pending.valueOrNull == true &&
+            comparison != 0 &&
+            (pendingVersions[(record.type, record.id)]?.knows(
+                  record.updatedAt,
+                ) ??
+                false)) {
+          // Remote is the base of the queued edit: keep local for upload.
+          continue;
+        }
         if (comparison > 0) {
           final allowed = await _allowRelationship(ownerId, record);
           if (allowed.failureOrNull case final failure?) {
@@ -119,13 +144,26 @@ final class MapReconciler implements MapReconciliationPort {
             continue;
           }
         }
+        if (pending.valueOrNull != true && comparison > 0) {
+          final applied = await _store.applyInbound(
+            entityType: record.type,
+            payload: record.payload,
+          );
+          if (applied.failureOrNull case final failure?) {
+            return AppResult.failure(failure);
+          }
+          imported++;
+          continue;
+        }
         final recorded = await _recordConflict(
-          id: _conflictId(
-            ownerId,
-            record.type,
-            record.id,
-            localPayload,
-            record.payload,
+          id: syncConflictId(
+            accountId: ownerId,
+            entityType: record.type,
+            entityId: record.id,
+            activeAt: comparison > 0 ? record.updatedAt : localAt,
+            retainedAt: comparison > 0 ? localAt : record.updatedAt,
+            activePayload: comparison > 0 ? record.payload : localPayload,
+            retainedPayload: comparison > 0 ? localPayload : record.payload,
           ),
           ownerId: ownerId,
           entityType: record.type,

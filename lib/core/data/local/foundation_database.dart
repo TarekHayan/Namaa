@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 5;
+const int kFoundationSchemaVersion = 7;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -78,6 +78,9 @@ class PendingChanges extends Table {
   TextColumn get acknowledgementId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get versionTimestamp => dateTime()();
+
+  /// Version observed immediately before the local mutation.
+  DateTimeColumn get baseUpdatedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {operationId};
@@ -230,6 +233,7 @@ class HabitDayRecords extends Table {
   TextColumn get habitId => text()();
   TextColumn get localDate => text()();
   DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get dailyCount => integer().withDefault(const Constant(0))();
   BoolColumn get earnedWhileDue => boolean()();
   TextColumn get earnedAgainstRevisionId => text().nullable()();
   IntColumn get recordedUtcOffsetMinutes => integer()();
@@ -542,6 +546,30 @@ class FoundationDatabase extends _$FoundationDatabase {
           mindMapSideLinksOwnerUpdated,
         ]) {
           await _createIndexIfMissing(migrator, index);
+        }
+      }
+      if (to >= 6 && from < 6) {
+        if (from >= 4) {
+          await migrator.addColumn(habitDayRecords, habitDayRecords.dailyCount);
+          await customUpdate(
+            'UPDATE habit_day_records SET daily_count = 1 '
+            'WHERE completed_at IS NOT NULL',
+          );
+        }
+      }
+      if (to >= 7 && from < 7) {
+        // Installed v1-v6 databases all have pending_changes. Test fixtures
+        // created with the latest declaration may already have this column.
+        final columns = await customSelect(
+          'PRAGMA table_info(pending_changes)',
+        ).get();
+        if (!columns.any(
+          (row) => row.read<String>('name') == 'base_updated_at',
+        )) {
+          await migrator.addColumn(
+            pendingChanges,
+            pendingChanges.baseUpdatedAt,
+          );
         }
       }
       await _recordJournalComplete(to);

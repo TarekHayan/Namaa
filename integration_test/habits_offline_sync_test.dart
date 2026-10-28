@@ -20,6 +20,8 @@ import 'package:namma_project/features/habits/domain/habit_day.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import 'package:namma_project/features/habits/presentation/habits_state.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_bottom_navigation.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 
 import '../test/support/foundation_test_support.dart';
 import '../test/support/habits_test_support.dart';
@@ -86,6 +88,7 @@ void main() {
             (await outbox.acknowledgeChange(
               change.operationId,
               change.operationId,
+              change.versionTimestamp,
             )).failureOrNull,
             isNull,
           );
@@ -230,10 +233,9 @@ void main() {
         )).valueOrNull?.isDeleted,
         isTrue,
       );
-      expect(
-        await dbB.rawScalar('SELECT count(*) FROM conflict_records'),
-        greaterThan(0),
-      );
+      // Both devices have sent their changes; an incoming server snapshot is
+      // not a local pending edit and must not create a synthetic conflict.
+      expect(await dbB.rawScalar('SELECT count(*) FROM conflict_records'), 0);
 
       for (var trial = 0; trial < 10; trial++) {
         await dbA.close();
@@ -314,12 +316,15 @@ void main() {
     tester,
   ) async {
     Future<void> openHabitsFromToday() async {
-      final entry = find.byKey(kTodayHabitsNavigationKey);
-      await tester.scrollUntilVisible(entry, 200);
-      await tester.ensureVisible(entry);
-      await tester.pump();
-      await tester.tap(entry);
+      if (find.byKey(kTodaySidebarKey).evaluate().isNotEmpty) {
+        await tester.tap(find.byKey(kTodaySidebarHabitsKey));
+      } else {
+        await tester.tap(find.byKey(kTodayBottomMoreKey));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(kTodayBottomHabitsKey));
+      }
       await tester.pumpAndSettle();
+      expect(find.byType(HabitsScreen), findsOneWidget);
     }
 
     Future<void> waitForPreviewHabit({required bool completed}) async {
@@ -370,10 +375,15 @@ void main() {
       await tester.ensureVisible(chip);
       await tester.tap(chip);
     }
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(kHabitSaveButtonKey));
     await waitForPreviewHabit(completed: false);
     expect(find.text('Preview reading'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.check_circle_outline));
+    final completeAction = find.byIcon(Icons.check_circle_outline);
+    await tester.ensureVisible(completeAction);
+    await tester.pumpAndSettle();
+    await tester.tap(completeAction);
     await waitForPreviewHabit(completed: true);
     expect(find.byIcon(Icons.undo), findsOneWidget);
 
@@ -386,6 +396,8 @@ void main() {
     await waitForPreviewHabit(completed: true);
     expect(find.text('Preview reading'), findsOneWidget);
     expect(find.byIcon(Icons.undo), findsOneWidget);
+    await tester.ensureVisible(find.byIcon(Icons.undo));
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.undo));
     await waitForPreviewHabit(completed: false);
     expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);

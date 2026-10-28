@@ -246,6 +246,88 @@ void main() {
     expect(await database.rawScalar('SELECT count(*) FROM pending_changes'), 2);
   });
 
+  test(
+    'partial counts and decrement from target survive encrypted restart',
+    () async {
+      final partial = HabitDay.restore(
+        accountId: kHabitsTestAccountA,
+        habitId: kHabitsTestHabitId,
+        localDate: '2026-10-12',
+        completedAt: null,
+        count: 2,
+        earnedWhileDue: false,
+        earnedAgainstRevisionId: null,
+        recordedUtcOffsetMinutes: 120,
+        updatedAt: at,
+      );
+      expect(
+        (await repository.commitDay(
+          HabitDayWriteRequest(
+            day: partial,
+            operationId: 'counter-partial',
+            kind: ChangeKind.create,
+            queuedAt: at,
+          ),
+        )).failureOrNull,
+        isNull,
+      );
+      final reached = partial.changeCount(
+        count: 5,
+        target: 5,
+        at: at.add(const Duration(seconds: 1)),
+        utcOffsetMinutes: 120,
+        revisionId: kHabitsTestRevisionId,
+      );
+      expect(
+        (await repository.commitDay(
+          HabitDayWriteRequest(
+            day: reached,
+            operationId: 'counter-reached',
+            kind: ChangeKind.update,
+            queuedAt: reached.updatedAt,
+          ),
+        )).failureOrNull,
+        isNull,
+      );
+      final steppedBack = reached.changeCount(
+        count: 4,
+        target: 5,
+        at: at.add(const Duration(seconds: 2)),
+        utcOffsetMinutes: 120,
+        revisionId: kHabitsTestRevisionId,
+      );
+      expect(
+        (await repository.commitDay(
+          HabitDayWriteRequest(
+            day: steppedBack,
+            operationId: 'counter-decrement',
+            kind: ChangeKind.update,
+            queuedAt: steppedBack.updatedAt,
+          ),
+        )).failureOrNull,
+        isNull,
+      );
+      final file = database.resolvedPath;
+      await database.close();
+      database = await FoundationDatabase.openEncrypted(path: file, key: key);
+      repository = DriftHabitRepository(
+        database: database,
+        codec: const HabitPayloadCodec(),
+      );
+      final restored = (await repository.readDay(
+        accountId: kHabitsTestAccountA,
+        habitId: kHabitsTestHabitId,
+        localDate: '2026-10-12',
+      )).valueOrNull;
+      expect(restored?.count, 4);
+      expect(restored?.isCompleted, isFalse);
+      expect(
+        await database.rawScalar('SELECT count(*) FROM pending_changes'),
+        3,
+      );
+    },
+  );
+
   test('failed day outbox update preserves confirmed completion', () async {
     final day = HabitDay.completed(
       accountId: kHabitsTestAccountA,

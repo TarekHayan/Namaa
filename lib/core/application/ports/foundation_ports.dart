@@ -103,6 +103,7 @@ class PendingChangeRecord {
     required this.serializedChange,
     required this.createdAt,
     required this.versionTimestamp,
+    this.baseUpdatedAt,
     this.lastFailureSummary,
   });
 
@@ -121,6 +122,9 @@ class PendingChangeRecord {
   final String serializedChange;
   final DateTime createdAt;
   final DateTime versionTimestamp;
+
+  /// Remote version this operation was based on, null for a new record.
+  final DateTime? baseUpdatedAt;
 }
 
 /// One candidate version in a conflict record.
@@ -210,6 +214,7 @@ abstract interface class LocalStorePort {
   Future<AppResult<void>> acknowledgeChange(
     String operationId,
     String acknowledgementId,
+    DateTime acknowledgedVersion,
   );
 
   /// Persists a recoverable dispatch failure: the operation returns to
@@ -291,6 +296,7 @@ class OutboundChange {
     required this.kind,
     required this.payload,
     required this.versionTimestamp,
+    this.baseUpdatedAt,
   });
 
   /// Stable idempotency key; repeated dispatch of the same ID is one logical
@@ -306,6 +312,7 @@ class OutboundChange {
 
   /// Required UTC ordering value of the underlying record change.
   final DateTime versionTimestamp;
+  final DateTime? baseUpdatedAt;
 }
 
 /// Outcome of a successful dispatch that is not a failure.

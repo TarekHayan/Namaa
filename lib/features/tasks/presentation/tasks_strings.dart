@@ -7,6 +7,8 @@ abstract interface class TasksStrings {
   String get retry;
   String get tasksSignInRequired;
   String get tasksTitle;
+  String get mindMapsTitle;
+  String get tasksEmptyHint;
   String get tasksFilterToday;
   String get tasksFilterUrgent;
   String get tasksFilterAll;
@@ -46,6 +48,9 @@ abstract interface class TasksStrings {
   String taskCompletedAt(String timestamp);
   String get taskSave;
   String get taskCancel;
+  String get taskMoreDetails;
+  String get taskLessDetails;
+  String get taskMatrixLabel;
   String get taskTitleLabel;
   String get taskTitleHint;
   String get taskDescriptionLabel;

@@ -840,6 +840,18 @@ class $PendingChangesTable extends PendingChanges
         type: DriftSqlType.dateTime,
         requiredDuringInsert: true,
       );
+  static const VerificationMeta _baseUpdatedAtMeta = const VerificationMeta(
+    'baseUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> baseUpdatedAt =
+      GeneratedColumn<DateTime>(
+        'base_updated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     operationId,
@@ -854,6 +866,7 @@ class $PendingChangesTable extends PendingChanges
     acknowledgementId,
     createdAt,
     versionTimestamp,
+    baseUpdatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -959,6 +972,15 @@ class $PendingChangesTable extends PendingChanges
     } else if (isInserting) {
       context.missing(_versionTimestampMeta);
     }
+    if (data.containsKey('base_updated_at')) {
+      context.handle(
+        _baseUpdatedAtMeta,
+        baseUpdatedAt.isAcceptableOrUnknown(
+          data['base_updated_at']!,
+          _baseUpdatedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1020,6 +1042,10 @@ class $PendingChangesTable extends PendingChanges
         DriftSqlType.dateTime,
         data['${effectivePrefix}version_timestamp'],
       )!,
+      baseUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}base_updated_at'],
+      ),
     );
   }
 
@@ -1047,6 +1073,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
   final String? acknowledgementId;
   final DateTime createdAt;
   final DateTime versionTimestamp;
+
+  /// Version observed immediately before the local mutation.
+  final DateTime? baseUpdatedAt;
   const PendingChange({
     required this.operationId,
     required this.accountId,
@@ -1060,6 +1089,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
     this.acknowledgementId,
     required this.createdAt,
     required this.versionTimestamp,
+    this.baseUpdatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1088,6 +1118,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['version_timestamp'] = Variable<DateTime>(versionTimestamp);
+    if (!nullToAbsent || baseUpdatedAt != null) {
+      map['base_updated_at'] = Variable<DateTime>(baseUpdatedAt);
+    }
     return map;
   }
 
@@ -1109,6 +1142,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
           : Value(acknowledgementId),
       createdAt: Value(createdAt),
       versionTimestamp: Value(versionTimestamp),
+      baseUpdatedAt: baseUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(baseUpdatedAt),
     );
   }
 
@@ -1138,6 +1174,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       versionTimestamp: serializer.fromJson<DateTime>(json['versionTimestamp']),
+      baseUpdatedAt: serializer.fromJson<DateTime?>(json['baseUpdatedAt']),
     );
   }
   @override
@@ -1160,6 +1197,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
       'acknowledgementId': serializer.toJson<String?>(acknowledgementId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'versionTimestamp': serializer.toJson<DateTime>(versionTimestamp),
+      'baseUpdatedAt': serializer.toJson<DateTime?>(baseUpdatedAt),
     };
   }
 
@@ -1176,6 +1214,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
     Value<String?> acknowledgementId = const Value.absent(),
     DateTime? createdAt,
     DateTime? versionTimestamp,
+    Value<DateTime?> baseUpdatedAt = const Value.absent(),
   }) => PendingChange(
     operationId: operationId ?? this.operationId,
     accountId: accountId ?? this.accountId,
@@ -1193,6 +1232,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
         : this.acknowledgementId,
     createdAt: createdAt ?? this.createdAt,
     versionTimestamp: versionTimestamp ?? this.versionTimestamp,
+    baseUpdatedAt: baseUpdatedAt.present
+        ? baseUpdatedAt.value
+        : this.baseUpdatedAt,
   );
   PendingChange copyWithCompanion(PendingChangesCompanion data) {
     return PendingChange(
@@ -1222,6 +1264,9 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
       versionTimestamp: data.versionTimestamp.present
           ? data.versionTimestamp.value
           : this.versionTimestamp,
+      baseUpdatedAt: data.baseUpdatedAt.present
+          ? data.baseUpdatedAt.value
+          : this.baseUpdatedAt,
     );
   }
 
@@ -1239,7 +1284,8 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
           ..write('serializedChange: $serializedChange, ')
           ..write('acknowledgementId: $acknowledgementId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('versionTimestamp: $versionTimestamp')
+          ..write('versionTimestamp: $versionTimestamp, ')
+          ..write('baseUpdatedAt: $baseUpdatedAt')
           ..write(')'))
         .toString();
   }
@@ -1258,6 +1304,7 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
     acknowledgementId,
     createdAt,
     versionTimestamp,
+    baseUpdatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -1274,7 +1321,8 @@ class PendingChange extends DataClass implements Insertable<PendingChange> {
           other.serializedChange == this.serializedChange &&
           other.acknowledgementId == this.acknowledgementId &&
           other.createdAt == this.createdAt &&
-          other.versionTimestamp == this.versionTimestamp);
+          other.versionTimestamp == this.versionTimestamp &&
+          other.baseUpdatedAt == this.baseUpdatedAt);
 }
 
 class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
@@ -1290,6 +1338,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
   final Value<String?> acknowledgementId;
   final Value<DateTime> createdAt;
   final Value<DateTime> versionTimestamp;
+  final Value<DateTime?> baseUpdatedAt;
   final Value<int> rowid;
   const PendingChangesCompanion({
     this.operationId = const Value.absent(),
@@ -1304,6 +1353,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     this.acknowledgementId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.versionTimestamp = const Value.absent(),
+    this.baseUpdatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PendingChangesCompanion.insert({
@@ -1319,6 +1369,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     this.acknowledgementId = const Value.absent(),
     required DateTime createdAt,
     required DateTime versionTimestamp,
+    this.baseUpdatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : operationId = Value(operationId),
        accountId = Value(accountId),
@@ -1342,6 +1393,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     Expression<String>? acknowledgementId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? versionTimestamp,
+    Expression<DateTime>? baseUpdatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1358,6 +1410,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
       if (acknowledgementId != null) 'acknowledgement_id': acknowledgementId,
       if (createdAt != null) 'created_at': createdAt,
       if (versionTimestamp != null) 'version_timestamp': versionTimestamp,
+      if (baseUpdatedAt != null) 'base_updated_at': baseUpdatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1375,6 +1428,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     Value<String?>? acknowledgementId,
     Value<DateTime>? createdAt,
     Value<DateTime>? versionTimestamp,
+    Value<DateTime?>? baseUpdatedAt,
     Value<int>? rowid,
   }) {
     return PendingChangesCompanion(
@@ -1390,6 +1444,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
       acknowledgementId: acknowledgementId ?? this.acknowledgementId,
       createdAt: createdAt ?? this.createdAt,
       versionTimestamp: versionTimestamp ?? this.versionTimestamp,
+      baseUpdatedAt: baseUpdatedAt ?? this.baseUpdatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1437,6 +1492,9 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
     if (versionTimestamp.present) {
       map['version_timestamp'] = Variable<DateTime>(versionTimestamp.value);
     }
+    if (baseUpdatedAt.present) {
+      map['base_updated_at'] = Variable<DateTime>(baseUpdatedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1458,6 +1516,7 @@ class PendingChangesCompanion extends UpdateCompanion<PendingChange> {
           ..write('acknowledgementId: $acknowledgementId, ')
           ..write('createdAt: $createdAt, ')
           ..write('versionTimestamp: $versionTimestamp, ')
+          ..write('baseUpdatedAt: $baseUpdatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4873,6 +4932,18 @@ class $HabitDayRecordsTable extends HabitDayRecords
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _dailyCountMeta = const VerificationMeta(
+    'dailyCount',
+  );
+  @override
+  late final GeneratedColumn<int> dailyCount = GeneratedColumn<int>(
+    'daily_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _earnedWhileDueMeta = const VerificationMeta(
     'earnedWhileDue',
   );
@@ -4926,6 +4997,7 @@ class $HabitDayRecordsTable extends HabitDayRecords
     habitId,
     localDate,
     completedAt,
+    dailyCount,
     earnedWhileDue,
     earnedAgainstRevisionId,
     recordedUtcOffsetMinutes,
@@ -4974,6 +5046,12 @@ class $HabitDayRecordsTable extends HabitDayRecords
           data['completed_at']!,
           _completedAtMeta,
         ),
+      );
+    }
+    if (data.containsKey('daily_count')) {
+      context.handle(
+        _dailyCountMeta,
+        dailyCount.isAcceptableOrUnknown(data['daily_count']!, _dailyCountMeta),
       );
     }
     if (data.containsKey('earned_while_due')) {
@@ -5040,6 +5118,10 @@ class $HabitDayRecordsTable extends HabitDayRecords
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       ),
+      dailyCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}daily_count'],
+      )!,
       earnedWhileDue: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}earned_while_due'],
@@ -5070,6 +5152,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
   final String habitId;
   final String localDate;
   final DateTime? completedAt;
+  final int dailyCount;
   final bool earnedWhileDue;
   final String? earnedAgainstRevisionId;
   final int recordedUtcOffsetMinutes;
@@ -5079,6 +5162,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     required this.habitId,
     required this.localDate,
     this.completedAt,
+    required this.dailyCount,
     required this.earnedWhileDue,
     this.earnedAgainstRevisionId,
     required this.recordedUtcOffsetMinutes,
@@ -5093,6 +5177,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
     }
+    map['daily_count'] = Variable<int>(dailyCount);
     map['earned_while_due'] = Variable<bool>(earnedWhileDue);
     if (!nullToAbsent || earnedAgainstRevisionId != null) {
       map['earned_against_revision_id'] = Variable<String>(
@@ -5114,6 +5199,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      dailyCount: Value(dailyCount),
       earnedWhileDue: Value(earnedWhileDue),
       earnedAgainstRevisionId: earnedAgainstRevisionId == null && nullToAbsent
           ? const Value.absent()
@@ -5133,6 +5219,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
       habitId: serializer.fromJson<String>(json['habitId']),
       localDate: serializer.fromJson<String>(json['localDate']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      dailyCount: serializer.fromJson<int>(json['dailyCount']),
       earnedWhileDue: serializer.fromJson<bool>(json['earnedWhileDue']),
       earnedAgainstRevisionId: serializer.fromJson<String?>(
         json['earnedAgainstRevisionId'],
@@ -5151,6 +5238,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
       'habitId': serializer.toJson<String>(habitId),
       'localDate': serializer.toJson<String>(localDate),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'dailyCount': serializer.toJson<int>(dailyCount),
       'earnedWhileDue': serializer.toJson<bool>(earnedWhileDue),
       'earnedAgainstRevisionId': serializer.toJson<String?>(
         earnedAgainstRevisionId,
@@ -5167,6 +5255,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     String? habitId,
     String? localDate,
     Value<DateTime?> completedAt = const Value.absent(),
+    int? dailyCount,
     bool? earnedWhileDue,
     Value<String?> earnedAgainstRevisionId = const Value.absent(),
     int? recordedUtcOffsetMinutes,
@@ -5176,6 +5265,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     habitId: habitId ?? this.habitId,
     localDate: localDate ?? this.localDate,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    dailyCount: dailyCount ?? this.dailyCount,
     earnedWhileDue: earnedWhileDue ?? this.earnedWhileDue,
     earnedAgainstRevisionId: earnedAgainstRevisionId.present
         ? earnedAgainstRevisionId.value
@@ -5192,6 +5282,9 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      dailyCount: data.dailyCount.present
+          ? data.dailyCount.value
+          : this.dailyCount,
       earnedWhileDue: data.earnedWhileDue.present
           ? data.earnedWhileDue.value
           : this.earnedWhileDue,
@@ -5212,6 +5305,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
           ..write('habitId: $habitId, ')
           ..write('localDate: $localDate, ')
           ..write('completedAt: $completedAt, ')
+          ..write('dailyCount: $dailyCount, ')
           ..write('earnedWhileDue: $earnedWhileDue, ')
           ..write('earnedAgainstRevisionId: $earnedAgainstRevisionId, ')
           ..write('recordedUtcOffsetMinutes: $recordedUtcOffsetMinutes, ')
@@ -5226,6 +5320,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
     habitId,
     localDate,
     completedAt,
+    dailyCount,
     earnedWhileDue,
     earnedAgainstRevisionId,
     recordedUtcOffsetMinutes,
@@ -5239,6 +5334,7 @@ class HabitDayRecord extends DataClass implements Insertable<HabitDayRecord> {
           other.habitId == this.habitId &&
           other.localDate == this.localDate &&
           other.completedAt == this.completedAt &&
+          other.dailyCount == this.dailyCount &&
           other.earnedWhileDue == this.earnedWhileDue &&
           other.earnedAgainstRevisionId == this.earnedAgainstRevisionId &&
           other.recordedUtcOffsetMinutes == this.recordedUtcOffsetMinutes &&
@@ -5250,6 +5346,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
   final Value<String> habitId;
   final Value<String> localDate;
   final Value<DateTime?> completedAt;
+  final Value<int> dailyCount;
   final Value<bool> earnedWhileDue;
   final Value<String?> earnedAgainstRevisionId;
   final Value<int> recordedUtcOffsetMinutes;
@@ -5260,6 +5357,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     this.habitId = const Value.absent(),
     this.localDate = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.dailyCount = const Value.absent(),
     this.earnedWhileDue = const Value.absent(),
     this.earnedAgainstRevisionId = const Value.absent(),
     this.recordedUtcOffsetMinutes = const Value.absent(),
@@ -5271,6 +5369,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     required String habitId,
     required String localDate,
     this.completedAt = const Value.absent(),
+    this.dailyCount = const Value.absent(),
     required bool earnedWhileDue,
     this.earnedAgainstRevisionId = const Value.absent(),
     required int recordedUtcOffsetMinutes,
@@ -5287,6 +5386,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     Expression<String>? habitId,
     Expression<String>? localDate,
     Expression<DateTime>? completedAt,
+    Expression<int>? dailyCount,
     Expression<bool>? earnedWhileDue,
     Expression<String>? earnedAgainstRevisionId,
     Expression<int>? recordedUtcOffsetMinutes,
@@ -5298,6 +5398,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
       if (habitId != null) 'habit_id': habitId,
       if (localDate != null) 'local_date': localDate,
       if (completedAt != null) 'completed_at': completedAt,
+      if (dailyCount != null) 'daily_count': dailyCount,
       if (earnedWhileDue != null) 'earned_while_due': earnedWhileDue,
       if (earnedAgainstRevisionId != null)
         'earned_against_revision_id': earnedAgainstRevisionId,
@@ -5313,6 +5414,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     Value<String>? habitId,
     Value<String>? localDate,
     Value<DateTime?>? completedAt,
+    Value<int>? dailyCount,
     Value<bool>? earnedWhileDue,
     Value<String?>? earnedAgainstRevisionId,
     Value<int>? recordedUtcOffsetMinutes,
@@ -5324,6 +5426,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
       habitId: habitId ?? this.habitId,
       localDate: localDate ?? this.localDate,
       completedAt: completedAt ?? this.completedAt,
+      dailyCount: dailyCount ?? this.dailyCount,
       earnedWhileDue: earnedWhileDue ?? this.earnedWhileDue,
       earnedAgainstRevisionId:
           earnedAgainstRevisionId ?? this.earnedAgainstRevisionId,
@@ -5348,6 +5451,9 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
     }
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (dailyCount.present) {
+      map['daily_count'] = Variable<int>(dailyCount.value);
     }
     if (earnedWhileDue.present) {
       map['earned_while_due'] = Variable<bool>(earnedWhileDue.value);
@@ -5378,6 +5484,7 @@ class HabitDayRecordsCompanion extends UpdateCompanion<HabitDayRecord> {
           ..write('habitId: $habitId, ')
           ..write('localDate: $localDate, ')
           ..write('completedAt: $completedAt, ')
+          ..write('dailyCount: $dailyCount, ')
           ..write('earnedWhileDue: $earnedWhileDue, ')
           ..write('earnedAgainstRevisionId: $earnedAgainstRevisionId, ')
           ..write('recordedUtcOffsetMinutes: $recordedUtcOffsetMinutes, ')
@@ -8617,6 +8724,7 @@ typedef $$PendingChangesTableCreateCompanionBuilder =
       Value<String?> acknowledgementId,
       required DateTime createdAt,
       required DateTime versionTimestamp,
+      Value<DateTime?> baseUpdatedAt,
       Value<int> rowid,
     });
 typedef $$PendingChangesTableUpdateCompanionBuilder =
@@ -8633,6 +8741,7 @@ typedef $$PendingChangesTableUpdateCompanionBuilder =
       Value<String?> acknowledgementId,
       Value<DateTime> createdAt,
       Value<DateTime> versionTimestamp,
+      Value<DateTime?> baseUpdatedAt,
       Value<int> rowid,
     });
 
@@ -8706,6 +8815,11 @@ class $$PendingChangesTableFilterComposer
     column: $table.versionTimestamp,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$PendingChangesTableOrderingComposer
@@ -8776,6 +8890,11 @@ class $$PendingChangesTableOrderingComposer
     column: $table.versionTimestamp,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PendingChangesTableAnnotationComposer
@@ -8836,6 +8955,11 @@ class $$PendingChangesTableAnnotationComposer
     column: $table.versionTimestamp,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$PendingChangesTableTableManager
@@ -8887,6 +9011,7 @@ class $$PendingChangesTableTableManager
                 Value<String?> acknowledgementId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> versionTimestamp = const Value.absent(),
+                Value<DateTime?> baseUpdatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PendingChangesCompanion(
                 operationId: operationId,
@@ -8901,6 +9026,7 @@ class $$PendingChangesTableTableManager
                 acknowledgementId: acknowledgementId,
                 createdAt: createdAt,
                 versionTimestamp: versionTimestamp,
+                baseUpdatedAt: baseUpdatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8917,6 +9043,7 @@ class $$PendingChangesTableTableManager
                 Value<String?> acknowledgementId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime versionTimestamp,
+                Value<DateTime?> baseUpdatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PendingChangesCompanion.insert(
                 operationId: operationId,
@@ -8931,6 +9058,7 @@ class $$PendingChangesTableTableManager
                 acknowledgementId: acknowledgementId,
                 createdAt: createdAt,
                 versionTimestamp: versionTimestamp,
+                baseUpdatedAt: baseUpdatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -10639,6 +10767,7 @@ typedef $$HabitDayRecordsTableCreateCompanionBuilder =
       required String habitId,
       required String localDate,
       Value<DateTime?> completedAt,
+      Value<int> dailyCount,
       required bool earnedWhileDue,
       Value<String?> earnedAgainstRevisionId,
       required int recordedUtcOffsetMinutes,
@@ -10651,6 +10780,7 @@ typedef $$HabitDayRecordsTableUpdateCompanionBuilder =
       Value<String> habitId,
       Value<String> localDate,
       Value<DateTime?> completedAt,
+      Value<int> dailyCount,
       Value<bool> earnedWhileDue,
       Value<String?> earnedAgainstRevisionId,
       Value<int> recordedUtcOffsetMinutes,
@@ -10684,6 +10814,11 @@ class $$HabitDayRecordsTableFilterComposer
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dailyCount => $composableBuilder(
+    column: $table.dailyCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10737,6 +10872,11 @@ class $$HabitDayRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get dailyCount => $composableBuilder(
+    column: $table.dailyCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get earnedWhileDue => $composableBuilder(
     column: $table.earnedWhileDue,
     builder: (column) => ColumnOrderings(column),
@@ -10778,6 +10918,11 @@ class $$HabitDayRecordsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dailyCount => $composableBuilder(
+    column: $table.dailyCount,
     builder: (column) => column,
   );
 
@@ -10841,6 +10986,7 @@ class $$HabitDayRecordsTableTableManager
                 Value<String> habitId = const Value.absent(),
                 Value<String> localDate = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> dailyCount = const Value.absent(),
                 Value<bool> earnedWhileDue = const Value.absent(),
                 Value<String?> earnedAgainstRevisionId = const Value.absent(),
                 Value<int> recordedUtcOffsetMinutes = const Value.absent(),
@@ -10851,6 +10997,7 @@ class $$HabitDayRecordsTableTableManager
                 habitId: habitId,
                 localDate: localDate,
                 completedAt: completedAt,
+                dailyCount: dailyCount,
                 earnedWhileDue: earnedWhileDue,
                 earnedAgainstRevisionId: earnedAgainstRevisionId,
                 recordedUtcOffsetMinutes: recordedUtcOffsetMinutes,
@@ -10863,6 +11010,7 @@ class $$HabitDayRecordsTableTableManager
                 required String habitId,
                 required String localDate,
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> dailyCount = const Value.absent(),
                 required bool earnedWhileDue,
                 Value<String?> earnedAgainstRevisionId = const Value.absent(),
                 required int recordedUtcOffsetMinutes,
@@ -10873,6 +11021,7 @@ class $$HabitDayRecordsTableTableManager
                 habitId: habitId,
                 localDate: localDate,
                 completedAt: completedAt,
+                dailyCount: dailyCount,
                 earnedWhileDue: earnedWhileDue,
                 earnedAgainstRevisionId: earnedAgainstRevisionId,
                 recordedUtcOffsetMinutes: recordedUtcOffsetMinutes,

@@ -1,9 +1,12 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
+import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/l10n/today_localization_adapter.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
@@ -33,6 +36,10 @@ import 'package:namma_project/features/today/domain/today_projection.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/domain/today_section.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
+import 'package:namma_project/features/today/presentation/today_screen.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_bottom_navigation.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_coming_soon_page.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 import 'package:namma_project/features/xp/data/drift_award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
@@ -170,7 +177,6 @@ void main() {
         title: 'Offline task',
         scheduledDate: DateTime(2026, 10, 12),
         createdAt: DateTime.utc(2026, 10, 11, 8),
-        completionXp: 25,
       );
       expect(
         (await DriftTaskRepository(
@@ -632,6 +638,198 @@ void main() {
       database = await FoundationDatabase.openEncrypted(path: path, key: key);
       await inspect(database);
       expect(await counts(database), before);
+    },
+  );
+
+  testWidgets(
+    'Dashboard integration journey: preview entry without public sign-in, no sample mutation, owner access and offline return (T046)',
+    (tester) async {
+      final directory = await Directory.systemTemp.createTemp(
+        'namaa_today_journey_',
+      );
+      final path = '${directory.path}${Platform.pathSeparator}today.db';
+      final vault = SecureCredentialVault(store: InMemorySecureKeyValueStore());
+      final key = await resolveDatabaseKey(vault);
+      final database = await FoundationDatabase.openEncrypted(
+        path: path,
+        key: key,
+      );
+      addTearDown(() async {
+        await database.close();
+        await directory.delete(recursive: true);
+      });
+
+      final tasks = DriftTaskRepository(
+        database: database,
+        codec: const TaskPayloadCodec(),
+      );
+      final habits = DriftHabitRepository(
+        database: database,
+        codec: const HabitPayloadCodec(),
+      );
+      final ledger = DriftAwardLedger(database);
+      final created = DateTime.utc(2026, 10, 11, 8);
+
+      final task = Task.create(
+        id: TodayOwnerFixture.taskId(1),
+        accountId: kTasksPreviewAccountId,
+        title: 'Initial Journey Task',
+        scheduledDate: DateTime(2026, 10, 12),
+        createdAt: created,
+      );
+      await tasks.commitTask(
+        TaskWriteRequest(
+          task: task,
+          operationId: 'journey-seed-task',
+          kind: ChangeKind.create,
+          queuedAt: created,
+        ),
+      );
+
+      final habit = Habit.create(
+        id: TodayOwnerFixture.habitId(1),
+        accountId: kHabitsPreviewAccountId,
+        name: 'Initial Journey Habit',
+        weekdays: {DateTime.monday},
+        revisionId: 'journey-seed-revision',
+        createdAt: created,
+        effectiveLocalDate: '2026-10-10',
+        utcOffsetMinutes: 0,
+      );
+      await habits.commitHabit(
+        HabitWriteRequest(
+          habit: habit,
+          operationId: 'journey-seed-habit',
+          kind: ChangeKind.create,
+          queuedAt: created,
+        ),
+      );
+
+      Future<List<int>> tableCounts(FoundationDatabase db) async {
+        final values = <int>[];
+        for (final table in [
+          'task_records',
+          'habit_records',
+          'habit_day_records',
+          'xp_awards',
+          'pending_changes',
+        ]) {
+          values.add(
+            (await db
+                    .customSelect('SELECT COUNT(*) AS c FROM $table')
+                    .getSingle())
+                .read<int>('c'),
+          );
+        }
+        return values;
+      }
+
+      final beforeCounts = await tableCounts(database);
+
+      var didOpenTasks = false;
+      var didOpenHabits = false;
+      var didOpenMindMaps = false;
+
+      final clock = _Clock();
+      final cubit = TodayCubit(
+        scope: TodayScope.preview(
+          taskOwnerId: kTasksPreviewAccountId,
+          habitOwnerId: kHabitsPreviewAccountId,
+          generation: 1,
+        ),
+        calendar: clock,
+        tasks: TasksTodayAdapter(tasks),
+        habits: HabitsTodayAdapter(habits),
+        xp: XpTodayAdapter(ledger),
+      );
+      addTearDown(cubit.close);
+
+      // 1. Preview entry without public sign-in: renders Today directly
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates:
+              FoundationLocalizations.localizationsDelegates,
+          supportedLocales: FoundationLocalizations.supportedLocales,
+          home: TodayScreen(
+            cubit: cubit,
+            stringsResolver: resolveTodayStrings,
+            onTasks: () => didOpenTasks = true,
+            onHabits: () => didOpenHabits = true,
+            onMindMaps: () => didOpenMindMaps = true,
+            onPreferences: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(kTodayScreenKey), findsOneWidget);
+      expect(find.text('Initial Journey Task'), findsAtLeast(1));
+
+      // 2. No sample-induced mutation: interact with preview controls
+      final incrementFinder = find.byKey(const ValueKey('counter_increment_0'));
+      await Scrollable.ensureVisible(
+        tester.element(incrementFinder),
+        alignment: 0.5,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(incrementFinder);
+      await tester.pumpAndSettle();
+      expect(find.byType(TodayComingSoonPage), findsOneWidget);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      // Assert table counts in SQLite encrypted database did not mutate at all
+      final afterSampleCounts = await tableCounts(database);
+      expect(afterSampleCounts, beforeCounts);
+
+      // 3. Owner navigation access (supports both desktop sidebar and mobile bottom navigation)
+      if (find.byKey(kTodaySidebarKey).evaluate().isNotEmpty) {
+        await tester.tap(find.byKey(kTodaySidebarTasksKey));
+        await tester.pumpAndSettle();
+        expect(didOpenTasks, isTrue);
+
+        await tester.tap(find.byKey(kTodaySidebarHabitsKey));
+        await tester.pumpAndSettle();
+        expect(didOpenHabits, isTrue);
+
+        await tester.tap(find.byKey(kTodaySidebarMindMapsKey));
+        await tester.pumpAndSettle();
+        expect(didOpenMindMaps, isTrue);
+      } else {
+        await tester.tap(find.byKey(kTodayBottomTasksKey));
+        await tester.pumpAndSettle();
+        expect(didOpenTasks, isTrue);
+
+        await tester.tap(find.byKey(kTodayBottomMoreKey));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(kTodayBottomHabitsKey));
+        await tester.pumpAndSettle();
+        expect(didOpenHabits, isTrue);
+
+        await tester.tap(find.byKey(kTodayBottomMoreKey));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(kTodayMoreMindMapsKey));
+        await tester.pumpAndSettle();
+        expect(didOpenMindMaps, isTrue);
+      }
+
+      // 4. Offline return: update task in owner repository and return/refresh
+      final updatedTask = task.copyWith(
+        title: 'Updated Offline Task Title',
+        updatedAt: DateTime.utc(2026, 10, 12, 14),
+      );
+      await tasks.commitTask(
+        TaskWriteRequest(
+          task: updatedTask,
+          operationId: 'journey-update-task',
+          kind: ChangeKind.update,
+          queuedAt: updatedTask.updatedAt,
+        ),
+      );
+
+      cubit.refresh();
+      await tester.pumpAndSettle();
+      expect(find.text('Updated Offline Task Title'), findsAtLeast(1));
     },
   );
 }

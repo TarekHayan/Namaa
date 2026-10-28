@@ -11,8 +11,12 @@ on:
         description: 'Optional JSON array of Android suites for a mobile-only run'
         type: string
         default: ''
+      ios_groups:
+        description: 'Optional JSON array of iOS groups (foundation, tasks, habits, mind-maps, today) for a mobile-only run'
+        type: string
+        default: ''
       ios_suites:
-        description: 'Optional JSON array of iOS suites for a mobile-only run'
+        description: 'Optional comma-separated iOS suite names to run inside the selected groups, e.g. today-dashboard'
         type: string
         default: ''
       include_linux:
@@ -23,6 +27,8 @@ on:
         description: 'Run only macOS Today staging sync in a focused run'
         type: boolean
         default: false
+  # CI runs once a feature is finished and its PR targets develop: every PR
+  # run is the full five-target run. Manual runs can focus on one group/file.
   pull_request:
     branches:
       - develop
@@ -76,7 +82,7 @@ jobs:
           pub-cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: python3 .github/scripts/pub-get-with-retry.py
 
       - name: Verify source formatting
         run: dart format --output=none --set-exit-if-changed lib test integration_test
@@ -140,7 +146,7 @@ jobs:
           pub-cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: python3 .github/scripts/pub-get-with-retry.py
 
       - name: Install Android compile SDK
         shell: bash
@@ -156,7 +162,11 @@ jobs:
         run: python3 .github/scripts/prepare-android-ndk.py
 
       - name: Prepare and verify Android emulator with bounded download retries
-        timeout-minutes: 8
+        # Emulator (3 x 2 min) plus system image (3 x 6 min) retries.
+        timeout-minutes: 25
+        env:
+          # Must match api-level, target and arch of the emulator step below.
+          ANDROID_SYSTEM_IMAGE: system-images;android-35;google_apis;x86_64
         run: python3 .github/scripts/prepare-android-emulator.py
 
       - name: Set up Supabase CLI
@@ -225,7 +235,7 @@ jobs:
       - name: Enable Linux desktop and resolve dependencies
         run: |
           flutter config --enable-linux-desktop
-          flutter pub get
+          python3 .github/scripts/pub-get-with-retry.py
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -432,7 +442,7 @@ jobs:
       - name: Enable macOS desktop and resolve dependencies
         run: |
           flutter config --enable-macos-desktop
-          flutter pub get
+          python3 .github/scripts/pub-get-with-retry.py
 
       - name: Build macOS application
         run: flutter build macos --debug
@@ -515,16 +525,18 @@ jobs:
             --reporter expanded
 
   ios:
-    if: ${{ !inputs.mobile_only || inputs.ios_suites != '[]' }}
-    name: iOS simulator (${{ matrix.suite }})
+    if: ${{ !inputs.mobile_only || inputs.ios_groups != '[]' }}
+    name: iOS simulator (${{ matrix.group }})
     # Use the separate Intel pool while ARM runners have capacity delays.
     runs-on: macos-26-intel
-    timeout-minutes: 90
+    # One job per feature: set up, boot and build once, then each file in the
+    # group runs as its own app launch (see run-ios-integration-group.sh).
+    timeout-minutes: 150
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 5
       matrix:
-        suite: ${{ fromJSON(inputs.mobile_only && inputs.ios_suites || '["migration","offline","platform","sync","staging-supabase","tasks-offline-sync","tasks-completion-sync","tasks-checklist-history","tasks-localized-route","habits-offline-sync","habits-streak-history","habits-edit-delete","habits-localized-route","mind-maps-library","mind-maps-editor","mind-maps-task-link","mind-maps-viewport","mind-maps-offline-sync","mind-maps-localized-route","mind-maps-staging-sync","today-dashboard","today-sync"]') }}
+        group: ${{ fromJSON(inputs.mobile_only && inputs.ios_groups || '["foundation","tasks","habits","mind-maps","today"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -536,11 +548,12 @@ jobs:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: false
-          pub-cache: false
+          pub-cache: true
 
       - name: Resolve dependencies
-        timeout-minutes: 5
-        run: flutter pub get
+        # Three bounded attempts; one stalled download used to fail the job.
+        timeout-minutes: 14
+        run: python3 .github/scripts/pub-get-with-retry.py
 
       - name: Prefetch verified encrypted SQLite for the simulator
         timeout-minutes: 6
@@ -553,95 +566,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          device_id="$(xcrun simctl list devices available -j | \
-            python3 -c 'import json,sys; data=json.load(sys.stdin); print(next(d["udid"] for devices in data["devices"].values() for d in devices if d["name"].startswith("iPhone")))')"
+          device_id="$(xcrun simctl list devices available -j |             python3 -c 'import json,sys; data=json.load(sys.stdin); print(next(d["udid"] for devices in data["devices"].values() for d in devices if d["name"].startswith("iPhone")))')"
           xcrun simctl boot "$device_id" || true
           xcrun simctl bootstatus "$device_id" -b
           echo "device-id=$device_id" >> "$GITHUB_OUTPUT"
 
-      - name: Build iOS integration entry point for XCTest
-        timeout-minutes: 40
+      - name: Build and run the group's integration files through XCTest
+        timeout-minutes: 125
         shell: bash
         env:
           IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
-          IOS_SUITE: ${{ matrix.suite }}
+          IOS_GROUP: ${{ matrix.group }}
+          IOS_SUITES: ${{ inputs.ios_suites }}
           NAMAA_STAGING_SUPABASE_URL: ${{ secrets.NAMAA_STAGING_SUPABASE_URL }}
           NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY }}
           NAMAA_STAGING_TEST_USER_A_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_A_EMAIL }}
           NAMAA_STAGING_TEST_USER_A_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_A_PASSWORD }}
           NAMAA_STAGING_TEST_USER_B_EMAIL: ${{ secrets.NAMAA_STAGING_TEST_USER_B_EMAIL }}
           NAMAA_STAGING_TEST_USER_B_PASSWORD: ${{ secrets.NAMAA_STAGING_TEST_USER_B_PASSWORD }}
-        run: |
-          set -euo pipefail
-          case "$IOS_SUITE" in
-            migration|offline|platform|sync|staging-supabase)
-              test_file="integration_test/foundation_${IOS_SUITE//-/_}_test.dart"
-              ;;
-            tasks-*|habits-*|mind-maps-*|today-*)
-              test_file="integration_test/${IOS_SUITE//-/_}_test.dart"
-              ;;
-            *) echo "Unknown iOS integration suite: $IOS_SUITE" >&2; exit 2 ;;
-          esac
-          test -f "$test_file"
-          staging_defines=(
-            --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL"
-            --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY"
-            --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL"
-            --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD"
-            --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL"
-            --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD"
-          )
-          # Xcode logs can include the encoded Dart defines from Generated.xcconfig.
-          python3 - "${staging_defines[@]}" <<'PY'
-          import base64, sys
-          for argument in sys.argv[1:]:
-              value = argument.removeprefix('--dart-define=')
-              print('::add-mask::' + base64.b64encode(value.encode()).decode())
-          PY
-          mkdir -p build/ios_integration
-          # XCTest can activate native accessibility after the first test begins.
-          # Establish it before testWidgets records its semantics-handle baseline.
-          cat > build/ios_integration/entrypoint.dart <<DART
-          import 'package:integration_test/integration_test.dart';
-
-          import '../../$test_file' as scenario;
-          import '../../test/support/native_ios_test_binding.dart';
-
-          void main() {
-            final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-            stabilizeNativeIosSemantics(binding);
-            scenario.main();
-          }
-          DART
-          flutter build ios --simulator --debug --no-codesign --no-pub --config-only \
-            "${staging_defines[@]}" --target=build/ios_integration/entrypoint.dart
-          python3 .github/scripts/run-ios-integration.py --build-only -- \
-            xcodebuild -quiet build-for-testing -workspace ios/Runner.xcworkspace -scheme Runner \
-            -configuration Debug -sdk iphonesimulator \
-            -destination "id=$IOS_DEVICE_ID" \
-            -derivedDataPath "$PWD/build/ios_integration/DerivedData" \
-            CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES
-
-      - name: Run iOS integration entry point through XCTest
-        timeout-minutes: 15
-        shell: bash
-        env:
-          IOS_DEVICE_ID: ${{ steps.simulator.outputs.device-id }}
-        run: |
-          set -euo pipefail
-          result_bundle="$PWD/build/ios_integration/results.xcresult"
-          # Native XCTest receives Dart results through the integration_test plugin;
-          # it does not wait for discovery of a debugger VM-service URI.
-          # Ad-hoc simulator signing preserves the host app's Keychain identity.
-          python3 .github/scripts/run-ios-integration.py "$result_bundle" -- \
-            xcodebuild -quiet test-without-building -workspace ios/Runner.xcworkspace -scheme Runner \
-            -configuration Debug -sdk iphonesimulator \
-            -derivedDataPath "$PWD/build/ios_integration/DerivedData" \
-            -destination "id=$IOS_DEVICE_ID" -parallel-testing-enabled NO \
-            -only-testing:RunnerTests/RunnerTests/testFlutterIntegration \
-            -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
-            -maximum-test-execution-time-allowance 600 \
-            -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES
+        run: bash .github/scripts/run-ios-integration-group.sh
 
   foundation-gate:
     name: Foundation and Task five-target gate

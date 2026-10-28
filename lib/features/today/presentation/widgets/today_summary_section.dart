@@ -13,22 +13,37 @@ class TodaySummarySection<T> extends StatelessWidget {
     required this.strings,
     required this.onRetry,
     required this.content,
+    this.icon,
   });
   final String title;
   final TodaySection<T> section;
   final TodayStrings strings;
   final VoidCallback onRetry;
   final Widget Function(T value) content;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (icon != null)
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+            ],
+          ),
+          const SizedBox(height: 14),
           if (section.status == TodaySectionStatus.loading)
             Semantics(liveRegion: true, child: Text(strings.loading))
           else if (section.value == null)

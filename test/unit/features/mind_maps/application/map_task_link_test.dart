@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/application/synchronization_engine.dart';
@@ -7,6 +9,7 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/mind_maps/application/map_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_graph_commands.dart';
 import 'package:namma_project/features/mind_maps/application/map_task_link_commands.dart';
+import 'package:namma_project/features/mind_maps/application/map_task_link_port.dart';
 import 'package:namma_project/features/mind_maps/data/drift_map_repository.dart';
 import 'package:namma_project/features/mind_maps/data/map_payload_codec.dart';
 import 'package:namma_project/features/mind_maps/data/tasks_map_link_adapter.dart';
@@ -68,7 +71,6 @@ void main() {
       title: 'Shared task',
       scheduledDate: DateTime(2026, 10, 19),
       createdAt: DateTime.utc(2026, 10, 18),
-      completionXp: 30,
     );
     expect(
       (await repository.commitTask(
@@ -155,7 +157,7 @@ void main() {
         source: kTaskDoneAwardSource,
         sourceId: taskId,
       )).valueOrNull!;
-      expect(award.amount, 30);
+      expect(award.amount, kTaskCompletionXp);
       expect((await ledger.watchAwards(kMindMapsTestAccountA).first).length, 1);
     },
   );
@@ -328,6 +330,94 @@ void main() {
       isEmpty,
     );
   });
+
+  test(
+    'an older Task list that finishes its session check late is dropped',
+    () async {
+      final tasks = _ControlledTasks(repository);
+      final controlled = TasksMapLinkAdapter(
+        repository: tasks,
+        completionService: TaskCompletionService(
+          repository: repository,
+          unitOfWork: DriftTaskCompletionUnitOfWork(
+            database: db,
+            codec: const TaskPayloadCodec(),
+            awardLedger: ledger,
+          ),
+          session: session,
+        ),
+        session: session,
+      );
+      final open = Task.create(
+        id: taskId,
+        accountId: kMindMapsTestAccountA,
+        title: 'Shared task',
+        scheduledDate: DateTime(2026, 10, 19),
+        createdAt: DateTime.utc(2026, 10, 18),
+      );
+      final done = open.complete(DateTime.utc(2026, 10, 18, 1));
+      final published = <List<MapLinkedTask>>[];
+      final subscription = controlled
+          .watchAccessibleTasks(kMindMapsTestAccountA)
+          .listen(published.add);
+      addTearDown(subscription.cancel);
+      await pumpEventQueue();
+
+      // The open list's session check stalls; the completed list overtakes it.
+      final stalled = session.pauseNextLookup();
+      tasks.emit([open]);
+      await pumpEventQueue();
+      tasks.emit([done]);
+      await pumpEventQueue();
+      stalled.complete();
+      await pumpEventQueue();
+
+      expect(published, hasLength(1));
+      expect(published.single.single.completed, isTrue);
+    },
+  );
+}
+
+/// Real persistence, but a Task stream the test emits on directly.
+final class _ControlledTasks implements TaskRepository {
+  _ControlledTasks(this._inner);
+
+  final TaskRepository _inner;
+  final StreamController<List<Task>> _tasks = StreamController<List<Task>>();
+
+  void emit(List<Task> tasks) => _tasks.add(tasks);
+
+  @override
+  Stream<List<Task>> watchTasks(String accountId) => _tasks.stream;
+
+  @override
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  ) => _inner.runInTransaction(action);
+
+  @override
+  Future<AppResult<Task?>> readTask({
+    required String accountId,
+    required String taskId,
+  }) => _inner.readTask(accountId: accountId, taskId: taskId);
+
+  @override
+  Stream<List<TaskConflictRecord>> watchConflicts(String accountId) =>
+      _inner.watchConflicts(accountId);
+
+  @override
+  Future<AppResult<void>> commitTask(TaskWriteRequest request) =>
+      _inner.commitTask(request);
+
+  @override
+  Future<AppResult<bool>> hasPendingChange({
+    required String accountId,
+    required String taskId,
+  }) => _inner.hasPendingChange(accountId: accountId, taskId: taskId);
+
+  @override
+  Future<AppResult<void>> applyInboundTask(Task task) =>
+      _inner.applyInboundTask(task);
 }
 
 final class _NoPendingChanges implements PendingSynchronizationEngine {

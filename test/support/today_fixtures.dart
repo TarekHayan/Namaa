@@ -194,7 +194,7 @@ final class TodayOwnerFixture {
         accountId: task.accountId,
         source: kTaskDoneAwardSource,
         sourceId: task.id,
-        amount: task.completionXp,
+        amount: kTaskCompletionXp,
         awardedAt: at,
       );
 }

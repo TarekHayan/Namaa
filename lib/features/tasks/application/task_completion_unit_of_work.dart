@@ -38,7 +38,7 @@ final class TaskCompletionCommit {
         (award.accountId != task.accountId ||
             award.source != kTaskDoneAwardSource ||
             award.sourceId != task.id ||
-            award.amount != task.completionXp ||
+            award.amount != kTaskCompletionXp ||
             award.awardedAt != task.completedAt)) {
       throw ArgumentError.value(
         award.uniqueKey,

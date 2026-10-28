@@ -295,6 +295,7 @@ final class _Gateway implements SupabaseMapGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   }) async {
     operations.add(operationId);
     if (fail) throw StateError('offline');

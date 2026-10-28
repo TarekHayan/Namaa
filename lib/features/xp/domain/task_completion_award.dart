@@ -3,6 +3,11 @@ library;
 
 const String kTaskDoneAwardSource = 'task_done';
 
+/// XP for the first completion of any Task. The server applies the same value
+/// (`apply_task_change` in supabase/migrations/0011); the client never chooses
+/// it, so offline and synchronized totals always agree.
+const int kTaskCompletionXp = 20;
+
 final class TaskCompletionAward {
   TaskCompletionAward({
     required this.accountId,

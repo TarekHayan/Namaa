@@ -15,6 +15,7 @@ import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
+import 'package:namma_project/features/tasks/presentation/tasks_state.dart';
 import 'package:namma_project/features/xp/application/award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
@@ -137,18 +138,20 @@ void main() {
 
     await tester.tap(find.byKey(const Key('enter_matrix')));
     await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.view_list), findsOneWidget);
+    expect(find.byKey(kTasksMatrixToggleKey), findsOneWidget);
+    expect(find.byType(GridView), findsOneWidget);
     expect(find.text('Owner overdue work'), findsOneWidget);
     await tester.pump();
-    expect(find.byIcon(Icons.view_list), findsOneWidget);
+    expect(find.byType(GridView), findsOneWidget);
 
     routing.router.pop();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('enter_overdue')));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<FilterChip>(find.byKey(kTasksOverdueFilterKey)).selected,
-      isTrue,
+      (tester.state<_OwnerState>(find.byType(_Owner)).cubit.state as TasksReady)
+          .filter,
+      TaskListFilter.overdue,
     );
     expect(find.text('Owner overdue work'), findsOneWidget);
 
@@ -156,4 +159,125 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('enter_matrix')), findsOneWidget);
   });
+
+  testWidgets(
+    'dashboard controls navigate to owner routes and coming-soon placeholders',
+    (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 1200 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final repository = _Repository();
+      final routing = FoundationAppRouter(
+        rootBuilder: (context) => Scaffold(
+          body: Column(
+            children: [
+              ElevatedButton(
+                key: const Key('tasks_dest'),
+                onPressed: () =>
+                    unawaited(GoRouter.of(context).push<void>(kTasksRoute)),
+                child: const Text('Tasks Dest'),
+              ),
+              ElevatedButton(
+                key: const Key('habits_dest'),
+                onPressed: () =>
+                    unawaited(GoRouter.of(context).push<void>(kHabitsRoute)),
+                child: const Text('Habits Dest'),
+              ),
+              ElevatedButton(
+                key: const Key('mind_maps_dest'),
+                onPressed: () =>
+                    unawaited(GoRouter.of(context).push<void>(kMindMapsRoute)),
+                child: const Text('Mind Maps Dest'),
+              ),
+              ElevatedButton(
+                key: const Key('track_dest'),
+                onPressed: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const Scaffold(body: Text('Track Coming Soon')),
+                  ),
+                ),
+                child: const Text('Track Dest'),
+              ),
+              ElevatedButton(
+                key: const Key('finance_dest'),
+                onPressed: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const Scaffold(body: Text('Finance Coming Soon')),
+                  ),
+                ),
+                child: const Text('Finance Dest'),
+              ),
+            ],
+          ),
+        ),
+        cloudSession: const TasksPreviewSession(),
+        tasksBuilder: (_, accountId) =>
+            _Owner(accountId: accountId, repository: repository),
+        habitsSession: const TasksPreviewSession(),
+        habitsBuilder: (_, accountId) =>
+            Scaffold(body: Text('Habits Owner: $accountId')),
+        mindMapsSession: const TasksPreviewSession(),
+        mindMapsBuilder: (_, accountId) =>
+            Scaffold(body: Text('Mind Maps Owner: $accountId')),
+      );
+      addTearDown(routing.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: routing.router,
+          localizationsDelegates:
+              FoundationLocalizations.localizationsDelegates,
+          supportedLocales: FoundationLocalizations.supportedLocales,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tasks owner navigation
+      await tester.tap(find.byKey(const Key('tasks_dest')));
+      await tester.pumpAndSettle();
+      expect(find.byType(TasksScreen), findsOneWidget);
+      routing.router.pop();
+      await tester.pumpAndSettle();
+
+      // Habits owner navigation
+      await tester.tap(find.byKey(const Key('habits_dest')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Habits Owner: 00000000-0000-4000-8000-000000000003'),
+        findsOneWidget,
+      );
+      routing.router.pop();
+      await tester.pumpAndSettle();
+
+      // Mind Maps owner navigation
+      await tester.tap(find.byKey(const Key('mind_maps_dest')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Mind Maps Owner: 00000000-0000-4000-8000-000000000003'),
+        findsOneWidget,
+      );
+      routing.router.pop();
+      await tester.pumpAndSettle();
+
+      // Track placeholder
+      await tester.tap(find.byKey(const Key('track_dest')));
+      await tester.pumpAndSettle();
+      expect(find.text('Track Coming Soon'), findsOneWidget);
+      Navigator.of(tester.element(find.text('Track Coming Soon'))).pop();
+      await tester.pumpAndSettle();
+
+      // Finance placeholder
+      await tester.tap(find.byKey(const Key('finance_dest')));
+      await tester.pumpAndSettle();
+      expect(find.text('Finance Coming Soon'), findsOneWidget);
+      Navigator.of(tester.element(find.text('Finance Coming Soon'))).pop();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('tasks_dest')), findsOneWidget);
+    },
+  );
 }

@@ -5,6 +5,7 @@ library;
 
 import 'dart:async';
 
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -19,7 +20,9 @@ import 'package:namma_project/app/l10n/today_localization_adapter.dart';
 import 'package:namma_project/app/preferences/app_preferences_sheet.dart';
 import 'package:namma_project/app/routing/app_router.dart';
 import 'package:namma_project/app/routing/owner_entry_intent.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
+import 'package:namma_project/app/widgets/app_status_view.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
@@ -35,6 +38,8 @@ import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_navigation_shell.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 
 export 'theme/app_theme.dart' show kProjectFontFamily;
 
@@ -356,6 +361,18 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
     darkTheme: AppTheme.dark,
     themeMode: widget.themeMode,
     routerConfig: _router.router,
+    builder: (context, child) => Theme(
+      data: AppTheme.forWidth(
+        Theme.of(context),
+        MediaQuery.sizeOf(context).width,
+      ),
+      child: Builder(
+        builder: (previewContext) => DevicePreview.appBuilder(
+          previewContext,
+          child ?? const SizedBox.shrink(),
+        ),
+      ),
+    ),
   );
 }
 
@@ -655,12 +672,16 @@ class _TasksRouteScopeState extends State<_TasksRouteScope> {
   }
 
   @override
-  Widget build(BuildContext context) => TasksScreen(
-    cubit: _cubit,
-    accountId: widget.accountId,
-    stringsResolver: resolveTasksStrings,
-    session: GetIt.instance<CloudSessionPort>(),
-    entryIntent: OwnerEntryIntentScope.maybeOf(context),
+  Widget build(BuildContext context) => _FeatureNavigationShell(
+    section: TodayNavigationSection.tasks,
+    child: TasksScreen(
+      cubit: _cubit,
+      accountId: widget.accountId,
+      stringsResolver: resolveTasksStrings,
+      session: GetIt.instance<CloudSessionPort>(),
+      entryIntent: OwnerEntryIntentScope.maybeOf(context),
+      onMindMaps: () => GoRouter.of(context).go(kMindMapsRoute),
+    ),
   );
 }
 
@@ -683,11 +704,14 @@ class _HabitsRouteScopeState extends State<_HabitsRouteScope> {
   }
 
   @override
-  Widget build(BuildContext context) => HabitsScreen(
-    cubit: _cubit,
-    accountId: widget.accountId,
-    stringsResolver: resolveHabitsStrings,
-    entryIntent: OwnerEntryIntentScope.maybeOf(context),
+  Widget build(BuildContext context) => _FeatureNavigationShell(
+    section: TodayNavigationSection.habits,
+    child: HabitsScreen(
+      cubit: _cubit,
+      accountId: widget.accountId,
+      stringsResolver: resolveHabitsStrings,
+      entryIntent: OwnerEntryIntentScope.maybeOf(context),
+    ),
   );
 }
 
@@ -709,20 +733,58 @@ class _MindMapsRouteScopeState extends State<_MindMapsRouteScope> {
   }
 
   @override
-  Widget build(BuildContext context) => MapLibraryScreen(
-    cubit: _cubit,
-    ownerId: widget.accountId,
-    stringsResolver: resolveMindMapsStrings,
+  Widget build(BuildContext context) => _FeatureNavigationShell(
+    section: TodayNavigationSection.mindMaps,
+    child: MapLibraryScreen(
+      cubit: _cubit,
+      ownerId: widget.accountId,
+      stringsResolver: resolveMindMapsStrings,
+    ),
   );
+}
+
+class _FeatureNavigationShell extends StatelessWidget {
+  const _FeatureNavigationShell({required this.section, required this.child});
+
+  final TodayNavigationSection section;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
+    final router = GoRouter.of(context);
+    return TodayNavigationShell(
+      colors: colors,
+      section: section,
+      onHome: () => router.go(kTodayRoute),
+      onTasks: () {
+        if (section != TodayNavigationSection.tasks) router.go(kTasksRoute);
+      },
+      onHabits: () {
+        if (section != TodayNavigationSection.habits) router.go(kHabitsRoute);
+      },
+      onMindMaps: () {
+        if (section != TodayNavigationSection.mindMaps) {
+          router.go(kMindMapsRoute);
+        }
+      },
+      onPreferences: () => showAppPreferencesSheet(context),
+      child: child,
+    );
+  }
 }
 
 class _StartupShell extends StatelessWidget {
   const _StartupShell();
 
   @override
-  Widget build(BuildContext context) => const SizedBox.expand(
+  Widget build(BuildContext context) => SizedBox.expand(
     key: kFoundationRootStartupKey,
-    child: Center(child: CircularProgressIndicator()),
+    child: AppStatusView.loading(
+      message: FoundationLocalizations.of(context).todayLoading,
+    ),
   );
 }
 
@@ -737,18 +799,12 @@ class _SafeFailureShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SizedBox.expand(
     key: kFoundationRootFailureKey,
-    child: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(_localizedFoundationMessage(context, messageKey)),
-          if (canRetry)
-            TextButton(
-              onPressed: () => context.read<FoundationCubit>().bootstrap(),
-              child: Text(FoundationLocalizations.of(context).retry),
-            ),
-        ],
-      ),
+    child: AppStatusView.error(
+      title: _localizedFoundationMessage(context, messageKey),
+      actionLabel: canRetry ? FoundationLocalizations.of(context).retry : null,
+      onAction: canRetry
+          ? () => context.read<FoundationCubit>().bootstrap()
+          : null,
     ),
   );
 }

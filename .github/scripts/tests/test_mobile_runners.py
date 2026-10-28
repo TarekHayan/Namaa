@@ -182,12 +182,15 @@ class TodaySuiteSelectionTest(unittest.TestCase):
 
     def test_ios_today_suite_names_map_to_existing_xctest_harness(self):
         workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        self.assertIn("bash .github/scripts/run-ios-integration-group.sh", workflow)
+        group_runner = (ROOT / ".github/scripts/run-ios-integration-group.sh").read_text()
+        today = group_runner.split("  today)", 1)[1].split("    ;;", 1)[0]
         for suite in ("today-dashboard", "today-sync"):
-            self.assertIn(f'"{suite}"', workflow)
-        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*)', workflow)
-        self.assertIn('run-ios-integration.py "$result_bundle"', workflow)
-        self.assertIn('CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-', workflow)
-        self.assertIn('stabilizeNativeIosSemantics(binding)', workflow)
+            self.assertIn(suite, today)
+        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*)', group_runner)
+        self.assertIn('run-ios-integration.py "$result_bundle"', group_runner)
+        self.assertIn('CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-', group_runner)
+        self.assertIn('stabilizeNativeIosSemantics(binding)', group_runner)
         runner = (ROOT / ".github/scripts/run-ios-integration.py").read_text()
         self.assertIn('totalTestCount', runner)
         self.assertIn('passedTests', runner)

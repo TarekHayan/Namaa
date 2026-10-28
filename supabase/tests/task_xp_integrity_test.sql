@@ -76,8 +76,8 @@ select is(
   (select amount from public.xp_awards
    where source = 'task_done'
      and source_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
-  35,
-  'award snapshots the Task configured completion XP'
+  20,
+  'award uses the server-controlled completion XP'
 );
 select is(
   (select awarded_at from public.xp_awards
@@ -105,7 +105,7 @@ select is(
 );
 select is(
   (select amount from public.xp_awards),
-  35,
+  20,
   'duplicate operation cannot change the first reward snapshot'
 );
 
@@ -251,8 +251,8 @@ select is(
 select is(
   (select amount from public.xp_awards
    where source_id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
-  35,
-  'the award uses the first stored Task reward snapshot'
+  20,
+  'the award uses the server-controlled reward'
 );
 select is(
   (select awarded_at from public.xp_awards

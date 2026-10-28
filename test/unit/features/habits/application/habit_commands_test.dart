@@ -72,6 +72,90 @@ void main() {
     },
   );
 
+  test(
+    'repeated habit counts up to its daily target and can step back',
+    () async {
+      final habit = (await commands.createHabit(
+        const CreateHabitInput(
+          name: 'Water',
+          weekdays: HabitsTestSchedules.daily,
+          dailyTarget: 7,
+        ),
+      )).valueOrNull!;
+      expect(habit.dailyTarget, 7);
+      expect(habit.hasRepetitions, isTrue);
+      final first = (await commands.adjustHabitToday(
+        habit.id,
+        delta: 1,
+      )).valueOrNull!;
+      expect(first.count, 1);
+      expect(first.isCompleted, isFalse);
+      final sixth = (await commands.adjustHabitToday(
+        habit.id,
+        delta: 5,
+      )).valueOrNull!;
+      expect(sixth.count, 6);
+      expect(sixth.isCompleted, isFalse);
+      final reached = (await commands.adjustHabitToday(
+        habit.id,
+        delta: 5,
+      )).valueOrNull!;
+      expect(reached.count, 7);
+      expect(reached.isCompleted, isTrue);
+      expect(
+        (await commands.adjustHabitToday(
+          habit.id,
+          delta: 1,
+        )).valueOrNull?.count,
+        7,
+      );
+      final steppedBack = (await commands.adjustHabitToday(
+        habit.id,
+        delta: -1,
+      )).valueOrNull!;
+      expect(steppedBack.count, 6);
+      expect(steppedBack.isCompleted, isFalse);
+      final reset = (await commands.adjustHabitToday(
+        habit.id,
+        delta: -5,
+      )).valueOrNull!;
+      expect(reset.count, 1);
+      expect(
+        await database.rawScalar(
+          "SELECT daily_count FROM habit_day_records WHERE habit_id = '${habit.id}'",
+        ),
+        1,
+      );
+      expect((await commands.undoHabitToday(habit.id)).valueOrNull?.count, 0);
+      clock.advance(const Duration(days: 1));
+      final nextDay = (await commands.adjustHabitToday(
+        habit.id,
+        delta: 1,
+      )).valueOrNull!;
+      expect(nextDay.count, 1);
+      expect(nextDay.localDate, '2026-10-13');
+    },
+  );
+
+  test('daily target must be within supported range', () async {
+    expect(
+      (await commands.createHabit(
+        const CreateHabitInput(name: 'Water', weekdays: {1}, dailyTarget: 0),
+      )).failureOrNull?.category,
+      AppFailureCategory.validation,
+    );
+    expect(
+      (await commands.createHabit(
+        const CreateHabitInput(
+          name: 'Water',
+          weekdays: {1},
+          dailyTarget: 10000,
+        ),
+      )).failureOrNull?.category,
+      AppFailureCategory.validation,
+    );
+  });
+
   test('blank, empty and unscheduled writes have typed failures', () async {
     expect(
       (await commands.createHabit(

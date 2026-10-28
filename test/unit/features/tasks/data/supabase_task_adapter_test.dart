@@ -20,6 +20,7 @@ void main() {
     ChangeKind kind = ChangeKind.update,
     String? payload,
     DateTime? versionTimestamp,
+    DateTime? baseUpdatedAt,
   }) => OutboundChange(
     operationId: operationId,
     accountId: kTasksTestAccountA,
@@ -28,6 +29,7 @@ void main() {
     kind: kind,
     payload: payload ?? codec.encode(_task(updatedAt: versionTimestamp ?? now)),
     versionTimestamp: versionTimestamp ?? now,
+    baseUpdatedAt: baseUpdatedAt,
   );
 
   group('Task outbound RPC adapter', () {
@@ -151,6 +153,26 @@ void main() {
         expect(gateway.applied.last.operationId, 'reopen-operation');
         expect(gateway.applied.last.payload['completedAt'], isNull);
         expect(gateway.applied.last.payload['completionXp'], 20);
+      },
+    );
+
+    test(
+      'forwards the observed base version without changing Task fields',
+      () async {
+        final gateway = _FakeTaskGateway();
+        final adapter = SupabaseTaskSyncAdapter(gateway: gateway);
+        final base = now.subtract(const Duration(minutes: 1));
+        await adapter.dispatchChange(change(baseUpdatedAt: base));
+
+        expect(gateway.applied.single.baseUpdatedAt, base);
+        expect(
+          gateway.applied.single.payload,
+          isNot(contains('_syncBaseUpdatedAt')),
+        );
+        expect(
+          gateway.applied.single.payload['title'],
+          _task(updatedAt: now).title,
+        );
       },
     );
 
@@ -363,6 +385,7 @@ final class _AppliedCall {
     required this.payload,
     required this.updatedAt,
     required this.sentOwnerField,
+    this.baseUpdatedAt,
   });
 
   final String expectedAccountId;
@@ -372,6 +395,7 @@ final class _AppliedCall {
   final Map<String, dynamic> payload;
   final DateTime updatedAt;
   final bool sentOwnerField;
+  final DateTime? baseUpdatedAt;
 }
 
 final class _FakeTaskGateway implements SupabaseTaskGateway {
@@ -391,6 +415,7 @@ final class _FakeTaskGateway implements SupabaseTaskGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   }) async {
     applied.add(
       _AppliedCall(
@@ -400,6 +425,7 @@ final class _FakeTaskGateway implements SupabaseTaskGateway {
         kind: kind,
         payload: payload,
         updatedAt: updatedAt,
+        baseUpdatedAt: baseUpdatedAt,
         sentOwnerField: false,
       ),
     );

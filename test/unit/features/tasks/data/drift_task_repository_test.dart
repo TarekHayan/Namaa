@@ -260,6 +260,40 @@ void main() {
   );
 
   test(
+    'different remote Task at equal time retains evidence without outbox',
+    () async {
+      final local = _task(title: 'Local');
+      final remote = local.copyWith(title: 'Remote');
+      expect((await repository.applyInboundTask(local)).failureOrNull, isNull);
+      final reconciler = TaskReconciler(
+        repository: repository,
+        localStore: DriftLocalStore(database),
+        codec: codec,
+        detectedAt: () => DateTime.utc(2026, 10, 8, 11),
+      );
+
+      final result = await reconciler.reconcile(
+        accountId: kTasksTestAccountA,
+        remoteTasks: [remote],
+      );
+
+      expect(result.failureOrNull, isNull);
+      expect(result.valueOrNull?.equalTimestampConflicts, 1);
+      expect(
+        await database.rawScalar('SELECT count(*) FROM conflict_records'),
+        1,
+      );
+      expect(
+        (await repository.readTask(
+          accountId: kTasksTestAccountA,
+          taskId: kTasksTestTaskId,
+        )).valueOrNull?.title,
+        'Local',
+      );
+    },
+  );
+
+  test(
     'failed reconciliation transaction rolls back the inbound Task',
     () async {
       final task = _task(title: 'Must roll back');

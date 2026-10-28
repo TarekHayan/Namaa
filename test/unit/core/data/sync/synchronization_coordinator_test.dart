@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/sync_versions.dart';
 import 'package:namma_project/core/data/sync/synchronization_coordinator.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
@@ -58,6 +59,7 @@ class FakeLocalStore implements LocalStorePort {
   Future<AppResult<void>> acknowledgeChange(
     String operationId,
     String acknowledgementId,
+    DateTime acknowledgedVersion,
   ) async {
     final record = outbox[operationId];
     if (record == null || record.state == PendingChangeState.acknowledged) {
@@ -74,7 +76,35 @@ class FakeLocalStore implements LocalStorePort {
       serializedChange: record.serializedChange,
       createdAt: record.createdAt,
       versionTimestamp: record.versionTimestamp,
+      baseUpdatedAt: record.baseUpdatedAt,
     );
+    final later =
+        outbox.values
+            .where(
+              (other) =>
+                  other.accountId == record.accountId &&
+                  other.entityType == record.entityType &&
+                  other.entityId == record.entityId &&
+                  other.state == PendingChangeState.pending,
+            )
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    if (later.isNotEmpty) {
+      final next = later.first;
+      outbox[next.operationId] = PendingChangeRecord(
+        operationId: next.operationId,
+        accountId: next.accountId,
+        entityType: next.entityType,
+        entityId: next.entityId,
+        kind: next.kind,
+        state: next.state,
+        attemptCount: next.attemptCount,
+        serializedChange: next.serializedChange,
+        createdAt: next.createdAt,
+        versionTimestamp: next.versionTimestamp,
+        baseUpdatedAt: acknowledgedVersion,
+      );
+    }
     return AppResult<void>.success(null);
   }
 
@@ -99,6 +129,7 @@ class FakeLocalStore implements LocalStorePort {
       serializedChange: record.serializedChange,
       createdAt: record.createdAt,
       versionTimestamp: record.versionTimestamp,
+      baseUpdatedAt: record.baseUpdatedAt,
     );
     return AppResult<void>.success(null);
   }
@@ -120,6 +151,7 @@ class FakeLocalStore implements LocalStorePort {
       serializedChange: record.serializedChange,
       createdAt: record.createdAt,
       versionTimestamp: record.versionTimestamp,
+      baseUpdatedAt: record.baseUpdatedAt,
     );
     return AppResult<void>.success(null);
   }
@@ -195,6 +227,7 @@ class FakeCloudSync implements CloudSyncPort {
 
   final List<AppResult<DispatchOutcome>> outcomes;
   final List<String> dispatchedOperationIds = [];
+  final List<OutboundChange> dispatchedChanges = [];
   int _cursor = 0;
 
   @override
@@ -202,6 +235,7 @@ class FakeCloudSync implements CloudSyncPort {
     OutboundChange change,
   ) async {
     dispatchedOperationIds.add(change.operationId);
+    dispatchedChanges.add(change);
     if (_cursor >= outcomes.length) {
       return AppResult<DispatchOutcome>.success(
         const DispatchAcknowledged(acknowledgementId: 'ack-default'),
@@ -250,6 +284,60 @@ AppFailure _recoverableDispatchFailure() => AppFailure.recoverable(
 
 void main() {
   final t = DateTime.utc(2026, 9, 6, 12);
+
+  test(
+    'failed first offline edit blocks its successor; ACK rebases successor',
+    () async {
+      final base = t.subtract(const Duration(days: 1));
+      final firstVersion = t.add(const Duration(minutes: 1));
+      final secondVersion = t.add(const Duration(minutes: 2));
+      final store = FakeLocalStore();
+      for (final (id, version) in <(String, DateTime)>[
+        ('first', firstVersion),
+        ('second', secondVersion),
+      ]) {
+        store.outbox[id] = PendingChangeRecord(
+          operationId: id,
+          accountId: 'account-1',
+          entityType: 'task',
+          entityId: 'same-task',
+          kind: ChangeKind.update,
+          state: PendingChangeState.pending,
+          attemptCount: 0,
+          serializedChange: id,
+          createdAt: version,
+          versionTimestamp: version,
+          baseUpdatedAt: id == 'first' ? base : firstVersion,
+        );
+      }
+      final sync = FakeCloudSync([
+        AppResult<DispatchOutcome>.failure(_recoverableDispatchFailure()),
+        AppResult<DispatchOutcome>.success(
+          DispatchAcknowledged(
+            acknowledgementId: 'ack-first',
+            remoteVersionTimestamp: firstVersion,
+          ),
+        ),
+        AppResult<DispatchOutcome>.success(
+          DispatchAcknowledged(
+            acknowledgementId: 'ack-second',
+            remoteVersionTimestamp: secondVersion,
+          ),
+        ),
+      ]);
+      final coordinator = buildCoordinator(store, sync);
+
+      await coordinator.synchronize();
+      expect(sync.dispatchedOperationIds, ['first']);
+      expect(store.outbox['second']!.state, PendingChangeState.pending);
+
+      await coordinator.synchronize();
+      expect(sync.dispatchedOperationIds, ['first', 'first', 'second']);
+      expect(sync.dispatchedChanges[1].baseUpdatedAt, base);
+      expect(sync.dispatchedChanges[2].baseUpdatedAt, firstVersion);
+      expect(store.outbox['second']!.state, PendingChangeState.acknowledged);
+    },
+  );
 
   test(
     'a recoverable failure stays pending with the same operation ID, then acks',
@@ -347,6 +435,19 @@ void main() {
       expect(
         conflict.retainedVersion.versionTimestamp,
         t.subtract(const Duration(minutes: 1)),
+      );
+      // Same ID inbound reconciliation derives, so one clash is one record.
+      expect(
+        conflict.conflictId,
+        syncConflictId(
+          accountId: 'account-1',
+          entityType: 'foundation_record',
+          entityId: 'probe-1',
+          activeAt: t,
+          retainedAt: t.subtract(const Duration(minutes: 1)),
+          activePayload: 'payload-local',
+          retainedPayload: 'payload-remote',
+        ),
       );
       // The conflicted operation is never re-dispatched.
       expect(store.outbox['op-1']!.state, PendingChangeState.conflict);

@@ -1,5 +1,7 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/sync_versions.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
@@ -10,6 +12,7 @@ import '../../../../support/foundation_test_support.dart';
 /// Fixed test key; never a real credential. The production key comes from
 /// the Credential Vault before database opening.
 final _testKey = List<int>.generate(32, (i) => 0x20 + i);
+const _minute = Duration(minutes: 1);
 
 void main() {
   late TemporaryDatabasePath tempPath;
@@ -88,6 +91,50 @@ void main() {
   });
 
   group('atomic local-record/outbox commit with create, update, and delete', () {
+    test(
+      'acknowledgement rebases only the next pending edit durably',
+      () async {
+        final store = await openStore();
+        final t = DateTime.utc(2026, 9, 6);
+        for (var i = 0; i < 3; i++) {
+          final version = t.add(Duration(minutes: i));
+          final result = await store.commitLocalChange(
+            LocalRecordChange(
+              recordId: 'probe-1',
+              accountId: 'account-1',
+              payload: 'payload-$i',
+              versionTimestamp: version,
+            ),
+            PendingChangeRequest(
+              operationId: 'op-$i',
+              accountId: 'account-1',
+              entityType: 'foundation_record',
+              entityId: 'probe-1',
+              kind: i == 0 ? ChangeKind.create : ChangeKind.update,
+              serializedChange: 'payload-$i',
+              createdAt: version,
+              versionTimestamp: version,
+            ),
+          );
+          expect(result.failureOrNull, isNull);
+        }
+        final serverVersion = t.add(const Duration(seconds: 30));
+        final acknowledged = await store.acknowledgeChange(
+          'op-0',
+          'receipt-0',
+          serverVersion,
+        );
+        expect(acknowledged.failureOrNull, isNull);
+        final pending = (await store.readPendingChanges(
+          'account-1',
+        )).valueOrNull!;
+        expect(pending.map((row) => row.operationId), ['op-1', 'op-2']);
+        expect(pending.first.baseUpdatedAt, serverVersion);
+        expect(pending.last.baseUpdatedAt, isNull);
+        await store.database.close();
+      },
+    );
+
     test('create commits local record and outbox item atomically', () async {
       final store = await openStore();
       final result = await store.commitLocalChange(
@@ -249,7 +296,7 @@ void main() {
         ),
         pendingRequest('op-1'),
       );
-      await store.acknowledgeChange('op-1', 'ack-1');
+      await store.acknowledgeChange('op-1', 'ack-1', DateTime.utc(2026, 9, 6));
 
       final pending = await store.readPendingChanges('account-1');
       expect(pending.valueOrNull, isEmpty);
@@ -410,6 +457,182 @@ void main() {
         await store.database.close();
       },
     );
+
+    Future<void> queueTaskEdit(
+      DriftLocalStore store,
+      String operationId,
+      DateTime version, {
+      DateTime? base,
+    }) => store.database
+        .into(store.database.pendingChanges)
+        .insert(
+          PendingChangesCompanion.insert(
+            operationId: operationId,
+            accountId: 'account-1',
+            entityType: 'task',
+            entityId: 'task-1',
+            kind: ChangeKind.update,
+            state: PendingChangeState.pending,
+            serializedChange: '{"v":"$operationId"}',
+            createdAt: version,
+            versionTimestamp: version,
+            baseUpdatedAt: Value(base),
+          ),
+        );
+
+    ConflictRecordInput taskConflict({
+      required DateTime activeAt,
+      required DateTime retainedAt,
+      required String activePayload,
+    }) => ConflictRecordInput(
+      conflictId: syncConflictId(
+        accountId: 'account-1',
+        entityType: 'task',
+        entityId: 'task-1',
+        activeAt: activeAt,
+        retainedAt: retainedAt,
+        activePayload: activePayload,
+        retainedPayload: 'payload-local',
+      ),
+      accountId: 'account-1',
+      entityType: 'task',
+      entityId: 'task-1',
+      activeVersion: RecordVersionInput(
+        source: VersionSource.remote,
+        versionTimestamp: activeAt,
+        payload: activePayload,
+      ),
+      retainedVersion: RecordVersionInput(
+        source: VersionSource.local,
+        versionTimestamp: retainedAt,
+        payload: '{"v":"op-1"}',
+      ),
+      detectedAt: DateTime.utc(2026, 9, 6, 3),
+    );
+
+    test(
+      'a conflicted edit rebases the next queued edit on the server winner',
+      () async {
+        final store = await openStore();
+        final t = DateTime.utc(2026, 9, 6);
+        await queueTaskEdit(store, 'op-1', t, base: t.subtract(_minute));
+        await queueTaskEdit(store, 'op-2', t.add(_minute), base: t);
+        final remoteWinner = t.add(const Duration(seconds: 30));
+
+        final result = await store.recordConflictAndFinalize(
+          conflict: taskConflict(
+            activeAt: remoteWinner,
+            retainedAt: t,
+            activePayload: '{"v":"remote"}',
+          ),
+          operationId: 'op-1',
+        );
+
+        expect(result.failureOrNull, isNull);
+        final pending = (await store.readPendingChanges(
+          'account-1',
+        )).valueOrNull!;
+        expect(pending.map((row) => row.operationId), ['op-2']);
+        // op-2 was built on the losing op-1 version; the server now holds the
+        // remote winner, so that is what op-2 must be compared against.
+        expect(pending.single.baseUpdatedAt, remoteWinner);
+        await store.database.close();
+      },
+    );
+
+    test('the same clash seen inbound then outbound is stored once', () async {
+      final store = await openStore();
+      final t = DateTime.utc(2026, 9, 6);
+      await queueTaskEdit(store, 'op-1', t, base: t.subtract(_minute));
+      final remoteWinner = t.add(const Duration(seconds: 30));
+
+      // Inbound reconciliation encodes the remote through the codec...
+      final inbound = await store.recordConflict(
+        taskConflict(
+          activeAt: remoteWinner,
+          retainedAt: t,
+          activePayload: '{"v":"remote"}',
+        ),
+      );
+      // ...outbound dispatch receives the server's JSON for the same version.
+      final outbound = await store.recordConflictAndFinalize(
+        conflict: taskConflict(
+          activeAt: remoteWinner,
+          retainedAt: t,
+          activePayload: '{ "v": "remote" }',
+        ),
+        operationId: 'op-1',
+      );
+
+      expect(inbound.failureOrNull, isNull);
+      expect(outbound.failureOrNull, isNull);
+      expect(
+        await store.database.rawScalar('SELECT count(*) FROM conflict_records'),
+        1,
+      );
+      expect(
+        (await store.readPendingChanges('account-1')).valueOrNull,
+        isEmpty,
+      );
+      await store.database.close();
+    });
+
+    test(
+      'equal timestamps with different contents retain both clashes',
+      () async {
+        final store = await openStore();
+        final t = DateTime.utc(2026, 9, 6);
+        final first = taskConflict(
+          activeAt: t,
+          retainedAt: t,
+          activePayload: '{"v":"first"}',
+        );
+        final second = taskConflict(
+          activeAt: t,
+          retainedAt: t,
+          activePayload: '{"v":"second"}',
+        );
+
+        expect(first.conflictId, isNot(second.conflictId));
+        expect((await store.recordConflict(first)).failureOrNull, isNull);
+        expect((await store.recordConflict(second)).failureOrNull, isNull);
+        expect(
+          await store.database.rawScalar(
+            'SELECT count(*) FROM conflict_records',
+          ),
+          2,
+        );
+        await store.database.close();
+      },
+    );
+
+    test('a conflict id reused for different versions is rejected', () async {
+      final store = await openStore();
+      final t = DateTime.utc(2026, 9, 6);
+      final first = taskConflict(
+        activeAt: t.add(_minute),
+        retainedAt: t,
+        activePayload: '{"v":"remote"}',
+      );
+      expect((await store.recordConflict(first)).failureOrNull, isNull);
+
+      final reused = ConflictRecordInput(
+        conflictId: first.conflictId,
+        accountId: first.accountId,
+        entityType: first.entityType,
+        entityId: first.entityId,
+        activeVersion: RecordVersionInput(
+          source: VersionSource.remote,
+          versionTimestamp: t.add(const Duration(hours: 1)),
+          payload: '{"v":"other"}',
+        ),
+        retainedVersion: first.retainedVersion,
+        detectedAt: first.detectedAt,
+      );
+
+      expect((await store.recordConflict(reused)).failureOrNull, isNotNull);
+      await store.database.close();
+    });
   });
 
   group('durable preference storage', () {

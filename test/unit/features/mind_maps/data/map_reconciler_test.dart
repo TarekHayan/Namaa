@@ -1,4 +1,6 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
@@ -69,85 +71,74 @@ void main() {
     temp.dispose();
   });
 
-  test(
-    'different nodes merge while older same-node version is retained',
-    () async {
-      final local = _node(
-        '00000000-0000-4000-8102-000000000002',
-        'Local edit',
-        _later,
-      );
-      final older = _node(local.id, 'Old remote', _at);
-      final independent = _node(
-        '00000000-0000-4000-8102-000000000003',
-        'Independent remote',
-        _later,
-      );
-      await repo.applyInbound(
-        entityType: kMindMapNodeEntityType,
-        payload: _codec.encodeNode(local),
-      );
-      final result = await reconciler.reconcile(
-        ownerId: map.ownerId,
-        remote: _snapshot(maps: [map], nodes: [center, older, independent]),
-      );
-      expect(result.failureOrNull, isNull);
-      expect(result.valueOrNull!.imported, 1);
-      expect(result.valueOrNull!.conflictsRecorded, 1);
-      final graph = (await repo.readGraph(
+  test('different nodes merge and retain the stale remote version', () async {
+    final local = _node(
+      '00000000-0000-4000-8102-000000000002',
+      'Local edit',
+      _later,
+    );
+    final older = _node(local.id, 'Old remote', _at);
+    final independent = _node(
+      '00000000-0000-4000-8102-000000000003',
+      'Independent remote',
+      _later,
+    );
+    await repo.applyInbound(
+      entityType: kMindMapNodeEntityType,
+      payload: _codec.encodeNode(local),
+    );
+    final result = await reconciler.reconcile(
+      ownerId: map.ownerId,
+      remote: _snapshot(maps: [map], nodes: [center, older, independent]),
+    );
+    expect(result.failureOrNull, isNull);
+    expect(result.valueOrNull!.imported, 1);
+    expect(result.valueOrNull!.conflictsRecorded, 1);
+    final graph = (await repo.readGraph(
+      ownerId: map.ownerId,
+      mapId: map.id,
+    )).valueOrNull!;
+    expect(
+      graph.nodes.map((node) => node.title),
+      containsAll(['Center', 'Local edit', 'Independent remote']),
+    );
+    expect(await repo.watchConflicts(map.ownerId, map.id).first, hasLength(1));
+  });
+
+  test('newer node tombstone wins without a pending local edit', () async {
+    final local = _node('00000000-0000-4000-8102-000000000002', 'Local', _at);
+    await repo.applyInbound(
+      entityType: kMindMapNodeEntityType,
+      payload: _codec.encodeNode(local),
+    );
+    final equal = _node(local.id, 'Other', _at);
+    final tied = await reconciler.reconcile(
+      ownerId: map.ownerId,
+      remote: _snapshot(maps: [map], nodes: [center, equal]),
+    );
+    expect(tied.failureOrNull, isNull);
+    expect(tied.valueOrNull!.equalTimestampConflicts, 1);
+    expect(
+      (await repo.readGraph(
         ownerId: map.ownerId,
         mapId: map.id,
-      )).valueOrNull!;
-      expect(
-        graph.nodes.map((node) => node.title),
-        containsAll(['Center', 'Local edit', 'Independent remote']),
-      );
-      expect(
-        (await repo.watchConflicts(map.ownerId, map.id).first)
-            .single
-            .retainedLabel,
-        'Old remote',
-      );
-    },
-  );
-
-  test(
-    'newer node tombstone wins and equal-time mismatch stays unresolved',
-    () async {
-      final local = _node('00000000-0000-4000-8102-000000000002', 'Local', _at);
-      await repo.applyInbound(
-        entityType: kMindMapNodeEntityType,
-        payload: _codec.encodeNode(local),
-      );
-      final equal = _node(local.id, 'Other', _at);
-      final tied = await reconciler.reconcile(
+      )).valueOrNull!.nodes.last.title,
+      'Local',
+    );
+    final deleted = _node(local.id, 'Deleted', _later, deleted: true);
+    final resolved = await reconciler.reconcile(
+      ownerId: map.ownerId,
+      remote: _snapshot(maps: [map], nodes: [center, deleted]),
+    );
+    expect(resolved.failureOrNull, isNull);
+    expect(
+      (await repo.readGraph(
         ownerId: map.ownerId,
-        remote: _snapshot(maps: [map], nodes: [center, equal]),
-      );
-      expect(tied.failureOrNull, isNull);
-      expect(tied.valueOrNull!.equalTimestampConflicts, 1);
-      expect(
-        (await repo.readGraph(
-          ownerId: map.ownerId,
-          mapId: map.id,
-        )).valueOrNull!.nodes.last.title,
-        'Local',
-      );
-      final deleted = _node(local.id, 'Deleted', _later, deleted: true);
-      final resolved = await reconciler.reconcile(
-        ownerId: map.ownerId,
-        remote: _snapshot(maps: [map], nodes: [center, deleted]),
-      );
-      expect(resolved.failureOrNull, isNull);
-      expect(
-        (await repo.readGraph(
-          ownerId: map.ownerId,
-          mapId: map.id,
-        )).valueOrNull!.nodes,
-        hasLength(1),
-      );
-    },
-  );
+        mapId: map.id,
+      )).valueOrNull!.nodes,
+      hasLength(1),
+    );
+  });
 
   test('newer side role replaces local parent pair atomically', () async {
     final branch = _node('00000000-0000-4000-8102-000000000002', 'Branch', _at);
@@ -192,6 +183,52 @@ void main() {
     expect(graph.sideLinks, hasLength(1));
     expect(await repo.watchConflicts(map.ownerId, map.id).first, isNotEmpty);
   });
+
+  test(
+    'a node edit queued on top of the remote version is not a conflict',
+    () async {
+      const nodeId = '00000000-0000-4000-8102-000000000002';
+      final synced = _node(nodeId, 'Synced', _at);
+      final edited = _node(nodeId, 'Edited during sync', _later);
+      await repo.applyInbound(
+        entityType: kMindMapNodeEntityType,
+        payload: _codec.encodeNode(edited),
+      );
+      await db
+          .into(db.pendingChanges)
+          .insert(
+            PendingChangesCompanion.insert(
+              operationId: 'node-edit-during-sync',
+              accountId: map.ownerId,
+              entityType: kMindMapNodeEntityType,
+              entityId: '${map.id}:$nodeId',
+              kind: ChangeKind.update,
+              state: PendingChangeState.pending,
+              serializedChange: _codec.encodeNode(edited),
+              createdAt: _later,
+              versionTimestamp: _later,
+              baseUpdatedAt: Value(_at),
+            ),
+          );
+
+      final result = await reconciler.reconcile(
+        ownerId: map.ownerId,
+        remote: _snapshot(maps: [map], nodes: [center, synced]),
+      );
+
+      expect(result.failureOrNull, isNull);
+      expect(result.valueOrNull!.conflictsRecorded, 0);
+      expect(await repo.watchConflicts(map.ownerId, map.id).first, isEmpty);
+      final graph = (await repo.readGraph(
+        ownerId: map.ownerId,
+        mapId: map.id,
+      )).valueOrNull!;
+      expect(
+        graph.nodes.singleWhere((node) => node.id == nodeId).title,
+        'Edited during sync',
+      );
+    },
+  );
 
   test(
     'foreign page is rejected without changing local account data',

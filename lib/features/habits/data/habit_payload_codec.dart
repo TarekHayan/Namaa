@@ -49,6 +49,7 @@ final class HabitPayloadCodec {
             'effectiveLocalDate': revision.effectiveLocalDate,
             'utcOffsetMinutes': revision.utcOffsetMinutes,
             'weekdays': revision.weekdays,
+            'dailyTarget': revision.dailyTarget,
           },
       ]);
 
@@ -66,6 +67,7 @@ final class HabitPayloadCodec {
             effectiveLocalDate: revision['effectiveLocalDate'] as String,
             utcOffsetMinutes: revision['utcOffsetMinutes'] as int,
             weekdays: (revision['weekdays'] as List<dynamic>).cast<int>(),
+            dailyTarget: revision['dailyTarget'] as int? ?? 1,
           );
         }),
       );
@@ -79,6 +81,7 @@ final class HabitPayloadCodec {
     'habitId': day.habitId,
     'localDate': day.localDate,
     'completedAt': day.completedAt?.toIso8601String(),
+    'count': day.count,
     'earnedWhileDue': day.earnedWhileDue,
     'earnedAgainstRevisionId': day.earnedAgainstRevisionId,
     'recordedUtcOffsetMinutes': day.recordedUtcOffsetMinutes,
@@ -95,6 +98,7 @@ final class HabitPayloadCodec {
         completedAt: (value['completedAt'] as String?) == null
             ? null
             : DateTime.parse(value['completedAt'] as String).toUtc(),
+        count: value['count'] as int?,
         earnedWhileDue: value['earnedWhileDue'] as bool,
         earnedAgainstRevisionId: value['earnedAgainstRevisionId'] as String?,
         recordedUtcOffsetMinutes: value['recordedUtcOffsetMinutes'] as int,

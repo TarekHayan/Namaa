@@ -9,6 +9,7 @@
 library;
 
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/sync_versions.dart';
 import 'package:namma_project/core/application/synchronization_engine.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/core/domain/values/version_source.dart';
@@ -63,11 +64,15 @@ class SynchronizationCoordinator implements PendingSynchronizationEngine {
     var conflictsRecorded = 0;
     var equalTimestampConflicts = 0;
     var recoverableFailures = 0;
+    final blockedEntities = <(String, String)>{};
+    final acknowledgedVersions = <(String, String), DateTime>{};
 
     for (final record in pendingResult.valueOrNull!) {
       if (record.state != PendingChangeState.pending) {
         continue;
       }
+      final entity = (record.entityType, record.entityId);
+      if (blockedEntities.contains(entity)) continue;
       final dispatch = await _cloudSync.dispatchChange(
         OutboundChange(
           operationId: record.operationId,
@@ -77,6 +82,7 @@ class SynchronizationCoordinator implements PendingSynchronizationEngine {
           kind: record.kind,
           payload: record.serializedChange,
           versionTimestamp: record.versionTimestamp,
+          baseUpdatedAt: acknowledgedVersions[entity] ?? record.baseUpdatedAt,
         ),
       );
 
@@ -93,15 +99,22 @@ class SynchronizationCoordinator implements PendingSynchronizationEngine {
           return AppResult<SyncSummary>.failure(recorded.failureOrNull!);
         }
         recoverableFailures++;
+        blockedEntities.add(entity);
         continue;
       }
 
       final outcome = dispatch.valueOrNull!;
       switch (outcome) {
-        case DispatchAcknowledged(:final acknowledgementId):
+        case DispatchAcknowledged(
+          :final acknowledgementId,
+          :final remoteVersionTimestamp,
+        ):
+          final acknowledgedVersion =
+              remoteVersionTimestamp ?? record.versionTimestamp;
           final ack = await _localStore.acknowledgeChange(
             record.operationId,
             acknowledgementId,
+            acknowledgedVersion,
           );
           final ackFailure = ack.failureOrNull;
           if (ackFailure != null) {
@@ -109,9 +122,11 @@ class SynchronizationCoordinator implements PendingSynchronizationEngine {
               return AppResult<SyncSummary>.failure(ackFailure);
             }
             recoverableFailures++;
+            blockedEntities.add(entity);
             continue;
           }
           acknowledged++;
+          acknowledgedVersions[entity] = acknowledgedVersion;
 
         case DispatchVersionConflict(
           :final remoteVersionTimestamp,
@@ -132,16 +147,28 @@ class SynchronizationCoordinator implements PendingSynchronizationEngine {
           if (resolution is! NewerVersionSelected) {
             // Equal timestamps: open recoverable conflict until a separate
             // tie-breaker is approved; nothing is overwritten.
-            await _localStore.recordRecoverableFailure(
+            final recorded = await _localStore.recordRecoverableFailure(
               record.operationId,
               kEqualTimestampConflictMessageKey,
             );
+            if (recorded.failureOrNull != null) {
+              return AppResult<SyncSummary>.failure(recorded.failureOrNull!);
+            }
             equalTimestampConflicts++;
+            blockedEntities.add(entity);
             continue;
           }
           final finalized = await _localStore.recordConflictAndFinalize(
             conflict: ConflictRecordInput(
-              conflictId: 'conflict-${record.operationId}',
+              conflictId: syncConflictId(
+                accountId: record.accountId,
+                entityType: record.entityType,
+                entityId: record.entityId,
+                activeAt: resolution.active.versionTimestamp,
+                retainedAt: resolution.retained.versionTimestamp,
+                activePayload: resolution.active.payload,
+                retainedPayload: resolution.retained.payload,
+              ),
               accountId: record.accountId,
               entityType: record.entityType,
               entityId: record.entityId,
@@ -155,6 +182,7 @@ class SynchronizationCoordinator implements PendingSynchronizationEngine {
             return AppResult<SyncSummary>.failure(finalized.failureOrNull!);
           }
           conflictsRecorded++;
+          blockedEntities.add(entity);
       }
     }
 

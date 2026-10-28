@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kReleaseMode;
 import 'package:flutter/material.dart';
 
@@ -24,5 +25,17 @@ Future<void> main() async {
         : FoundationEnvironment.local,
   );
 
-  runApp(const FoundationApp());
+  final enableDevicePreview =
+      !kReleaseMode &&
+      const bool.fromEnvironment(
+        'NAMAA_DEVICE_PREVIEW',
+        defaultValue: kDebugMode,
+      );
+
+  runApp(
+    DevicePreview(
+      enabled: enableDevicePreview,
+      builder: (context) => const FoundationApp(),
+    ),
+  );
 }

@@ -61,7 +61,6 @@ void main() {
       title: 'Review Namaa خطة',
       scheduledDate: DateTime(2026, 10, 19),
       createdAt: DateTime.utc(2026, 10, 19),
-      completionXp: 25,
     );
     expect(
       (await tasks.commitTask(
@@ -164,9 +163,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('خطة Namaa 2026'), findsWidgets);
     await tester.tap(find.text('خطة Namaa 2026').first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('تعديل الخريطة'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 350));
     expect(find.byKey(kMindMapEditorKey), findsOneWidget);
     final editor = tester
         .widget<MapEditorScreen>(find.byType(MapEditorScreen))
@@ -181,26 +178,14 @@ void main() {
           .timeout(const Duration(seconds: 10));
     }
 
-    Future<void> revealInEditor(Finder target) async {
-      final position = tester
-          .state<ScrollableState>(find.byType(Scrollable).first)
-          .position;
-      final max = position.maxScrollExtent;
-      for (var offset = 0.0; offset <= max + 240; offset += 240) {
-        position.jumpTo(offset.clamp(0.0, max));
-        await tester.pump();
-        if (target.evaluate().isNotEmpty) {
-          await tester.ensureVisible(target);
-          await tester.pumpAndSettle();
-          return;
-        }
-      }
-      fail('Editor control was not built while scrolling');
-    }
-
     expect(find.textContaining('المكتملة: 0/1'), findsOneWidget);
+    final rootId = (editor.state as MapEditorReady).graph.nodes.single.id;
+    await tester.tap(find.byKey(ValueKey('mind-map-canvas-node-$rootId')));
+    await tester.pump();
 
     await tester.tap(find.byKey(kMindMapAddNodeKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mind_map_quick_branch')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(kMindMapNodeTitleFieldKey), 'فرع Alpha');
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -213,16 +198,14 @@ void main() {
 
     await tester.tap(find.byKey(kMindMapAddNodeKey));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mind_map_quick_note')));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(kMindMapNodeTitleFieldKey),
       'ملاحظة Beta',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
     FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<MindMapNodeKind>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('ملاحظة').last);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(kMindMapNodeSaveKey));
     await waitForEditor((ready) => ready.summary.nodeCount == 3);
@@ -237,24 +220,27 @@ void main() {
     expect(graph.nodes.any((node) => node.kind == MindMapNodeKind.note), true);
 
     expect(editor.taskPort, isNotNull);
-    await revealInEditor(find.byKey(kMindMapLinkTaskKey));
-    await tester.tap(find.byKey(kMindMapLinkTaskKey));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'تعديل العقدة'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(kMindMapNodeTaskFieldKey));
+    await tester.tap(find.byKey(kMindMapNodeTaskFieldKey));
     await tester.pumpAndSettle();
     expect(find.byKey(kMindMapTaskPickerKey), findsOneWidget);
     await tester.tap(find.byKey(ValueKey('mind-map-task-${task.id}')));
+    await tester.pumpAndSettle();
+    expect(find.text('Review Namaa خطة'), findsOneWidget);
+    await tester.tap(find.byKey(kMindMapNodeSaveKey));
     await waitForEditor(
       (ready) => ready.graph.nodes.any((node) => node.taskId == task.id),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Review Namaa خطة'), findsWidgets);
 
     if (!mobile) tester.view.physicalSize = const Size(1200, 800);
     await tester.pumpWidget(app(const Locale('en')));
     await tester.pumpAndSettle();
     expect(find.byKey(kMindMapEditorKey), findsOneWidget);
-    await revealInEditor(find.textContaining('Completed:'));
     expect(find.textContaining('Completed:'), findsOneWidget);
-    await revealInEditor(find.byKey(kMindMapCanvasKey));
+    expect(find.byKey(kMindMapCanvasKey), findsOneWidget);
     expect(
       Directionality.of(tester.element(find.byKey(kMindMapCanvasKey))),
       TextDirection.ltr,
@@ -309,7 +295,6 @@ void main() {
       title: 'Keyboard Task',
       scheduledDate: DateTime(2026, 10, 19),
       createdAt: DateTime.utc(2026, 10, 19),
-      completionXp: 25,
     );
     expect(
       (await tasks.commitTask(
@@ -420,19 +405,15 @@ void main() {
     final graph = (await maps.watchGraphs(kTasksPreviewAccountId).first).single;
     final card = find.byKey(ValueKey('mind-map-${graph.map.id}'));
     await enter(
-      find.descendant(of: card, matching: find.byType(ListTile)).first,
-    );
-    await enter(
-      find
-          .ancestor(
-            of: find.text('Edit map'),
-            matching: find.byType(FilledButton),
-          )
-          .first,
+      find.descendant(of: card, matching: find.byType(InkWell)).first,
     );
     expect(find.byKey(kMindMapEditorKey), findsOneWidget);
+    await enter(
+      find.byKey(ValueKey('mind-map-canvas-node-${graph.nodes.single.id}')),
+    );
 
     await enter(find.byKey(kMindMapAddNodeKey));
+    await enter(find.byKey(const ValueKey('mind_map_quick_branch')));
     await tabTo(find.byKey(kMindMapNodeTitleFieldKey));
     await tester.enterText(find.byKey(kMindMapNodeTitleFieldKey), 'Child idea');
     await enter(find.byKey(kMindMapNodeSaveKey));
@@ -440,20 +421,12 @@ void main() {
     expect(find.textContaining('Completed: 0/2'), findsOneWidget);
 
     await enter(find.byKey(kMindMapAddNodeKey));
+    await enter(find.byKey(const ValueKey('mind_map_quick_note')));
     await tabTo(find.byKey(kMindMapNodeTitleFieldKey));
     await tester.enterText(
       find.byKey(kMindMapNodeTitleFieldKey),
       'Keyboard note',
     );
-    await tabTo(find.byType(DropdownButtonFormField<MindMapNodeKind>));
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    for (var step = 0; step < 3; step++) {
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pump();
-    }
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
     await enter(find.byKey(kMindMapNodeSaveKey));
     await tester.pumpAndSettle();
     expect(find.textContaining('Completed: 0/3'), findsOneWidget);
@@ -465,10 +438,13 @@ void main() {
       isTrue,
     );
 
-    await enter(find.byKey(kMindMapLinkTaskKey));
+    await enter(find.widgetWithText(OutlinedButton, 'Edit node'));
+    await tabTo(find.byKey(kMindMapNodeTaskFieldKey));
+    await enter(find.byKey(kMindMapNodeTaskFieldKey));
     await enter(find.byKey(ValueKey('mind-map-task-${task.id}')));
+    expect(find.text('Keyboard Task'), findsOneWidget);
+    await enter(find.byKey(kMindMapNodeSaveKey));
     await tester.pumpAndSettle();
-    expect(find.text('Keyboard Task'), findsWidgets);
     expect(find.textContaining('Completed: 0/3'), findsOneWidget);
   });
 }

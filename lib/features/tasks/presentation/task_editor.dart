@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_select_field.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/domain/checklist_item.dart';
@@ -19,6 +21,9 @@ const Key kTaskSaveButtonKey = Key('task_save_button');
 const Key kTaskTitleValidationKey = Key('task_title_validation');
 const Key kTaskChecklistNewFieldKey = Key('task_checklist_new_field');
 const Key kTaskChecklistAddButtonKey = Key('task_checklist_add_button');
+const Key kTaskMoreDetailsButtonKey = Key('task_more_details_button');
+const Key kTaskInlineEditorKey = Key('task_inline_editor');
+const Key kTaskInlineCancelKey = Key('task_inline_cancel');
 
 class TaskEditor extends StatefulWidget {
   const TaskEditor({
@@ -29,6 +34,8 @@ class TaskEditor extends StatefulWidget {
     this.session,
     this.initialTask,
     this.initialScheduledDate,
+    this.inline = false,
+    this.onFinished,
   });
 
   final TasksCubit cubit;
@@ -37,6 +44,8 @@ class TaskEditor extends StatefulWidget {
   final CloudSessionPort? session;
   final Task? initialTask;
   final DateTime? initialScheduledDate;
+  final bool inline;
+  final VoidCallback? onFinished;
 
   static Future<void> show(
     BuildContext context, {
@@ -50,6 +59,10 @@ class TaskEditor extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (bottomSheetContext) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom,
@@ -96,6 +109,7 @@ class _TaskEditorState extends State<TaskEditor> {
   String? _titleError;
   String? _submissionError;
   bool _isSaving = false;
+  bool _showMoreDetails = false;
   StreamSubscription<CloudSessionSnapshot>? _sessionSubscription;
   StreamSubscription<TasksState>? _tasksSubscription;
 
@@ -106,7 +120,7 @@ class _TaskEditorState extends State<TaskEditor> {
       if (snapshot.status != CloudSessionStatus.signedIn ||
           snapshot.accountId != widget.accountId) {
         if (mounted) {
-          Navigator.of(context).pop();
+          _closeEditor();
         }
       }
     });
@@ -163,6 +177,14 @@ class _TaskEditorState extends State<TaskEditor> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  void _closeEditor() {
+    if (widget.inline) {
+      widget.onFinished?.call();
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _pickScheduledDate() async {
@@ -253,7 +275,7 @@ class _TaskEditorState extends State<TaskEditor> {
       final resolved = await session.obtainSyncContext();
       if (!mounted) return;
       if (resolved.valueOrNull?.accountId != widget.accountId) {
-        Navigator.of(context).pop();
+        _closeEditor();
         return;
       }
     }
@@ -309,7 +331,7 @@ class _TaskEditorState extends State<TaskEditor> {
       );
       if (!mounted) return;
       if (result.failureOrNull == null) {
-        Navigator.of(context).pop();
+        _closeEditor();
       } else {
         setState(() {
           _isSaving = false;
@@ -341,7 +363,7 @@ class _TaskEditorState extends State<TaskEditor> {
       );
       if (!mounted) return;
       if (result.failureOrNull == null) {
-        Navigator.of(context).pop();
+        _closeEditor();
       } else {
         setState(() {
           _isSaving = false;
@@ -484,6 +506,9 @@ class _TaskEditorState extends State<TaskEditor> {
     final l10n = widget.stringsResolver(context);
     final theme = Theme.of(context);
     final isEditing = widget.initialTask != null;
+    if (widget.inline && !isEditing) {
+      return _buildInlineCreateForm(context, l10n, theme);
+    }
     final material = MaterialLocalizations.of(context);
     final scheduledDateText = _scheduledDate == null
         ? l10n.taskDateTodayDefault
@@ -624,7 +649,7 @@ class _TaskEditorState extends State<TaskEditor> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<TaskCategory>(
+                AppSelectField<TaskCategory>(
                   initialValue: _category,
                   decoration: InputDecoration(
                     labelText: l10n.taskCategoryLabel,
@@ -640,7 +665,7 @@ class _TaskEditorState extends State<TaskEditor> {
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<EisenhowerQuadrant>(
+                AppSelectField<EisenhowerQuadrant>(
                   initialValue: _quadrant,
                   decoration: InputDecoration(
                     labelText: l10n.taskQuadrantLabel,
@@ -693,6 +718,315 @@ class _TaskEditorState extends State<TaskEditor> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildInlineCreateForm(
+    BuildContext context,
+    TasksStrings l10n,
+    ThemeData theme,
+  ) {
+    final colors = theme.brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
+    final material = MaterialLocalizations.of(context);
+    final scheduledDateText = _scheduledDate == null
+        ? l10n.taskDateTodayDefault
+        : material.formatMediumDate(_scheduledDate!);
+    final scheduledTimeText = _scheduledTime == null
+        ? l10n.taskNotSet
+        : material.formatTimeOfDay(TimeOfDay.fromDateTime(_scheduledTime!));
+    final deadline = _targetDeadline?.toLocal();
+    final deadlineText = deadline == null
+        ? l10n.taskNotSet
+        : '${material.formatMediumDate(deadline)} · '
+              '${material.formatTimeOfDay(TimeOfDay.fromDateTime(deadline))}';
+
+    InputDecoration fieldDecoration(String hint, {bool title = false}) =>
+        InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: colors.textMuted,
+            fontSize: title ? 14 : 13,
+          ),
+          filled: true,
+          fillColor: colors.surfaceSecondary,
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: title ? 15 : 13,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: colors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: colors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: colors.primary),
+          ),
+        );
+
+    Widget labeledControl(String label, Widget control) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: colors.textMuted,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        control,
+      ],
+    );
+
+    final quadrantControl = labeledControl(
+      l10n.taskMatrixLabel,
+      AppSelectField<EisenhowerQuadrant>(
+        key: const Key('task_inline_quadrant'),
+        initialValue: _quadrant,
+        decoration: fieldDecoration(''),
+        items: EisenhowerQuadrant.values.map((quadrant) {
+          return DropdownMenuItem<EisenhowerQuadrant>(
+            value: quadrant,
+            child: Text(
+              '${quadrant.index + 1}. ${_localizedQuadrant(quadrant, l10n)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall,
+            ),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value != null) setState(() => _quadrant = value);
+        },
+      ),
+    );
+    final categoryControl = labeledControl(
+      l10n.taskCategoryLabel,
+      AppSelectField<TaskCategory>(
+        key: const Key('task_inline_category'),
+        initialValue: _category,
+        decoration: fieldDecoration(''),
+        items: TaskCategory.values.map((category) {
+          return DropdownMenuItem<TaskCategory>(
+            value: category,
+            child: Text(
+              _localizedCategory(category, l10n),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall,
+            ),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value != null) setState(() => _category = value);
+        },
+      ),
+    );
+    final durationControl = labeledControl(
+      l10n.taskDurationUnit,
+      TextField(
+        key: kTaskDurationFieldKey,
+        controller: _durationController,
+        keyboardType: TextInputType.number,
+        decoration: fieldDecoration(l10n.taskDurationHint),
+      ),
+    );
+
+    return Container(
+      key: kTaskInlineEditorKey,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.34)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 600;
+          return Padding(
+            padding: EdgeInsets.all(compact ? 16 : 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.taskCreate,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      key: kTaskInlineCancelKey,
+                      onPressed: _closeEditor,
+                      child: Text(
+                        l10n.taskCancel,
+                        style: TextStyle(color: colors.textMuted),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: kTaskTitleFieldKey,
+                  controller: _titleController,
+                  autofocus: true,
+                  textInputAction: TextInputAction.next,
+                  decoration: fieldDecoration(l10n.taskTitleHint, title: true),
+                  onChanged: (_) {
+                    if (_titleError != null) {
+                      setState(() => _titleError = null);
+                    }
+                  },
+                ),
+                if (_titleError != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    _titleError!,
+                    key: kTaskTitleValidationKey,
+                    style: TextStyle(color: colors.error, fontSize: 12),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                TextField(
+                  key: kTaskDescriptionFieldKey,
+                  controller: _descriptionController,
+                  decoration: fieldDecoration(l10n.taskDescriptionHint),
+                ),
+                const SizedBox(height: 16),
+                if (compact) ...[
+                  quadrantControl,
+                  const SizedBox(height: 12),
+                  categoryControl,
+                  const SizedBox(height: 12),
+                  durationControl,
+                ] else
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: quadrantControl),
+                      const SizedBox(width: 10),
+                      Expanded(child: categoryControl),
+                      const SizedBox(width: 10),
+                      Expanded(child: durationControl),
+                    ],
+                  ),
+                if (_showMoreDetails) ...[
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        key: kTaskScheduledDateButtonKey,
+                        onPressed: _pickScheduledDate,
+                        icon: const Icon(Icons.calendar_today_outlined),
+                        label: Text(
+                          '${l10n.taskScheduledDateLabel}: $scheduledDateText',
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        key: kTaskScheduledTimeButtonKey,
+                        onPressed: _pickScheduledTime,
+                        icon: const Icon(Icons.schedule_outlined),
+                        label: Text(
+                          '${l10n.taskScheduledTimeLabel}: $scheduledTimeText',
+                        ),
+                      ),
+                      if (_scheduledTime != null)
+                        IconButton(
+                          tooltip: l10n.taskClear,
+                          onPressed: () =>
+                              setState(() => _scheduledTime = null),
+                          icon: const Icon(Icons.clear),
+                        ),
+                      OutlinedButton.icon(
+                        key: kTaskDeadlineButtonKey,
+                        onPressed: _pickDeadline,
+                        icon: const Icon(Icons.event_available_outlined),
+                        label: Text('${l10n.taskDeadlineLabel}: $deadlineText'),
+                      ),
+                      if (_targetDeadline != null)
+                        IconButton(
+                          tooltip: l10n.taskClear,
+                          onPressed: () => setState(() {
+                            _targetDeadline = null;
+                            _deadlineChanged = true;
+                          }),
+                          icon: const Icon(Icons.clear),
+                        ),
+                    ],
+                  ),
+                ],
+                if (_submissionError != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _submissionError!,
+                    style: TextStyle(color: colors.error),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    TextButton.icon(
+                      key: kTaskMoreDetailsButtonKey,
+                      onPressed: () =>
+                          setState(() => _showMoreDetails = !_showMoreDetails),
+                      icon: Icon(
+                        _showMoreDetails
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                        size: 18,
+                      ),
+                      label: Text(
+                        _showMoreDetails
+                            ? l10n.taskLessDetails
+                            : l10n.taskMoreDetails,
+                      ),
+                    ),
+                    FilledButton(
+                      key: kTaskSaveButtonKey,
+                      onPressed: _isSaving ? null : _save,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colors.primary,
+                        foregroundColor: theme.brightness == Brightness.dark
+                            ? Colors.black
+                            : Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.taskSave),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 

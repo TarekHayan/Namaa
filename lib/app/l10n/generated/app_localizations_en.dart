@@ -114,6 +114,9 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get tasksTitle => 'Tasks';
 
   @override
+  String get tasksEmptyHint => 'Add a task to start organizing your day.';
+
+  @override
   String get tasksFilterToday => 'Today';
 
   @override
@@ -233,16 +236,25 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get taskCancel => 'Cancel';
 
   @override
+  String get taskMoreDetails => 'More details';
+
+  @override
+  String get taskLessDetails => 'Less details';
+
+  @override
+  String get taskMatrixLabel => 'Eisenhower Matrix';
+
+  @override
   String get taskTitleLabel => 'Title';
 
   @override
-  String get taskTitleHint => 'Task title';
+  String get taskTitleHint => 'What would you like to accomplish today?';
 
   @override
   String get taskDescriptionLabel => 'Description';
 
   @override
-  String get taskDescriptionHint => 'Notes or details';
+  String get taskDescriptionHint => 'Add optional notes or details...';
 
   @override
   String get taskDurationLabel => 'Estimated Duration (minutes)';
@@ -877,4 +889,387 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get todayOpenOverdue => 'Open overdue tasks';
+
+  @override
+  String get dashboardGreetingMorning => 'Good morning';
+
+  @override
+  String get dashboardGreetingLater => 'Good evening';
+
+  @override
+  String get dashboardSubtitle =>
+      'One place for your priorities and daily rhythm.';
+
+  @override
+  String get dashboardOverview => 'Your day at a glance';
+
+  @override
+  String get dashboardTasksProgress => 'Tasks completed';
+
+  @override
+  String get dashboardHabitsProgress => 'Habits completed';
+
+  @override
+  String get dashboardXpEarned => 'XP earned today';
+
+  @override
+  String get dashboardExplore => 'Explore your space';
+
+  @override
+  String get dashboardMindMapsHint => 'Turn ideas into clear paths';
+
+  @override
+  String get dashboardPreviewTitle => 'Coming into focus';
+
+  @override
+  String get dashboardPreviewDescription =>
+      'A glimpse of the spaces we are building next.';
+
+  @override
+  String get dashboardSampleBadge => 'SAMPLE DATA';
+
+  @override
+  String get dashboardSidebarTagline => 'Space for a balanced day';
+
+  @override
+  String get dashboardComingSoon => 'Coming soon';
+
+  @override
+  String get dashboardPrayerShort => 'Prayer';
+
+  @override
+  String get dashboardMore => 'More';
+
+  @override
+  String get dashboardQuickAdd => 'Quick add';
+
+  @override
+  String get dashboardPrayer => 'Prayer times';
+
+  @override
+  String get dashboardPrayerDetail => 'Next: Asr · 3:25 PM';
+
+  @override
+  String get dashboardQuran => 'Quran reading';
+
+  @override
+  String get dashboardQuranDetail => '7 of 20 pages this week';
+
+  @override
+  String get dashboardFinance => 'Personal finances';
+
+  @override
+  String get dashboardFinanceDetail => 'Monthly goal · 4,250 / 8,000';
+
+  @override
+  String get dashboardFocus => 'Focus time';
+
+  @override
+  String get dashboardFocusDetail => 'Two sessions planned · 50 min';
+
+  @override
+  String get dashboardEncryptedBadge => 'Locally saved & encrypted';
+
+  @override
+  String get dashboardProductiveDay => 'Balanced & productive day';
+
+  @override
+  String dashboardLevelBadge(int level, int xp) {
+    return 'Lv.$level • $xp XP';
+  }
+
+  @override
+  String get dashboardSampleNotice =>
+      'Preview of upcoming feature. Values are demo samples.';
+
+  @override
+  String get dashboardPrayerTitle => 'Daily Prayers';
+
+  @override
+  String get dashboardPrayerCity => 'Riyadh';
+
+  @override
+  String get dashboardPrayerFajr => 'Fajr';
+
+  @override
+  String get dashboardPrayerDhuhr => 'Dhuhr';
+
+  @override
+  String get dashboardPrayerAsr => 'Asr';
+
+  @override
+  String get dashboardPrayerMaghrib => 'Maghrib';
+
+  @override
+  String get dashboardPrayerIsha => 'Isha';
+
+  @override
+  String get dashboardPrayerNext => 'Next prayer';
+
+  @override
+  String get dashboardPrayerRemaining => '3h 24m remaining';
+
+  @override
+  String get dashboardPrayerDone => 'Done';
+
+  @override
+  String get dashboardPrayerUpcoming => 'Waiting';
+
+  @override
+  String get dashboardQuranSectionTitle => 'Daily Quran & Memorization';
+
+  @override
+  String get dashboardQuranWirdTitle => 'Today\'s Reading • Surah Al-Kahf';
+
+  @override
+  String get dashboardQuranProgressInfo =>
+      'Juz 15 • Page 302 of 304 • 75% done';
+
+  @override
+  String get dashboardQuranRemainingPages =>
+      '2 pages remaining to finish reading';
+
+  @override
+  String get dashboardQuranAyahQuote =>
+      '«And as for the wall, it belonged to two orphan boys in the city, and there was beneath it a treasure for them...»';
+
+  @override
+  String get dashboardQuranAyahRef => 'Surah Al-Kahf • Ayah 82';
+
+  @override
+  String get dashboardQuranContinueReading => 'Continue reading';
+
+  @override
+  String get dashboardQuranMemorizationTitle =>
+      'Memorization Review • Surah Al-Mulk';
+
+  @override
+  String get dashboardQuranMemorizationDetail =>
+      'Verses 1-5 mastered ✓ • Verses 6-10 pending';
+
+  @override
+  String get dashboardQuranStartRecite => 'Start recitation';
+
+  @override
+  String get dashboardFinanceSectionTitle => 'Personal Finance Snapshot';
+
+  @override
+  String get dashboardFinanceMonth => 'Current month example';
+
+  @override
+  String get dashboardFinanceTotalBalance => 'Total Balance';
+
+  @override
+  String get dashboardFinanceAvailable => 'Available to Spend';
+
+  @override
+  String get dashboardFinanceSavings => 'Savings';
+
+  @override
+  String get dashboardFinanceCurrency => 'SAR';
+
+  @override
+  String get dashboardFinanceFlowTitle => '7-Day Cash Flow';
+
+  @override
+  String get dashboardFinanceIncome => 'Income';
+
+  @override
+  String get dashboardFinanceExpense => 'Expense';
+
+  @override
+  String get dashboardFinanceBudgetConsumption => 'Monthly Budget Usage';
+
+  @override
+  String get dashboardFinanceBudgetConsumed => '52% consumed';
+
+  @override
+  String get dashboardFinanceSpent => 'Spent';
+
+  @override
+  String get dashboardFinanceRemaining => 'Remaining';
+
+  @override
+  String get dashboardFinanceDaysLeft => '16 days left';
+
+  @override
+  String get dashboardFinanceAddIncome => '+ Income';
+
+  @override
+  String get dashboardFinanceAddExpense => '- Expense';
+
+  @override
+  String get dashboardFinanceAddSaving => 'Savings';
+
+  @override
+  String get dashboardFocusSectionTitle => 'Focus & Spiritual Routine';
+
+  @override
+  String get dashboardFocusPomodoroTitle => 'Suggested Focus Session';
+
+  @override
+  String get dashboardFocusPomodoroDuration => 'Duration: 25 minutes';
+
+  @override
+  String get dashboardFocusStart => 'Start session';
+
+  @override
+  String get dashboardFocusCompletedToday => '50 min completed today';
+
+  @override
+  String get dashboardAdhkarTitle => 'Daily Adhkar & Sunan';
+
+  @override
+  String get dashboardAdhkarMorning => 'Morning Adhkar';
+
+  @override
+  String get dashboardAdhkarEvening => 'Evening Adhkar';
+
+  @override
+  String get dashboardAdhkarQiyam => 'Qiyam & Witr';
+
+  @override
+  String get dashboardReflectionTitle => 'Daily Reflection';
+
+  @override
+  String get dashboardReflectionQuote =>
+      '«The most beloved deeds to Allah are those done regularly, even if small.»';
+
+  @override
+  String get dashboardReflectionAction => 'Write reflection';
+
+  @override
+  String get dashboardHome => 'Home';
+
+  @override
+  String get dashboardTrack => 'Track';
+
+  @override
+  String get dashboardCounters => 'Counters';
+
+  @override
+  String get dashboardTodayProgress => 'Today\'s progress';
+
+  @override
+  String get dashboardNextPrayer => 'Next prayer';
+
+  @override
+  String get dashboardDailyQuran => 'Daily Quran portion';
+
+  @override
+  String get dashboardQuickAccess => 'Quick access';
+
+  @override
+  String get dashboardDailyTimeline => 'Daily timeline';
+
+  @override
+  String get dashboardFinancialSummary => 'Financial summary';
+
+  @override
+  String get dashboardCountersSection => 'Counters preview';
+
+  @override
+  String get dashboardOverallProgress => 'Overall progress';
+
+  @override
+  String get dashboardLevel => 'Level';
+
+  @override
+  String get dashboardStreak => 'Streak';
+
+  @override
+  String get dashboardLiveValue => 'Live data';
+
+  @override
+  String get dashboardSampleValue => 'Sample data';
+
+  @override
+  String get dashboardLoadingValue => 'Loading value…';
+
+  @override
+  String get dashboardEmptyValue => 'No value available yet';
+
+  @override
+  String get dashboardStaleValue => 'Outdated data';
+
+  @override
+  String get dashboardUnavailableValue => 'Value unavailable';
+
+  @override
+  String get dashboardUmmAlQuraCalendar => 'Umm al-Qura calendar';
+
+  @override
+  String get dashboardHijriDateUnavailable => 'Hijri date unavailable';
+
+  @override
+  String dashboardHijriDate(String day, String month, String year) {
+    return '$day $month $year AH';
+  }
+
+  @override
+  String get dashboardHijriMuharram => 'Muharram';
+
+  @override
+  String get dashboardHijriSafar => 'Safar';
+
+  @override
+  String get dashboardHijriRabiAlAwwal => 'Rabi al-Awwal';
+
+  @override
+  String get dashboardHijriRabiAlThani => 'Rabi al-Thani';
+
+  @override
+  String get dashboardHijriJumadaAlAwwal => 'Jumada al-Awwal';
+
+  @override
+  String get dashboardHijriJumadaAlThani => 'Jumada al-Thani';
+
+  @override
+  String get dashboardHijriRajab => 'Rajab';
+
+  @override
+  String get dashboardHijriShaban => 'Sha\'ban';
+
+  @override
+  String get dashboardHijriRamadan => 'Ramadan';
+
+  @override
+  String get dashboardHijriShawwal => 'Shawwal';
+
+  @override
+  String get dashboardHijriDhuAlQidah => 'Dhu al-Qidah';
+
+  @override
+  String get dashboardHijriDhuAlHijjah => 'Dhu al-Hijjah';
+
+  @override
+  String get dashboardComingSoonTrackTitle => 'Track';
+
+  @override
+  String get dashboardComingSoonPrayerTitle => 'Prayer';
+
+  @override
+  String get dashboardComingSoonFocusTitle => 'Focus';
+
+  @override
+  String get dashboardComingSoonQuranTitle => 'Quran';
+
+  @override
+  String get dashboardComingSoonAdhkarTitle => 'Adhkar';
+
+  @override
+  String get dashboardComingSoonQiyamTitle => 'Qiyam';
+
+  @override
+  String get dashboardComingSoonCountersTitle => 'Counters';
+
+  @override
+  String get dashboardComingSoonFinanceTitle => 'Finance';
+
+  @override
+  String get dashboardComingSoonDescription =>
+      'This space is being prepared and will be available soon.';
+
+  @override
+  String get dashboardBackToHome => 'Back to Home';
 }

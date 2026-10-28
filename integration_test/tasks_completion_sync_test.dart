@@ -45,7 +45,7 @@ void main() {
       addTearDown(() => clientA.dispose());
 
       final task = (await clientA.commands.createTask(
-        const CreateTaskInput(title: 'Offline completion', completionXp: 35),
+        const CreateTaskInput(title: 'Offline completion'),
       )).valueOrNull!;
 
       for (var cycle = 0; cycle < 10; cycle += 1) {
@@ -119,7 +119,7 @@ void main() {
           .first;
       expect(taskOnB.completedAt, finalCompletedAt);
       expect(awardsOnB, hasLength(1));
-      expect(awardsOnB.single.amount, 35);
+      expect(awardsOnB.single.amount, kTaskCompletionXp);
 
       clientB.connectivity.goOffline();
       clock.advance(const Duration(minutes: 1));
@@ -164,7 +164,7 @@ void main() {
     );
     addTearDown(clientA.dispose);
     final task = (await clientA.commands.createTask(
-      const CreateTaskInput(title: 'Open on both devices', completionXp: 35),
+      const CreateTaskInput(title: 'Open on both devices'),
     )).valueOrNull!;
     clientA.connectivity.goOnline();
     expect((await clientA.sync.synchronize()).failureOrNull, isNull);
@@ -208,7 +208,7 @@ void main() {
     for (final client in <_CompletionClient>[clientA, clientB]) {
       final awards = await client.awards.watchAwards(kTasksTestAccountA).first;
       expect(awards, hasLength(1));
-      expect(awards.single.amount, 35);
+      expect(awards.single.amount, kTaskCompletionXp);
       expect(awards.single.awardedAt, completed.completedAt);
     }
     expect(
@@ -237,7 +237,7 @@ void main() {
     );
     addTearDown(clientA.dispose);
     final task = (await clientA.commands.createTask(
-      const CreateTaskInput(title: 'Two offline completions', completionXp: 35),
+      const CreateTaskInput(title: 'Two offline completions'),
     )).valueOrNull!;
     clientA.connectivity.goOnline();
     expect((await clientA.sync.synchronize()).failureOrNull, isNull);
@@ -282,7 +282,7 @@ void main() {
         (await clientB.awards.watchAwards(kTasksTestAccountA).first).single;
     expect(awardOnA, awardOnB);
     expect(awardOnA.awardedAt, firstRemote.completedAt);
-    expect(awardOnA.amount, 35);
+    expect(awardOnA.amount, kTaskCompletionXp);
     expect(remote.awardsFor(kTasksTestAccountA), hasLength(1));
     expect(
       await clientA.tasks.watchConflicts(kTasksTestAccountA).first,
@@ -456,6 +456,7 @@ final class _CompletionGateway implements SupabaseTaskGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   }) async {
     if (expectedAccountId != accountId) {
       throw StateError('Authenticated account changed before Task upload');

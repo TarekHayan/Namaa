@@ -449,6 +449,7 @@ final class DriftMapRepository
             entityId: map.id,
             payload: _codec.encodeMap(map),
             version: map.updatedAt,
+            baseUpdatedAt: current?.updatedAt,
             queuedAt: batch.queuedAt,
           );
         }
@@ -515,6 +516,7 @@ final class DriftMapRepository
             entityId: '${node.mapId}:${node.id}',
             payload: _codec.encodeNode(node),
             version: node.updatedAt,
+            baseUpdatedAt: current?.updatedAt,
             queuedAt: batch.queuedAt,
           );
         }
@@ -558,6 +560,7 @@ final class DriftMapRepository
             entityId: '${slot.mapId}:${slot.id}',
             payload: _codec.encodeParentSlot(slot),
             version: slot.updatedAt,
+            baseUpdatedAt: current?.updatedAt,
             queuedAt: batch.queuedAt,
           );
         }
@@ -602,6 +605,7 @@ final class DriftMapRepository
             entityId: '${link.mapId}:${link.id}',
             payload: _codec.encodeSideLink(link),
             version: link.updatedAt,
+            baseUpdatedAt: current?.updatedAt,
             queuedAt: batch.queuedAt,
           );
         }
@@ -713,6 +717,7 @@ final class DriftMapRepository
     required String entityId,
     required String payload,
     required DateTime version,
+    DateTime? baseUpdatedAt,
     required DateTime queuedAt,
   }) => _db
       .into(_db.pendingChanges)
@@ -727,6 +732,7 @@ final class DriftMapRepository
           serializedChange: payload,
           createdAt: queuedAt,
           versionTimestamp: version,
+          baseUpdatedAt: Value(baseUpdatedAt),
         ),
       );
 

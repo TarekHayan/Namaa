@@ -32,6 +32,7 @@ abstract interface class SupabaseTaskGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   });
 
   Future<TaskRemotePage> fetchTaskPage({required int pageSize, String? cursor});
@@ -57,18 +58,20 @@ final class SupabaseTaskGatewayImpl implements SupabaseTaskGateway {
     required String operationId,
     required String kind,
     required DateTime updatedAt,
+    DateTime? baseUpdatedAt,
   }) async {
     if (_client.auth.currentUser?.id != expectedAccountId) {
       throw StateError('Authenticated account changed before Task upload');
     }
     final result = await _client.rpc<dynamic>(
-      'apply_task_change',
+      'apply_task_change_v2',
       params: <String, Object?>{
         'p_id': id,
         'p_payload': payload,
         'p_operation_id': operationId,
         'p_updated_at': updatedAt.toUtc().toIso8601String(),
         'p_kind': kind,
+        'p_base_updated_at': baseUpdatedAt?.toUtc().toIso8601String(),
       },
     );
     if (result is List<dynamic> && result.isNotEmpty) {
@@ -156,6 +159,7 @@ final class SupabaseTaskSyncAdapter implements CloudSyncPort {
         operationId: change.operationId,
         kind: change.kind.name,
         updatedAt: change.versionTimestamp.toUtc(),
+        baseUpdatedAt: change.baseUpdatedAt,
       );
       if (row['owner'] != change.accountId) {
         throw StateError('Task RPC returned a different account owner');
@@ -257,7 +261,6 @@ final class SupabaseTaskSyncAdapter implements CloudSyncPort {
         'completedAt must be an ISO-8601 date-time or null',
       );
     }
-    final completionXp = payload['completionXp'];
     final transition = payload['completionChangedAt'];
     if (transition != null &&
         (transition is! String || DateTime.tryParse(transition) == null)) {
@@ -265,11 +268,7 @@ final class SupabaseTaskSyncAdapter implements CloudSyncPort {
         'completionChangedAt must be an ISO-8601 date-time',
       );
     }
-    if (completionXp is! int || completionXp < 0) {
-      throw const FormatException(
-        'completionXp must be a non-negative integer',
-      );
-    }
+    // The reward amount is server-owned (kTaskCompletionXp), not validated here.
   }
 
   static AppFailure _cloudFailure(Object error) => AppFailure.recoverable(

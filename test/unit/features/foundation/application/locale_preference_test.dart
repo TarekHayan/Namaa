@@ -29,6 +29,7 @@ class _MemoryLocalStore implements LocalStorePort {
   Future<AppResult<void>> acknowledgeChange(
     String operationId,
     String acknowledgementId,
+    DateTime acknowledgedVersion,
   ) async => AppResult<void>.success(null);
 
   @override

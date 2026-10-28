@@ -10,7 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 ///  * domain       -> domain only
 ///  * application  -> domain, application
 ///  * data/platform-> domain, application, data/platform
-///  * presentation -> domain, application, presentation
+///  * presentation -> domain, application, presentation (including the shared
+///    theme, reusable widgets, and generated localization resources)
 ///  * app          -> anything
 ///
 /// Both `package:namma_project/...` and relative imports are resolved to a
@@ -97,6 +98,14 @@ String? _resolveProjectPath(String fromFile, String target) {
 /// Classifies a `lib/`-relative path into a layer.
 _Layer _layerOf(String libPath) {
   final p = libPath.replaceAll('\\', '/');
+  // These directories contain reusable view resources, not the app's
+  // composition root. Feature views may depend on them without depending on
+  // app wiring, navigation, repositories, or services.
+  if (p.startsWith('app/theme/') ||
+      p.startsWith('app/widgets/') ||
+      p.startsWith('app/l10n/generated/')) {
+    return _Layer.presentation;
+  }
   if (p.startsWith('app/')) {
     return _Layer.app;
   }
@@ -231,6 +240,26 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import '../ports/foundation_ports.dart';
 ''';
       expect(_violationsIn('core/application/x.dart', sample), isEmpty);
+    });
+
+    test('accepts shared UI resources but rejects app composition', () {
+      const shared = '''
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/widgets/app_hover_surface.dart';
+import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+''';
+      const composition = '''
+import 'package:namma_project/app/app.dart';
+import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
+''';
+      expect(
+        _violationsIn('features/today/presentation/view.dart', shared),
+        isEmpty,
+      );
+      expect(
+        _violationsIn('features/today/presentation/view.dart', composition),
+        hasLength(2),
+      );
     });
   });
 

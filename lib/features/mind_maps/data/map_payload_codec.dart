@@ -156,6 +156,7 @@ final class MapPayloadCodec {
   Map<String, dynamic> _settings(MindMapSettings value) => {
     'layout': value.layout.name,
     'backgroundArgb': value.backgroundArgb,
+    'backgroundPattern': value.backgroundPattern.name,
     'defaultNode': _nodeAppearance(value.defaultNode),
     'defaultConnection': _connectionAppearance(value.defaultConnection),
     'spacing': value.spacing,
@@ -164,6 +165,9 @@ final class MapPayloadCodec {
   MindMapSettings _readSettings(Map<String, dynamic> value) => MindMapSettings(
     layout: MapLayout.values.byName(value['layout'] as String),
     backgroundArgb: value['backgroundArgb'] as int,
+    backgroundPattern: MapCanvasPattern.values.byName(
+      value['backgroundPattern'] as String? ?? 'theme',
+    ),
     defaultNode: _readNodeAppearance(
       value['defaultNode'] as Map<String, dynamic>,
     ),
@@ -193,6 +197,7 @@ final class MapPayloadCodec {
   Map<String, dynamic> _connectionAppearance(MapConnectionAppearance value) => {
     'argb': value.argb,
     'width': value.width,
+    'pattern': value.pattern.name,
   };
 
   MapConnectionAppearance _readConnectionAppearance(
@@ -200,5 +205,8 @@ final class MapPayloadCodec {
   ) => MapConnectionAppearance(
     argb: value['argb'] as int,
     width: (value['width'] as num).toDouble(),
+    pattern: MapLinePattern.values.byName(
+      value['pattern'] as String? ?? 'solid',
+    ),
   );
 }

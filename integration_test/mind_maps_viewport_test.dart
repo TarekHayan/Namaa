@@ -198,7 +198,19 @@ void main() {
         ),
       );
       expect(selected, map.centralNodeId);
-      await check('pan', () => tester.tap(find.byTooltip('Pan left')));
+      await check('pan', () async {
+        final viewer = tester.widget<InteractiveViewer>(
+          find.byType(InteractiveViewer),
+        );
+        final transform = viewer.transformationController!;
+        final before = transform.value.storage[12];
+        final canvasCorner = tester.getTopLeft(find.byKey(kMindMapCanvasKey));
+        await tester.dragFrom(
+          canvasCorner + const Offset(24, 120),
+          const Offset(-60, 0),
+        );
+        expect(transform.value.storage[12], isNot(before));
+      });
       await check('edit', () async {
         final result = await MapGraphCommands(
           repository: repo(),

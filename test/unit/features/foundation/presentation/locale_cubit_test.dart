@@ -41,8 +41,11 @@ class _LocaleStore implements LocalStorePort {
   }
 
   @override
-  Future<AppResult<void>> acknowledgeChange(String a, String b) async =>
-      AppResult<void>.success(null);
+  Future<AppResult<void>> acknowledgeChange(
+    String a,
+    String b,
+    DateTime version,
+  ) async => AppResult<void>.success(null);
   @override
   Future<AppResult<void>> commitLocalChange(
     LocalRecordChange a,

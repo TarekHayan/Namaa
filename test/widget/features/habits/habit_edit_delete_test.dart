@@ -71,9 +71,13 @@ void main() {
     expect(find.text('Reading'), findsWidgets);
     expect(find.byKey(const Key('habit-weekday-1')), findsOneWidget);
     await tester.enterText(find.byKey(kHabitNameFieldKey), 'Books');
+    await tester.ensureVisible(find.byKey(kHabitReminderButtonKey));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(kHabitReminderButtonKey));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(kHabitSaveButtonKey));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(kHabitSaveButtonKey));
     await tester.pumpAndSettle();

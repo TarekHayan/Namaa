@@ -3,6 +3,10 @@ library;
 
 enum MapLayout { radial, tree, horizontal, vertical, freeform }
 
+enum MapCanvasPattern { theme, grid, dots, dark, plain }
+
+enum MapLinePattern { solid, dashed, dotted }
+
 // The last three values retain already persisted Phase 2 payloads.
 enum MapNodeShape {
   rectangle,
@@ -34,7 +38,7 @@ String requireMapTitle(String value, String field) {
 /// A color is a saved ARGB value; visual redesign may change defaults later.
 final class MapNodeAppearance {
   const MapNodeAppearance({
-    this.argb = 0xffd9e8ff,
+    this.argb = 0xff10b981,
     this.icon = 'idea',
     this.shape = MapNodeShape.roundedRectangle,
     this.nodeSize = MapSize.medium,
@@ -56,10 +60,15 @@ final class MapNodeAppearance {
 }
 
 final class MapConnectionAppearance {
-  const MapConnectionAppearance({this.argb = 0xff64748b, this.width = 2});
+  const MapConnectionAppearance({
+    this.argb = 0xff10b981,
+    this.width = 2,
+    this.pattern = MapLinePattern.solid,
+  });
 
   final int argb;
   final double width;
+  final MapLinePattern pattern;
 
   void validate() {
     if (argb < 0 || argb > 0xffffffff) {
@@ -75,6 +84,7 @@ final class MindMapSettings {
   const MindMapSettings({
     this.layout = MapLayout.radial,
     this.backgroundArgb = 0xffffffff,
+    this.backgroundPattern = MapCanvasPattern.theme,
     this.defaultNode = const MapNodeAppearance(),
     this.defaultConnection = const MapConnectionAppearance(),
     this.spacing = 120,
@@ -82,6 +92,7 @@ final class MindMapSettings {
 
   final MapLayout layout;
   final int backgroundArgb;
+  final MapCanvasPattern backgroundPattern;
   final MapNodeAppearance defaultNode;
   final MapConnectionAppearance defaultConnection;
   final double spacing;

@@ -52,6 +52,17 @@ void main() {
             .timeout(const Duration(seconds: 10));
       }
 
+      Future<void> selectMapAction(String mapId, String action) async {
+        final menu = find.byKey(ValueKey('mind-map-menu-$mapId'));
+        await tester.ensureVisible(menu);
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        final item = find.byKey(ValueKey('mind-map-$action-$mapId'));
+        expect(item, findsOneWidget);
+        await tester.tap(item);
+        await tester.pumpAndSettle();
+      }
+
       addTearDown(() async {
         await tester.pumpWidget(const SizedBox.shrink());
         await cubit.close();
@@ -91,8 +102,7 @@ void main() {
       final first = (await repo.watchGraphs(kTasksPreviewAccountId).first)
           .singleWhere((graph) => graph.map.title == 'First map')
           .map;
-      await tester.tap(find.byKey(ValueKey('mind-map-rename-${first.id}')));
-      await tester.pumpAndSettle();
+      await selectMapAction(first.id, 'rename');
       await tester.enterText(
         find.byKey(kMapLibraryTitleFieldKey),
         'Renamed map',
@@ -203,11 +213,7 @@ void main() {
       await tester.enterText(find.byKey(kMapLibrarySearchKey), '');
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.pumpAndSettle();
-      final duplicateButton = find.byKey(
-        ValueKey('mind-map-duplicate-${second.id}'),
-      );
-      await tester.ensureVisible(duplicateButton);
-      await tester.tap(duplicateButton);
+      await selectMapAction(second.id, 'duplicate');
       await waitFor(
         (ready) =>
             ready.maps.where((item) => item.map.title == 'Second map').length ==
@@ -241,11 +247,7 @@ void main() {
         }),
         isEmpty,
       );
-      final deleteButton = find.byKey(ValueKey('mind-map-delete-${second.id}'));
-      await tester.ensureVisible(deleteButton);
-      await tester.pumpAndSettle();
-      await tester.tap(deleteButton);
-      await tester.pumpAndSettle();
+      await selectMapAction(second.id, 'delete');
       await tester.tap(find.byKey(kMapLibraryConfirmDeleteKey));
       await waitFor(
         (ready) =>

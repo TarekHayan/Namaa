@@ -9,6 +9,7 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
+import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 /// Encrypted Drift implementation of the canonical account-scoped Task store.
 final class DriftTaskRepository implements TaskRepository {
@@ -134,6 +135,13 @@ final class DriftTaskRepository implements TaskRepository {
           return;
         }
 
+        final existingTask =
+            await (_database.select(_database.taskRecords)..where(
+                  (table) =>
+                      table.accountId.equals(task.accountId) &
+                      table.taskId.equals(task.id),
+                ))
+                .getSingleOrNull();
         await _database
             .into(_database.taskRecords)
             .insertOnConflictUpdate(_toCompanion(task));
@@ -150,6 +158,7 @@ final class DriftTaskRepository implements TaskRepository {
                 serializedChange: payload,
                 createdAt: request.queuedAt,
                 versionTimestamp: task.updatedAt,
+                baseUpdatedAt: Value(existingTask?.updatedAt),
               ),
             );
       });
@@ -211,7 +220,8 @@ final class DriftTaskRepository implements TaskRepository {
       checklistJson: Value(jsonEncode(payload['checklistItems'])),
       completedAt: Value(task.completedAt),
       completionChangedAt: Value(task.completionChangedAt),
-      completionXp: task.completionXp,
+      // Legacy column; the reward is the shared kTaskCompletionXp constant.
+      completionXp: kTaskCompletionXp,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
       deletedAt: Value(task.deletedAt),
@@ -234,7 +244,6 @@ final class DriftTaskRepository implements TaskRepository {
       'checklistItems': jsonDecode(row.checklistJson),
       'completedAt': row.completedAt?.toUtc().toIso8601String(),
       'completionChangedAt': row.completionChangedAt?.toUtc().toIso8601String(),
-      'completionXp': row.completionXp,
       'createdAt': row.createdAt.toUtc().toIso8601String(),
       'updatedAt': row.updatedAt.toUtc().toIso8601String(),
       'deletedAt': row.deletedAt?.toUtc().toIso8601String(),

@@ -9,6 +9,7 @@ library;
 
 import 'package:drift/drift.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/sync_versions.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
@@ -160,6 +161,7 @@ class DriftLocalStore implements LocalStorePort {
   Future<AppResult<void>> acknowledgeChange(
     String operationId,
     String acknowledgementId,
+    DateTime acknowledgedVersion,
   ) async {
     try {
       await database.transaction(() async {
@@ -178,6 +180,7 @@ class DriftLocalStore implements LocalStorePort {
             acknowledgementId: Value(acknowledgementId),
           ),
         );
+        await _rebaseNextPending(row, acknowledgedVersion);
         if (row.entityType == 'foundation_record') {
           await (database.update(
             database.localRecords,
@@ -254,21 +257,7 @@ class DriftLocalStore implements LocalStorePort {
               )..where((table) => table.conflictId.equals(conflict.conflictId)))
               .getSingleOrNull();
       if (existing != null) {
-        final same =
-            existing.accountId == conflict.accountId &&
-            existing.entityType == conflict.entityType &&
-            existing.entityId == conflict.entityId &&
-            existing.activeSource == conflict.activeVersion.source &&
-            existing.activeTimestamp ==
-                conflict.activeVersion.versionTimestamp &&
-            existing.activePayload == conflict.activeVersion.payload &&
-            existing.retainedSource == conflict.retainedVersion.source &&
-            existing.retainedTimestamp ==
-                conflict.retainedVersion.versionTimestamp &&
-            existing.retainedPayload == conflict.retainedVersion.payload;
-        if (!same) {
-          throw StateError('conflict id identifies different versions');
-        }
+        _requireSameClash(existing, conflict);
         return AppResult<void>.success(null);
       }
       await database
@@ -309,23 +298,32 @@ class DriftLocalStore implements LocalStorePort {
             'operation $operationId is missing to finalize conflict',
           );
         }
-        await database
-            .into(database.conflictRecords)
-            .insert(
-              ConflictRecordsCompanion.insert(
-                conflictId: conflict.conflictId,
-                accountId: conflict.accountId,
-                entityType: conflict.entityType,
-                entityId: conflict.entityId,
-                activeSource: conflict.activeVersion.source,
-                activeTimestamp: conflict.activeVersion.versionTimestamp,
-                activePayload: conflict.activeVersion.payload,
-                retainedSource: conflict.retainedVersion.source,
-                retainedTimestamp: conflict.retainedVersion.versionTimestamp,
-                retainedPayload: conflict.retainedVersion.payload,
-                detectedAt: conflict.detectedAt,
-              ),
-            );
+        final existingConflict =
+            await (database.select(database.conflictRecords)
+                  ..where((t) => t.conflictId.equals(conflict.conflictId)))
+                .getSingleOrNull();
+        if (existingConflict != null) {
+          // Inbound reconciliation already recorded this same clash.
+          _requireSameClash(existingConflict, conflict);
+        } else {
+          await database
+              .into(database.conflictRecords)
+              .insert(
+                ConflictRecordsCompanion.insert(
+                  conflictId: conflict.conflictId,
+                  accountId: conflict.accountId,
+                  entityType: conflict.entityType,
+                  entityId: conflict.entityId,
+                  activeSource: conflict.activeVersion.source,
+                  activeTimestamp: conflict.activeVersion.versionTimestamp,
+                  activePayload: conflict.activeVersion.payload,
+                  retainedSource: conflict.retainedVersion.source,
+                  retainedTimestamp: conflict.retainedVersion.versionTimestamp,
+                  retainedPayload: conflict.retainedVersion.payload,
+                  detectedAt: conflict.detectedAt,
+                ),
+              );
+        }
 
         // The conflict record and the active local state must change together.
         // A remote winner replaces (or restores) the local record; a local
@@ -375,6 +373,12 @@ class DriftLocalStore implements LocalStorePort {
         if (updated != 1) {
           throw StateError('operation $operationId was not finalized');
         }
+        // The server now holds the active version, whichever side won. The
+        // next queued edit must be compared against that, not the loser.
+        await _rebaseNextPending(
+          pending,
+          conflict.activeVersion.versionTimestamp,
+        );
       });
       return AppResult<void>.success(null);
     } catch (error) {
@@ -416,5 +420,69 @@ class DriftLocalStore implements LocalStorePort {
     serializedChange: row.serializedChange,
     createdAt: row.createdAt,
     versionTimestamp: row.versionTimestamp,
+    baseUpdatedAt: row.baseUpdatedAt,
   );
+
+  /// Points the next queued edit to [row]'s entity at [serverVersion], the
+  /// version the server holds once [row] has been resolved.
+  Future<void> _rebaseNextPending(
+    PendingChange row,
+    DateTime serverVersion,
+  ) async {
+    final next =
+        await (database.select(database.pendingChanges)
+              ..where(
+                (t) =>
+                    t.accountId.equals(row.accountId) &
+                    t.entityType.equals(row.entityType) &
+                    t.entityId.equals(row.entityId) &
+                    t.state.equals(PendingChangeState.pending.index) &
+                    t.operationId.equals(row.operationId).not() &
+                    t.createdAt.isBiggerOrEqualValue(row.createdAt),
+              )
+              ..orderBy([(t) => OrderingTerm(expression: t.createdAt)])
+              ..limit(1))
+            .getSingleOrNull();
+    if (next == null) return;
+    await (database.update(database.pendingChanges)
+          ..where((t) => t.operationId.equals(next.operationId)))
+        .write(PendingChangesCompanion(baseUpdatedAt: Value(serverVersion)));
+  }
+
+  /// A conflict ID names one clash (see [syncConflictId]). Inbound and
+  /// outbound sync can report the same clash with differently formatted
+  /// payloads, so payloads are compared only when the two timestamps are
+  /// equal, the one case where timestamps cannot tell two clashes apart.
+  static void _requireSameClash(
+    ConflictRecord existing,
+    ConflictRecordInput conflict,
+  ) {
+    final sameVersions =
+        existing.accountId == conflict.accountId &&
+        existing.entityType == conflict.entityType &&
+        existing.entityId == conflict.entityId &&
+        existing.activeSource == conflict.activeVersion.source &&
+        existing.retainedSource == conflict.retainedVersion.source &&
+        _sameInstant(
+          existing.activeTimestamp,
+          conflict.activeVersion.versionTimestamp,
+        ) &&
+        _sameInstant(
+          existing.retainedTimestamp,
+          conflict.retainedVersion.versionTimestamp,
+        );
+    final samePayloads =
+        !_sameInstant(existing.activeTimestamp, existing.retainedTimestamp) ||
+        (canonicalSyncPayload(existing.activePayload) ==
+                canonicalSyncPayload(conflict.activeVersion.payload) &&
+            canonicalSyncPayload(existing.retainedPayload) ==
+                canonicalSyncPayload(conflict.retainedVersion.payload));
+    if (!sameVersions || !samePayloads) {
+      throw StateError('conflict id identifies different versions');
+    }
+  }
+
+  static bool _sameInstant(DateTime left, DateTime right) =>
+      left.toUtc().microsecondsSinceEpoch ==
+      right.toUtc().microsecondsSinceEpoch;
 }

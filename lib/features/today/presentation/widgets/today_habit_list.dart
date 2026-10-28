@@ -1,6 +1,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/features/today/domain/today_models.dart';
 
 import '../today_state.dart';
@@ -53,6 +54,9 @@ class _TodayHabitListState extends State<TodayHabitList> {
   );
 
   Widget _habitTile(BuildContext context, TodayHabitReference habit) {
+    final colors = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
     final compact =
         MediaQuery.sizeOf(context).width < 400 ||
         MediaQuery.textScalerOf(context).scale(1) > 1.3;
@@ -77,24 +81,38 @@ class _TodayHabitListState extends State<TodayHabitList> {
           );
     final tile = ListTile(
       key: ValueKey('today_habit_${habit.habitId}'),
+      tileColor: colors.surfaceSecondary,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       leading: Icon(
         habit.isCompleted
             ? Icons.check_circle_outline
             : Icons.radio_button_unchecked,
+        color: habit.isCompleted ? colors.primary : colors.textMuted,
       ),
-      title: Text(habit.name),
+      title: Text(
+        habit.name,
+        style: habit.isCompleted
+            ? TextStyle(
+                color: colors.textSecondary,
+                decoration: TextDecoration.lineThrough,
+              )
+            : null,
+      ),
       subtitle: Text(
         '${widget.strings.streak}: ${widget.strings.formatCount(habit.currentStreak)}',
       ),
       trailing: compact ? null : action,
     );
-    return compact
-        ? Column(
-            children: [
-              tile,
-              Align(alignment: AlignmentDirectional.centerEnd, child: action),
-            ],
-          )
-        : tile;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: compact
+          ? Column(
+              children: [
+                tile,
+                Align(alignment: AlignmentDirectional.centerEnd, child: action),
+              ],
+            )
+          : tile,
+    );
   }
 }

@@ -69,7 +69,6 @@ void main() {
     expect(checked.scheduledDate, original.scheduledDate);
     expect(checked.category, original.category);
     expect(checked.quadrant, original.quadrant);
-    expect(checked.completionXp, original.completionXp);
     expect(checked.completedAt, isNull);
   });
 
@@ -148,7 +147,6 @@ void main() {
     expect(checked.checklistItems.single.completed, isTrue);
     expect(checked.isCompleted, isFalse);
     expect(checked.completedAt, isNull);
-    expect(checked.completionXp, 20);
   });
 
   test('explicit parent completion remains allowed with unfinished steps', () {

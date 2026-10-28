@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/features/mind_maps/data/map_payload_codec.dart';
 import 'package:namma_project/features/mind_maps/domain/map_connection.dart';
@@ -10,7 +12,11 @@ void main() {
   const codec = MapPayloadCodec();
   final created = DateTime.utc(2026, 10, 18, 9);
   final updated = created.add(const Duration(minutes: 2));
-  const connectionStyle = MapConnectionAppearance(argb: 0xff123456, width: 3.5);
+  const connectionStyle = MapConnectionAppearance(
+    argb: 0xff123456,
+    width: 3.5,
+    pattern: MapLinePattern.dashed,
+  );
   const nodeStyle = MapNodeAppearance(
     argb: 0xffabcdef,
     icon: 'star',
@@ -29,6 +35,7 @@ void main() {
       settings: const MindMapSettings(
         layout: MapLayout.freeform,
         backgroundArgb: 0xff112233,
+        backgroundPattern: MapCanvasPattern.grid,
         defaultNode: nodeStyle,
         defaultConnection: connectionStyle,
         spacing: 180,
@@ -44,11 +51,33 @@ void main() {
     expect(restored.title, 'Planning');
     expect(restored.centralNodeId, map.centralNodeId);
     expect(restored.settings.layout, MapLayout.freeform);
+    expect(restored.settings.backgroundPattern, MapCanvasPattern.grid);
     expect(restored.settings.defaultNode.shape, MapNodeShape.hexagon);
     expect(restored.settings.defaultConnection.width, 3.5);
+    expect(restored.settings.defaultConnection.pattern, MapLinePattern.dashed);
     expect(restored.settings.spacing, 180);
     expect(restored.revisionId, 'revision-map');
     expect(restored.deletedAt, updated);
+  });
+
+  test('older map payloads use original canvas and connection styles', () {
+    final map = MindMap(
+      ownerId: kMindMapsTestAccountA,
+      id: kMindMapsTestMapId,
+      title: 'Old map',
+      centralNodeId: kMindMapsTestNodeId,
+      revisionId: 'old-revision',
+      createdAt: created,
+      updatedAt: updated,
+    );
+    final payload = jsonDecode(codec.encodeMap(map)) as Map<String, dynamic>;
+    final settings = payload['settings'] as Map<String, dynamic>;
+    settings.remove('backgroundPattern');
+    (settings['defaultConnection'] as Map<String, dynamic>).remove('pattern');
+
+    final restored = codec.decodeMap(jsonEncode(payload));
+    expect(restored.settings.backgroundPattern, MapCanvasPattern.theme);
+    expect(restored.settings.defaultConnection.pattern, MapLinePattern.solid);
   });
 
   test('node status, appearance and Task reference survive payload', () {

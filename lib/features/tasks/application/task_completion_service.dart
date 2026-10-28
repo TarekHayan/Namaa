@@ -122,7 +122,7 @@ final class TaskCompletionService {
                     accountId: task.accountId,
                     source: kTaskDoneAwardSource,
                     sourceId: task.id,
-                    amount: task.completionXp,
+                    amount: kTaskCompletionXp,
                     awardedAt: now,
                   )
                 : null,

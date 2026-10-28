@@ -40,6 +40,91 @@ void main() {
     path.dispose();
   });
 
+  test('remote habit edit without a pending write is not a conflict', () async {
+    final local = Habit.create(
+      id: kHabitsTestHabitId,
+      accountId: kHabitsTestAccountA,
+      name: 'Read',
+      weekdays: {1},
+      revisionId: kHabitsTestRevisionId,
+      createdAt: at,
+      effectiveLocalDate: '2026-10-12',
+      utcOffsetMinutes: 120,
+    );
+    expect((await repository.applyInboundHabit(local)).failureOrNull, isNull);
+    final remote = local.edit(
+      name: 'Read books',
+      weekdays: {1},
+      reminderMinuteOfDay: null,
+      revisionId: 'remote-r2',
+      editedAt: at.add(const Duration(minutes: 1)),
+      effectiveLocalDate: '2026-10-12',
+      utcOffsetMinutes: 120,
+    );
+
+    final result = await reconciler.reconcile(
+      accountId: local.accountId,
+      remote: HabitRemoteSnapshot(habits: [remote], days: []),
+    );
+
+    expect(result.valueOrNull?.conflictsRecorded, 0);
+    expect(
+      (await repository.readHabit(
+        accountId: local.accountId,
+        habitId: local.id,
+      )).valueOrNull?.name,
+      'Read books',
+    );
+    expect(
+      await database.rawScalar('SELECT count(*) FROM conflict_records'),
+      0,
+    );
+  });
+
+  test(
+    'different remote Habit at equal time is retained without outbox',
+    () async {
+      final local = Habit.create(
+        id: kHabitsTestHabitId,
+        accountId: kHabitsTestAccountA,
+        name: 'Local',
+        weekdays: {1},
+        revisionId: kHabitsTestRevisionId,
+        createdAt: at,
+        effectiveLocalDate: '2026-10-12',
+        utcOffsetMinutes: 120,
+      );
+      expect((await repository.applyInboundHabit(local)).failureOrNull, isNull);
+      final remote = Habit.restore(
+        id: local.id,
+        accountId: local.accountId,
+        name: 'Remote',
+        scheduleRevisions: local.scheduleRevisions,
+        createdAt: local.createdAt,
+        updatedAt: local.updatedAt,
+      );
+
+      final result = await reconciler.reconcile(
+        accountId: local.accountId,
+        remote: HabitRemoteSnapshot(habits: [remote], days: []),
+      );
+
+      expect(result.failureOrNull, isNull);
+      expect(result.valueOrNull?.equalTimestampConflicts, 1);
+      expect(
+        await database.rawScalar('SELECT count(*) FROM conflict_records'),
+        1,
+      );
+      expect(
+        (await repository.readHabit(
+          accountId: local.accountId,
+          habitId: local.id,
+        )).valueOrNull?.name,
+        'Local',
+      );
+    },
+  );
+
   test(
     'newest winner and equal-time loser are atomic; pending is retained',
     () async {
@@ -191,4 +276,108 @@ void main() {
       expect(result.valueOrNull!.conflictsRecorded, greaterThanOrEqualTo(2));
     },
   );
+
+  Habit syncedHabit() => Habit.create(
+    id: kHabitsTestHabitId,
+    accountId: kHabitsTestAccountA,
+    name: 'Read',
+    weekdays: {1},
+    revisionId: kHabitsTestRevisionId,
+    createdAt: at,
+    effectiveLocalDate: '2026-10-12',
+    utcOffsetMinutes: 120,
+  );
+
+  test(
+    'a habit edit queued on top of the remote version is not a conflict',
+    () async {
+      final synced = syncedHabit();
+      expect(
+        (await repository.applyInboundHabit(synced)).failureOrNull,
+        isNull,
+      );
+      final edited = synced.edit(
+        name: 'Read daily',
+        weekdays: {1},
+        reminderMinuteOfDay: null,
+        revisionId: 'local-r2',
+        editedAt: at.add(const Duration(minutes: 1)),
+        effectiveLocalDate: '2026-10-12',
+        utcOffsetMinutes: 120,
+      );
+      expect(
+        (await repository.commitHabit(
+          HabitWriteRequest(
+            habit: edited,
+            operationId: 'edit-during-sync',
+            kind: ChangeKind.update,
+            queuedAt: edited.updatedAt,
+          ),
+        )).failureOrNull,
+        isNull,
+      );
+
+      final result = await reconciler.reconcile(
+        accountId: synced.accountId,
+        remote: HabitRemoteSnapshot(habits: [synced], days: []),
+      );
+
+      expect(result.failureOrNull, isNull);
+      expect(result.valueOrNull!.conflictsRecorded, 0);
+      expect(
+        await database.rawScalar('SELECT count(*) FROM conflict_records'),
+        0,
+      );
+      expect(
+        (await repository.readHabit(
+          accountId: synced.accountId,
+          habitId: synced.id,
+        )).valueOrNull?.name,
+        'Read daily',
+      );
+    },
+  );
+
+  test('undoing a day while its completion syncs is not a conflict', () async {
+    final habit = syncedHabit();
+    final completed = HabitDay.completed(
+      accountId: habit.accountId,
+      habitId: habit.id,
+      localDate: '2026-10-12',
+      completedAt: at,
+      earnedAgainstRevisionId: kHabitsTestRevisionId,
+      recordedUtcOffsetMinutes: 120,
+    );
+    expect((await repository.applyInboundHabit(habit)).failureOrNull, isNull);
+    expect((await repository.applyInboundDay(completed)).failureOrNull, isNull);
+    final undone = completed.undo(at.add(const Duration(seconds: 5)), 120);
+    expect(
+      (await repository.commitDay(
+        HabitDayWriteRequest(
+          day: undone,
+          operationId: 'undo-during-sync',
+          kind: ChangeKind.update,
+          queuedAt: undone.updatedAt,
+        ),
+      )).failureOrNull,
+      isNull,
+    );
+
+    // The snapshot was read after the completion uploaded but before undo.
+    final result = await reconciler.reconcile(
+      accountId: habit.accountId,
+      remote: HabitRemoteSnapshot(habits: [habit], days: [completed]),
+    );
+
+    expect(result.failureOrNull, isNull);
+    expect(result.valueOrNull!.conflictsRecorded, 0);
+    expect(
+      (await repository.readDay(
+        accountId: habit.accountId,
+        habitId: habit.id,
+        localDate: '2026-10-12',
+      )).valueOrNull?.isCompleted,
+      isFalse,
+    );
+  });
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,6 +34,9 @@ import 'package:namma_project/features/today/domain/today_models.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_bottom_navigation.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_dashboard_header.dart';
+import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 import 'package:namma_project/features/xp/application/award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
@@ -114,6 +118,40 @@ final class _OwnerHabits implements HabitRepository {
   Stream<List<HabitDay>> watchDays(String accountId) => Stream.value(_days());
 
   @override
+  Future<AppResult<T>> runInTransaction<T>(
+    Future<AppResult<T>> Function() action,
+  ) => action();
+
+  @override
+  Future<AppResult<Habit?>> readHabit({
+    required String accountId,
+    required String habitId,
+  }) async =>
+      AppResult.success(_rows().where((h) => h.id == habitId).firstOrNull);
+
+  @override
+  Future<AppResult<HabitDay?>> readDay({
+    required String accountId,
+    required String habitId,
+    required String localDate,
+  }) async => AppResult.success(
+    _days()
+        .where((d) => d.habitId == habitId && d.localDate == localDate)
+        .firstOrNull,
+  );
+
+  @override
+  Future<AppResult<void>> commitDay(HabitDayWriteRequest request) async {
+    source.completed = true;
+    source.updates.add(source);
+    return const AppResult.success(null);
+  }
+
+  @override
+  Future<AppResult<void>> commitHabit(HabitWriteRequest request) async =>
+      const AppResult.success(null);
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -159,7 +197,7 @@ class _Tasks implements TodayTasksPort, TodayTaskReadSnapshot {
       scheduledMinuteOfDay: null,
       estimatedDurationMinutes: null,
       isCompleted: completed,
-      isUrgentImportant: false,
+      isUrgentImportant: true,
       isOverdue: false,
       ownerOrder: 0,
     ),
@@ -238,7 +276,7 @@ Future<void> _activateByKeyboard(WidgetTester tester, Finder target) async {
     FocusManager.instance.rootScope.requestFocus();
     await tester.pump();
   }
-  for (var index = 0; index < 60 && !_focusWithin(tester, target); index++) {
+  for (var index = 0; index < 120 && !_focusWithin(tester, target); index++) {
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
   }
@@ -250,6 +288,50 @@ Future<void> _activateByKeyboard(WidgetTester tester, Finder target) async {
   );
   await tester.sendKeyEvent(LogicalKeyboardKey.enter);
   await tester.pump();
+}
+
+/// Describes what receives a tap at [target]'s center, for device runs where
+/// a control is laid out but another layer covers it.
+String _whatCovers(WidgetTester tester, Finder target) {
+  final box = tester.renderObject<RenderBox>(target);
+  final rect = box.localToGlobal(Offset.zero) & box.size;
+  final view = tester.view;
+  final result = HitTestResult();
+  tester.binding.hitTestInView(result, rect.center, view.viewId);
+  String describe(HitTestTarget hit) {
+    if (hit is! RenderObject) return hit.runtimeType.toString();
+    // Owner widgets work in every build mode; debugCreator needs debug.
+    final owners = find
+        .byElementPredicate((element) => element.renderObject == hit)
+        .evaluate()
+        .map((element) {
+          final widget = element.widget;
+          return widget.key == null
+              ? '${widget.runtimeType}'
+              : '${widget.runtimeType}(${widget.key})';
+        })
+        .take(2)
+        .join('/');
+    return '${hit.runtimeType}${owners.isEmpty ? '' : '<$owners>'}';
+  }
+
+  final hits = result.path.map((entry) => describe(entry.target)).take(10);
+  final headers = find.byType(TodayDashboardHeader).evaluate();
+  final header = headers.isEmpty
+      ? 'none'
+      : '${tester.getRect(find.byType(TodayDashboardHeader).first)}';
+  final reachesTarget = result.path.any((entry) => entry.target == box);
+  final padding = view.padding;
+  return 'target=$rect center=${rect.center} '
+      'reachesTarget=$reachesTarget '
+      'view=${view.physicalSize / view.devicePixelRatio} '
+      'dpr=${view.devicePixelRatio} '
+      'physicalPadding=(l${padding.left} t${padding.top} '
+      'r${padding.right} b${padding.bottom}) '
+      'mediaPadding=${MediaQuery.paddingOf(tester.element(target))} '
+      'textScale=${MediaQuery.textScalerOf(tester.element(target))} '
+      'header=$header '
+      'hits(top first)=[${hits.join(', ')}]';
 }
 
 Future<void> _finishRouteTransition(WidgetTester tester) async {
@@ -266,9 +348,17 @@ void main() {
         (tester) async {
           tester.view.physicalSize = const Size(360, 760);
           tester.view.devicePixelRatio = 1;
+          // A device reports its safe area in physical pixels. With the ratio
+          // forced to 1 an iPhone's 62pt notch would be read as 186pt, which
+          // made the header 302pt tall and cover the task action on CI. Pin a
+          // realistic phone inset so every target lays out the same screen.
+          tester.view.padding = const FakeViewPadding(top: 47, bottom: 34);
+          tester.view.viewPadding = const FakeViewPadding(top: 47, bottom: 34);
           addTearDown(() {
             tester.view.resetPhysicalSize();
             tester.view.resetDevicePixelRatio();
+            tester.view.resetPadding();
+            tester.view.resetViewPadding();
           });
           final semantics = tester.ensureSemantics();
           final tasks = _Tasks();
@@ -373,68 +463,104 @@ void main() {
             findsOneWidget,
           );
           final clock = Stopwatch()..start();
+          Future<void> waitForHabitCompletion() async {
+            for (var attempt = 0; attempt < 40; attempt++) {
+              if (habits.completed &&
+                  cubit.state.habits.value?.completedCount == 1) {
+                return;
+              }
+              await tester.pump(const Duration(milliseconds: 100));
+            }
+            expect(habits.completed, isTrue);
+            expect(cubit.state.habits.value?.completedCount, 1);
+          }
+
+          // On a device, frames run in real time, so the action completes a
+          // few frames after the tap rather than on the next pump.
+          Future<void> waitForTaskCompletion() async {
+            for (var attempt = 0; attempt < 40; attempt++) {
+              if (tasks.completed &&
+                  cubit.state.tasks.value?.completedCount == 1) {
+                return;
+              }
+              await tester.pump(const Duration(milliseconds: 100));
+            }
+            expect(tasks.completed, isTrue, reason: 'Task action never ran');
+            expect(cubit.state.tasks.value?.completedCount, 1);
+          }
+
           final taskAction = find.byKey(
             const ValueKey('today_task_action_task'),
           );
-          final habitAction = find.byKey(
-            const ValueKey('today_habit_action_habit'),
-          );
           if (keyboardOnly) {
             await _activateByKeyboard(tester, taskAction);
-            await _activateByKeyboard(
-              tester,
-              find.byKey(kTodayTasksNavigationKey),
-            );
+            await waitForTaskCompletion();
+            await _activateByKeyboard(tester, find.byKey(kTodayBottomTasksKey));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTasksMobileLayoutKey), findsOneWidget);
             expect(find.byKey(kTasksHistoryFilterKey), findsOneWidget);
             await _activateByKeyboard(tester, find.byType(BackButton));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTodayScreenKey), findsOneWidget);
-            await _activateByKeyboard(tester, habitAction);
+
+            // Open Habits via More bottom navigation destination
+            await _activateByKeyboard(tester, find.byKey(kTodayBottomMoreKey));
+            await tester.pumpAndSettle();
             await _activateByKeyboard(
               tester,
-              find.byKey(kTodayHabitsNavigationKey),
+              find.byKey(kTodayBottomHabitsKey),
             );
             await _finishRouteTransition(tester);
             expect(find.byKey(kHabitsMobileLayoutKey), findsOneWidget);
             expect(find.text(_habitTitle), findsOneWidget);
+            await _activateByKeyboard(
+              tester,
+              find.byKey(const ValueKey('habit-complete-habit')),
+            );
+            await waitForHabitCompletion();
             await _activateByKeyboard(tester, find.byType(BackButton));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTodayScreenKey), findsOneWidget);
           } else {
-            await tester.ensureVisible(taskAction);
-            await tester.pump();
-            await tester.tap(taskAction);
-            await tester.pump();
-            await tester.scrollUntilVisible(habitAction, 200);
-            await tester.ensureVisible(habitAction);
-            await tester.pump();
-            await tester.tap(habitAction);
-            await tester.pump();
-            await tester.scrollUntilVisible(
-              find.byKey(kTodayTasksNavigationKey),
-              -200,
+            // Let scrolling and entrance animations finish so the button is
+            // still where the tap lands (real-time frames on a device).
+            await Scrollable.ensureVisible(
+              tester.element(taskAction),
+              alignment: 0.5,
             );
-            await tester.ensureVisible(find.byKey(kTodayTasksNavigationKey));
-            await tester.pump();
-            await tester.tap(find.byKey(kTodayTasksNavigationKey));
+            await tester.pumpAndSettle();
+            if (taskAction.hitTestable().evaluate().isEmpty) {
+              fail(
+                'Task action is laid out but not tappable: '
+                '${_whatCovers(tester, taskAction)}',
+              );
+            }
+            await tester.tap(taskAction);
+            await waitForTaskCompletion();
+
+            await tester.tap(find.byKey(kTodayBottomTasksKey));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTasksMobileLayoutKey), findsOneWidget);
             expect(find.byKey(kTasksHistoryFilterKey), findsOneWidget);
             await tester.tap(find.byType(BackButton));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTodayScreenKey), findsOneWidget);
-            await tester.scrollUntilVisible(
-              find.byKey(kTodayHabitsNavigationKey),
-              200,
-            );
-            await tester.ensureVisible(find.byKey(kTodayHabitsNavigationKey));
-            await tester.pump();
-            await tester.tap(find.byKey(kTodayHabitsNavigationKey));
+
+            // Open Habits via More bottom navigation destination
+            await tester.tap(find.byKey(kTodayBottomMoreKey));
+            await tester.pumpAndSettle();
+            await tester.tap(find.byKey(kTodayBottomHabitsKey));
             await _finishRouteTransition(tester);
             expect(find.byKey(kHabitsMobileLayoutKey), findsOneWidget);
             expect(find.text(_habitTitle), findsOneWidget);
+            await tester.ensureVisible(
+              find.byKey(const ValueKey('habit-complete-habit')),
+            );
+            await tester.pumpAndSettle();
+            await tester.tap(
+              find.byKey(const ValueKey('habit-complete-habit')),
+            );
+            await waitForHabitCompletion();
             await tester.tap(find.byType(BackButton));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTodayScreenKey), findsOneWidget);
@@ -448,4 +574,245 @@ void main() {
       );
     }
   }
+
+  // T024: Dedicated responsive, text-scale, safe-area and overflow test suite
+  group('T024 Dashboard Responsive Viewport and Overflow Assertions', () {
+    const viewports = [
+      (width: 320.0, height: 640.0, name: 'iPhone SE / 320px narrow'),
+      (width: 390.0, height: 844.0, name: 'iPhone 14 / 390px standard'),
+      (width: 430.0, height: 932.0, name: 'iPhone 14 Pro Max / 430px large'),
+    ];
+
+    for (final vp in viewports) {
+      for (final locale in const [Locale('ar'), Locale('en')]) {
+        testWidgets(
+          'Dashboard renders with zero overflow on ${vp.name} in ${locale.languageCode} at 1.5x text scale',
+          (tester) async {
+            tester.view.physicalSize = Size(vp.width, vp.height);
+            tester.view.devicePixelRatio = 1.0;
+            addTearDown(() {
+              tester.view.resetPhysicalSize();
+              tester.view.resetDevicePixelRatio();
+            });
+
+            final tasks = _Tasks();
+            final habits = _Habits();
+            final cubit = TodayCubit(
+              scope: TodayScope.account(accountId: 'owner', generation: 1),
+              calendar: _Clock(),
+              tasks: tasks,
+              habits: habits,
+              xp: _Xp(),
+            );
+            addTearDown(() async {
+              await cubit.close();
+              await tasks.updates.close();
+              await habits.updates.close();
+            });
+
+            FlutterErrorDetails? caughtDetails;
+            final prevOnError = FlutterError.onError;
+            FlutterError.onError = (details) {
+              caughtDetails = details;
+              prevOnError?.call(details);
+            };
+
+            await tester.pumpWidget(
+              MaterialApp(
+                locale: locale,
+                localizationsDelegates:
+                    FoundationLocalizations.localizationsDelegates,
+                supportedLocales: FoundationLocalizations.supportedLocales,
+                home: MediaQuery(
+                  data: const MediaQueryData(
+                    textScaler: TextScaler.linear(1.5),
+                  ),
+                  child: TodayScreen(
+                    cubit: cubit,
+                    stringsResolver: resolveTodayStrings,
+                    onTasks: () {},
+                    onHabits: () {},
+                    onMindMaps: () {},
+                    onPreferences: () {},
+                  ),
+                ),
+              ),
+            );
+            tasks.updates.add(tasks);
+            habits.updates.add(habits);
+            await tester.pumpAndSettle();
+
+            FlutterError.onError = prevOnError;
+
+            // 1. Assert Directionality
+            expect(
+              Directionality.of(tester.element(find.byKey(kTodayScreenKey))),
+              locale.languageCode == 'ar'
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+            );
+
+            // 2. Assert all 8 prototype groups exist in the widget tree
+            const groups = [
+              Key('dashboard_group_progress'),
+              Key('dashboard_group_prayer'),
+              Key('dashboard_group_quran'),
+              Key('dashboard_group_hubs'),
+              Key('dashboard_group_timeline'),
+              Key('dashboard_group_priority'),
+              Key('dashboard_group_finance'),
+              Key('dashboard_group_counters'),
+            ];
+            for (final groupKey in groups) {
+              expect(find.byKey(groupKey), findsOneWidget);
+            }
+
+            // 3. Assert zero RenderFlex overflow errors
+            final exc = tester.takeException();
+            if (exc != null) {
+              if (caughtDetails != null) {
+                debugPrint('CAUGHT STACK TRACE:\n${caughtDetails!.toString()}');
+                if (caughtDetails!.informationCollector != null) {
+                  for (final node in caughtDetails!.informationCollector!()) {
+                    debugPrint('INFO_COLLECTOR:\n${node.toStringDeep()}');
+                  }
+                }
+              } else {
+                debugPrint(
+                  'OVERFLOW EXCEPTION on ${vp.name} [${locale.languageCode}]: $exc',
+                );
+              }
+            }
+            expect(exc, isNull);
+
+            // 4. Assert scrolling to the 8th card (Counters) succeeds and it's visible above bottom nav
+            final lastCard = find.byKey(const Key('dashboard_group_counters'));
+            await tester.scrollUntilVisible(lastCard, 300);
+            await tester.pumpAndSettle();
+            expect(lastCard, findsOneWidget);
+
+            // 5. Assert bottom navigation remains present and visible
+            expect(find.byKey(kTodayBottomNavigationKey), findsOneWidget);
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
+
+    testWidgets(
+      'Dashboard respects safe area insets and provides clearance above bottom navigation',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        tester.view.padding = const FakeViewPadding(top: 44, bottom: 34);
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+          tester.view.resetPadding();
+        });
+
+        final tasks = _Tasks();
+        final habits = _Habits();
+        final cubit = TodayCubit(
+          scope: TodayScope.account(accountId: 'owner', generation: 1),
+          calendar: _Clock(),
+          tasks: tasks,
+          habits: habits,
+          xp: _Xp(),
+        );
+        addTearDown(() async {
+          await cubit.close();
+          await tasks.updates.close();
+          await habits.updates.close();
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates:
+                FoundationLocalizations.localizationsDelegates,
+            supportedLocales: FoundationLocalizations.supportedLocales,
+            home: TodayScreen(
+              cubit: cubit,
+              stringsResolver: resolveTodayStrings,
+              onTasks: () {},
+              onHabits: () {},
+              onMindMaps: () {},
+              onPreferences: () {},
+            ),
+          ),
+        );
+        tasks.updates.add(tasks);
+        habits.updates.add(habits);
+        await tester.pumpAndSettle();
+
+        // Bottom nav is within safe area and last card scrolls cleanly
+        final lastCard = find.byKey(const Key('dashboard_group_counters'));
+        await tester.scrollUntilVisible(lastCard, 300);
+        await tester.pumpAndSettle();
+        expect(lastCard, findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'Dashboard adapts to tablet (768px) and desktop (1200px) widths with constrained content and sidebar',
+      (tester) async {
+        // Desktop 1200px
+        tester.view.physicalSize = const Size(1200, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        final tasks = _Tasks();
+        final habits = _Habits();
+        final cubit = TodayCubit(
+          scope: TodayScope.account(accountId: 'owner', generation: 1),
+          calendar: _Clock(),
+          tasks: tasks,
+          habits: habits,
+          xp: _Xp(),
+        );
+        addTearDown(() async {
+          await cubit.close();
+          await tasks.updates.close();
+          await habits.updates.close();
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates:
+                FoundationLocalizations.localizationsDelegates,
+            supportedLocales: FoundationLocalizations.supportedLocales,
+            home: TodayScreen(
+              cubit: cubit,
+              stringsResolver: resolveTodayStrings,
+              onTasks: () {},
+              onHabits: () {},
+              onMindMaps: () {},
+              onPreferences: () {},
+            ),
+          ),
+        );
+        tasks.updates.add(tasks);
+        habits.updates.add(habits);
+        await tester.pumpAndSettle();
+
+        // On desktop, sidebar is shown and bottom navigation is hidden
+        expect(find.byKey(kTodaySidebarKey), findsOneWidget);
+        expect(find.byKey(kTodayBottomNavigationKey), findsNothing);
+        expect(tester.takeException(), isNull);
+
+        // Switch to tablet 768px
+        tester.view.physicalSize = const Size(768, 1024);
+        await tester.pumpAndSettle();
+
+        // On tablet, bottom navigation is shown and sidebar is hidden
+        expect(find.byKey(kTodayBottomNavigationKey), findsOneWidget);
+        expect(find.byKey(kTodaySidebarKey), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  });
 }

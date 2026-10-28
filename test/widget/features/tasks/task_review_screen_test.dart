@@ -287,7 +287,10 @@ void main() {
         findsNothing,
       );
 
-      await tester.tap(find.byKey(const Key('tasks_history_filter')));
+      final historyFilter = find.byKey(const Key('tasks_history_filter'));
+      await tester.ensureVisible(historyFilter);
+      await tester.pumpAndSettle();
+      await tester.tap(historyFilter);
       await tester.pumpAndSettle();
       expect(
         find.byKey(const ValueKey<String>('task-completed')),
@@ -318,7 +321,10 @@ void main() {
       size: const Size(390, 844),
     );
 
-    await tester.tap(find.byKey(const Key('tasks_history_filter')));
+    final historyFilter = find.byKey(const Key('tasks_history_filter'));
+    await tester.ensureVisible(historyFilter);
+    await tester.pumpAndSettle();
+    await tester.tap(historyFilter);
     await tester.pumpAndSettle();
 
     expect(find.text('مهمة مكتملة'), findsOneWidget);

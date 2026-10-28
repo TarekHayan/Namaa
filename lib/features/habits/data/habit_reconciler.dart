@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/core/application/sync_versions.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
@@ -41,6 +42,15 @@ final class HabitReconciler implements HabitReconciliationPort {
       var conflicts = 0;
       var equal = 0;
       final parents = <String, Habit>{};
+      final pendingRead = await _localStore.readPendingChanges(accountId);
+      if (pendingRead.failureOrNull case final failure?) {
+        return AppResult.failure(failure);
+      }
+      final pendingVersions = PendingSyncVersions.index(
+        pendingRead.valueOrNull!,
+      );
+      bool knownToQueuedEdit(String type, String id, DateTime remoteAt) =>
+          pendingVersions[(type, id)]?.knows(remoteAt) ?? false;
       for (final habit in remote.habits) {
         final result = await _store.readHabit(
           accountId: accountId,
@@ -63,6 +73,30 @@ final class HabitReconciler implements HabitReconciliationPort {
         final localPayload = _codec.encodeHabit(local);
         if (localPayload != remotePayload) {
           final comparison = habit.updatedAt.compareTo(local.updatedAt);
+          final pending = await _store.hasPendingChange(
+            accountId: accountId,
+            entityType: kHabitEntityType,
+            entityId: habit.id,
+          );
+          if (pending.failureOrNull case final failure?) {
+            return AppResult.failure(failure);
+          }
+          if (pending.valueOrNull != true && comparison > 0) {
+            final applied = await _store.applyInboundHabit(habit);
+            if (applied.failureOrNull case final failure?) {
+              return AppResult.failure(failure);
+            }
+            imported++;
+            parents[habit.id] = habit;
+            continue;
+          }
+          if (pending.valueOrNull == true &&
+              comparison != 0 &&
+              knownToQueuedEdit(kHabitEntityType, habit.id, habit.updatedAt)) {
+            // Remote is the base of the queued edit: keep local for upload.
+            parents[habit.id] = local;
+            continue;
+          }
           final recorded = await _recordConflict(
             accountId: accountId,
             entityType: kHabitEntityType,
@@ -124,6 +158,35 @@ final class HabitReconciler implements HabitReconciliationPort {
           final localPayload = _codec.encodeDay(local);
           if (localPayload != remotePayload) {
             final comparison = day.updatedAt.compareTo(local.updatedAt);
+            final pending = await _store.hasPendingChange(
+              accountId: accountId,
+              entityType: kHabitDayEntityType,
+              entityId: '${day.habitId}:${day.localDate}',
+            );
+            if (pending.failureOrNull case final failure?) {
+              return AppResult.failure(failure);
+            }
+            if (pending.valueOrNull != true &&
+                !parent.isDeleted &&
+                comparison > 0) {
+              final applied = await _store.applyInboundDay(day);
+              if (applied.failureOrNull case final failure?) {
+                return AppResult.failure(failure);
+              }
+              imported++;
+              continue;
+            }
+            if (pending.valueOrNull == true &&
+                comparison != 0 &&
+                !parent.isDeleted &&
+                knownToQueuedEdit(
+                  kHabitDayEntityType,
+                  '${day.habitId}:${day.localDate}',
+                  day.updatedAt,
+                )) {
+              // Remote is the base of the queued edit: keep local for upload.
+              continue;
+            }
             final recorded = await _recordConflict(
               accountId: accountId,
               entityType: kHabitDayEntityType,
@@ -200,12 +263,14 @@ final class HabitReconciler implements HabitReconciliationPort {
     required int comparison,
   }) => _localStore.recordConflict(
     ConflictRecordInput(
-      conflictId: _conflictId(
-        accountId,
-        entityType,
-        entityId,
-        localPayload,
-        remotePayload,
+      conflictId: syncConflictId(
+        accountId: accountId,
+        entityType: entityType,
+        entityId: entityId,
+        activeAt: comparison > 0 ? remoteAt : localAt,
+        retainedAt: comparison > 0 ? localAt : remoteAt,
+        activePayload: comparison > 0 ? remotePayload : localPayload,
+        retainedPayload: comparison > 0 ? localPayload : remotePayload,
       ),
       accountId: accountId,
       entityType: entityType,

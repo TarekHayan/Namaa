@@ -15,11 +15,77 @@ import 'package:namma_project/features/mind_maps/domain/mind_map_node.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_editor_cubit.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_editor_screen.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_editor_state.dart';
+import 'package:namma_project/features/mind_maps/presentation/map_node_editor.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_task_picker.dart';
 
 import '../../../support/mind_maps_test_support.dart';
 
 void main() {
+  testWidgets('node edit form includes task link in the new order', (
+    tester,
+  ) async {
+    final tasks = _LiveTasks();
+    addTearDown(tasks.close);
+    final at = DateTime.utc(2026, 10, 26);
+    final node = MindMapNode(
+      ownerId: 'owner',
+      mapId: 'map',
+      id: 'idea',
+      kind: MindMapNodeKind.mainIdea,
+      title: 'Idea',
+      x: 0,
+      y: 0,
+      revisionId: 'v',
+      createdAt: at,
+      updatedAt: at,
+    );
+    MapNodeDraft? draft;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
+        supportedLocales: FoundationLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: FilledButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => MapNodeEditor(
+                  node: node,
+                  strings: resolveMindMapsStrings(context),
+                  taskPort: tasks,
+                  ownerId: 'owner',
+                  onSave: (value) async {
+                    draft = value;
+                    return true;
+                  },
+                ),
+              ),
+              child: const Text('Edit'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    expect(find.text('Node color'), findsOneWidget);
+    expect(find.text('Node icon'), findsOneWidget);
+    expect(find.text('Link task'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(kMindMapNodeTaskFieldKey));
+    await tester.tap(find.byKey(kMindMapNodeTaskFieldKey));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+    expect(find.byKey(kMindMapTaskPickerKey), findsOneWidget);
+    await tester.tap(find.text('Write proposal'));
+    await tester.pumpAndSettle();
+    expect(find.text('Write proposal'), findsOneWidget);
+    await tester.tap(find.byKey(kMindMapNodeSaveKey));
+    await tester.pumpAndSettle();
+    expect(draft!.taskId, 'task');
+  });
+
   testWidgets('accessible chooser shows only Task projections and returns ID', (
     tester,
   ) async {
@@ -140,13 +206,15 @@ void main() {
     await tester.pumpAndSettle();
     cubit.select('idea');
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mind-map-canvas-node-idea')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Status').last);
+    await tester.pumpAndSettle();
     expect(cubit.state, isA<MapEditorReady>());
     expect(find.byKey(kMindMapEditorKey), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.byKey(kMindMapLinkTaskKey),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.ensureVisible(find.byKey(kMindMapLinkTaskKey));
     await tester.tap(find.byKey(kMindMapLinkTaskKey));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
@@ -156,11 +224,7 @@ void main() {
     await tester.tap(find.text('Write proposal'));
     await tester.pumpAndSettle();
     expect((cubit.state as MapEditorReady).graph.nodes.last.taskId, 'task');
-    await tester.scrollUntilVisible(
-      find.byKey(kMindMapCompleteTaskKey),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.ensureVisible(find.byKey(kMindMapCompleteTaskKey));
     await tester.tap(find.byKey(kMindMapCompleteTaskKey));
     await tester.pumpAndSettle();
     expect((cubit.state as MapEditorReady).summary.completedCount, 1);
@@ -176,11 +240,8 @@ void main() {
       (cubit.state as MapEditorReady).linkedTasks['task']!.available,
       false,
     );
-    await tester.scrollUntilVisible(
-      find.text('Linked task unavailable').first,
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.drag(find.byType(ListView).last, const Offset(0, 500));
+    await tester.pumpAndSettle();
     expect(find.text('Linked task unavailable'), findsOneWidget);
     expect(find.text('Write proposal'), findsNothing);
     await tester.ensureVisible(find.byKey(kMindMapLinkTaskKey));
@@ -198,6 +259,34 @@ void main() {
     expect((cubit.state as MapEditorReady).graph.nodes.last.taskId, isNull);
     expect(tasks.completes, 1);
     expect(tasks.reopens, 1);
+
+    await tester.drag(find.byType(ListView).last, const Offset(0, 800));
+    await tester.pumpAndSettle();
+    final closeDetails = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.byIcon(Icons.close_rounded),
+    );
+    await tester.ensureVisible(closeDetails);
+    await tester.tap(closeDetails);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit node'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('node-color-${0xffa855f7}')),
+    );
+    await tester.tap(find.byKey(const ValueKey('node-color-${0xffa855f7}')));
+    await tester.ensureVisible(find.byKey(kMindMapNodeTaskFieldKey));
+    await tester.tap(find.byKey(kMindMapNodeTaskFieldKey));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+    await tester.tap(find.text('Other task'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(kMindMapNodeSaveKey));
+    await tester.pumpAndSettle();
+    final savedNode = (cubit.state as MapEditorReady).graph.nodes.last;
+    expect(savedNode.taskId, 'other');
+    expect(savedNode.appearance.argb, 0xffa855f7);
   });
 }
 
