@@ -375,10 +375,15 @@ void main() {
       await tester.ensureVisible(chip);
       await tester.tap(chip);
     }
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(kHabitSaveButtonKey));
     await waitForPreviewHabit(completed: false);
     expect(find.text('Preview reading'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.check_circle_outline));
+    final completeAction = find.byIcon(Icons.check_circle_outline);
+    await tester.ensureVisible(completeAction);
+    await tester.pumpAndSettle();
+    await tester.tap(completeAction);
     await waitForPreviewHabit(completed: true);
     expect(find.byIcon(Icons.undo), findsOneWidget);
 

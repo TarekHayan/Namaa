@@ -775,7 +775,7 @@ void main() {
       await tester.tap(incrementFinder);
       await tester.pumpAndSettle();
       expect(find.byType(TodayComingSoonPage), findsOneWidget);
-      await tester.pageBack();
+      await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
 
       // Assert table counts in SQLite encrypted database did not mutate at all
