@@ -20,21 +20,22 @@ debug run, pass `--dart-define=NAMAA_DEVICE_PREVIEW=false`.
 
 ## Continuous integration
 
-Every push to a pull request runs the fast tier in about 15 minutes: analysis,
-unit and widget tests, Supabase database and RLS tests, Android, Linux,
-Windows, and macOS. The **Fast checks gate** job summarizes it.
+CI runs when a finished feature's pull request targets `develop`. Every run
+is the full check: analysis, unit and widget tests, Supabase database and RLS
+tests, Android, Linux, Windows, macOS, and five iOS simulator groups
+(foundation, tasks, habits, mind-maps, today). The **Foundation and Task
+five-target gate** passes only when all of them pass.
 
-The iOS simulator groups (foundation, tasks, habits, mind-maps, today) run
-only when you ask for them, because macOS runners are slow and scarce:
+Before opening the pull request, run `flutter analyze` and `flutter test`
+locally (about 6 minutes); they catch most problems without waiting for CI.
 
-- Add the `full-ci` label to the pull request. Later pushes keep running iOS
-  while the label stays.
-- Or run **Foundation CI** manually from the Actions tab.
-
-The **Foundation and Task five-target gate** runs only with iOS, and a phase
-is closed only after it passes. To rerun one iOS file, run the workflow
-manually with `mobile_only` on, `ios_groups` set (for example `["today"]`),
-and `ios_suites` set to the file's suite name (for example `today-dashboard`).
+Each iOS group builds the app once and then runs every file in the group,
+even after one fails, so a run lists all failing files at once. If a job
+fails because of the runner (a lost connection or a stalled download), use
+**Re-run failed jobs** on the run instead of rerunning everything. To rerun
+one iOS file, run **Foundation CI** manually with `mobile_only` on,
+`ios_groups` set (for example `["today"]`), and `ios_suites` set to the
+file's suite name (for example `today-dashboard`).
 
 ## Getting Started
 

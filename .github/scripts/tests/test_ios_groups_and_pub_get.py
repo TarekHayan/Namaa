@@ -1,5 +1,4 @@
 import importlib.util
-import json
 import os
 from pathlib import Path
 import shutil
@@ -19,64 +18,27 @@ def load(name, file):
     return module
 
 
-tier = load("ci_tier", "select-ci-tier.py")
 pub_get = load("pub_get_retry", "pub-get-with-retry.py")
 
 ALL_GROUPS = ["foundation", "tasks", "habits", "mind-maps", "today"]
 
 
-class TierSelectionTest(unittest.TestCase):
-    def select(self, **env):
-        return tier.select(env)
-
-    def groups(self, outputs):
-        return json.loads(outputs["ios_groups"])
-
-    def test_ordinary_pr_push_runs_fast_tier_only(self):
-        outputs = self.select(EVENT="pull_request", ACTION="synchronize", HAS_FULL_LABEL="false")
-        self.assertEqual((outputs["run"], outputs["ios"]), ("true", "false"))
-
-    def test_full_ci_label_adds_every_ios_group(self):
-        for action in ("labeled", "synchronize"):
-            with self.subTest(action=action):
-                outputs = self.select(
-                    EVENT="pull_request", ACTION=action,
-                    ADDED_LABEL="full-ci", HAS_FULL_LABEL="true",
-                )
-                self.assertEqual(outputs["ios"], "true")
-                self.assertEqual(self.groups(outputs), ALL_GROUPS)
-
-    def test_another_label_runs_nothing(self):
-        outputs = self.select(
-            EVENT="pull_request", ACTION="labeled", ADDED_LABEL="docs", HAS_FULL_LABEL="false",
-        )
-        self.assertEqual((outputs["run"], outputs["ios"]), ("false", "false"))
-
-    def test_manual_full_run_includes_ios(self):
-        outputs = self.select(EVENT="workflow_dispatch", MOBILE_ONLY="false")
-        self.assertEqual(outputs["ios"], "true")
-        self.assertEqual(self.groups(outputs), ALL_GROUPS)
-
-    def test_focused_run_selects_named_groups(self):
-        outputs = self.select(
-            EVENT="workflow_dispatch", MOBILE_ONLY="true", IOS_GROUPS='["today"]',
-        )
-        self.assertEqual((outputs["ios"], self.groups(outputs)), ("true", ["today"]))
-
-    def test_focused_run_without_ios_keeps_a_valid_matrix(self):
-        outputs = self.select(EVENT="workflow_dispatch", MOBILE_ONLY="true", IOS_GROUPS="[]")
-        self.assertEqual(outputs["ios"], "false")
-        # A skipped matrix job still needs a non-empty vector.
-        self.assertTrue(self.groups(outputs))
-
-    def test_unknown_group_is_rejected(self):
-        with self.assertRaises(ValueError):
-            self.select(EVENT="workflow_dispatch", MOBILE_ONLY="true", IOS_GROUPS='["ipad"]')
-
-    def test_groups_match_the_ios_runner(self):
+class IosGroupRegistrationTest(unittest.TestCase):
+    def test_default_matrix_runs_every_group_of_the_runner(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        default = '[' + ','.join(f'"{g}"' for g in ALL_GROUPS) + ']'
+        self.assertIn(default, workflow)
+        self.assertIn("bash .github/scripts/run-ios-integration-group.sh", workflow)
         script = (ROOT / ".github/scripts/run-ios-integration-group.sh").read_text()
-        for group in tier.IOS_GROUPS:
+        for group in ALL_GROUPS:
             self.assertIn(f"\n  {group})\n", script)
+
+    def test_pull_requests_run_the_full_five_target_gate(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        gate = workflow.split("  foundation-gate:", 1)[1]
+        self.assertIn("- ios", gate)
+        self.assertIn("IOS_RESULT", gate)
+        self.assertNotIn("labeled", workflow)
 
 
 class PubGetRetryTest(unittest.TestCase):
