@@ -156,7 +156,11 @@ jobs:
         run: python3 .github/scripts/prepare-android-ndk.py
 
       - name: Prepare and verify Android emulator with bounded download retries
-        timeout-minutes: 8
+        # Emulator (3 x 2 min) plus system image (3 x 6 min) retries.
+        timeout-minutes: 25
+        env:
+          # Must match api-level, target and arch of the emulator step below.
+          ANDROID_SYSTEM_IMAGE: system-images;android-35;google_apis;x86_64
         run: python3 .github/scripts/prepare-android-emulator.py
 
       - name: Set up Supabase CLI
