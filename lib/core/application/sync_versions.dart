@@ -43,10 +43,17 @@ final class PendingSyncVersions {
 
 /// One identity for one clash between two versions of a record.
 ///
-/// Inbound reconciliation and outbound dispatch can each detect the same clash.
-/// Include canonical payloads: distinct contents can carry equal timestamps.
-/// Canonicalization makes whitespace and JSON key order irrelevant when the
-/// same clash is observed through both inbound and outbound paths.
+/// Inbound reconciliation and outbound dispatch can each detect the same clash,
+/// and they see the remote version as different text: outbound gets the
+/// server's stored JSON (a Task's `completionChangedAt` is rewritten there as
+/// `+00:00`), inbound re-encodes it through the feature codec (`Z`). So when
+/// the two timestamps differ, the record and the two timestamps alone identify
+/// the clash.
+///
+/// Equal timestamps cannot tell two different clashes apart, so only then are
+/// the payloads hashed in. Only inbound reconciliation records an
+/// equal-timestamp clash (outbound keeps it open as a retryable failure), so
+/// that hash is always computed from one consistent encoding.
 String syncConflictId({
   required String accountId,
   required String entityType,
@@ -56,6 +63,18 @@ String syncConflictId({
   required String activePayload,
   required String retainedPayload,
 }) {
+  final identity =
+      'sync-conflict:$accountId:$entityType:$entityId:'
+      '${activeAt.toUtc().microsecondsSinceEpoch}:'
+      '${retainedAt.toUtc().microsecondsSinceEpoch}';
+  if (!_sameInstant(activeAt, retainedAt)) return identity;
+  return '$identity:${_payloadHash(activePayload, retainedPayload)}';
+}
+
+bool _sameInstant(DateTime left, DateTime right) =>
+    left.toUtc().microsecondsSinceEpoch == right.toUtc().microsecondsSinceEpoch;
+
+String _payloadHash(String activePayload, String retainedPayload) {
   final candidatePair = jsonEncode([
     canonicalSyncPayload(activePayload),
     canonicalSyncPayload(retainedPayload),
@@ -66,10 +85,7 @@ String syncConflictId({
     first = ((first ^ byte) * 0x01000193) & 0xffffffff;
     second = ((second ^ byte) * 0x85ebca6b) & 0xffffffff;
   }
-  return 'sync-conflict:$accountId:$entityType:$entityId:'
-      '${activeAt.toUtc().microsecondsSinceEpoch}:'
-      '${retainedAt.toUtc().microsecondsSinceEpoch}:'
-      '${first.toRadixString(16).padLeft(8, '0')}'
+  return '${first.toRadixString(16).padLeft(8, '0')}'
       '${second.toRadixString(16).padLeft(8, '0')}';
 }
 

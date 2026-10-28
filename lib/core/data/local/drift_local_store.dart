@@ -449,14 +449,15 @@ class DriftLocalStore implements LocalStorePort {
         .write(PendingChangesCompanion(baseUpdatedAt: Value(serverVersion)));
   }
 
-  /// A conflict ID names one clash: one record and two version timestamps.
-  /// The same clash can be detected by inbound and outbound sync with
-  /// differently formatted payloads, so payloads are not compared.
+  /// A conflict ID names one clash (see [syncConflictId]). Inbound and
+  /// outbound sync can report the same clash with differently formatted
+  /// payloads, so payloads are compared only when the two timestamps are
+  /// equal, the one case where timestamps cannot tell two clashes apart.
   static void _requireSameClash(
     ConflictRecord existing,
     ConflictRecordInput conflict,
   ) {
-    final same =
+    final sameVersions =
         existing.accountId == conflict.accountId &&
         existing.entityType == conflict.entityType &&
         existing.entityId == conflict.entityId &&
@@ -469,12 +470,14 @@ class DriftLocalStore implements LocalStorePort {
         _sameInstant(
           existing.retainedTimestamp,
           conflict.retainedVersion.versionTimestamp,
-        ) &&
-        canonicalSyncPayload(existing.activePayload) ==
-            canonicalSyncPayload(conflict.activeVersion.payload) &&
-        canonicalSyncPayload(existing.retainedPayload) ==
-            canonicalSyncPayload(conflict.retainedVersion.payload);
-    if (!same) {
+        );
+    final samePayloads =
+        !_sameInstant(existing.activeTimestamp, existing.retainedTimestamp) ||
+        (canonicalSyncPayload(existing.activePayload) ==
+                canonicalSyncPayload(conflict.activeVersion.payload) &&
+            canonicalSyncPayload(existing.retainedPayload) ==
+                canonicalSyncPayload(conflict.retainedVersion.payload));
+    if (!sameVersions || !samePayloads) {
       throw StateError('conflict id identifies different versions');
     }
   }

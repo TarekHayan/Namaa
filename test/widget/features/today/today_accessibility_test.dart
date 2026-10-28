@@ -421,11 +421,26 @@ void main() {
             expect(cubit.state.habits.value?.completedCount, 1);
           }
 
+          // On a device, frames run in real time, so the action completes a
+          // few frames after the tap rather than on the next pump.
+          Future<void> waitForTaskCompletion() async {
+            for (var attempt = 0; attempt < 40; attempt++) {
+              if (tasks.completed &&
+                  cubit.state.tasks.value?.completedCount == 1) {
+                return;
+              }
+              await tester.pump(const Duration(milliseconds: 100));
+            }
+            expect(tasks.completed, isTrue, reason: 'Task action never ran');
+            expect(cubit.state.tasks.value?.completedCount, 1);
+          }
+
           final taskAction = find.byKey(
             const ValueKey('today_task_action_task'),
           );
           if (keyboardOnly) {
             await _activateByKeyboard(tester, taskAction);
+            await waitForTaskCompletion();
             await _activateByKeyboard(tester, find.byKey(kTodayBottomTasksKey));
             await _finishRouteTransition(tester);
             expect(find.byKey(kTasksMobileLayoutKey), findsOneWidget);
@@ -453,13 +468,20 @@ void main() {
             await _finishRouteTransition(tester);
             expect(find.byKey(kTodayScreenKey), findsOneWidget);
           } else {
+            // Let scrolling and entrance animations finish so the button is
+            // still where the tap lands (real-time frames on a device).
             await Scrollable.ensureVisible(
               tester.element(taskAction),
               alignment: 0.5,
             );
-            await tester.pump();
+            await tester.pumpAndSettle();
+            expect(
+              taskAction.hitTestable(),
+              findsOneWidget,
+              reason: 'Task action must be tappable, not covered or moving',
+            );
             await tester.tap(taskAction);
-            await tester.pump();
+            await waitForTaskCompletion();
 
             await tester.tap(find.byKey(kTodayBottomTasksKey));
             await _finishRouteTransition(tester);
