@@ -94,88 +94,88 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 
 **Independent check**: Domain/identity/ledger/migration/architecture tests pass; old productivity records remain readable.
 
-- [ ] T009 [P] Add pure-value tests in test/unit/features/prayer/domain/prayer_values_test.dart.
+- [x] T009 [P] Add pure-value tests in test/unit/features/prayer/domain/prayer_values_test.dart.
   - **Depends**: T003
   - **Done**: Cover five-name order, four statuses, strict valid YYYY-MM-DD, real leap dates, UTC instants, finite coordinates including zero, invalid bounds and completion-timestamp nullability.
 
-- [ ] T010 Implement lib/features/prayer/domain/prayer_name.dart, prayer_status.dart and prayer_local_date.dart.
+- [x] T010 Implement lib/features/prayer/domain/prayer_name.dart, prayer_status.dart and prayer_local_date.dart.
   - **Depends**: T009
   - **Done**: Pure Dart values with canonical wire names; no Flutter/DB/timezone/UUID imports; pending/missed never count completed.
 
-- [ ] T011 Implement lib/features/prayer/domain/prayer_city.dart, prayer_preferences.dart, prayer_report.dart and prayer_schedule.dart.
+- [x] T011 Implement lib/features/prayer/domain/prayer_city.dart, prayer_preferences.dart, prayer_report.dart and prayer_schedule.dart.
   - **Depends**: T010
   - **Done**: Match data-model.md fields; missing report can project pending; per-field schedule availability is distinct from reports; immutable copy/equality semantics and context revision.
 
-- [ ] T012 Define application ports under lib/features/prayer/application/: city_search_port.dart, prayer_preferences_port.dart, prayer_schedule_calculator_port.dart, prayer_clock_port.dart, prayer_report_identity_port.dart and prayer_repository.dart.
+- [x] T012 Define application ports under lib/features/prayer/application/: city_search_port.dart, prayer_preferences_port.dart, prayer_schedule_calculator_port.dart, prayer_clock_port.dart, prayer_report_identity_port.dart and prayer_repository.dart.
   - **Depends**: T011
   - **Done**: Use AppResult/AppFailure and cancellable owner-scoped watches; repository exposes fresh transaction/read/write/reconciliation contracts; day/context and acknowledgement base are explicit, not fetched by UI.
 
-- [ ] T013 [P] Create test/fixtures/prayer/identity_vectors.json and test/unit/features/prayer/data/prayer_report_identity_test.dart.
+- [x] T013 [P] Create test/fixtures/prayer/identity_vectors.json and test/unit/features/prayer/data/prayer_report_identity_test.dart.
   - **Depends**: T012
   - **Done**: Namespace9d63d7a6-bb43-4b93-b2a1-c1d22c68b008; UTF8 YYYY-MM-DD/prayer; committed expected UUIDv5 values for allfive names and leap dates; same key across devices, separate owner component.
 
-- [ ] T014 Implement lib/features/prayer/data/uuid_prayer_report_identity.dart.
+- [x] T014 Implement lib/features/prayer/data/uuid_prayer_report_identity.dart.
   - **Depends**: T013
   - **Done**: Use uuid only in data adapter; derive report/reward sourceId deterministically; no per-device random report IDs; vectors pass.
 
-- [ ] T015 [P] Add shared-source compatibility tests in test/unit/features/xp/xp_award_test.dart and drift_award_ledger_test.dart.
+- [x] T015 [P] Add shared-source compatibility tests in test/unit/features/xp/xp_award_test.dart and drift_award_ledger_test.dart.
   - **Depends**: T003
   - **Done**: Existing task_done20 and new prayer_done10/5 can coexist; reject unknown sources/invalid amounts; immutable insertOnce; canonical remote reconciliation; Task constructors/callers remain compatible.
 
-- [ ] T016 Introduce lib/features/xp/domain/xp_award.dart and adapt lib/features/xp/domain/task_completion_award.dart.
+- [x] T016 Introduce lib/features/xp/domain/xp_award.dart and adapt lib/features/xp/domain/task_completion_award.dart.
   - **Depends**: T015
   - **Done**: Shared XpAward supports the two approved sources; preserve Task wrapper/constants/20XP semantics; do not allow a new arbitrary client-controlled XP policy.
 
-- [ ] T017 Update lib/features/xp/application/award_ledger.dart, lib/features/xp/data/drift_award_ledger.dart and affected Task/Today typed callers.
+- [x] T017 Update lib/features/xp/application/award_ledger.dart, lib/features/xp/data/drift_award_ledger.dart and affected Task/Today typed callers.
   - **Depends**: T016
   - **Done**: Read/watch mixed-source rows without throwing; reuse existing table/key and Task remote filter; preserve Task behavior and existing tests; no second Prayer XP balance.
 
-- [ ] T018 [P] Add real historical schema fixtures under test/fixtures/prayer/migrations/ for local versions1…7.
+- [x] T018 [P] Add real historical schema fixtures under test/fixtures/prayer/migrations/ for local versions1…7.
   - **Depends**: T001
   - **Done**: Reconstruct actual historical tables/columns using existing migration-test patterns; seed identifiable Task/Habit/Map/XP/outbox/conflict records appropriate to each version; never label modern createAll as a historical schema.
 
-- [ ] T019 Create test/unit/core/data/local/prayer_migration_test.dart.
+- [x] T019 Create test/unit/core/data/local/prayer_migration_test.dart.
   - **Depends**: T018, T017
   - **Done**: Failing tests cover fresh8, every1…7→8, retained base_updated_at/counters/links/XP, new tables/indexes, absent physical completion_xp, restart and injected rollback/recovery.
 
-- [ ] T020 Declare PrayerDevicePreferences and PrayerReports plus indexes in lib/core/data/local/foundation_database.dart; remove TaskRecords.completionXp and its unused mapper writes.
+- [x] T020 Declare PrayerDevicePreferences and PrayerReports plus indexes in lib/core/data/local/foundation_database.dart; remove TaskRecords.completionXp and its unused mapper writes.
   - **Depends**: T019, T011
   - **Done**: Fields/keys match data-model.md; preferences encrypted and owner-local; no cloud preference/schedule table. Remove only unused persistence field, not Task 20 XP policy or past award rows.
 
-- [ ] T021 Implement schema7→8 upgrade and historical-path guards in lib/core/data/local/foundation_database.dart.
+- [x] T021 Implement schema7→8 upgrade and historical-path guards in lib/core/data/local/foundation_database.dart.
   - **Depends**: T020
   - **Done**: All older versions create Prayer tables; use actual column inspection before dropping completion_xp; keep prior base_updated_at fix; automatic rollback/journal recovery and all1…7 paths work.
 
-- [ ] T022 Regenerate lib/core/data/local/foundation_database.g.dart and fix affected generated-row call sites.
+- [x] T022 Regenerate lib/core/data/local/foundation_database.g.dart and fix affected generated-row call sites.
   - **Depends**: T021
   - **Done**: Never hand-edit generated code; fresh8 and historical upgrades pass and existing feature repositories compile.
   - **Check**: dart run build_runner build --delete-conflicting-outputs
 
-- [ ] T023 [P] Add encrypted preferences tests in test/unit/features/prayer/data/drift_prayer_preferences_test.dart.
+- [x] T023 [P] Add encrypted preferences tests in test/unit/features/prayer/data/drift_prayer_preferences_test.dart.
   - **Depends**: T012, T022
   - **Done**: Separate owners/databases retain independent cities; cancel/failure preserves confirmed city; revision guard rejects stale save; no outbox row emitted.
 
-- [ ] T024 Implement lib/features/prayer/data/drift_prayer_preferences.dart.
+- [x] T024 Implement lib/features/prayer/data/drift_prayer_preferences.dart.
   - **Depends**: T023
   - **Done**: Atomic owner-local replacement/watch with expected revision and valid coordinates/zone; reads survive restart; no network or cross-device sync.
 
-- [ ] T025 Create lib/features/prayer/data/drift_prayer_repository.dart with indexed owner/day watches, fresh reads and transaction helper.
+- [x] T025 Create lib/features/prayer/data/drift_prayer_repository.dart with indexed owner/day watches, fresh reads and transaction helper.
   - **Depends**: T022, T012
   - **Done**: Read only requested day; missing row projects pending outside storage; preserve UTC microseconds and last acknowledged base; write paths are added in US2.
 
-- [ ] T026 [P] Create test/unit/features/prayer/domain/prayer_version_policy_test.dart and test/fixtures/prayer/conflict_vectors.json.
+- [x] T026 [P] Create test/unit/features/prayer/domain/prayer_version_policy_test.dart and test/fixtures/prayer/conflict_vectors.json.
   - **Depends**: T011, T014
   - **Done**: Assert semantic ASCII key, literal null encoding, UTC microseconds, reversed arrivals and stable UUIDv5 conflict IDs match prayer-sync contract; no localized JSON ordering.
 
-- [ ] T027 Implement lib/features/prayer/domain/prayer_version_policy.dart and lib/features/prayer/data/prayer_payload_codec.dart.
+- [x] T027 Implement lib/features/prayer/domain/prayer_version_policy.dart and lib/features/prayer/data/prayer_payload_codec.dart.
   - **Depends**: T026
   - **Done**: Encode validated semantic fields only; newest timestamp then byte-order semantic tie; deterministic conflict identity through identity adapter; no _syncBaseUpdatedAt or XP amount in payload.
 
-- [ ] T028 [P] Add test/architecture/prayer_boundaries_test.dart.
+- [x] T028 [P] Add test/architecture/prayer_boundaries_test.dart.
   - **Depends**: T012
   - **Done**: Reject Prayer domain/application infrastructure imports, Today access to Prayer DB/UI, public client secrets and alternate XP stores; preserve current layer allowlists rather than weakening them.
 
-- [ ] T029 Record foundational verification in specs/008-prayer-experience/verification.md.
+- [x] T029 Record foundational verification in specs/008-prayer-experience/verification.md.
   - **Depends**: T004, T007, T008, T017, T022, T024, T025, T027, T028
   - **Done**: Focused values/UUID/XP/migration/preferences/architecture tests and analysis pass; no user-story task starts until red migration/model tests are green.
 

@@ -7,11 +7,11 @@ import '../domain/today_models.dart';
 
 final class XpTodayAdapter implements TodayXpPort {
   const XpTodayAdapter(this._ledger);
-  final AwardLedgerPort _ledger;
+  final SharedAwardLedgerPort _ledger;
 
   @override
   Stream<List<TodayAwardReference>> watchAwards(String ownerId) => _ledger
-      .watchAwards(ownerId)
+      .watchSharedAwards(ownerId)
       .map(
         (awards) => List.unmodifiable([
           for (final award in awards)

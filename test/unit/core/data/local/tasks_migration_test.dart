@@ -65,6 +65,7 @@ void main() {
     );
 
     expect(v3.schemaVersion, 3);
+    await v3.rawExecute('ALTER TABLE task_records ADD COLUMN completion_xp INTEGER');
     expect(
       await v3.rawScalar(
         "SELECT value FROM foundation_preferences WHERE \"key\" = 'locale'",

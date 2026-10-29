@@ -58,7 +58,19 @@ No full CI/device matrix is required for this setup phase. Network discovery, UI
 
 ### Phase 1 checkpoint
 
-**PASS (2026-10-29)**: T001–T008 complete. Final `flutter analyze --no-pub`: no issues (9.2s). `dart format` checked all five new Dart files: 0 changes. All 20 focused tests passed; the final affected-file rerun passed all 16 search tests after lint cleanup. No app code changed after that final validation. T009 onwards remain unchecked and unimplemented. No commit/push or CI run performed.
+**PASS (2026-10-29)**: T001–T008 complete. Final `flutter analyze --no-pub`: no issues (9.2s). `dart format` checked all five new Dart files: 0 changes. All 20 focused tests passed; the final affected-file rerun passed all 16 search tests after lint cleanup. No app code changed after that final validation. At this checkpoint T009 onwards were pending. No commit/push or CI run was performed for this checkpoint.
+
+## Phase 2 foundational verification
+
+**PASS (2026-10-29)**: T009–T029 complete. Pure Prayer values and application ports, deterministic UUIDv5 identity, semantic conflict versioning, shared Task/Prayer XP ledger compatibility, local schema version 8, device-local encrypted city preference storage, and indexed owner/day report reads are implemented. Generated Drift code was regenerated with `dart run build_runner build --delete-conflicting-outputs`.
+
+The migration suite reconstructs historical physical schemas for versions 1–7, seeds existing records, verifies each upgrade to version 8 and restart, and exercises rollback followed by recovery. Preference tests cover owner and installation separation, restart, revision guards and absence of cloud outbox changes. XP tests cover mixed Task/Prayer awards, historical Task rows and Today projection. Identity and conflict fixtures assert stable cross-device wire values. The architecture test checks Prayer and Today boundaries.
+
+- Focused Phase 2 suite (`flutter test --no-pub test/unit/core/data/local test/unit/features/prayer test/unit/features/xp test/unit/features/today/data/xp_today_adapter_test.dart test/unit/features/tasks test/architecture/prayer_boundaries_test.dart`): **193 passed**.
+- After the final timezone-initializer and preference-test adjustments, the affected preferences, migration, Today XP and architecture files were rerun: **17 passed**.
+- Full `flutter analyze --no-pub`: **no issues**. Formatting and `git diff --check` passed.
+
+These are foundational checks. City search, prayer-time calculations, UI, report commands, remote synchronization, SQL security and full acceptance criteria remain in later phases.
 
 ## SC-001 — scripted journey within 60 seconds
 

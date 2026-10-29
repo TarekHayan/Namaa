@@ -1,6 +1,8 @@
 /// Immutable XP evidence for the first explicit completion of one Task.
 library;
 
+import 'xp_award.dart';
+
 const String kTaskDoneAwardSource = 'task_done';
 
 /// XP for the first completion of any Task. The server applies the same value
@@ -44,6 +46,15 @@ final class TaskCompletionAward {
   final DateTime awardedAt;
 
   String get uniqueKey => '$accountId/$source/$sourceId';
+
+  /// Converts a policy-conforming Task award into the shared ledger value.
+  XpAward toSharedAward() => XpAward(
+    accountId: accountId,
+    source: source,
+    sourceId: sourceId,
+    amount: amount,
+    awardedAt: awardedAt,
+  );
 
   @override
   bool operator ==(Object other) =>

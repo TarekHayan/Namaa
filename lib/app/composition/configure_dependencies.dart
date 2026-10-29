@@ -309,8 +309,14 @@ Future<void> configureDependencies({
         },
       ),
     );
-    getIt.registerLazySingleton<AwardLedgerPort>(
+    getIt.registerLazySingleton<DriftAwardLedger>(
       () => DriftAwardLedger(database),
+    );
+    getIt.registerLazySingleton<AwardLedgerPort>(
+      () => getIt<DriftAwardLedger>(),
+    );
+    getIt.registerLazySingleton<SharedAwardLedgerPort>(
+      () => getIt<DriftAwardLedger>(),
     );
     getIt.registerLazySingleton<TodayTasksPort>(
       () => TasksTodayAdapter(
@@ -327,7 +333,7 @@ Future<void> configureDependencies({
       ),
     );
     getIt.registerLazySingleton<TodayXpPort>(
-      () => XpTodayAdapter(getIt<AwardLedgerPort>()),
+      () => XpTodayAdapter(getIt<SharedAwardLedgerPort>()),
     );
     getIt.registerLazySingleton<TodayCalendarPort>(SystemTodayCalendar.new);
     getIt.registerLazySingleton<TodayActions>(
@@ -466,7 +472,15 @@ void _registerSafeFail(GetIt getIt) {
   getIt.registerLazySingleton<TaskRepository>(
     () => UnconfiguredTaskRepository(),
   );
-  getIt.registerLazySingleton<AwardLedgerPort>(() => UnconfiguredAwardLedger());
+  getIt.registerLazySingleton<UnconfiguredAwardLedger>(
+    UnconfiguredAwardLedger.new,
+  );
+  getIt.registerLazySingleton<AwardLedgerPort>(
+    () => getIt<UnconfiguredAwardLedger>(),
+  );
+  getIt.registerLazySingleton<SharedAwardLedgerPort>(
+    () => getIt<UnconfiguredAwardLedger>(),
+  );
   getIt.registerLazySingleton<TaskCompletionUnitOfWork>(
     () => UnconfiguredTaskCompletionUnitOfWork(),
   );

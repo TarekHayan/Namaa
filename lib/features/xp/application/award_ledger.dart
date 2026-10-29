@@ -1,5 +1,6 @@
 import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
+import 'package:namma_project/features/xp/domain/xp_award.dart';
 
 enum AwardInsertOutcome { inserted, alreadyExists }
 
@@ -20,4 +21,16 @@ abstract interface class AwardLedgerPort {
   });
 
   Stream<List<TaskCompletionAward>> watchAwards(String accountId);
+}
+
+/// Same durable ledger, with typed Prayer and Task source support.
+abstract interface class SharedAwardLedgerPort {
+  Future<AppResult<AwardInsertOutcome>> insertSharedOnce(XpAward award);
+  Future<AppResult<void>> applyRemoteSharedAward(XpAward award);
+  Future<AppResult<XpAward?>> readSharedAward({
+    required String accountId,
+    required String source,
+    required String sourceId,
+  });
+  Stream<List<XpAward>> watchSharedAwards(String accountId);
 }

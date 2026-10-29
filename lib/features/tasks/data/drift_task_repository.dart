@@ -9,7 +9,6 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
-import 'package:namma_project/features/xp/domain/task_completion_award.dart';
 
 /// Encrypted Drift implementation of the canonical account-scoped Task store.
 final class DriftTaskRepository implements TaskRepository {
@@ -220,8 +219,6 @@ final class DriftTaskRepository implements TaskRepository {
       checklistJson: Value(jsonEncode(payload['checklistItems'])),
       completedAt: Value(task.completedAt),
       completionChangedAt: Value(task.completionChangedAt),
-      // Legacy column; the reward is the shared kTaskCompletionXp constant.
-      completionXp: kTaskCompletionXp,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
       deletedAt: Value(task.deletedAt),

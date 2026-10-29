@@ -3046,17 +3046,6 @@ class $TaskRecordsTable extends TaskRecords
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
-  static const VerificationMeta _completionXpMeta = const VerificationMeta(
-    'completionXp',
-  );
-  @override
-  late final GeneratedColumn<int> completionXp = GeneratedColumn<int>(
-    'completion_xp',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3106,7 +3095,6 @@ class $TaskRecordsTable extends TaskRecords
     checklistJson,
     completedAt,
     completionChangedAt,
-    completionXp,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3246,17 +3234,6 @@ class $TaskRecordsTable extends TaskRecords
         ),
       );
     }
-    if (data.containsKey('completion_xp')) {
-      context.handle(
-        _completionXpMeta,
-        completionXp.isAcceptableOrUnknown(
-          data['completion_xp']!,
-          _completionXpMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_completionXpMeta);
-    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3344,10 +3321,6 @@ class $TaskRecordsTable extends TaskRecords
         DriftSqlType.dateTime,
         data['${effectivePrefix}completion_changed_at'],
       ),
-      completionXp: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}completion_xp'],
-      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3386,7 +3359,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
 
   /// Tasks owns this transition revision; map status projections only read it.
   final DateTime? completionChangedAt;
-  final int completionXp;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -3405,7 +3377,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     required this.checklistJson,
     this.completedAt,
     this.completionChangedAt,
-    required this.completionXp,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3445,7 +3416,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     if (!nullToAbsent || completionChangedAt != null) {
       map['completion_changed_at'] = Variable<DateTime>(completionChangedAt);
     }
-    map['completion_xp'] = Variable<int>(completionXp);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3485,7 +3455,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
       completionChangedAt: completionChangedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completionChangedAt),
-      completionXp: Value(completionXp),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -3520,7 +3489,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
       completionChangedAt: serializer.fromJson<DateTime?>(
         json['completionChangedAt'],
       ),
-      completionXp: serializer.fromJson<int>(json['completionXp']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -3548,7 +3516,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
       'checklistJson': serializer.toJson<String>(checklistJson),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
       'completionChangedAt': serializer.toJson<DateTime?>(completionChangedAt),
-      'completionXp': serializer.toJson<int>(completionXp),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -3570,7 +3537,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     String? checklistJson,
     Value<DateTime?> completedAt = const Value.absent(),
     Value<DateTime?> completionChangedAt = const Value.absent(),
-    int? completionXp,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -3599,7 +3565,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     completionChangedAt: completionChangedAt.present
         ? completionChangedAt.value
         : this.completionChangedAt,
-    completionXp: completionXp ?? this.completionXp,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3639,9 +3604,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
       completionChangedAt: data.completionChangedAt.present
           ? data.completionChangedAt.value
           : this.completionChangedAt,
-      completionXp: data.completionXp.present
-          ? data.completionXp.value
-          : this.completionXp,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3667,7 +3629,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
           ..write('checklistJson: $checklistJson, ')
           ..write('completedAt: $completedAt, ')
           ..write('completionChangedAt: $completionChangedAt, ')
-          ..write('completionXp: $completionXp, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -3691,7 +3652,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
     checklistJson,
     completedAt,
     completionChangedAt,
-    completionXp,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3715,7 +3675,6 @@ class TaskRecord extends DataClass implements Insertable<TaskRecord> {
           other.checklistJson == this.checklistJson &&
           other.completedAt == this.completedAt &&
           other.completionChangedAt == this.completionChangedAt &&
-          other.completionXp == this.completionXp &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -3736,7 +3695,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
   final Value<String> checklistJson;
   final Value<DateTime?> completedAt;
   final Value<DateTime?> completionChangedAt;
-  final Value<int> completionXp;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -3756,7 +3714,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     this.checklistJson = const Value.absent(),
     this.completedAt = const Value.absent(),
     this.completionChangedAt = const Value.absent(),
-    this.completionXp = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -3777,7 +3734,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     this.checklistJson = const Value.absent(),
     this.completedAt = const Value.absent(),
     this.completionChangedAt = const Value.absent(),
-    required int completionXp,
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -3788,7 +3744,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
        scheduledDate = Value(scheduledDate),
        category = Value(category),
        quadrant = Value(quadrant),
-       completionXp = Value(completionXp),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<TaskRecord> custom({
@@ -3806,7 +3761,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     Expression<String>? checklistJson,
     Expression<DateTime>? completedAt,
     Expression<DateTime>? completionChangedAt,
-    Expression<int>? completionXp,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -3830,7 +3784,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
       if (completedAt != null) 'completed_at': completedAt,
       if (completionChangedAt != null)
         'completion_changed_at': completionChangedAt,
-      if (completionXp != null) 'completion_xp': completionXp,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -3853,7 +3806,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
     Value<String>? checklistJson,
     Value<DateTime?>? completedAt,
     Value<DateTime?>? completionChangedAt,
-    Value<int>? completionXp,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -3876,7 +3828,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
       checklistJson: checklistJson ?? this.checklistJson,
       completedAt: completedAt ?? this.completedAt,
       completionChangedAt: completionChangedAt ?? this.completionChangedAt,
-      completionXp: completionXp ?? this.completionXp,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -3935,9 +3886,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
         completionChangedAt.value,
       );
     }
-    if (completionXp.present) {
-      map['completion_xp'] = Variable<int>(completionXp.value);
-    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3972,7 +3920,6 @@ class TaskRecordsCompanion extends UpdateCompanion<TaskRecord> {
           ..write('checklistJson: $checklistJson, ')
           ..write('completedAt: $completedAt, ')
           ..write('completionChangedAt: $completionChangedAt, ')
-          ..write('completionXp: $completionXp, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -8147,6 +8094,1569 @@ class MindMapSideLinksCompanion extends UpdateCompanion<MindMapSideLink> {
   }
 }
 
+class $PrayerDevicePreferencesTable extends PrayerDevicePreferences
+    with TableInfo<$PrayerDevicePreferencesTable, PrayerDevicePreference> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PrayerDevicePreferencesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _providerMeta = const VerificationMeta(
+    'provider',
+  );
+  @override
+  late final GeneratedColumn<String> provider = GeneratedColumn<String>(
+    'provider',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _providerCityIdMeta = const VerificationMeta(
+    'providerCityId',
+  );
+  @override
+  late final GeneratedColumn<String> providerCityId = GeneratedColumn<String>(
+    'provider_city_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cityNameMeta = const VerificationMeta(
+    'cityName',
+  );
+  @override
+  late final GeneratedColumn<String> cityName = GeneratedColumn<String>(
+    'city_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countryCodeMeta = const VerificationMeta(
+    'countryCode',
+  );
+  @override
+  late final GeneratedColumn<String> countryCode = GeneratedColumn<String>(
+    'country_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countryNameMeta = const VerificationMeta(
+    'countryName',
+  );
+  @override
+  late final GeneratedColumn<String> countryName = GeneratedColumn<String>(
+    'country_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _adminNameMeta = const VerificationMeta(
+    'adminName',
+  );
+  @override
+  late final GeneratedColumn<String> adminName = GeneratedColumn<String>(
+    'admin_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timeZoneIdMeta = const VerificationMeta(
+    'timeZoneId',
+  );
+  @override
+  late final GeneratedColumn<String> timeZoneId = GeneratedColumn<String>(
+    'time_zone_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _calculationMethodMeta = const VerificationMeta(
+    'calculationMethod',
+  );
+  @override
+  late final GeneratedColumn<String> calculationMethod =
+      GeneratedColumn<String>(
+        'calculation_method',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    provider,
+    providerCityId,
+    cityName,
+    countryCode,
+    countryName,
+    adminName,
+    latitude,
+    longitude,
+    timeZoneId,
+    calculationMethod,
+    revision,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'prayer_device_preferences';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PrayerDevicePreference> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('provider')) {
+      context.handle(
+        _providerMeta,
+        provider.isAcceptableOrUnknown(data['provider']!, _providerMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_providerMeta);
+    }
+    if (data.containsKey('provider_city_id')) {
+      context.handle(
+        _providerCityIdMeta,
+        providerCityId.isAcceptableOrUnknown(
+          data['provider_city_id']!,
+          _providerCityIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_providerCityIdMeta);
+    }
+    if (data.containsKey('city_name')) {
+      context.handle(
+        _cityNameMeta,
+        cityName.isAcceptableOrUnknown(data['city_name']!, _cityNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cityNameMeta);
+    }
+    if (data.containsKey('country_code')) {
+      context.handle(
+        _countryCodeMeta,
+        countryCode.isAcceptableOrUnknown(
+          data['country_code']!,
+          _countryCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_countryCodeMeta);
+    }
+    if (data.containsKey('country_name')) {
+      context.handle(
+        _countryNameMeta,
+        countryName.isAcceptableOrUnknown(
+          data['country_name']!,
+          _countryNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_countryNameMeta);
+    }
+    if (data.containsKey('admin_name')) {
+      context.handle(
+        _adminNameMeta,
+        adminName.isAcceptableOrUnknown(data['admin_name']!, _adminNameMeta),
+      );
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('time_zone_id')) {
+      context.handle(
+        _timeZoneIdMeta,
+        timeZoneId.isAcceptableOrUnknown(
+          data['time_zone_id']!,
+          _timeZoneIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_timeZoneIdMeta);
+    }
+    if (data.containsKey('calculation_method')) {
+      context.handle(
+        _calculationMethodMeta,
+        calculationMethod.isAcceptableOrUnknown(
+          data['calculation_method']!,
+          _calculationMethodMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_calculationMethodMeta);
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revisionMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId};
+  @override
+  PrayerDevicePreference map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PrayerDevicePreference(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      provider: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider'],
+      )!,
+      providerCityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_city_id'],
+      )!,
+      cityName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}city_name'],
+      )!,
+      countryCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}country_code'],
+      )!,
+      countryName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}country_name'],
+      )!,
+      adminName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}admin_name'],
+      ),
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      timeZoneId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}time_zone_id'],
+      )!,
+      calculationMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}calculation_method'],
+      )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PrayerDevicePreferencesTable createAlias(String alias) {
+    return $PrayerDevicePreferencesTable(attachedDatabase, alias);
+  }
+}
+
+class PrayerDevicePreference extends DataClass
+    implements Insertable<PrayerDevicePreference> {
+  final String accountId;
+  final String provider;
+  final String providerCityId;
+  final String cityName;
+  final String countryCode;
+  final String countryName;
+  final String? adminName;
+  final double latitude;
+  final double longitude;
+  final String timeZoneId;
+  final String calculationMethod;
+  final int revision;
+  final String updatedAt;
+  const PrayerDevicePreference({
+    required this.accountId,
+    required this.provider,
+    required this.providerCityId,
+    required this.cityName,
+    required this.countryCode,
+    required this.countryName,
+    this.adminName,
+    required this.latitude,
+    required this.longitude,
+    required this.timeZoneId,
+    required this.calculationMethod,
+    required this.revision,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['provider'] = Variable<String>(provider);
+    map['provider_city_id'] = Variable<String>(providerCityId);
+    map['city_name'] = Variable<String>(cityName);
+    map['country_code'] = Variable<String>(countryCode);
+    map['country_name'] = Variable<String>(countryName);
+    if (!nullToAbsent || adminName != null) {
+      map['admin_name'] = Variable<String>(adminName);
+    }
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['time_zone_id'] = Variable<String>(timeZoneId);
+    map['calculation_method'] = Variable<String>(calculationMethod);
+    map['revision'] = Variable<int>(revision);
+    map['updated_at'] = Variable<String>(updatedAt);
+    return map;
+  }
+
+  PrayerDevicePreferencesCompanion toCompanion(bool nullToAbsent) {
+    return PrayerDevicePreferencesCompanion(
+      accountId: Value(accountId),
+      provider: Value(provider),
+      providerCityId: Value(providerCityId),
+      cityName: Value(cityName),
+      countryCode: Value(countryCode),
+      countryName: Value(countryName),
+      adminName: adminName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(adminName),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      timeZoneId: Value(timeZoneId),
+      calculationMethod: Value(calculationMethod),
+      revision: Value(revision),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PrayerDevicePreference.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PrayerDevicePreference(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      provider: serializer.fromJson<String>(json['provider']),
+      providerCityId: serializer.fromJson<String>(json['providerCityId']),
+      cityName: serializer.fromJson<String>(json['cityName']),
+      countryCode: serializer.fromJson<String>(json['countryCode']),
+      countryName: serializer.fromJson<String>(json['countryName']),
+      adminName: serializer.fromJson<String?>(json['adminName']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      timeZoneId: serializer.fromJson<String>(json['timeZoneId']),
+      calculationMethod: serializer.fromJson<String>(json['calculationMethod']),
+      revision: serializer.fromJson<int>(json['revision']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'provider': serializer.toJson<String>(provider),
+      'providerCityId': serializer.toJson<String>(providerCityId),
+      'cityName': serializer.toJson<String>(cityName),
+      'countryCode': serializer.toJson<String>(countryCode),
+      'countryName': serializer.toJson<String>(countryName),
+      'adminName': serializer.toJson<String?>(adminName),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'timeZoneId': serializer.toJson<String>(timeZoneId),
+      'calculationMethod': serializer.toJson<String>(calculationMethod),
+      'revision': serializer.toJson<int>(revision),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+    };
+  }
+
+  PrayerDevicePreference copyWith({
+    String? accountId,
+    String? provider,
+    String? providerCityId,
+    String? cityName,
+    String? countryCode,
+    String? countryName,
+    Value<String?> adminName = const Value.absent(),
+    double? latitude,
+    double? longitude,
+    String? timeZoneId,
+    String? calculationMethod,
+    int? revision,
+    String? updatedAt,
+  }) => PrayerDevicePreference(
+    accountId: accountId ?? this.accountId,
+    provider: provider ?? this.provider,
+    providerCityId: providerCityId ?? this.providerCityId,
+    cityName: cityName ?? this.cityName,
+    countryCode: countryCode ?? this.countryCode,
+    countryName: countryName ?? this.countryName,
+    adminName: adminName.present ? adminName.value : this.adminName,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    timeZoneId: timeZoneId ?? this.timeZoneId,
+    calculationMethod: calculationMethod ?? this.calculationMethod,
+    revision: revision ?? this.revision,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  PrayerDevicePreference copyWithCompanion(
+    PrayerDevicePreferencesCompanion data,
+  ) {
+    return PrayerDevicePreference(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      provider: data.provider.present ? data.provider.value : this.provider,
+      providerCityId: data.providerCityId.present
+          ? data.providerCityId.value
+          : this.providerCityId,
+      cityName: data.cityName.present ? data.cityName.value : this.cityName,
+      countryCode: data.countryCode.present
+          ? data.countryCode.value
+          : this.countryCode,
+      countryName: data.countryName.present
+          ? data.countryName.value
+          : this.countryName,
+      adminName: data.adminName.present ? data.adminName.value : this.adminName,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      timeZoneId: data.timeZoneId.present
+          ? data.timeZoneId.value
+          : this.timeZoneId,
+      calculationMethod: data.calculationMethod.present
+          ? data.calculationMethod.value
+          : this.calculationMethod,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PrayerDevicePreference(')
+          ..write('accountId: $accountId, ')
+          ..write('provider: $provider, ')
+          ..write('providerCityId: $providerCityId, ')
+          ..write('cityName: $cityName, ')
+          ..write('countryCode: $countryCode, ')
+          ..write('countryName: $countryName, ')
+          ..write('adminName: $adminName, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('timeZoneId: $timeZoneId, ')
+          ..write('calculationMethod: $calculationMethod, ')
+          ..write('revision: $revision, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    provider,
+    providerCityId,
+    cityName,
+    countryCode,
+    countryName,
+    adminName,
+    latitude,
+    longitude,
+    timeZoneId,
+    calculationMethod,
+    revision,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrayerDevicePreference &&
+          other.accountId == this.accountId &&
+          other.provider == this.provider &&
+          other.providerCityId == this.providerCityId &&
+          other.cityName == this.cityName &&
+          other.countryCode == this.countryCode &&
+          other.countryName == this.countryName &&
+          other.adminName == this.adminName &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.timeZoneId == this.timeZoneId &&
+          other.calculationMethod == this.calculationMethod &&
+          other.revision == this.revision &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PrayerDevicePreferencesCompanion
+    extends UpdateCompanion<PrayerDevicePreference> {
+  final Value<String> accountId;
+  final Value<String> provider;
+  final Value<String> providerCityId;
+  final Value<String> cityName;
+  final Value<String> countryCode;
+  final Value<String> countryName;
+  final Value<String?> adminName;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<String> timeZoneId;
+  final Value<String> calculationMethod;
+  final Value<int> revision;
+  final Value<String> updatedAt;
+  final Value<int> rowid;
+  const PrayerDevicePreferencesCompanion({
+    this.accountId = const Value.absent(),
+    this.provider = const Value.absent(),
+    this.providerCityId = const Value.absent(),
+    this.cityName = const Value.absent(),
+    this.countryCode = const Value.absent(),
+    this.countryName = const Value.absent(),
+    this.adminName = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.timeZoneId = const Value.absent(),
+    this.calculationMethod = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PrayerDevicePreferencesCompanion.insert({
+    required String accountId,
+    required String provider,
+    required String providerCityId,
+    required String cityName,
+    required String countryCode,
+    required String countryName,
+    this.adminName = const Value.absent(),
+    required double latitude,
+    required double longitude,
+    required String timeZoneId,
+    required String calculationMethod,
+    required int revision,
+    required String updatedAt,
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       provider = Value(provider),
+       providerCityId = Value(providerCityId),
+       cityName = Value(cityName),
+       countryCode = Value(countryCode),
+       countryName = Value(countryName),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       timeZoneId = Value(timeZoneId),
+       calculationMethod = Value(calculationMethod),
+       revision = Value(revision),
+       updatedAt = Value(updatedAt);
+  static Insertable<PrayerDevicePreference> custom({
+    Expression<String>? accountId,
+    Expression<String>? provider,
+    Expression<String>? providerCityId,
+    Expression<String>? cityName,
+    Expression<String>? countryCode,
+    Expression<String>? countryName,
+    Expression<String>? adminName,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<String>? timeZoneId,
+    Expression<String>? calculationMethod,
+    Expression<int>? revision,
+    Expression<String>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (provider != null) 'provider': provider,
+      if (providerCityId != null) 'provider_city_id': providerCityId,
+      if (cityName != null) 'city_name': cityName,
+      if (countryCode != null) 'country_code': countryCode,
+      if (countryName != null) 'country_name': countryName,
+      if (adminName != null) 'admin_name': adminName,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (timeZoneId != null) 'time_zone_id': timeZoneId,
+      if (calculationMethod != null) 'calculation_method': calculationMethod,
+      if (revision != null) 'revision': revision,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PrayerDevicePreferencesCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? provider,
+    Value<String>? providerCityId,
+    Value<String>? cityName,
+    Value<String>? countryCode,
+    Value<String>? countryName,
+    Value<String?>? adminName,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<String>? timeZoneId,
+    Value<String>? calculationMethod,
+    Value<int>? revision,
+    Value<String>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return PrayerDevicePreferencesCompanion(
+      accountId: accountId ?? this.accountId,
+      provider: provider ?? this.provider,
+      providerCityId: providerCityId ?? this.providerCityId,
+      cityName: cityName ?? this.cityName,
+      countryCode: countryCode ?? this.countryCode,
+      countryName: countryName ?? this.countryName,
+      adminName: adminName ?? this.adminName,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      timeZoneId: timeZoneId ?? this.timeZoneId,
+      calculationMethod: calculationMethod ?? this.calculationMethod,
+      revision: revision ?? this.revision,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (provider.present) {
+      map['provider'] = Variable<String>(provider.value);
+    }
+    if (providerCityId.present) {
+      map['provider_city_id'] = Variable<String>(providerCityId.value);
+    }
+    if (cityName.present) {
+      map['city_name'] = Variable<String>(cityName.value);
+    }
+    if (countryCode.present) {
+      map['country_code'] = Variable<String>(countryCode.value);
+    }
+    if (countryName.present) {
+      map['country_name'] = Variable<String>(countryName.value);
+    }
+    if (adminName.present) {
+      map['admin_name'] = Variable<String>(adminName.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (timeZoneId.present) {
+      map['time_zone_id'] = Variable<String>(timeZoneId.value);
+    }
+    if (calculationMethod.present) {
+      map['calculation_method'] = Variable<String>(calculationMethod.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PrayerDevicePreferencesCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('provider: $provider, ')
+          ..write('providerCityId: $providerCityId, ')
+          ..write('cityName: $cityName, ')
+          ..write('countryCode: $countryCode, ')
+          ..write('countryName: $countryName, ')
+          ..write('adminName: $adminName, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('timeZoneId: $timeZoneId, ')
+          ..write('calculationMethod: $calculationMethod, ')
+          ..write('revision: $revision, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PrayerReportsTable extends PrayerReports
+    with TableInfo<$PrayerReportsTable, PrayerReport> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PrayerReportsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _localDateMeta = const VerificationMeta(
+    'localDate',
+  );
+  @override
+  late final GeneratedColumn<String> localDate = GeneratedColumn<String>(
+    'local_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _prayerNameMeta = const VerificationMeta(
+    'prayerName',
+  );
+  @override
+  late final GeneratedColumn<String> prayerName = GeneratedColumn<String>(
+    'prayer_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reportIdMeta = const VerificationMeta(
+    'reportId',
+  );
+  @override
+  late final GeneratedColumn<String> reportId = GeneratedColumn<String>(
+    'report_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reportedCompletionAtMeta =
+      const VerificationMeta('reportedCompletionAt');
+  @override
+  late final GeneratedColumn<String> reportedCompletionAt =
+      GeneratedColumn<String>(
+        'reported_completion_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recordedZoneIdMeta = const VerificationMeta(
+    'recordedZoneId',
+  );
+  @override
+  late final GeneratedColumn<String> recordedZoneId = GeneratedColumn<String>(
+    'recorded_zone_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedOffsetMinutesMeta =
+      const VerificationMeta('recordedOffsetMinutes');
+  @override
+  late final GeneratedColumn<int> recordedOffsetMinutes = GeneratedColumn<int>(
+    'recorded_offset_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastAcknowledgedUpdatedAtMeta =
+      const VerificationMeta('lastAcknowledgedUpdatedAt');
+  @override
+  late final GeneratedColumn<String> lastAcknowledgedUpdatedAt =
+      GeneratedColumn<String>(
+        'last_acknowledged_updated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _canonicalRewardConfirmedAtMeta =
+      const VerificationMeta('canonicalRewardConfirmedAt');
+  @override
+  late final GeneratedColumn<String> canonicalRewardConfirmedAt =
+      GeneratedColumn<String>(
+        'canonical_reward_confirmed_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    localDate,
+    prayerName,
+    reportId,
+    status,
+    reportedCompletionAt,
+    recordedZoneId,
+    recordedOffsetMinutes,
+    createdAt,
+    updatedAt,
+    lastAcknowledgedUpdatedAt,
+    canonicalRewardConfirmedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'prayer_reports';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PrayerReport> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('local_date')) {
+      context.handle(
+        _localDateMeta,
+        localDate.isAcceptableOrUnknown(data['local_date']!, _localDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_localDateMeta);
+    }
+    if (data.containsKey('prayer_name')) {
+      context.handle(
+        _prayerNameMeta,
+        prayerName.isAcceptableOrUnknown(data['prayer_name']!, _prayerNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_prayerNameMeta);
+    }
+    if (data.containsKey('report_id')) {
+      context.handle(
+        _reportIdMeta,
+        reportId.isAcceptableOrUnknown(data['report_id']!, _reportIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reportIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('reported_completion_at')) {
+      context.handle(
+        _reportedCompletionAtMeta,
+        reportedCompletionAt.isAcceptableOrUnknown(
+          data['reported_completion_at']!,
+          _reportedCompletionAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recorded_zone_id')) {
+      context.handle(
+        _recordedZoneIdMeta,
+        recordedZoneId.isAcceptableOrUnknown(
+          data['recorded_zone_id']!,
+          _recordedZoneIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedZoneIdMeta);
+    }
+    if (data.containsKey('recorded_offset_minutes')) {
+      context.handle(
+        _recordedOffsetMinutesMeta,
+        recordedOffsetMinutes.isAcceptableOrUnknown(
+          data['recorded_offset_minutes']!,
+          _recordedOffsetMinutesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedOffsetMinutesMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('last_acknowledged_updated_at')) {
+      context.handle(
+        _lastAcknowledgedUpdatedAtMeta,
+        lastAcknowledgedUpdatedAt.isAcceptableOrUnknown(
+          data['last_acknowledged_updated_at']!,
+          _lastAcknowledgedUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('canonical_reward_confirmed_at')) {
+      context.handle(
+        _canonicalRewardConfirmedAtMeta,
+        canonicalRewardConfirmedAt.isAcceptableOrUnknown(
+          data['canonical_reward_confirmed_at']!,
+          _canonicalRewardConfirmedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, localDate, prayerName};
+  @override
+  PrayerReport map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PrayerReport(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      localDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_date'],
+      )!,
+      prayerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prayer_name'],
+      )!,
+      reportId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}report_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      reportedCompletionAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reported_completion_at'],
+      ),
+      recordedZoneId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_zone_id'],
+      )!,
+      recordedOffsetMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recorded_offset_minutes'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      lastAcknowledgedUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_acknowledged_updated_at'],
+      ),
+      canonicalRewardConfirmedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}canonical_reward_confirmed_at'],
+      ),
+    );
+  }
+
+  @override
+  $PrayerReportsTable createAlias(String alias) {
+    return $PrayerReportsTable(attachedDatabase, alias);
+  }
+}
+
+class PrayerReport extends DataClass implements Insertable<PrayerReport> {
+  final String accountId;
+  final String localDate;
+  final String prayerName;
+  final String reportId;
+  final String status;
+  final String? reportedCompletionAt;
+  final String recordedZoneId;
+  final int recordedOffsetMinutes;
+  final String createdAt;
+  final String updatedAt;
+  final String? lastAcknowledgedUpdatedAt;
+  final String? canonicalRewardConfirmedAt;
+  const PrayerReport({
+    required this.accountId,
+    required this.localDate,
+    required this.prayerName,
+    required this.reportId,
+    required this.status,
+    this.reportedCompletionAt,
+    required this.recordedZoneId,
+    required this.recordedOffsetMinutes,
+    required this.createdAt,
+    required this.updatedAt,
+    this.lastAcknowledgedUpdatedAt,
+    this.canonicalRewardConfirmedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['local_date'] = Variable<String>(localDate);
+    map['prayer_name'] = Variable<String>(prayerName);
+    map['report_id'] = Variable<String>(reportId);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || reportedCompletionAt != null) {
+      map['reported_completion_at'] = Variable<String>(reportedCompletionAt);
+    }
+    map['recorded_zone_id'] = Variable<String>(recordedZoneId);
+    map['recorded_offset_minutes'] = Variable<int>(recordedOffsetMinutes);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || lastAcknowledgedUpdatedAt != null) {
+      map['last_acknowledged_updated_at'] = Variable<String>(
+        lastAcknowledgedUpdatedAt,
+      );
+    }
+    if (!nullToAbsent || canonicalRewardConfirmedAt != null) {
+      map['canonical_reward_confirmed_at'] = Variable<String>(
+        canonicalRewardConfirmedAt,
+      );
+    }
+    return map;
+  }
+
+  PrayerReportsCompanion toCompanion(bool nullToAbsent) {
+    return PrayerReportsCompanion(
+      accountId: Value(accountId),
+      localDate: Value(localDate),
+      prayerName: Value(prayerName),
+      reportId: Value(reportId),
+      status: Value(status),
+      reportedCompletionAt: reportedCompletionAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reportedCompletionAt),
+      recordedZoneId: Value(recordedZoneId),
+      recordedOffsetMinutes: Value(recordedOffsetMinutes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      lastAcknowledgedUpdatedAt:
+          lastAcknowledgedUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastAcknowledgedUpdatedAt),
+      canonicalRewardConfirmedAt:
+          canonicalRewardConfirmedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(canonicalRewardConfirmedAt),
+    );
+  }
+
+  factory PrayerReport.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PrayerReport(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      localDate: serializer.fromJson<String>(json['localDate']),
+      prayerName: serializer.fromJson<String>(json['prayerName']),
+      reportId: serializer.fromJson<String>(json['reportId']),
+      status: serializer.fromJson<String>(json['status']),
+      reportedCompletionAt: serializer.fromJson<String?>(
+        json['reportedCompletionAt'],
+      ),
+      recordedZoneId: serializer.fromJson<String>(json['recordedZoneId']),
+      recordedOffsetMinutes: serializer.fromJson<int>(
+        json['recordedOffsetMinutes'],
+      ),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      lastAcknowledgedUpdatedAt: serializer.fromJson<String?>(
+        json['lastAcknowledgedUpdatedAt'],
+      ),
+      canonicalRewardConfirmedAt: serializer.fromJson<String?>(
+        json['canonicalRewardConfirmedAt'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'localDate': serializer.toJson<String>(localDate),
+      'prayerName': serializer.toJson<String>(prayerName),
+      'reportId': serializer.toJson<String>(reportId),
+      'status': serializer.toJson<String>(status),
+      'reportedCompletionAt': serializer.toJson<String?>(reportedCompletionAt),
+      'recordedZoneId': serializer.toJson<String>(recordedZoneId),
+      'recordedOffsetMinutes': serializer.toJson<int>(recordedOffsetMinutes),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'lastAcknowledgedUpdatedAt': serializer.toJson<String?>(
+        lastAcknowledgedUpdatedAt,
+      ),
+      'canonicalRewardConfirmedAt': serializer.toJson<String?>(
+        canonicalRewardConfirmedAt,
+      ),
+    };
+  }
+
+  PrayerReport copyWith({
+    String? accountId,
+    String? localDate,
+    String? prayerName,
+    String? reportId,
+    String? status,
+    Value<String?> reportedCompletionAt = const Value.absent(),
+    String? recordedZoneId,
+    int? recordedOffsetMinutes,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+    Value<String?> canonicalRewardConfirmedAt = const Value.absent(),
+  }) => PrayerReport(
+    accountId: accountId ?? this.accountId,
+    localDate: localDate ?? this.localDate,
+    prayerName: prayerName ?? this.prayerName,
+    reportId: reportId ?? this.reportId,
+    status: status ?? this.status,
+    reportedCompletionAt: reportedCompletionAt.present
+        ? reportedCompletionAt.value
+        : this.reportedCompletionAt,
+    recordedZoneId: recordedZoneId ?? this.recordedZoneId,
+    recordedOffsetMinutes: recordedOffsetMinutes ?? this.recordedOffsetMinutes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt.present
+        ? lastAcknowledgedUpdatedAt.value
+        : this.lastAcknowledgedUpdatedAt,
+    canonicalRewardConfirmedAt: canonicalRewardConfirmedAt.present
+        ? canonicalRewardConfirmedAt.value
+        : this.canonicalRewardConfirmedAt,
+  );
+  PrayerReport copyWithCompanion(PrayerReportsCompanion data) {
+    return PrayerReport(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      localDate: data.localDate.present ? data.localDate.value : this.localDate,
+      prayerName: data.prayerName.present
+          ? data.prayerName.value
+          : this.prayerName,
+      reportId: data.reportId.present ? data.reportId.value : this.reportId,
+      status: data.status.present ? data.status.value : this.status,
+      reportedCompletionAt: data.reportedCompletionAt.present
+          ? data.reportedCompletionAt.value
+          : this.reportedCompletionAt,
+      recordedZoneId: data.recordedZoneId.present
+          ? data.recordedZoneId.value
+          : this.recordedZoneId,
+      recordedOffsetMinutes: data.recordedOffsetMinutes.present
+          ? data.recordedOffsetMinutes.value
+          : this.recordedOffsetMinutes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      lastAcknowledgedUpdatedAt: data.lastAcknowledgedUpdatedAt.present
+          ? data.lastAcknowledgedUpdatedAt.value
+          : this.lastAcknowledgedUpdatedAt,
+      canonicalRewardConfirmedAt: data.canonicalRewardConfirmedAt.present
+          ? data.canonicalRewardConfirmedAt.value
+          : this.canonicalRewardConfirmedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PrayerReport(')
+          ..write('accountId: $accountId, ')
+          ..write('localDate: $localDate, ')
+          ..write('prayerName: $prayerName, ')
+          ..write('reportId: $reportId, ')
+          ..write('status: $status, ')
+          ..write('reportedCompletionAt: $reportedCompletionAt, ')
+          ..write('recordedZoneId: $recordedZoneId, ')
+          ..write('recordedOffsetMinutes: $recordedOffsetMinutes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
+          ..write('canonicalRewardConfirmedAt: $canonicalRewardConfirmedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    localDate,
+    prayerName,
+    reportId,
+    status,
+    reportedCompletionAt,
+    recordedZoneId,
+    recordedOffsetMinutes,
+    createdAt,
+    updatedAt,
+    lastAcknowledgedUpdatedAt,
+    canonicalRewardConfirmedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrayerReport &&
+          other.accountId == this.accountId &&
+          other.localDate == this.localDate &&
+          other.prayerName == this.prayerName &&
+          other.reportId == this.reportId &&
+          other.status == this.status &&
+          other.reportedCompletionAt == this.reportedCompletionAt &&
+          other.recordedZoneId == this.recordedZoneId &&
+          other.recordedOffsetMinutes == this.recordedOffsetMinutes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.lastAcknowledgedUpdatedAt == this.lastAcknowledgedUpdatedAt &&
+          other.canonicalRewardConfirmedAt == this.canonicalRewardConfirmedAt);
+}
+
+class PrayerReportsCompanion extends UpdateCompanion<PrayerReport> {
+  final Value<String> accountId;
+  final Value<String> localDate;
+  final Value<String> prayerName;
+  final Value<String> reportId;
+  final Value<String> status;
+  final Value<String?> reportedCompletionAt;
+  final Value<String> recordedZoneId;
+  final Value<int> recordedOffsetMinutes;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> lastAcknowledgedUpdatedAt;
+  final Value<String?> canonicalRewardConfirmedAt;
+  final Value<int> rowid;
+  const PrayerReportsCompanion({
+    this.accountId = const Value.absent(),
+    this.localDate = const Value.absent(),
+    this.prayerName = const Value.absent(),
+    this.reportId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.reportedCompletionAt = const Value.absent(),
+    this.recordedZoneId = const Value.absent(),
+    this.recordedOffsetMinutes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.canonicalRewardConfirmedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PrayerReportsCompanion.insert({
+    required String accountId,
+    required String localDate,
+    required String prayerName,
+    required String reportId,
+    required String status,
+    this.reportedCompletionAt = const Value.absent(),
+    required String recordedZoneId,
+    required int recordedOffsetMinutes,
+    required String createdAt,
+    required String updatedAt,
+    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.canonicalRewardConfirmedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       localDate = Value(localDate),
+       prayerName = Value(prayerName),
+       reportId = Value(reportId),
+       status = Value(status),
+       recordedZoneId = Value(recordedZoneId),
+       recordedOffsetMinutes = Value(recordedOffsetMinutes),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PrayerReport> custom({
+    Expression<String>? accountId,
+    Expression<String>? localDate,
+    Expression<String>? prayerName,
+    Expression<String>? reportId,
+    Expression<String>? status,
+    Expression<String>? reportedCompletionAt,
+    Expression<String>? recordedZoneId,
+    Expression<int>? recordedOffsetMinutes,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? lastAcknowledgedUpdatedAt,
+    Expression<String>? canonicalRewardConfirmedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (localDate != null) 'local_date': localDate,
+      if (prayerName != null) 'prayer_name': prayerName,
+      if (reportId != null) 'report_id': reportId,
+      if (status != null) 'status': status,
+      if (reportedCompletionAt != null)
+        'reported_completion_at': reportedCompletionAt,
+      if (recordedZoneId != null) 'recorded_zone_id': recordedZoneId,
+      if (recordedOffsetMinutes != null)
+        'recorded_offset_minutes': recordedOffsetMinutes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (lastAcknowledgedUpdatedAt != null)
+        'last_acknowledged_updated_at': lastAcknowledgedUpdatedAt,
+      if (canonicalRewardConfirmedAt != null)
+        'canonical_reward_confirmed_at': canonicalRewardConfirmedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PrayerReportsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? localDate,
+    Value<String>? prayerName,
+    Value<String>? reportId,
+    Value<String>? status,
+    Value<String?>? reportedCompletionAt,
+    Value<String>? recordedZoneId,
+    Value<int>? recordedOffsetMinutes,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? lastAcknowledgedUpdatedAt,
+    Value<String?>? canonicalRewardConfirmedAt,
+    Value<int>? rowid,
+  }) {
+    return PrayerReportsCompanion(
+      accountId: accountId ?? this.accountId,
+      localDate: localDate ?? this.localDate,
+      prayerName: prayerName ?? this.prayerName,
+      reportId: reportId ?? this.reportId,
+      status: status ?? this.status,
+      reportedCompletionAt: reportedCompletionAt ?? this.reportedCompletionAt,
+      recordedZoneId: recordedZoneId ?? this.recordedZoneId,
+      recordedOffsetMinutes:
+          recordedOffsetMinutes ?? this.recordedOffsetMinutes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastAcknowledgedUpdatedAt:
+          lastAcknowledgedUpdatedAt ?? this.lastAcknowledgedUpdatedAt,
+      canonicalRewardConfirmedAt:
+          canonicalRewardConfirmedAt ?? this.canonicalRewardConfirmedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (localDate.present) {
+      map['local_date'] = Variable<String>(localDate.value);
+    }
+    if (prayerName.present) {
+      map['prayer_name'] = Variable<String>(prayerName.value);
+    }
+    if (reportId.present) {
+      map['report_id'] = Variable<String>(reportId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (reportedCompletionAt.present) {
+      map['reported_completion_at'] = Variable<String>(
+        reportedCompletionAt.value,
+      );
+    }
+    if (recordedZoneId.present) {
+      map['recorded_zone_id'] = Variable<String>(recordedZoneId.value);
+    }
+    if (recordedOffsetMinutes.present) {
+      map['recorded_offset_minutes'] = Variable<int>(
+        recordedOffsetMinutes.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (lastAcknowledgedUpdatedAt.present) {
+      map['last_acknowledged_updated_at'] = Variable<String>(
+        lastAcknowledgedUpdatedAt.value,
+      );
+    }
+    if (canonicalRewardConfirmedAt.present) {
+      map['canonical_reward_confirmed_at'] = Variable<String>(
+        canonicalRewardConfirmedAt.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PrayerReportsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('localDate: $localDate, ')
+          ..write('prayerName: $prayerName, ')
+          ..write('reportId: $reportId, ')
+          ..write('status: $status, ')
+          ..write('reportedCompletionAt: $reportedCompletionAt, ')
+          ..write('recordedZoneId: $recordedZoneId, ')
+          ..write('recordedOffsetMinutes: $recordedOffsetMinutes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
+          ..write('canonicalRewardConfirmedAt: $canonicalRewardConfirmedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$FoundationDatabase extends GeneratedDatabase {
   _$FoundationDatabase(QueryExecutor e) : super(e);
   $FoundationDatabaseManager get managers => $FoundationDatabaseManager(this);
@@ -8176,6 +9686,9 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
   late final $MindMapSideLinksTable mindMapSideLinks = $MindMapSideLinksTable(
     this,
   );
+  late final $PrayerDevicePreferencesTable prayerDevicePreferences =
+      $PrayerDevicePreferencesTable(this);
+  late final $PrayerReportsTable prayerReports = $PrayerReportsTable(this);
   late final Index taskRecordsAccountDate = Index(
     'task_records_account_date',
     'CREATE INDEX task_records_account_date ON task_records (account_id, scheduled_date)',
@@ -8256,6 +9769,18 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     'mind_map_side_links_owner_updated',
     'CREATE INDEX mind_map_side_links_owner_updated ON mind_map_side_links (account_id, updated_at)',
   );
+  late final Index prayerReportsOwnerDay = Index(
+    'prayer_reports_owner_day',
+    'CREATE INDEX prayer_reports_owner_day ON prayer_reports (account_id, local_date)',
+  );
+  late final Index prayerReportsOwnerVersion = Index(
+    'prayer_reports_owner_version',
+    'CREATE INDEX prayer_reports_owner_version ON prayer_reports (account_id, updated_at, report_id)',
+  );
+  late final Index prayerReportsOwnerReport = Index(
+    'prayer_reports_owner_report',
+    'CREATE UNIQUE INDEX prayer_reports_owner_report ON prayer_reports (account_id, report_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8275,6 +9800,8 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     mindMapNodeRecords,
     mindMapParentSlots,
     mindMapSideLinks,
+    prayerDevicePreferences,
+    prayerReports,
     taskRecordsAccountDate,
     taskRecordsAccountCategory,
     taskRecordsAccountQuadrant,
@@ -8295,6 +9822,9 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     mindMapSideLinksOwnerFirst,
     mindMapSideLinksOwnerSecond,
     mindMapSideLinksOwnerUpdated,
+    prayerReportsOwnerDay,
+    prayerReportsOwnerVersion,
+    prayerReportsOwnerReport,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -9842,7 +11372,6 @@ typedef $$TaskRecordsTableCreateCompanionBuilder =
       Value<String> checklistJson,
       Value<DateTime?> completedAt,
       Value<DateTime?> completionChangedAt,
-      required int completionXp,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -9864,7 +11393,6 @@ typedef $$TaskRecordsTableUpdateCompanionBuilder =
       Value<String> checklistJson,
       Value<DateTime?> completedAt,
       Value<DateTime?> completionChangedAt,
-      Value<int> completionXp,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -9947,11 +11475,6 @@ class $$TaskRecordsTableFilterComposer
 
   ColumnFilters<DateTime> get completionChangedAt => $composableBuilder(
     column: $table.completionChangedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get completionXp => $composableBuilder(
-    column: $table.completionXp,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10050,11 +11573,6 @@ class $$TaskRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get completionXp => $composableBuilder(
-    column: $table.completionXp,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -10140,11 +11658,6 @@ class $$TaskRecordsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get completionXp => $composableBuilder(
-    column: $table.completionXp,
-    builder: (column) => column,
-  );
-
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -10203,7 +11716,6 @@ class $$TaskRecordsTableTableManager
                 Value<String> checklistJson = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<DateTime?> completionChangedAt = const Value.absent(),
-                Value<int> completionXp = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -10223,7 +11735,6 @@ class $$TaskRecordsTableTableManager
                 checklistJson: checklistJson,
                 completedAt: completedAt,
                 completionChangedAt: completionChangedAt,
-                completionXp: completionXp,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -10246,7 +11757,6 @@ class $$TaskRecordsTableTableManager
                 Value<String> checklistJson = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<DateTime?> completionChangedAt = const Value.absent(),
-                required int completionXp,
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -10266,7 +11776,6 @@ class $$TaskRecordsTableTableManager
                 checklistJson: checklistJson,
                 completedAt: completedAt,
                 completionChangedAt: completionChangedAt,
-                completionXp: completionXp,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -12372,6 +13881,740 @@ typedef $$MindMapSideLinksTableProcessedTableManager =
       MindMapSideLink,
       PrefetchHooks Function()
     >;
+typedef $$PrayerDevicePreferencesTableCreateCompanionBuilder =
+    PrayerDevicePreferencesCompanion Function({
+      required String accountId,
+      required String provider,
+      required String providerCityId,
+      required String cityName,
+      required String countryCode,
+      required String countryName,
+      Value<String?> adminName,
+      required double latitude,
+      required double longitude,
+      required String timeZoneId,
+      required String calculationMethod,
+      required int revision,
+      required String updatedAt,
+      Value<int> rowid,
+    });
+typedef $$PrayerDevicePreferencesTableUpdateCompanionBuilder =
+    PrayerDevicePreferencesCompanion Function({
+      Value<String> accountId,
+      Value<String> provider,
+      Value<String> providerCityId,
+      Value<String> cityName,
+      Value<String> countryCode,
+      Value<String> countryName,
+      Value<String?> adminName,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<String> timeZoneId,
+      Value<String> calculationMethod,
+      Value<int> revision,
+      Value<String> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$PrayerDevicePreferencesTableFilterComposer
+    extends Composer<_$FoundationDatabase, $PrayerDevicePreferencesTable> {
+  $$PrayerDevicePreferencesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get provider => $composableBuilder(
+    column: $table.provider,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get providerCityId => $composableBuilder(
+    column: $table.providerCityId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cityName => $composableBuilder(
+    column: $table.cityName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get countryCode => $composableBuilder(
+    column: $table.countryCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get countryName => $composableBuilder(
+    column: $table.countryName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get adminName => $composableBuilder(
+    column: $table.adminName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timeZoneId => $composableBuilder(
+    column: $table.timeZoneId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get calculationMethod => $composableBuilder(
+    column: $table.calculationMethod,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PrayerDevicePreferencesTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $PrayerDevicePreferencesTable> {
+  $$PrayerDevicePreferencesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get provider => $composableBuilder(
+    column: $table.provider,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get providerCityId => $composableBuilder(
+    column: $table.providerCityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cityName => $composableBuilder(
+    column: $table.cityName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get countryCode => $composableBuilder(
+    column: $table.countryCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get countryName => $composableBuilder(
+    column: $table.countryName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get adminName => $composableBuilder(
+    column: $table.adminName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get timeZoneId => $composableBuilder(
+    column: $table.timeZoneId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get calculationMethod => $composableBuilder(
+    column: $table.calculationMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PrayerDevicePreferencesTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $PrayerDevicePreferencesTable> {
+  $$PrayerDevicePreferencesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get provider =>
+      $composableBuilder(column: $table.provider, builder: (column) => column);
+
+  GeneratedColumn<String> get providerCityId => $composableBuilder(
+    column: $table.providerCityId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cityName =>
+      $composableBuilder(column: $table.cityName, builder: (column) => column);
+
+  GeneratedColumn<String> get countryCode => $composableBuilder(
+    column: $table.countryCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get countryName => $composableBuilder(
+    column: $table.countryName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get adminName =>
+      $composableBuilder(column: $table.adminName, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<String> get timeZoneId => $composableBuilder(
+    column: $table.timeZoneId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get calculationMethod => $composableBuilder(
+    column: $table.calculationMethod,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PrayerDevicePreferencesTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $PrayerDevicePreferencesTable,
+          PrayerDevicePreference,
+          $$PrayerDevicePreferencesTableFilterComposer,
+          $$PrayerDevicePreferencesTableOrderingComposer,
+          $$PrayerDevicePreferencesTableAnnotationComposer,
+          $$PrayerDevicePreferencesTableCreateCompanionBuilder,
+          $$PrayerDevicePreferencesTableUpdateCompanionBuilder,
+          (
+            PrayerDevicePreference,
+            BaseReferences<
+              _$FoundationDatabase,
+              $PrayerDevicePreferencesTable,
+              PrayerDevicePreference
+            >,
+          ),
+          PrayerDevicePreference,
+          PrefetchHooks Function()
+        > {
+  $$PrayerDevicePreferencesTableTableManager(
+    _$FoundationDatabase db,
+    $PrayerDevicePreferencesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PrayerDevicePreferencesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PrayerDevicePreferencesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PrayerDevicePreferencesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> provider = const Value.absent(),
+                Value<String> providerCityId = const Value.absent(),
+                Value<String> cityName = const Value.absent(),
+                Value<String> countryCode = const Value.absent(),
+                Value<String> countryName = const Value.absent(),
+                Value<String?> adminName = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<String> timeZoneId = const Value.absent(),
+                Value<String> calculationMethod = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PrayerDevicePreferencesCompanion(
+                accountId: accountId,
+                provider: provider,
+                providerCityId: providerCityId,
+                cityName: cityName,
+                countryCode: countryCode,
+                countryName: countryName,
+                adminName: adminName,
+                latitude: latitude,
+                longitude: longitude,
+                timeZoneId: timeZoneId,
+                calculationMethod: calculationMethod,
+                revision: revision,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String provider,
+                required String providerCityId,
+                required String cityName,
+                required String countryCode,
+                required String countryName,
+                Value<String?> adminName = const Value.absent(),
+                required double latitude,
+                required double longitude,
+                required String timeZoneId,
+                required String calculationMethod,
+                required int revision,
+                required String updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PrayerDevicePreferencesCompanion.insert(
+                accountId: accountId,
+                provider: provider,
+                providerCityId: providerCityId,
+                cityName: cityName,
+                countryCode: countryCode,
+                countryName: countryName,
+                adminName: adminName,
+                latitude: latitude,
+                longitude: longitude,
+                timeZoneId: timeZoneId,
+                calculationMethod: calculationMethod,
+                revision: revision,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PrayerDevicePreferencesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $PrayerDevicePreferencesTable,
+      PrayerDevicePreference,
+      $$PrayerDevicePreferencesTableFilterComposer,
+      $$PrayerDevicePreferencesTableOrderingComposer,
+      $$PrayerDevicePreferencesTableAnnotationComposer,
+      $$PrayerDevicePreferencesTableCreateCompanionBuilder,
+      $$PrayerDevicePreferencesTableUpdateCompanionBuilder,
+      (
+        PrayerDevicePreference,
+        BaseReferences<
+          _$FoundationDatabase,
+          $PrayerDevicePreferencesTable,
+          PrayerDevicePreference
+        >,
+      ),
+      PrayerDevicePreference,
+      PrefetchHooks Function()
+    >;
+typedef $$PrayerReportsTableCreateCompanionBuilder =
+    PrayerReportsCompanion Function({
+      required String accountId,
+      required String localDate,
+      required String prayerName,
+      required String reportId,
+      required String status,
+      Value<String?> reportedCompletionAt,
+      required String recordedZoneId,
+      required int recordedOffsetMinutes,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> lastAcknowledgedUpdatedAt,
+      Value<String?> canonicalRewardConfirmedAt,
+      Value<int> rowid,
+    });
+typedef $$PrayerReportsTableUpdateCompanionBuilder =
+    PrayerReportsCompanion Function({
+      Value<String> accountId,
+      Value<String> localDate,
+      Value<String> prayerName,
+      Value<String> reportId,
+      Value<String> status,
+      Value<String?> reportedCompletionAt,
+      Value<String> recordedZoneId,
+      Value<int> recordedOffsetMinutes,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> lastAcknowledgedUpdatedAt,
+      Value<String?> canonicalRewardConfirmedAt,
+      Value<int> rowid,
+    });
+
+class $$PrayerReportsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $PrayerReportsTable> {
+  $$PrayerReportsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localDate => $composableBuilder(
+    column: $table.localDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prayerName => $composableBuilder(
+    column: $table.prayerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reportId => $composableBuilder(
+    column: $table.reportId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reportedCompletionAt => $composableBuilder(
+    column: $table.reportedCompletionAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedZoneId => $composableBuilder(
+    column: $table.recordedZoneId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get recordedOffsetMinutes => $composableBuilder(
+    column: $table.recordedOffsetMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get canonicalRewardConfirmedAt => $composableBuilder(
+    column: $table.canonicalRewardConfirmedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PrayerReportsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $PrayerReportsTable> {
+  $$PrayerReportsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localDate => $composableBuilder(
+    column: $table.localDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get prayerName => $composableBuilder(
+    column: $table.prayerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reportId => $composableBuilder(
+    column: $table.reportId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reportedCompletionAt => $composableBuilder(
+    column: $table.reportedCompletionAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedZoneId => $composableBuilder(
+    column: $table.recordedZoneId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get recordedOffsetMinutes => $composableBuilder(
+    column: $table.recordedOffsetMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get canonicalRewardConfirmedAt => $composableBuilder(
+    column: $table.canonicalRewardConfirmedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PrayerReportsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $PrayerReportsTable> {
+  $$PrayerReportsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get localDate =>
+      $composableBuilder(column: $table.localDate, builder: (column) => column);
+
+  GeneratedColumn<String> get prayerName => $composableBuilder(
+    column: $table.prayerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reportId =>
+      $composableBuilder(column: $table.reportId, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get reportedCompletionAt => $composableBuilder(
+    column: $table.reportedCompletionAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recordedZoneId => $composableBuilder(
+    column: $table.recordedZoneId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get recordedOffsetMinutes => $composableBuilder(
+    column: $table.recordedOffsetMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get canonicalRewardConfirmedAt => $composableBuilder(
+    column: $table.canonicalRewardConfirmedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$PrayerReportsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $PrayerReportsTable,
+          PrayerReport,
+          $$PrayerReportsTableFilterComposer,
+          $$PrayerReportsTableOrderingComposer,
+          $$PrayerReportsTableAnnotationComposer,
+          $$PrayerReportsTableCreateCompanionBuilder,
+          $$PrayerReportsTableUpdateCompanionBuilder,
+          (
+            PrayerReport,
+            BaseReferences<
+              _$FoundationDatabase,
+              $PrayerReportsTable,
+              PrayerReport
+            >,
+          ),
+          PrayerReport,
+          PrefetchHooks Function()
+        > {
+  $$PrayerReportsTableTableManager(
+    _$FoundationDatabase db,
+    $PrayerReportsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PrayerReportsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PrayerReportsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PrayerReportsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> localDate = const Value.absent(),
+                Value<String> prayerName = const Value.absent(),
+                Value<String> reportId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> reportedCompletionAt = const Value.absent(),
+                Value<String> recordedZoneId = const Value.absent(),
+                Value<int> recordedOffsetMinutes = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<String?> canonicalRewardConfirmedAt =
+                    const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PrayerReportsCompanion(
+                accountId: accountId,
+                localDate: localDate,
+                prayerName: prayerName,
+                reportId: reportId,
+                status: status,
+                reportedCompletionAt: reportedCompletionAt,
+                recordedZoneId: recordedZoneId,
+                recordedOffsetMinutes: recordedOffsetMinutes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                canonicalRewardConfirmedAt: canonicalRewardConfirmedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String localDate,
+                required String prayerName,
+                required String reportId,
+                required String status,
+                Value<String?> reportedCompletionAt = const Value.absent(),
+                required String recordedZoneId,
+                required int recordedOffsetMinutes,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<String?> canonicalRewardConfirmedAt =
+                    const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PrayerReportsCompanion.insert(
+                accountId: accountId,
+                localDate: localDate,
+                prayerName: prayerName,
+                reportId: reportId,
+                status: status,
+                reportedCompletionAt: reportedCompletionAt,
+                recordedZoneId: recordedZoneId,
+                recordedOffsetMinutes: recordedOffsetMinutes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                canonicalRewardConfirmedAt: canonicalRewardConfirmedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PrayerReportsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $PrayerReportsTable,
+      PrayerReport,
+      $$PrayerReportsTableFilterComposer,
+      $$PrayerReportsTableOrderingComposer,
+      $$PrayerReportsTableAnnotationComposer,
+      $$PrayerReportsTableCreateCompanionBuilder,
+      $$PrayerReportsTableUpdateCompanionBuilder,
+      (
+        PrayerReport,
+        BaseReferences<_$FoundationDatabase, $PrayerReportsTable, PrayerReport>,
+      ),
+      PrayerReport,
+      PrefetchHooks Function()
+    >;
 
 class $FoundationDatabaseManager {
   final _$FoundationDatabase _db;
@@ -12404,4 +14647,11 @@ class $FoundationDatabaseManager {
       $$MindMapParentSlotsTableTableManager(_db, _db.mindMapParentSlots);
   $$MindMapSideLinksTableTableManager get mindMapSideLinks =>
       $$MindMapSideLinksTableTableManager(_db, _db.mindMapSideLinks);
+  $$PrayerDevicePreferencesTableTableManager get prayerDevicePreferences =>
+      $$PrayerDevicePreferencesTableTableManager(
+        _db,
+        _db.prayerDevicePreferences,
+      );
+  $$PrayerReportsTableTableManager get prayerReports =>
+      $$PrayerReportsTableTableManager(_db, _db.prayerReports);
 }
