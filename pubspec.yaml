@@ -10,10 +10,15 @@ environment:
 # Sorted alphabetically (sort_pub_dependencies). Approved Foundation direction
 # only; every entry has a present use case (Constitution VIII).
 dependencies:
+  # Pinned offline Prayer calculations; raw solar API reviewed for 008.
+  adhan_dart: 2.0.1
+
   # Local-first encrypted persistence (Constitution III/IX: Drift over SQLite).
   connectivity_plus: ^7.3.1
   # Development-only device size, safe-area, and text-scale simulation.
   device_preview: ^1.3.1
+  # Cancellable city discovery; no network dependency for saved schedules.
+  dio: 5.11.1
   drift: ^2.34.4
   drift_flutter: ^0.3.1
 
@@ -54,6 +59,10 @@ dependencies:
   # Remote infrastructure only; used exclusively by core/data/cloud adapters
   # behind the Cloud Session and Cloud Sync ports (Constitution: Supabase).
   supabase_flutter: ^2.17.2
+
+  # Embedded full IANA database and stable per-date/prayer report identity.
+  timezone: 0.11.2
+  uuid: 4.6.0
 
 dev_dependencies:
   bloc_test: ^10.0.0

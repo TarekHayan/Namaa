@@ -1272,4 +1272,8 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get dashboardBackToHome => 'Back to Home';
+
+  @override
+  String get prayerSearchUnavailable =>
+      'City search is currently unavailable. Your saved city and its prayer times remain available offline.';
 }

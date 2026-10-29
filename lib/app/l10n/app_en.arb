@@ -426,5 +426,6 @@
   "dashboardComingSoonCountersTitle": "Counters",
   "dashboardComingSoonFinanceTitle": "Finance",
   "dashboardComingSoonDescription": "This space is being prepared and will be available soon.",
-  "dashboardBackToHome": "Back to Home"
+  "dashboardBackToHome": "Back to Home",
+  "prayerSearchUnavailable": "City search is currently unavailable. Your saved city and its prayer times remain available offline."
 }

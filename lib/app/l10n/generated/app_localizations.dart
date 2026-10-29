@@ -2554,6 +2554,12 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Back to Home'**
   String get dashboardBackToHome;
+
+  /// No description provided for @prayerSearchUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'City search is currently unavailable. Your saved city and its prayer times remain available offline.'**
+  String get prayerSearchUnavailable;
 }
 
 class _FoundationLocalizationsDelegate

@@ -1261,4 +1261,8 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get dashboardBackToHome => 'العودة إلى الرئيسية';
+
+  @override
+  String get prayerSearchUnavailable =>
+      'البحث عن مدينة غير متاح الآن. تظل مدينتك المحفوظة ومواقيتها متاحة دون إنترنت.';
 }
