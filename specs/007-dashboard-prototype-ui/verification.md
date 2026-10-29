@@ -437,10 +437,10 @@ The branch also contains two existing Dashboard commits above `develop`: `8bc168
 
 ### Still open after merge
 
-- **T047**: the CI Android emulator (API 35, x86_64) measured `phone_readable_ms=1377`, `desktop_readable_ms=509`, `state_ready_ms=1471` with the 500-Task/100-Habit/200-award fixture, within the two-second limit. A physical phone run is still required.
+- **T047 passed on a physical phone (2026-10-29).** An Android phone over USB (Oplus device, 1080x2400, Mali GPU), `flutter drive --profile --driver=test_driver/integration_test.dart --target=integration_test/today_performance_test.dart`, 500 Tasks / 100 Habits / 200 awards, offline: `mode=profile state_ready_ms=157 phone_readable_ms=112 desktop_readable_ms=117 action_ms=166 owner_update_ms=111`, all under the two-second limit, 2/2 tests passed. The same file run with `flutter test` (debug build, JIT) measured 2,636 ms for first readable phone content and failed; debug timing is not user-facing and is recorded for reference only. The CI Android emulator (API 35, x86_64, debug) measured `phone_readable_ms=1377`, `desktop_readable_ms=509`.
 - **T049**: the final prototype and FR/SC audit has not been performed.
-- PR #9 was merged at the owner's decision with T047 and T049 open; 007 is not closed until both are recorded.
-- **Release prerequisite**: the app now calls the `_v2` sync RPCs. Migrations 0011–0014 are recorded on the linked test project; they must be applied to staging and production before a build using them is distributed.
+- PR #9 was merged at the owner's decision with T047 and T049 open. T047 is now recorded; 007 is not closed until T049 is recorded.
+- **Release prerequisite**: the app now calls the `_v2` sync RPCs. The linked Supabase project is the staging project (`namaa_satging`), which has migrations 0001–0014. A production project must receive them before a build that uses it is distributed.
 
 ### Deferred known issues
 

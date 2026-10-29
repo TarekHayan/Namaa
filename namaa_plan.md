@@ -959,10 +959,11 @@ Implement:
 -   Dashboard / Today
 
 Status (2026-10-29): implemented and merged into `develop` (PR #9) after
-the full five-target CI gate passed. Still open for the Dashboard feature
-(007): a physical-phone performance run (T047) and the final prototype
-audit (T049). Before distributing a build, apply Supabase migrations
-0011--0014 to staging and production.
+the full five-target CI gate passed. The physical-phone performance run
+(T047) passed in profile mode. Still open for the Dashboard feature (007):
+the final prototype audit (T049). Supabase migrations 0001--0014 are on
+the staging project; apply them to a production project before
+distributing a build that uses it.
 
 Known issues carried forward (details in
 `specs/007-dashboard-prototype-ui/verification.md`):
