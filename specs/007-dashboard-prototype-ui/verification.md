@@ -415,3 +415,42 @@ The branch also contains two existing Dashboard commits above `develop`: `8bc168
 - Focused Windows integration, each file run as CI does: Task offline sync **1/1**, Task completion sync **3/3**, Habit offline sync **3/3**, Mind Map offline sync **1/1**, Dashboard journey **15/15**. The Habit integration fixture's old expected conflict was removed because both edits had been sent and the inbound snapshot had no pending local edit; SQL and unit tests separately cover actual divergent-version conflicts.
 - An additional equal-timestamp/queued-edit guard was checked in the Task, Habit and Mind Map reconcilers; their focused regression run passed **22/22**. Equal timestamps with different payloads retain conflict evidence even when that timestamp appears in the local outbox.
 - The 500-Task/100-Habit/200-award Windows debug performance run measured **3,282 ms** for first readable phone-sized content and failed the two-second assertion on its first run; a repeat measured **1,878 ms** phone-sized and **943 ms** desktop, passing. This host variability is recorded rather than counted as a phone-device pass. Android device evidence for T047 and the full cross-platform gate for T048 remain pending.
+
+## Phase 3 close-out: five-target gate, merge and deferred work (2026-10-29)
+
+### Corrections after the final review
+
+- **One conflict record per clash.** Inbound reconciliation and outbound dispatch now derive the same conflict ID from the record and its two version timestamps; payloads are hashed into the ID only when the timestamps are equal. Outbound sees the server's stored Task JSON (`completionChangedAt` rewritten as `+00:00`) while inbound re-encodes it through the codec (`Z`), so the earlier payload-hash ID split one clash into two records. An end-to-end test (`task_conflict_identity_test.dart`) records a clash inbound, then replays server-formatted JSON outbound, and finds exactly one record; it finds two on the previous code.
+- **No conflict for an edit made during a sync.** Task, Habit and Mind Map reconcilers keep a queued local edit when the remote snapshot is that edit's base version or its own upload. An outbound conflict now rebases the next queued edit on the server's winning version.
+- **Task XP is one constant.** `kTaskCompletionXp = 20` (XP domain) is used for creation, the local award and the Tasks screen; the client no longer chooses the reward, and incoming payload values are ignored. The local `completion_xp` column is kept and written with the constant.
+- **CI-only failures.** The Android emulator system image is installed with bounded retries before the emulator action (a corrupt download had stopped the foundation job). The narrow Arabic Today journey pins a realistic 47/34 safe area: with the ratio forced to 1, the iOS simulator's physical 186 px notch was read as 186 pt, grew the header to 302 pt and covered the Do First task action. A failure report naming the covering layer is kept in the test.
+
+### CI structure
+
+- Every PR run is the full five-target check. iOS runs as five feature groups (foundation, tasks, habits, mind-maps, today), up to five at a time; each group sets up, boots and builds once, then gives every file its own entry point, incremental Dart build and XCTest launch, clearing the app and Keychain between files. All files run even after a failure. `flutter pub get` is retried up to three times. Manual `mobile_only` runs can select `ios_groups` and `ios_suites`.
+- The previous layout (22 iOS jobs, three at a time, each building the whole app) took about 3.5 hours.
+
+### T048 evidence
+
+- Run [40782530780](https://github.com/TarekHayan/Namaa/actions/runs/40782530780) at `36e6970`: **all 15 jobs passed** in **45 minutes**: quality (format, CI script tests, analyze, unit/widget/architecture tests), Supabase database and RLS, Android foundation/tasks/habits-today/mind-maps, Linux, Windows, macOS, iOS foundation (25 min), tasks (26), today (29), habits (32), mind-maps (40), and the Foundation and Task five-target gate.
+- PR [#9](https://github.com/TarekHayan/Namaa/pull/9) was merged into `develop` at `2e458fc`.
+
+### Still open after merge
+
+- **T047 passed on a physical phone (2026-10-29).** An Android phone over USB (Oplus device, 1080x2400, Mali GPU), `flutter drive --profile --driver=test_driver/integration_test.dart --target=integration_test/today_performance_test.dart`, 500 Tasks / 100 Habits / 200 awards, offline: `mode=profile state_ready_ms=157 phone_readable_ms=112 desktop_readable_ms=117 action_ms=166 owner_update_ms=111`, all under the two-second limit, 2/2 tests passed. The same file run with `flutter test` (debug build, JIT) measured 2,636 ms for first readable phone content and failed; debug timing is not user-facing and is recorded for reference only. The CI Android emulator (API 35, x86_64, debug) measured `phone_readable_ms=1377`, `desktop_readable_ms=509`.
+- **T049**: the final prototype and FR/SC audit has not been performed.
+- PR #9 was merged at the owner's decision with T047 and T049 open. T047 is now recorded; 007 is not closed until T049 is recorded.
+- **Release prerequisite**: the app now calls the `_v2` sync RPCs. The linked Supabase project is the staging project (`namaa_satging`), which has migrations 0001–0014. A production project must receive them before a build that uses it is distributed.
+
+### Deferred known issues
+
+| Issue | Effect | Target |
+|---|---|---|
+| Acknowledged `pending_changes` rows are never pruned | The encrypted database grows with every local action | Sync hardening, before Phase 6 (Finance) |
+| Each sync downloads the complete account snapshot | Cost grows with data size on every entry, reconnect and completion | Sync hardening (incremental `updated_at` cursor), before Phase 6 |
+| Server Mind Map conflict rows are imported under their own IDs | A clash already recorded locally can appear a second time | Sync hardening |
+| `_v2` RPCs pass the base version to the inner functions inside the payload | The inner functions must keep stripping `_syncBaseUpdatedAt` | Sync hardening (move the bodies into typed functions) |
+| Habit projection filters the full day history once per Habit on every emission | Habit screens slow down as history grows | Phase 11 (performance refinement) |
+| Counts and streaks are built by string concatenation | Arabic plural forms and punctuation order cannot be localized (Constitution VII) | Phase 8 (Language and RTL) |
+| Today content scrolls behind the translucent header and reveal-on-focus ignores it | Keyboard or assistive-technology focus can place a control under the header | Phase 11 (UI refinement) |
+| The local `task_records.completion_xp` column is unused | Dead column | Next local schema migration |

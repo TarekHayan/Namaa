@@ -958,6 +958,28 @@ Implement:
 -   Mind Maps
 -   Dashboard / Today
 
+Status (2026-10-29): implemented and merged into `develop` (PR #9) after
+the full five-target CI gate passed. The physical-phone performance run
+(T047) passed in profile mode. Still open for the Dashboard feature (007):
+the final prototype audit (T049). Supabase migrations 0001--0014 are on
+the staging project; apply them to a production project before
+distributing a build that uses it.
+
+Known issues carried forward (details in
+`specs/007-dashboard-prototype-ui/verification.md`):
+
+-   Sync hardening, before Phase 6 (Finance): prune acknowledged outbox
+    rows; download only changes since the last sync instead of the whole
+    account; give server Mind Map conflict rows the shared conflict ID;
+    pass the sync base version to typed RPC functions instead of inside
+    the payload.
+-   Phase 8 (Language and RTL): build counts and streaks from ARB messages
+    with plural forms instead of string concatenation.
+-   Phase 11 (UI refinement): stop Today content from being revealed under
+    the translucent header; group Habit day history once per update.
+-   Next local schema migration: drop the unused
+    `task_records.completion_xp` column.
+
 ## Phase 4 --- Religious Experience
 
 Implement:
