@@ -20,6 +20,8 @@ abstract interface class PrayerRepository {
     PrayerReport report, {
     required String operationId,
     required DateTime? acknowledgedBase,
+    required DateTime? expectedCurrentVersion,
+    bool queueForSync = true,
   });
   Future<AppResult<void>> applyInbound(PrayerReport report);
 }

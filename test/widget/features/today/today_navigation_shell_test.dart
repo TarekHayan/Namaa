@@ -7,7 +7,10 @@ import 'package:namma_project/features/today/presentation/widgets/today_navigati
 import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 
 void main() {
-  Widget navigation({required TodayNavigationSection initialSection}) {
+  Widget navigation({
+    required TodayNavigationSection initialSection,
+    VoidCallback? onPrayer,
+  }) {
     var section = initialSection;
     return MaterialApp(
       localizationsDelegates: FoundationLocalizations.localizationsDelegates,
@@ -23,6 +26,7 @@ void main() {
             onTasks: () => show(TodayNavigationSection.tasks),
             onHabits: () => show(TodayNavigationSection.habits),
             onMindMaps: () => show(TodayNavigationSection.mindMaps),
+            onPrayer: onPrayer,
             onPreferences: () {},
             child: Scaffold(
               body: Center(
@@ -124,4 +128,41 @@ void main() {
       1,
     );
   });
+
+  for (final width in [390.0, 1280.0]) {
+    testWidgets('track opens prayer and retains navigation at $width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      var prayerOpened = 0;
+      await tester.pumpWidget(
+        navigation(
+          initialSection: TodayNavigationSection.home,
+          onPrayer: () => prayerOpened++,
+        ),
+      );
+      await tester.tap(
+        find.byKey(width < 1100 ? kTodayBottomTrackKey : kTodaySidebarTrackKey),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('prayer_track_0')), findsOneWidget);
+      if (width < 1100) {
+        expect(
+          tester
+              .widget<NavigationBar>(find.byKey(kTodayBottomNavigationKey))
+              .selectedIndex,
+          2,
+        );
+      } else {
+        expect(find.byKey(kTodaySidebarKey), findsOneWidget);
+      }
+      await tester.tap(find.byKey(const Key('prayer_track_0')));
+      await tester.pumpAndSettle();
+      expect(prayerOpened, 1);
+      expect(find.byKey(const Key('prayer_track_0')), findsNothing);
+    });
+  }
 }

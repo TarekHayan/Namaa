@@ -85,6 +85,8 @@ final class DriftPrayerRepository implements PrayerRepository {
     PrayerReport report, {
     required String operationId,
     required DateTime? acknowledgedBase,
+    required DateTime? expectedCurrentVersion,
+    bool queueForSync = true,
   }) async {
     try {
       await _database.transaction(() async {
@@ -94,35 +96,40 @@ final class DriftPrayerRepository implements PrayerRepository {
           prayerName: report.name,
         )).valueOrNull;
         if (operationId.trim().isEmpty ||
+            prior?.updatedAt != expectedCurrentVersion ||
             acknowledgedBase != prior?.lastAcknowledgedUpdatedAt ||
             (prior != null && !report.updatedAt.isAfter(prior.updatedAt)) ||
             (prior != null && prior.reportId != report.reportId)) {
           throw StateError('Invalid prayer report transition');
         }
-        final existingOperation =
-            await (_database.select(_database.pendingChanges)
-                  ..where((table) => table.operationId.equals(operationId)))
-                .getSingleOrNull();
-        if (existingOperation != null) {
-          throw StateError('Duplicate prayer operation');
+        if (queueForSync) {
+          final existingOperation =
+              await (_database.select(_database.pendingChanges)
+                    ..where((table) => table.operationId.equals(operationId)))
+                  .getSingleOrNull();
+          if (existingOperation != null) {
+            throw StateError('Duplicate prayer operation');
+          }
         }
         await _upsert(report);
-        await _database
-            .into(_database.pendingChanges)
-            .insert(
-              PendingChangesCompanion.insert(
-                operationId: operationId,
-                accountId: report.accountId,
-                entityType: 'prayer_report',
-                entityId: report.reportId,
-                kind: prior == null ? ChangeKind.create : ChangeKind.update,
-                state: PendingChangeState.pending,
-                serializedChange: jsonEncode(_codec.encode(report)),
-                createdAt: report.updatedAt,
-                versionTimestamp: report.updatedAt,
-                baseUpdatedAt: Value(acknowledgedBase),
-              ),
-            );
+        if (queueForSync) {
+          await _database
+              .into(_database.pendingChanges)
+              .insert(
+                PendingChangesCompanion.insert(
+                  operationId: operationId,
+                  accountId: report.accountId,
+                  entityType: 'prayer_report',
+                  entityId: report.reportId,
+                  kind: prior == null ? ChangeKind.create : ChangeKind.update,
+                  state: PendingChangeState.pending,
+                  serializedChange: jsonEncode(_codec.encode(report)),
+                  createdAt: report.updatedAt,
+                  versionTimestamp: report.updatedAt,
+                  baseUpdatedAt: Value(acknowledgedBase),
+                ),
+              );
+        }
       });
       return const AppResult.success(null);
     } catch (error) {

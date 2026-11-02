@@ -12,16 +12,26 @@ import 'today_navigation_shell.dart';
 /// Prototype-aligned Quick Action Hubs presenting exactly six hubs in order:
 /// 1. Prayer, 2. Focus, 3. Quran, 4. Adhkar, 5. Qiyam, 6. Counters.
 class TodayQuickHubs extends StatelessWidget {
-  const TodayQuickHubs({super.key, required this.colors, this.onOpenHub});
+  const TodayQuickHubs({
+    super.key,
+    required this.colors,
+    this.onOpenHub,
+    this.onPrayer,
+  });
 
   final AppColors colors;
   final void Function(DashboardPreviewFeature feature)? onOpenHub;
+  final VoidCallback? onPrayer;
 
   void _navigateToHub(
     BuildContext context,
     DashboardPreviewFeature feature,
     String title,
   ) {
+    if (feature == DashboardPreviewFeature.prayer && onPrayer != null) {
+      onPrayer!();
+      return;
+    }
     if (onOpenHub != null) {
       onOpenHub!(feature);
       return;
@@ -42,8 +52,8 @@ class TodayQuickHubs extends StatelessWidget {
     final hubs = [
       (
         feature: DashboardPreviewFeature.prayer,
-        title: copy.dashboardComingSoonPrayerTitle,
-        comingSoonTitle: copy.dashboardComingSoonPrayerTitle,
+        title: copy.prayerTitle,
+        comingSoonTitle: copy.prayerTitle,
         icon: Icons.schedule_rounded,
         iconBg: colors.primary.withValues(alpha: 0.14),
         iconColor: colors.primary,

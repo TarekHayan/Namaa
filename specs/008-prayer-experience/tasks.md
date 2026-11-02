@@ -183,9 +183,29 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 
 ## Phase 3: User Story 1 — Real city schedules (P1 / MVP)
 
-**Goal**: Deliver manual online city discovery, durable per-device selection, offline schedules and a real Home prayer card.
+**Goal**: Deliver foreground automatic location with a manual city fallback, durable per-device selection, offline schedules and a real Home prayer card.
 
 **Independent check**: Choose city→Prayer→Home, restart offline, advance seven dates, change city/method and resume at boundaries; both screens agree on that device without cloud or report actions.
+
+**Checkpoint (2026-10-31):** The local Prayer/Today implementation and the Windows offline journey are in place; focused tests and broad static analysis pass. The unpacked `prototype/` folder supplied the seven-method JS parity source, and all 504 prototype values matched within 60 seconds. Phase 3 remains open: T030 still needs source-attributed zero-coordinate/polar fixtures and T031 cannot meet SC-002 while 39/504 independent AlAdhan values exceed 60 seconds. See `verification.md` and `test/fixtures/prayer/calculation/README.md`. The unchecked test tasks still require their full stated case matrices; a green subset is not task completion.
+
+**Source decision (2026-10-31):** AlAdhan's complete annual calendar is now the primary, encrypted device-local timetable. The on-device calculator is the visibly labelled fallback when a date is not covered and the service cannot be reached. The following year is prefetched to cover at least twelve months after first download; this does not close the independent local-calculator comparison or real-network/device gates.
+
+**Location update (2026-11-01):** The user requested automatic device location for accurate coordinates. Foreground permission and a device fix replace typed search as first setup. Manual city search remains the fallback; there is no background tracking. The first location uses the provider's supported method suggestion, while later method changes remain user-controlled.
+
+- [X] T138 [US1] Add foreground device location with Android/iOS/macOS permissions, IANA zone lookup and owner-local saved coordinates. Reject denied/disabled/imprecise fixes; keep manual city search available; verify success and denial with focused tests.
+- [X] T139 [US1] Make the Prayer heading responsive, show the actual location context and source above the timetable, and retry transient annual-provider failures without concealing the labelled local fallback.
+
+- [X] T135 [US1] Add owner/context/year encrypted annual timetable storage and v8→v9 migration, preserving old Prayer reports and earlier schema upgrades.
+  - **Done**: Complete-year validation before atomic cache replacement; old installed data retained; restart and owner isolation tests.
+
+- [X] T136 [US1] Add AlAdhan annual calendar adapter, prefetch the following Gregorian year and replace the immediate labelled local schedule with validated cached API times when available.
+  - **Done**: Explicit coordinates, zone, method and Shafi school; no daily download; cache survives offline restart; malformed annual response rejected; Home and Prayer share one source.
+
+- [ ] T137 [US1] Verify the annual endpoint against a live accountless AlAdhan response and measure offline/cache/fallback on the named phone and desktop targets.
+  - **Depends**: T135, T136
+  - **Done**: Capture actual annual payload shape, 365/366-day coverage, DST and method metadata; verify at least one year of offline lookahead, reconnect refresh and source labels in Arabic/English. A mocked adapter alone does not close this task.
+  - **Partial evidence (2026-11-01)**: Live accountless annual response passed the opt-in test; the user reports the location/timetable flow works on a real phone. Named phone/desktop source, cache, offline and fallback checks remain.
 
 - [ ] T030 [US1] Capture source-attributed calculation fixtures under test/fixtures/prayer/calculation/ and document normalization in its README.md.
   - **Depends**: T029
@@ -227,7 +247,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T029
   - **Done**: AR/EN fallback names; duplicate-city disambiguation; max10; valid zero coords; malformed/missing zone; noResults/offline/429/timeouts/cancellation; no live HTTP in routine tests.
 
-- [ ] T040 [US1] Implement lib/features/prayer/data/dio_city_search.dart.
+- [X] T040 [US1] Implement lib/features/prayer/data/dio_city_search.dart.
   - **Depends**: T039, T007
   - **Done**: Map direct evaluation and normalized licensed-gateway responses per contract; 5s connect/8s receive limits, no infinite retry/free fallback; never log queries/coords/keys or send account/prayer payloads.
 
@@ -235,7 +255,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T029
   - **Done**: Confirmation required; save/method update validates known IANA zone and expected revision; stale result/cancel/failure cannot replace saved city.
 
-- [ ] T042 [US1] Implement lib/features/prayer/application/prayer_preferences_commands.dart.
+- [X] T042 [US1] Implement lib/features/prayer/application/prayer_preferences_commands.dart.
   - **Depends**: T041, T036, T024
   - **Done**: Obtain owner from scope/session; validate city/method/zone via ports; atomically save confirmed candidate/revision; no cloud sync.
 
@@ -268,19 +288,19 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T048
   - **Done**: Use current AppButton/AppSelectField/AppStatusView; explicit city+method confirmation; show localized provider names/country/admin; saved location/attribution available without rerunning search.
 
-- [ ] T050 [US1] Implement read-only lib/features/prayer/presentation/prayer_cubit.dart and prayer_state.dart.
+- [X] T050 [US1] Implement read-only lib/features/prayer/presentation/prayer_cubit.dart and prayer_state.dart.
   - **Depends**: T046
   - **Done**: Subscribe to shared context, expose setup/schedule/report health and retry; cancel on scope replacement; no report mutation yet and no timer-derived status.
 
-- [ ] T051 [US1] Implement lib/features/prayer/presentation/prayer_screen.dart and widgets/prayer_schedule_list.dart using final reusable shared primitives.
+- [X] T051 [US1] Implement lib/features/prayer/presentation/prayer_screen.dart and widgets/prayer_schedule_list.dart using final reusable shared primitives.
   - **Depends**: T049, T050, T047
   - **Done**: Usable city setup, method/date/zone heading, five ordered names/times, supplementary values and attribution. Expose final widget extension points for US2/US3; no throwaway duplicate screen or fake functional controls.
 
-- [ ] T052 [US1] Add lib/app/composition/prayer_preview_adapters.dart and wire /prayer in lib/app/composition/configure_dependencies.dart, lib/app/routing/app_router.dart and lib/app/app.dart.
+- [X] T052 [US1] Add lib/app/composition/prayer_preview_adapters.dart and wire /prayer in lib/app/composition/configure_dependencies.dart, lib/app/routing/app_router.dart and lib/app/app.dart.
   - **Depends**: T051, T014
   - **Done**: Closed dedicated preview owner and local-noop sync; same existing real session gate; no public sign-in added or release bypass; preserve existing preview Task/Habit owners.
 
-- [ ] T053 [P] [US1] Create lib/features/today/application/today_prayer_port.dart, domain/today_prayer_reference.dart and data/prayer_today_adapter.dart.
+- [X] T053 [P] [US1] Create lib/features/today/application/today_prayer_port.dart, domain/today_prayer_reference.dart and data/prayer_today_adapter.dart.
   - **Depends**: T046
   - **Done**: Map Prayer application snapshot only; separate schedule/report availability; include prayerLocalDate/zone/contextRevision; no Prayer DB/UI imports.
 
@@ -288,7 +308,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T053, T052
   - **Done**: Explicit prayerOwnerId and guarded source subscription/deadline/retry; keep SystemTodayCalendar for existing domains; no account/preview owner wildcard.
 
-- [ ] T055 [US1] Bind lib/features/today/presentation/widgets/today_prayer_card.dart and today_dashboard_view.dart to the real Prayer schedule.
+- [X] T055 [US1] Bind lib/features/today/presentation/widgets/today_prayer_card.dart and today_dashboard_view.dart to the real Prayer schedule.
   - **Depends**: T054
   - **Done**: Remove sample fallback/negative countdown; render live/setup/partial-unavailable honestly with city-local date/zone where different; Home card onPrayer opens existing new route, other sample markers unchanged.
 
@@ -312,68 +332,68 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 
 **Independent check**: Set/correct/reset all states, pass midnight, restart offline; completed0…5 and frozen10/5 awards remain correct; no automatic missed or backdated editor.
 
-- [ ] T059 [P] [US2] Add test/unit/features/prayer/application/prayer_report_commands_test.dart.
+- [X] T059 [P] [US2] Add test/unit/features/prayer/application/prayer_report_commands_test.dart.
   - **Depends**: T058
   - **Done**: Cover all 16 status transitions, same-state no-op, missing→pending behavior, completed count, local monotonic versions,5→on-time staying5,10→late/reset staying10; no arbitrary XP input.
 
-- [ ] T060 [P] [US2] Add test/unit/features/prayer/data/prayer_report_transaction_test.dart.
+- [X] T060 [P] [US2] Add test/unit/features/prayer/data/prayer_report_transaction_test.dart.
   - **Depends**: T058
   - **Done**: Inject failures after report/award/outbox steps; rollback all or commit all; fresh reads prevent concurrent overwrite; retained acknowledged base survives multiple offline edits.
 
-- [ ] T061 [P] [US2] Add test/unit/features/prayer/application/prayer_report_day_guard_test.dart.
+- [X] T061 [P] [US2] Add test/unit/features/prayer/application/prayer_report_day_guard_test.dart.
   - **Depends**: T058
   - **Done**: Reject a newly submitted prior/future date and stale preference/owner generation; accepted pending action across midnight retains captured date; report allowed with known date but unavailable solar field.
 
-- [ ] T062 [US2] Implement report transaction/write methods in lib/features/prayer/data/drift_prayer_repository.dart.
+- [X] T062 [US2] Implement report transaction/write methods in lib/features/prayer/data/drift_prayer_repository.dart.
   - **Depends**: T060
   - **Done**: Read current row inside transaction, preserve identity/date, write semantic status/context, last acknowledged base and immutable outbox snapshot; explicit pending reset is not delete.
 
-- [ ] T063 [US2] Add lib/features/prayer/application/prayer_report_unit_of_work.dart and lib/core/data/local/prayer_report_unit_of_work.dart.
+- [X] T063 [US2] Add lib/features/prayer/application/prayer_report_unit_of_work.dart and lib/core/data/local/prayer_report_unit_of_work.dart.
   - **Depends**: T062, T017, T014
   - **Done**: Write report+first10/5 local award+operation atomically on same encrypted executor; preserve earlier queued completion when resetting; preview writes same data but no outbound dispatch.
 
-- [ ] T064 [US2] Implement lib/features/prayer/application/prayer_report_commands.dart.
+- [X] T064 [US2] Implement lib/features/prayer/application/prayer_report_commands.dart.
   - **Depends**: T063, T059, T061
   - **Done**: Resolve owner, sample submitted city date/context once, final scope guard, desired-state no-op, per-record version and stable op ID; no UI clock judgment of on-time/late.
 
-- [ ] T065 [US2] Extend lib/features/prayer/presentation/prayer_cubit.dart and prayer_state.dart with desired-state actions.
+- [X] T065 [US2] Extend lib/features/prayer/presentation/prayer_cubit.dart and prayer_state.dart with desired-state actions.
   - **Depends**: T064
   - **Done**: Per-prayer pending/saved/failed feedback, disable only conflicting in-flight action, acknowledge success after local commit, reject obsolete results; no repeated celebration/reward.
 
-- [ ] T066 [US2] Add test/widget/features/prayer/prayer_status_actions_test.dart.
+- [X] T066 [US2] Add test/widget/features/prayer/prayer_status_actions_test.dart.
   - **Depends**: T065
   - **Done**: Allthree choices plus reset have localized labels/selected semantics; touch/keyboard submits desired state once; save failure is retryable and not displayed as saved.
 
-- [ ] T067 [US2] Implement lib/features/prayer/presentation/widgets/prayer_status_actions.dart and add report action strings in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb.
+- [X] T067 [US2] Implement lib/features/prayer/presentation/widgets/prayer_status_actions.dart and add report action strings in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb.
   - **Depends**: T066
   - **Done**: Shared buttons, explicit missed choice, reset-to-pending; no hidden automatic action; plurals/semantic labels regenerate cleanly.
   - **Check**: flutter gen-l10n
 
-- [ ] T068 [US2] Wire status controls and progress into lib/features/prayer/presentation/prayer_screen.dart and widgets/prayer_schedule_list.dart.
+- [X] T068 [US2] Wire status controls and progress into lib/features/prayer/presentation/prayer_screen.dart and widgets/prayer_schedule_list.dart.
   - **Depends**: T067
   - **Done**: Reflect context-owned completed count; unavailable schedule does not erase reports; retain captured prayer/date in action callback; no previous-day picker.
 
-- [ ] T069 [US2] Add test/unit/app/composition/prayer_preview_xp_test.dart.
+- [X] T069 [US2] Add test/unit/app/composition/prayer_preview_xp_test.dart.
   - **Depends**: T068
   - **Done**: Closed Task+Prayer preview owners aggregate rewards without copying rows or including Habit/foreign owners; real-account mode remains one owner.
 
-- [ ] T070 [US2] Update lib/app/composition/today_scope_resolver.dart and configure_dependencies.dart; create lib/app/composition/prayer_preview_xp_adapter.dart for the closed preview reward bridge.
+- [X] T070 [US2] Update lib/app/composition/today_scope_resolver.dart and configure_dependencies.dart; create lib/app/composition/prayer_preview_xp_adapter.dart for the closed preview reward bridge.
   - **Depends**: T069
   - **Done**: Use explicit fixed preview owner bindings only; existing xpOwnerId checks are not weakened; Today device-day XP uses actual award instants and reads mixed sources.
 
-- [ ] T071 [US2] Add integration_test/prayer_reports_test.dart.
+- [X] T071 [US2] Add integration_test/prayer_reports_test.dart.
   - **Depends**: T070
   - **Done**: Encrypted real create/complete/late/reset/restart, ten same-state replays and midnight no-auto-missed; lost local-write failure leaves no partial report/award/outbox; standalone preview without network.
 
-- [ ] T072 [P] [US2] Extend test/unit/features/prayer/application/prayer_context_service_test.dart for report-arrival and partial-failure scenarios.
+- [X] T072 [P] [US2] Extend test/unit/features/prayer/application/prayer_context_service_test.dart for report-arrival and partial-failure scenarios.
   - **Depends**: T068
   - **Done**: Late repo emissions after city/day/owner replacement ignored; an error does not fake0of5; explicit report reset changes count but never schedule or prior reward.
 
-- [ ] T073 [US2] Finish report-watch/action observation in lib/features/prayer/application/prayer_context_service.dart.
+- [X] T073 [US2] Finish report-watch/action observation in lib/features/prayer/application/prayer_context_service.dart.
   - **Depends**: T072, T071
   - **Done**: Only requested owner/day stream is observed; stream update refreshes Home/Prayer count once; timer performs no report writes or history scan.
 
-- [ ] T074 [US2] Record US2 report/reward/restart/race outcomes in specs/008-prayer-experience/verification.md.
+- [X] T074 [US2] Record US2 report/reward/restart/race outcomes in specs/008-prayer-experience/verification.md.
   - **Depends**: T073
   - **Done**: All focused US2 and impacted Task/XP tests green; immutable local first reward, rollback and accepted-midnight identity demonstrated; account-cloud settlement remains US4.
 
@@ -385,83 +405,83 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 
 **Independent check**: Match prototype group/field/action inventory; all state/search/navigation flows work in AR/EN, light/dark, 100%/150% text, phone touch and desktop keyboard.
 
-- [ ] T075 [P] [US3] Add test/widget/features/prayer/prayer_prototype_contract_test.dart.
+- [X] T075 [P] [US3] Add test/widget/features/prayer/prayer_prototype_contract_test.dart.
   - **Depends**: T074
   - **Done**: Assert four ordered groups, five canonical cards, required field/action roles, three informational values and two explanation panels; the coming-soon streak has no invented/global number.
 
-- [ ] T076 [P] [US3] Add test/widget/features/prayer/prayer_responsive_test.dart.
+- [X] T076 [P] [US3] Add test/widget/features/prayer/prayer_responsive_test.dart.
   - **Depends**: T074
   - **Done**: Test 320/390/430/768/1200 widths × Arabic/English × light/dark × 100%/150% text. Long names/guidance wrap without overflow or ellipsis; safe-area clearance and at least 48px action targets remain.
 
-- [ ] T077 [US3] Implement lib/features/prayer/domain/prayer_guidance.dart and complete reviewed AR/EN guidance entries in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb.
+- [X] T077 [US3] Implement lib/features/prayer/domain/prayer_guidance.dart and complete reviewed AR/EN guidance entries in lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb.
   - **Depends**: T008, T075
   - **Done**: Each string role maps to guidance-sources.md; 2/4/4/3/4 obligatory counts and recitation metadata distinct from optional guidance; reviewed paraphrases only, no full copied source; generate localizations.
 
-- [ ] T078 [US3] Create lib/features/prayer/presentation/widgets/prayer_header.dart.
+- [X] T078 [US3] Create lib/features/prayer/presentation/widgets/prayer_header.dart.
   - **Depends**: T077
   - **Done**: Prototype compact rounded heading/location/date/zone/method, completed/5, coming-soon streak slot; reusable typography and edit-city action; no tall fixed header or duplicate branding.
 
-- [ ] T079 [US3] Create lib/features/prayer/presentation/widgets/prayer_card.dart using prayer_status_actions.dart.
+- [X] T079 [US3] Create lib/features/prayer/presentation/widgets/prayer_card.dart using prayer_status_actions.dart.
   - **Depends**: T078
   - **Done**: Icon tile, full name, rak'ah badge, time or unavailable, recitation, guidance and state controls; green/amber/red with non-color cues; content-first height and phone/wide actions.
 
-- [ ] T080 [P] [US3] Create lib/features/prayer/presentation/widgets/prayer_supplementary_times.dart.
+- [X] T080 [P] [US3] Create lib/features/prayer/presentation/widgets/prayer_supplementary_times.dart.
   - **Depends**: T077
   - **Done**: Sunrise / middle of night / last third order, one column to three only when fitting; each availability independent; no reward/control for informational values.
 
-- [ ] T081 [P] [US3] Create lib/features/prayer/presentation/widgets/prayer_guidance_section.dart.
+- [X] T081 [P] [US3] Create lib/features/prayer/presentation/widgets/prayer_guidance_section.dart.
   - **Depends**: T077
   - **Done**: Render two reviewed Jahr/Sirr panels in one or two columns as space allows; source information is accessible and long Arabic text stays readable in both themes.
 
-- [ ] T082 [US3] Refine lib/features/prayer/presentation/prayer_screen.dart to compose the four final groups.
+- [X] T082 [US3] Refine lib/features/prayer/presentation/prayer_screen.dart to compose the four final groups.
   - **Depends**: T079, T080, T081
   - **Done**: Reuse US1/US2 logic/widgets, remove superseded duplicate rendering; match prototype-reference.md padding/gaps/radii with existing typography; no new design system or business logic.
 
-- [ ] T083 [US3] Refine lib/features/prayer/presentation/prayer_city_editor.dart for adaptive dialog/phone sheet.
+- [X] T083 [US3] Refine lib/features/prayer/presentation/prayer_city_editor.dart for adaptive dialog/phone sheet.
   - **Depends**: T082
   - **Done**: Keyboard-safe scroll, explicit confirm/cancel, selected method persists independently; result rows disambiguated; attribution retained; use shared selector/menu styling.
 
-- [ ] T084 [US3] Add lib/features/prayer/presentation/prayer_track_hub.dart.
+- [X] T084 [US3] Add lib/features/prayer/presentation/prayer_track_hub.dart.
   - **Depends**: T082
   - **Done**: Render the prototype Track list: Prayer, Focus, Quran, Adhkar, Qiyam. Only Prayer opens a real owner route; other entries explicitly say coming soon. No storage or invented progress.
 
-- [ ] T085 [US3] Thread onPrayer/onTrack through lib/features/today/presentation/widgets/today_navigation_shell.dart and lib/features/today/presentation/widgets/today_navigation_sidebar.dart plus app-owned callbacks.
+- [X] T085 [US3] Thread onPrayer/onTrack through lib/features/today/presentation/widgets/today_navigation_shell.dart and lib/features/today/presentation/widgets/today_navigation_sidebar.dart plus app-owned callbacks.
   - **Depends**: T084
   - **Done**: Persistent existing sidebar/current breakpoint and width; direct Prayer selected row; retain keys and unrelated destination behavior.
 
-- [ ] T086 [US3] Update lib/features/today/presentation/widgets/today_bottom_navigation.dart, lib/app/routing/app_router.dart and lib/app/app.dart for Track/Prayer.
+- [X] T086 [US3] Update lib/features/today/presentation/widgets/today_bottom_navigation.dart, lib/app/routing/app_router.dart and lib/app/app.dart for Track/Prayer.
   - **Depends**: T085
   - **Done**: Exactly five phone destinations; Track index 2 selected in Track/Prayer, all direct/Home/hub entries share /prayer resolved-owner route; no auth preview regression.
 
-- [ ] T087 [US3] Extend test/widget/app/prayer_route_test.dart and test/widget/features/today/dashboard_navigation_test.dart.
+- [X] T087 [US3] Extend test/widget/app/prayer_route_test.dart and test/widget/features/today/dashboard_navigation_test.dart.
   - **Depends**: T086
   - **Done**: Cover all four Prayer entries, Track placeholders, Back/Home, city retained, account gate, preview launch and old Tasks/Habits/Maps navigation.
 
-- [ ] T088 [US3] Add test/widget/features/prayer/prayer_accessibility_test.dart and fix focus/semantics in lib/features/prayer/presentation/prayer_screen.dart, lib/features/prayer/presentation/prayer_city_editor.dart and lib/features/prayer/presentation/widgets/prayer_status_actions.dart.
+- [X] T088 [US3] Add test/widget/features/prayer/prayer_accessibility_test.dart and fix focus/semantics in lib/features/prayer/presentation/prayer_screen.dart, lib/features/prayer/presentation/prayer_city_editor.dart and lib/features/prayer/presentation/widgets/prayer_status_actions.dart.
   - **Depends**: T083, T087
   - **Done**: Keyboard reaches search, results, confirmation, all five prayer controls, reset and return navigation. Focus and selected-state labels are visible; mixed-direction times are correct; countdown ticks do not repeatedly announce.
 
-- [ ] T089 [US3] Finalize setup/loading/partial/error/success feedback in lib/features/prayer/presentation/prayer_state.dart and prayer_screen.dart.
+- [X] T089 [US3] Finalize setup/loading/partial/error/success feedback in lib/features/prayer/presentation/prayer_state.dart and prayer_screen.dart.
   - **Depends**: T088
   - **Done**: Reuse AppStatusView. Independent source recovery preserves saved reports instead of fabricating 0/5. Unsaved work is not announced saved; reminder, Adhan and streak affordances say coming soon.
 
-- [ ] T090 [US3] Verify/fix hover/focus/theme usage in lib/features/prayer/presentation/widgets/prayer_card.dart and lib/features/prayer/presentation/prayer_city_editor.dart.
+- [X] T090 [US3] Verify/fix hover/focus/theme usage in lib/features/prayer/presentation/widgets/prayer_card.dart and lib/features/prayer/presentation/prayer_city_editor.dart.
   - **Depends**: T089
   - **Done**: AppHoverSurface/AppButton provide feedback without moving bounds; no touch hover or disabled glow; light-theme text/border contrast checked; no global restyle.
 
-- [ ] T091 [US3] Add integration_test/prayer_localized_route_test.dart.
+- [X] T091 [US3] Add integration_test/prayer_localized_route_test.dart.
   - **Depends**: T090
   - **Done**: Exercise preview touch and keyboard journeys in both locales: city selection, five prayer controls, reset, Back/Home and retained city after restart. Reveal controls and dismiss keyboard before tapping; select stable keys instead of an English Back tooltip.
 
-- [ ] T092 [US3] Record source-vs-screen comparison in specs/008-prayer-experience/verification.md.
+- [X] T092 [US3] Record source-vs-screen comparison in specs/008-prayer-experience/verification.md.
   - **Depends**: T091
-  - **Done**: Phone and desktop captures account for all four groups and approved adaptations using prototype-reference.md measurements. Leave unresolved visual differences open.
+  - **Done**: Compare source measurements with the rendered phone/desktop widget geometry for all four groups and approved adaptations. Per the user's deferred device trial, actual device captures remain in T128; do not claim visual sign-off from geometry alone.
 
-- [ ] T093 [US3] Run focused Prayer and affected Today/root widget checks and record results in specs/008-prayer-experience/verification.md.
+- [X] T093 [US3] Run focused Prayer and affected Today/root widget checks and record results in specs/008-prayer-experience/verification.md.
   - **Depends**: T092
   - **Done**: Prototype/responsive/navigation/accessibility tests green; keep original semantic coverage, update stale selectors to real controls; no blanket screenshot/test expectation weakening.
 
-- [ ] T094 [US3] Audit FR-019…025/027…028 against specs/008-prayer-experience/prototype-reference.md and record checkpoint in verification.md.
+- [X] T094 [US3] Audit FR-019…025/027…028 against specs/008-prayer-experience/prototype-reference.md and record checkpoint in verification.md.
   - **Depends**: T093
   - **Done**: Fully usable source-aligned UI and all routes demonstrated without cloud; guidance evidence complete; unimplemented notifications/religious features honest.
 
@@ -614,7 +634,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T120
   - **Done**: Source mapping/review complete; no invented universal optional practice, generated Quran/ruling, unreviewed placeholder or misleading global streak; references/attribution accessible.
 
-- [ ] T128 Execute SC-001/005/007/008 scenarios from specs/008-prayer-experience/quickstart.md and record evidence in verification.md.
+- [ ] T128 Execute SC-001/005/007/008 scenarios from specs/008-prayer-experience/quickstart.md, capture the Prayer screen on a named phone and desktop for final visual comparison, and record evidence in verification.md.
   - **Depends**: T127, T126
   - **Done**: Phone touch and desktop keyboard journey≤60s; full responsive/theme/locale matrix; real Home/provenance/date agreement; final four-group prototype inventory; no fabricated human-test result.
 

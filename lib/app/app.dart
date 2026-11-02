@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
+import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/habits_strings_adapter.dart';
@@ -33,6 +34,11 @@ import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_screen.dart';
+import 'package:namma_project/features/prayer/application/city_search_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_device_location_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_preferences_commands.dart';
+import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
+import 'package:namma_project/features/prayer/presentation/prayer_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
@@ -318,6 +324,9 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
     final mindMapsAvailable =
         getIt.isRegistered<MapLibraryCubit>() &&
         getIt.isRegistered<CloudSessionPort>();
+    final prayerAvailable =
+        getIt.isRegistered<PrayerCubit>() &&
+        getIt.isRegistered<CloudSessionPort>();
     _router = FoundationAppRouter(
       rootBuilder: (_) => widget.home,
       cloudSession: tasksAvailable ? getIt<CloudSessionPort>() : null,
@@ -338,6 +347,17 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
       mindMapsSession: mindMapsAvailable ? getIt<CloudSessionPort>() : null,
       mindMapsBuilder: mindMapsAvailable
           ? (_, accountId) => _MindMapsRouteScope(
+              key: ValueKey(accountId),
+              accountId: accountId,
+            )
+          : null,
+      prayerSession: prayerAvailable
+          ? (getIt.isRegistered<PrayerPreviewSession>()
+                ? getIt<PrayerPreviewSession>()
+                : getIt<CloudSessionPort>())
+          : null,
+      prayerBuilder: prayerAvailable
+          ? (_, accountId) => _PrayerRouteScope(
               key: ValueKey(accountId),
               accountId: accountId,
             )
@@ -635,6 +655,7 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
       onHabits: () => unawaited(GoRouter.of(context).push<void>(kHabitsRoute)),
       onMindMaps: () =>
           unawaited(GoRouter.of(context).push<void>(kMindMapsRoute)),
+      onPrayer: () => unawaited(GoRouter.of(context).push<void>(kPrayerRoute)),
       onPreferences: () => showAppPreferencesSheet(context),
       onNewTask: () => unawaited(
         GoRouter.of(
@@ -770,10 +791,45 @@ class _FeatureNavigationShell extends StatelessWidget {
           router.go(kMindMapsRoute);
         }
       },
+      onPrayer: () {
+        if (section != TodayNavigationSection.prayer) router.go(kPrayerRoute);
+      },
       onPreferences: () => showAppPreferencesSheet(context),
       child: child,
     );
   }
+}
+
+class _PrayerRouteScope extends StatefulWidget {
+  const _PrayerRouteScope({super.key, required this.accountId});
+  final String accountId;
+
+  @override
+  State<_PrayerRouteScope> createState() => _PrayerRouteScopeState();
+}
+
+class _PrayerRouteScopeState extends State<_PrayerRouteScope> {
+  late final PrayerCubit _cubit = GetIt.instance<PrayerCubit>(
+    param1: widget.accountId,
+  );
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => _FeatureNavigationShell(
+    section: TodayNavigationSection.prayer,
+    child: PrayerScreen(
+      ownerId: widget.accountId,
+      cubit: _cubit,
+      search: GetIt.instance<CitySearchPort>(),
+      commands: GetIt.instance<PrayerPreferencesCommands>(),
+      location: GetIt.instance<PrayerDeviceLocationPort>(),
+    ),
+  );
 }
 
 class _StartupShell extends StatelessWidget {

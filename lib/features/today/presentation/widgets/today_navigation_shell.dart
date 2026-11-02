@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/features/prayer/presentation/prayer_track_hub.dart';
 
 import '../dashboard_preview_data.dart';
 import 'today_bottom_navigation.dart';
@@ -16,6 +17,7 @@ class TodayNavigationShell extends StatelessWidget {
     required this.onTasks,
     required this.onHabits,
     required this.onMindMaps,
+    this.onPrayer,
     required this.onPreferences,
     required this.child,
     this.onHome,
@@ -27,6 +29,7 @@ class TodayNavigationShell extends StatelessWidget {
   final VoidCallback onTasks;
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
+  final VoidCallback? onPrayer;
   final VoidCallback onPreferences;
   final VoidCallback? onHome;
   final int? xpAmount;
@@ -79,12 +82,38 @@ class TodayNavigationShell extends StatelessWidget {
               onTasks: onTasks,
               onHabits: onHabits,
               onMindMaps: onMindMaps,
+              onPrayer: onPrayer,
               onPreferences: onPreferences,
               xpAmount: xpAmount,
               child: TodayComingSoonPage(
                 title: title,
                 feature: feature,
                 colors: colors,
+              ),
+            ),
+          ),
+        );
+      }
+
+      void openTrack() {
+        if (onPrayer == null || section == TodayNavigationSection.track) return;
+        Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (trackContext) => TodayNavigationShell(
+              colors: colors,
+              section: TodayNavigationSection.track,
+              onHome: goHome,
+              onTasks: onTasks,
+              onHabits: onHabits,
+              onMindMaps: onMindMaps,
+              onPrayer: onPrayer,
+              onPreferences: onPreferences,
+              xpAmount: xpAmount,
+              child: PrayerTrackHub(
+                onPrayer: () {
+                  Navigator.of(trackContext).pop();
+                  onPrayer!();
+                },
               ),
             ),
           ),
@@ -105,6 +134,8 @@ class TodayNavigationShell extends StatelessWidget {
                   onTasks: onTasks,
                   onHabits: onHabits,
                   onMindMaps: onMindMaps,
+                  onPrayer: onPrayer,
+                  onTrack: onPrayer == null ? null : openTrack,
                   onPreferences: onPreferences,
                   onPreview: openPreview,
                   xpAmount: xpAmount,
@@ -126,6 +157,8 @@ class TodayNavigationShell extends StatelessWidget {
             selectedIndex: switch (section) {
               TodayNavigationSection.home => 0,
               TodayNavigationSection.tasks => 1,
+              TodayNavigationSection.prayer ||
+              TodayNavigationSection.track => 2,
               TodayNavigationSection.habits ||
               TodayNavigationSection.mindMaps ||
               TodayNavigationSection.preview => 4,
@@ -134,6 +167,8 @@ class TodayNavigationShell extends StatelessWidget {
             onTasks: onTasks,
             onHabits: onHabits,
             onMindMaps: onMindMaps,
+            onPrayer: onPrayer,
+            onTrack: onPrayer == null ? null : openTrack,
             onPreferences: onPreferences,
             onPreview: openPreview,
           ),

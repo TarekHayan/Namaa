@@ -21,6 +21,7 @@ const String kTodayRoute = kFoundationRootRoute;
 const String kTasksRoute = '/tasks';
 const String kHabitsRoute = '/habits';
 const String kMindMapsRoute = '/mind-maps';
+const String kPrayerRoute = '/prayer';
 
 /// Key used by tests and diagnostics to identify handled route failures.
 const Key kFoundationUnknownRouteKey = Key('foundation_unknown_route');
@@ -33,12 +34,16 @@ const Key kHabitsRouteLoadingKey = Key('habits_route_loading');
 const Key kHabitsRouteSignedOutKey = Key('habits_route_signed_out');
 const Key kMindMapsRouteLoadingKey = Key('mind_maps_route_loading');
 const Key kMindMapsRouteSignedOutKey = Key('mind_maps_route_signed_out');
+const Key kPrayerRouteLoadingKey = Key('prayer_route_loading');
+const Key kPrayerRouteSignedOutKey = Key('prayer_route_signed_out');
 
 typedef AuthenticatedTasksBuilder =
     Widget Function(BuildContext context, String accountId);
 typedef AuthenticatedHabitsBuilder =
     Widget Function(BuildContext context, String accountId);
 typedef AuthenticatedMindMapsBuilder =
+    Widget Function(BuildContext context, String accountId);
+typedef AuthenticatedPrayerBuilder =
     Widget Function(BuildContext context, String accountId);
 
 /// Owns Foundation routing only. Future features register their own entries;
@@ -52,6 +57,8 @@ class FoundationAppRouter {
     AuthenticatedHabitsBuilder? habitsBuilder,
     CloudSessionPort? mindMapsSession,
     AuthenticatedMindMapsBuilder? mindMapsBuilder,
+    CloudSessionPort? prayerSession,
+    AuthenticatedPrayerBuilder? prayerBuilder,
   }) : router = GoRouter(
          initialLocation: kFoundationRootRoute,
          routes: _routes(
@@ -62,6 +69,8 @@ class FoundationAppRouter {
            habitsBuilder,
            mindMapsSession,
            mindMapsBuilder,
+           prayerSession,
+           prayerBuilder,
          ),
          errorBuilder: (context, state) => const _UnknownRouteBoundary(),
        );
@@ -80,6 +89,8 @@ class FoundationAppRouter {
     AuthenticatedHabitsBuilder? habitsBuilder,
     CloudSessionPort? mindMapsSession,
     AuthenticatedMindMapsBuilder? mindMapsBuilder,
+    CloudSessionPort? prayerSession,
+    AuthenticatedPrayerBuilder? prayerBuilder,
   ) => <RouteBase>[
     GoRoute(
       path: kFoundationRootRoute,
@@ -124,6 +135,16 @@ class FoundationAppRouter {
           mindMaps: true,
         ),
       ),
+    if (prayerSession != null && prayerBuilder != null)
+      GoRoute(
+        path: kPrayerRoute,
+        name: 'prayer',
+        builder: (context, _) => _TasksRouteGate(
+          cloudSession: prayerSession,
+          tasksBuilder: prayerBuilder,
+          prayer: true,
+        ),
+      ),
   ];
 }
 
@@ -136,6 +157,7 @@ class _TasksRouteGate extends StatefulWidget {
     required this.tasksBuilder,
     this.habits = false,
     this.mindMaps = false,
+    this.prayer = false,
     this.intent,
   });
 
@@ -143,6 +165,7 @@ class _TasksRouteGate extends StatefulWidget {
   final AuthenticatedTasksBuilder tasksBuilder;
   final bool habits;
   final bool mindMaps;
+  final bool prayer;
   final OwnerEntryIntent? intent;
 
   @override
@@ -271,14 +294,18 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
     }
     if (_status == CloudSessionStatus.signedOut) {
       return Scaffold(
-        key: widget.mindMaps
+        key: widget.prayer
+            ? kPrayerRouteSignedOutKey
+            : widget.mindMaps
             ? kMindMapsRouteSignedOutKey
             : widget.habits
             ? kHabitsRouteSignedOutKey
             : kTasksRouteSignedOutKey,
         body: Center(
           child: Text(
-            widget.mindMaps
+            widget.prayer
+                ? FoundationLocalizations.of(context).prayerSignInRequired
+                : widget.mindMaps
                 ? FoundationLocalizations.of(context).mindMapsSignInRequired
                 : widget.habits
                 ? FoundationLocalizations.of(context).habitsSignInRequired
@@ -289,7 +316,9 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
       );
     }
     return Scaffold(
-      key: widget.mindMaps
+      key: widget.prayer
+          ? kPrayerRouteLoadingKey
+          : widget.mindMaps
           ? kMindMapsRouteLoadingKey
           : widget.habits
           ? kHabitsRouteLoadingKey

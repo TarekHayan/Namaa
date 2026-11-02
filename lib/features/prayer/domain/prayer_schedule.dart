@@ -36,6 +36,7 @@ final class PrayerSchedule {
     required this.contextRevision,
     required Map<PrayerName, PrayerTime> times,
     required this.provenance,
+    this.sunriseUtc,
   }) : times = Map.unmodifiable(times) {
     if (contextRevision < 1 ||
         provenance.trim().isEmpty ||
@@ -49,16 +50,19 @@ final class PrayerSchedule {
   final int contextRevision;
   final Map<PrayerName, PrayerTime> times;
   final String provenance;
+  final DateTime? sunriseUtc;
 
   PrayerSchedule copyWith({
     Map<PrayerName, PrayerTime>? times,
     int? contextRevision,
     String? provenance,
+    DateTime? sunriseUtc,
   }) => PrayerSchedule(
     date: date,
     contextRevision: contextRevision ?? this.contextRevision,
     times: times ?? this.times,
     provenance: provenance ?? this.provenance,
+    sunriseUtc: sunriseUtc ?? this.sunriseUtc,
   );
 
   @override
@@ -67,6 +71,7 @@ final class PrayerSchedule {
       other.date == date &&
       other.contextRevision == contextRevision &&
       other.provenance == provenance &&
+      other.sunriseUtc == sunriseUtc &&
       PrayerName.values.every((name) => other.times[name] == times[name]);
 
   @override
@@ -74,6 +79,7 @@ final class PrayerSchedule {
     date,
     contextRevision,
     provenance,
+    sunriseUtc,
     Object.hashAll(PrayerName.values.map((name) => times[name])),
   );
 }

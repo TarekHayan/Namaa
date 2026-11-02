@@ -1276,4 +1276,251 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   @override
   String get prayerSearchUnavailable =>
       'City search is currently unavailable. Your saved city and its prayer times remain available offline.';
+
+  @override
+  String get prayerSaveFailed =>
+      'Could not save your selection. Check the city and method, then try again.';
+
+  @override
+  String get prayerTitle => 'Prayer times';
+
+  @override
+  String get prayerSubtitle =>
+      'Follow prayer times and record today\'s prayers';
+
+  @override
+  String get prayerCancel => 'Cancel';
+
+  @override
+  String prayerResidentRakahs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count obligatory rak\'ahs for a resident',
+      one: '$count obligatory rak\'ah for a resident',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prayerRecitationFajr => 'Recitation is aloud in both rak\'ahs.';
+
+  @override
+  String get prayerRecitationQuiet => 'Recitation is quiet.';
+
+  @override
+  String get prayerRecitationMaghrib =>
+      'The first two are aloud; the third is quiet.';
+
+  @override
+  String get prayerRecitationIsha =>
+      'The first two are aloud; the last two are quiet.';
+
+  @override
+  String get prayerOptionalFajr => 'Two regular Sunnah rak\'ahs before Fajr.';
+
+  @override
+  String get prayerOptionalDhuhr =>
+      'A reported regular Sunnah pattern is four before Dhuhr and two after.';
+
+  @override
+  String get prayerOptionalAsr =>
+      'Four before Asr after its time begins are recommended voluntary prayer, not regular Sunnah.';
+
+  @override
+  String get prayerOptionalMaghrib =>
+      'Two regular Sunnah rak\'ahs after Maghrib.';
+
+  @override
+  String get prayerOptionalIsha => 'Two regular Sunnah rak\'ahs after Isha.';
+
+  @override
+  String get prayerGuidanceContext =>
+      'Brief voluntary-prayer guidance; some details differ between schools.';
+
+  @override
+  String get prayerRecitationHeading => 'Aloud and quiet recitation';
+
+  @override
+  String get prayerJahrTitle => 'Aloud';
+
+  @override
+  String get prayerJahrDefinition =>
+      'Recitation that can be heard by those nearby.';
+
+  @override
+  String get prayerSirrTitle => 'Quiet';
+
+  @override
+  String get prayerSirrDefinition =>
+      'Recitation in a lowered voice, not only reading mentally.';
+
+  @override
+  String get prayerGuidanceScope =>
+      'General guidance on ordinary recitation, not a judgment on your prayer.';
+
+  @override
+  String get prayerGuidanceSource => 'Source: Egypt\'s Dar al-Ifta';
+
+  @override
+  String get prayerStreakSoon => 'Prayer streak: coming soon';
+
+  @override
+  String get prayerSetupTitle => 'Prayer times for your location';
+
+  @override
+  String get prayerSetupBody =>
+      'Allow location while using the app to get times for your area. You can choose a city instead. A saved location works offline.';
+
+  @override
+  String get prayerUseLocation => 'Use my current location';
+
+  @override
+  String get prayerCurrentLocation => 'My current location';
+
+  @override
+  String get prayerLocationDisabled =>
+      'Enable device location and try again, or choose a city.';
+
+  @override
+  String get prayerLocationDenied =>
+      'Location permission was not granted. Enable it in device settings or choose a city.';
+
+  @override
+  String get prayerLocationUnavailable =>
+      'Could not get an accurate location or its time zone. Try again or choose a city.';
+
+  @override
+  String get prayerCitySearch => 'Search cities';
+
+  @override
+  String get prayerCityEdit => 'Change city or method';
+
+  @override
+  String get prayerCityConfirm => 'Use this city';
+
+  @override
+  String get prayerMethod => 'Calculation method';
+
+  @override
+  String get prayerDateZone => 'City date and time zone';
+
+  @override
+  String get prayerUnavailable => 'Time unavailable for this location and date';
+
+  @override
+  String get prayerSearchNoResults => 'No matching cities';
+
+  @override
+  String get prayerSearchOffline =>
+      'Connect to the internet to find a new city.';
+
+  @override
+  String get prayerSearchThrottled => 'Search is busy. Try again shortly.';
+
+  @override
+  String get prayerSearchInvalidResponse =>
+      'City results are unavailable. Try again.';
+
+  @override
+  String get prayerSearchInvalidQuery => 'Enter 2 to 100 characters.';
+
+  @override
+  String get prayerSearchCancelled => 'Search cancelled.';
+
+  @override
+  String get prayerScheduleUnavailable =>
+      'Prayer times could not be calculated for this date.';
+
+  @override
+  String get prayerFajr => 'Fajr';
+
+  @override
+  String get prayerDhuhr => 'Dhuhr';
+
+  @override
+  String get prayerAsr => 'Asr';
+
+  @override
+  String get prayerMaghrib => 'Maghrib';
+
+  @override
+  String get prayerIsha => 'Isha';
+
+  @override
+  String get prayerSunrise => 'Sunrise';
+
+  @override
+  String get prayerMiddleNight => 'Middle of night';
+
+  @override
+  String get prayerLastThird => 'Last third of night';
+
+  @override
+  String get prayerComingSoon => 'Coming soon';
+
+  @override
+  String get prayerEgyptian => 'Egyptian';
+
+  @override
+  String get prayerMwl => 'Muslim World League';
+
+  @override
+  String get prayerUmmAlQura => 'Umm al-Qura (fixed 90-minute Isha)';
+
+  @override
+  String get prayerDubai => 'Dubai';
+
+  @override
+  String get prayerNorthAmerica => 'North America';
+
+  @override
+  String get prayerKuwait => 'Kuwait';
+
+  @override
+  String get prayerQatar => 'Qatar (fixed 90-minute Isha)';
+
+  @override
+  String get prayerAttribution =>
+      'City data: Open-Meteo / GeoNames (CC BY 4.0). Times: AlAdhan API annual timetable, with a labelled local calculation fallback.';
+
+  @override
+  String get prayerSourceApi =>
+      'Times: AlAdhan API annual timetable (saved on this device)';
+
+  @override
+  String get prayerSourceLocal =>
+      'Times: local calculation fallback; confirm with your local mosque';
+
+  @override
+  String get prayerSignInRequired => 'Open Prayer after signing in.';
+
+  @override
+  String get prayerStatusOnTime => 'On time';
+
+  @override
+  String get prayerStatusLate => 'Completed late';
+
+  @override
+  String get prayerStatusMissed => 'Missed';
+
+  @override
+  String get prayerStatusPending => 'Not recorded';
+
+  @override
+  String get prayerStatusReset => 'Reset';
+
+  @override
+  String get prayerStatusSaving => 'Saving…';
+
+  @override
+  String get prayerStatusSaved => 'Saved on this device';
+
+  @override
+  String get prayerStatusSaveFailed => 'Could not save this status. Try again.';
+
+  @override
+  String prayerStatusSelected(String status) {
+    return 'Selected: $status';
+  }
 }

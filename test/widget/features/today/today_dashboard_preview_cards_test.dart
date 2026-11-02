@@ -3,6 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/today_localization_adapter.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/features/prayer/domain/prayer_name.dart';
+import 'package:namma_project/features/today/domain/today_prayer_reference.dart';
+import 'package:namma_project/features/today/domain/today_section.dart';
 import 'package:namma_project/features/today/presentation/widgets/today_coming_soon_page.dart';
 import 'package:namma_project/features/today/presentation/widgets/today_counters_card.dart';
 import 'package:namma_project/features/today/presentation/widgets/today_finance_card.dart';
@@ -10,6 +13,17 @@ import 'package:namma_project/features/today/presentation/widgets/today_prayer_c
 import 'package:namma_project/features/today/presentation/widgets/today_quran_card.dart';
 
 void main() {
+  final prayer = TodaySection.available(TodayPrayerReference(
+    ownerId: 'preview',
+    city: 'Cairo',
+    timeZoneId: 'Africa/Cairo',
+    localDate: '2026-03-20',
+    nextName: PrayerName.asr,
+    nextUtc: DateTime.utc(2026, 3, 20, 13, 30),
+    followingName: PrayerName.maghrib,
+    followingUtc: DateTime.utc(2026, 3, 20, 16, 10),
+    nowUtc: DateTime.utc(2026, 3, 20, 13),
+  ));
   for (final locale in const [Locale('ar'), Locale('en')]) {
     for (final brightness in Brightness.values) {
       testWidgets(
@@ -43,7 +57,7 @@ void main() {
                       return SingleChildScrollView(
                         child: Column(
                           children: [
-                            TodayPrayerCard(colors: colors),
+                            TodayPrayerCard(colors: colors, prayer: prayer),
                             TodayQuranCard(colors: colors),
                             TodayFinanceCard(colors: colors),
                             TodayCountersCard(colors: colors, strings: strings),
@@ -61,7 +75,8 @@ void main() {
           final copy = FoundationLocalizations.of(
             tester.element(find.byType(TodayPrayerCard)),
           );
-          expect(find.text(copy.dashboardSampleBadge), findsNWidgets(5));
+          expect(find.text(copy.dashboardSampleBadge), findsNWidgets(4));
+          expect(find.text('Cairo'), findsOneWidget);
         },
       );
     }
@@ -85,7 +100,7 @@ void main() {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      TodayPrayerCard(colors: colors),
+                      TodayPrayerCard(colors: colors, prayer: prayer),
                       TodayQuranCard(colors: colors),
                       TodayFinanceCard(colors: colors),
                       TodayCountersCard(colors: colors, strings: strings),
@@ -102,8 +117,8 @@ void main() {
         tester.element(find.byType(TodayPrayerCard)),
       );
 
-      // Verify sample badge appears on all 4 cards
-      expect(find.text(copy.dashboardSampleBadge), findsNWidgets(5));
+      // Prayer is real; only the other preview sections carry sample badges.
+      expect(find.text(copy.dashboardSampleBadge), findsNWidgets(4));
 
       // Verify accessible semantics containing dashboardSampleValue
       final sampleSemantics = find.byWidgetPredicate(
@@ -112,8 +127,8 @@ void main() {
             widget.properties.label != null &&
             widget.properties.label!.contains(copy.dashboardSampleValue),
       );
-      // Prayer countdown, Quran title/progress, Finance 2 tiles, Counters tiles
-      expect(sampleSemantics, findsAtLeastNWidgets(4));
+      // Quran title/progress, Finance 2 tiles, Counters tiles.
+      expect(sampleSemantics, findsAtLeastNWidgets(3));
     },
   );
 
@@ -126,6 +141,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       final colors = AppColors.light;
+      var prayerOpens = 0;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -140,7 +156,11 @@ void main() {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      TodayPrayerCard(colors: colors),
+                      TodayPrayerCard(
+                        colors: colors,
+                        prayer: prayer,
+                        onTap: () => prayerOpens++,
+                      ),
                       TodayQuranCard(colors: colors),
                       TodayFinanceCard(colors: colors),
                       TodayCountersCard(colors: colors, strings: strings),
@@ -160,16 +180,11 @@ void main() {
         tester.element(find.byType(TodayPrayerCard)),
       );
 
-      // 1. Tap Prayer Card -> Navigates to TodayComingSoonPage (Prayer)
+      // 1. Tap Prayer Card -> invokes the real Prayer destination.
       await tester.ensureVisible(find.byType(TodayPrayerCard));
       await tester.tap(find.byType(TodayPrayerCard));
       await tester.pumpAndSettle();
-      expect(find.byType(TodayComingSoonPage), findsOneWidget);
-      expect(find.text(copy.dashboardComingSoonPrayerTitle), findsOneWidget);
-
-      // Navigate back
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+      expect(prayerOpens, 1);
       expect(find.byType(TodayComingSoonPage), findsNothing);
 
       // 2. Tap Quran Card action -> Navigates to TodayComingSoonPage (Quran)

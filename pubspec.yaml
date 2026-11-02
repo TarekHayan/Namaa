@@ -40,6 +40,9 @@ dependencies:
   # Verified offline Umm al-Qura calendar conversion for Dashboard dates.
   general_datetime_core: ^1.0.0
 
+  # Foreground device location for owner-local Prayer schedules.
+  geolocator: 14.1.2
+
   # Composition root (Constitution: get_it/injectable).
   get_it: ^9.2.1
 

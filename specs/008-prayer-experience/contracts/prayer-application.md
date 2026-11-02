@@ -7,8 +7,10 @@ References: [spec](../spec.md), [model](../data-model.md). Names are planned int
 | Port/service | Owning layer and obligations |
 | --- | --- |
 | CitySearchPort | Prayer application; search(query,locale,cancellation) yields validated candidates or typed failure. No profile/report data sent. |
+| PrayerDeviceLocationPort | Prayer application; request a foreground operating-system fix while Prayer is open, reject denied/disabled/imprecise fixes, resolve an IANA zone and supported method, then return measured coordinates. Manual city search remains available; no background tracking. |
 | PrayerPreferencesPort | Application; watch/read/save owner-local preferences with expected revision. Data adapter uses encrypted DB, never shared preferences/cloud. |
 | PrayerScheduleCalculatorPort | Application; calculate(location,zone,civilDate,method) returns immutable field availability/UTC instants. Pure adapter; no network/clock reads inside calculation. |
+| PrayerAnnualSchedulePort | Application; forDate(owner,city,zone,method,date) reads a validated encrypted annual AlAdhan table, downloading the year when missing and online. Returns null on unavailable coverage so the local calculator is explicitly identified as fallback. |
 | PrayerClockPort | Application; nowUtc plus explicit zone-date derivation and injected foreground scheduler/lifecycle refresh. |
 | PrayerReportIdentityPort | Application; derive stable date/prayer UUID; the data adapter owns the uuid package import, keeping domain/application infrastructure-free. |
 | PrayerRepository | Application; indexed owner/day watch/read and transaction boundary for report/outbox/reward/reconciliation. |

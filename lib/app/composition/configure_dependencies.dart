@@ -22,6 +22,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
+import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
+import 'package:namma_project/app/composition/prayer_preview_xp_adapter.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
@@ -33,6 +35,7 @@ import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.
 import 'package:namma_project/core/data/cloud/supabase/supabase_sync_adapter.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/data/local/prayer_report_unit_of_work.dart';
 import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/data/sync/synchronization_coordinator.dart';
@@ -75,6 +78,26 @@ import 'package:namma_project/features/mind_maps/data/supabase_map_reader.dart';
 import 'package:namma_project/features/mind_maps/data/supabase_map_sync_adapter.dart';
 import 'package:namma_project/features/mind_maps/data/tasks_map_link_adapter.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
+import 'package:namma_project/features/prayer/application/city_search_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_annual_schedule_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_clock_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_context_service.dart';
+import 'package:namma_project/features/prayer/application/prayer_device_location_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_preferences_commands.dart';
+import 'package:namma_project/features/prayer/application/prayer_preferences_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_report_commands.dart';
+import 'package:namma_project/features/prayer/application/prayer_report_identity_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_report_unit_of_work.dart';
+import 'package:namma_project/features/prayer/application/prayer_repository.dart';
+import 'package:namma_project/features/prayer/application/prayer_schedule_calculator_port.dart';
+import 'package:namma_project/features/prayer/data/adhan_prayer_calculator.dart';
+import 'package:namma_project/features/prayer/data/aladhan_annual_schedule.dart';
+import 'package:namma_project/features/prayer/data/drift_prayer_preferences.dart';
+import 'package:namma_project/features/prayer/data/drift_prayer_repository.dart';
+import 'package:namma_project/features/prayer/data/geolocator_prayer_location.dart';
+import 'package:namma_project/features/prayer/data/uuid_prayer_report_identity.dart';
+import 'package:namma_project/features/prayer/data/zoned_prayer_clock.dart';
+import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
@@ -91,9 +114,11 @@ import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/today/application/today_actions.dart';
 import 'package:namma_project/features/today/application/today_calendar_port.dart';
 import 'package:namma_project/features/today/application/today_habits_port.dart';
+import 'package:namma_project/features/today/application/today_prayer_port.dart';
 import 'package:namma_project/features/today/application/today_tasks_port.dart';
 import 'package:namma_project/features/today/application/today_xp_port.dart';
 import 'package:namma_project/features/today/data/habits_today_adapter.dart';
+import 'package:namma_project/features/today/data/prayer_today_adapter.dart';
 import 'package:namma_project/features/today/data/system_today_calendar.dart';
 import 'package:namma_project/features/today/data/tasks_today_adapter.dart';
 import 'package:namma_project/features/today/data/xp_today_adapter.dart';
@@ -150,13 +175,62 @@ Future<void> configureDependencies({
       database,
       dispose: (value) => value.close(),
     );
+    final preview = environment == FoundationEnvironment.tasksPreview;
+    getIt.registerLazySingleton<PrayerPreferencesPort>(
+      () => DriftPrayerPreferences(database),
+    );
+    getIt.registerLazySingleton<PrayerRepository>(
+      () => DriftPrayerRepository(database),
+    );
+    getIt.registerLazySingleton<PrayerReportIdentityPort>(
+      UuidPrayerReportIdentity.new,
+    );
+    getIt.registerLazySingleton<PrayerClockPort>(ZonedPrayerClock.new);
+    getIt.registerLazySingleton<PrayerScheduleCalculatorPort>(
+      AdhanPrayerCalculator.new,
+    );
+    getIt.registerLazySingleton<PrayerAnnualSchedulePort>(
+      () => AlAdhanAnnualSchedule(database),
+    );
+    getIt.registerLazySingleton<PrayerPreferencesCommands>(
+      () => PrayerPreferencesCommands(getIt<PrayerPreferencesPort>()),
+    );
+    getIt.registerLazySingleton<PrayerDeviceLocationPort>(
+      GeolocatorPrayerLocation.new,
+    );
+    getIt.registerLazySingleton<PrayerContextService>(
+      () => PrayerContextService(
+        preferences: getIt<PrayerPreferencesPort>(),
+        reports: getIt<PrayerRepository>(),
+        calculator: getIt<PrayerScheduleCalculatorPort>(),
+        annualSchedules: getIt<PrayerAnnualSchedulePort>(),
+        clock: getIt<PrayerClockPort>(),
+      ),
+    );
+    getIt.registerLazySingleton<CitySearchPort>(createPrayerCitySearch);
+    getIt.registerFactoryParam<PrayerCubit, String, void>(
+      (ownerId, _) => PrayerCubit(
+        context: getIt<PrayerContextService>(),
+        ownerId: ownerId,
+        reportCommands: (scopeValidator, ownerValidator) =>
+            PrayerReportCommands(
+              ownerId: ownerId,
+              repository: getIt<PrayerRepository>(),
+              unitOfWork: getIt<PrayerReportUnitOfWork>(),
+              identity: getIt<PrayerReportIdentityPort>(),
+              clock: getIt<PrayerClockPort>(),
+              isCurrentScope: scopeValidator,
+              isCurrentOwnerContext: ownerValidator,
+              queueForSync: !preview,
+            ),
+      ),
+    );
     final localStore = DriftLocalStore(database);
     getIt.registerLazySingleton<LocalStorePort>(() => localStore);
     const taskCodec = TaskPayloadCodec();
     const habitCodec = HabitPayloadCodec();
     getIt.registerLazySingleton<TaskPayloadCodec>(() => taskCodec);
 
-    final preview = environment == FoundationEnvironment.tasksPreview;
     final cloud = preview
         ? null
         : await _cloudSessionFor(environment, secureStore: secureStore);
@@ -165,6 +239,9 @@ Future<void> configureDependencies({
     if (preview) {
       getIt.registerLazySingleton<HabitsPreviewSession>(
         () => const HabitsPreviewSession(),
+      );
+      getIt.registerLazySingleton<PrayerPreviewSession>(
+        () => const PrayerPreviewSession(),
       );
     }
     if (preview) {
@@ -318,6 +395,13 @@ Future<void> configureDependencies({
     getIt.registerLazySingleton<SharedAwardLedgerPort>(
       () => getIt<DriftAwardLedger>(),
     );
+    getIt.registerLazySingleton<PrayerReportUnitOfWork>(
+      () => DriftPrayerReportUnitOfWork(
+        database: database,
+        reports: getIt<PrayerRepository>(),
+        awards: getIt<SharedAwardLedgerPort>(),
+      ),
+    );
     getIt.registerLazySingleton<TodayTasksPort>(
       () => TasksTodayAdapter(
         getIt<TaskRepository>(),
@@ -333,7 +417,12 @@ Future<void> configureDependencies({
       ),
     );
     getIt.registerLazySingleton<TodayXpPort>(
-      () => XpTodayAdapter(getIt<SharedAwardLedgerPort>()),
+      () => preview
+          ? PrayerPreviewXpAdapter(getIt<SharedAwardLedgerPort>())
+          : XpTodayAdapter(getIt<SharedAwardLedgerPort>()),
+    );
+    getIt.registerLazySingleton<TodayPrayerPort>(
+      () => PrayerTodayAdapter(getIt<PrayerContextService>()),
     );
     getIt.registerLazySingleton<TodayCalendarPort>(SystemTodayCalendar.new);
     getIt.registerLazySingleton<TodayActions>(
@@ -354,6 +443,7 @@ Future<void> configureDependencies({
         tasks: getIt<TodayTasksPort>(),
         habits: getIt<TodayHabitsPort>(),
         xp: getIt<TodayXpPort>(),
+        prayer: getIt<TodayPrayerPort>(),
         actions: getIt<TodayActions>(),
       ),
     );

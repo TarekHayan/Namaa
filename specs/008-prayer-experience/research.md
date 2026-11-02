@@ -1,10 +1,16 @@
 # Research: Prayer Experience
 
+## Foreground device location update (2026-11-01)
+
+The user replaced manual first-time city entry with automatic device location. `geolocator` supplies the foreground fix on Android, iOS, macOS, Windows and Linux; operating-system permission is requested only from Prayer. AlAdhan's coordinate-based daily endpoint supplies the IANA time zone and its closest calculation method suggestion. Only a supported method is adopted, and the encrypted per-device preference retains coordinates, zone and method for offline operation. A failed permission, disabled location service, imprecise fix or unavailable time-zone response leaves the manual search path visible. No background location or continuous stream is used.
+
+Sources: [geolocator platform/permission guide](https://pub.dev/packages/geolocator), [AlAdhan coordinate API and calculation-method notes](https://aladhan.com/prayer-times-api). AlAdhan explicitly notes that calculated times can differ from a local mosque or government authority's tuned timetable; the selected method and source are displayed for verification.
+
 Date: 2026-10-29. Decisions are design research, not executed implementation evidence. No dependency was installed, migration applied or live-provider response certified during planning.
 
 ## 1. Calculation library and preset parity
 
-**Decision**: Pin adhan_dart 2.0.1 (MIT; pure Dart, SDK >=2.19 <4) behind PrayerScheduleCalculatorPort. Pin timezone 0.11.2 (BSD-2-Clause; minimum Dart3.10) and embed its full zone database. Existing SDK satisfies the declared constraints; dependency resolution and five-target imports remain adoption gates.
+**Decision**: Pin adhan_dart 2.0.1 (MIT; pure Dart, SDK >=2.19 <4) behind PrayerScheduleCalculatorPort as the offline fallback after annual-cache coverage ends. AlAdhan's annual calendar endpoint supplies the primary schedule; validated whole-year responses are encrypted on device and the next Gregorian year is prefetched. Pin timezone 0.11.2 (BSD-2-Clause; minimum Dart3.10) and embed its full zone database. Existing SDK satisfies the declared constraints; dependency resolution and five-target imports remain adoption gates.
 
 **Rationale**: UTC result instants plus an explicit IANA zone avoid fixed-offset and host-zone errors. The prototype uses Adhan JS; corresponding presets allow traceable parity while a separate reference validates numerical results.
 
@@ -38,7 +44,7 @@ timezone0.11.2 changelog records2026e whereas its README still mentions2025c. Re
 
 **Decision**: Commit offline fixtures with coordinates, zone, civil date, exact method parameters, adjustment/rounding, UTC instants, source URL/version, capture date and raw reference response. Use prototype Adhan JS parity plus an independently maintained AlAdhan reference with explicitly matched parameters; never use location-chosen default methods or equate both providers' preset names without comparing definitions.
 
-[AlAdhan reference contract](https://aladhan.com/prayer-times-api) supports explicit coordinates, method, school, tuning and zone. It is reference acquisition only, never an application runtime dependency. Presets differ in adjustments; record normalization before comparison, including Dubai and fixed-interval Isha. Compare five prayers/sunrise within the spec's one-minute bound. A mismatch blocks adoption until explained and fixed; do not widen tolerance. Compute/check the night fractions separately against the defined Maghrib→next-Fajr rule.
+[AlAdhan API](https://aladhan.com/prayer-times-api) supports an annual calendar with explicit coordinates, method, school and zone. Following the 2026-10-31 user decision it is the application runtime's primary timetable source, with an encrypted annual cache. Presets differ in adjustments; record normalization before comparing the local fallback, including Dubai and fixed-interval Isha. Compare five prayers/sunrise within the spec's one-minute bound. A mismatch blocks acceptance of the local fallback until explained and fixed; do not widen tolerance. Compute/check the night fractions separately against the defined Maghrib→next-Fajr rule.
 
 Matrix: Cairo/Africa-Cairo, Dubai/Asia-Dubai, New York/America-New_York using valid IANA names Africa/Cairo, Asia/Dubai, America/New_York; all7 presets; March/June/September/December representative dates, Cairo and NewYork DST boundary dates, a Ramadan fixed90 case, exact boundary, after-Isha, zero coordinate and Tromso uncomputable twilight/polar dates. No reference numbers are invented in these documents.
 
@@ -94,7 +100,7 @@ Readers separately page reports, prayer_done awards and retained server conflict
 
 Retain the four groups and source measurements from prototype-reference.md, standard navigation shell/sidebar/bottom destinations and shared controls. A small city/method editor and reset affordance are approved adaptations. No fictitious streak: reserve its slot as coming soon. Route callbacks from Home, hubs, sidebar and Track lead to /prayer; unrelated domains remain coming soon.
 
-In memory only: schedule cache, countdown ticks, source health and query generation. Persisted setup is owner-local encrypted data. On resume sample the clock once; refresh date/report query when needed. Dispose all streams/timers on scope replacement and suppress per-second screen-reader announcements.
+In memory only: the active today/tomorrow projection, countdown ticks, source health and query generation. The annual timetable and setup are owner-local encrypted data. On resume sample the clock once; refresh date/report query when needed. Dispose all streams/timers on scope replacement and suppress per-second screen-reader announcements.
 
 ## 9. Religious copy
 

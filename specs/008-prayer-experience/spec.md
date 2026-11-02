@@ -10,6 +10,11 @@
 
 ## Clarifications
 
+### Session 2026-11-01
+
+- The user now wants the Prayer screen to use the device's current location instead of requiring typed city search. On first setup it requests foreground location permission, obtains coordinates and their time zone, and saves them on this device. A saved device location refreshes on later Prayer visits when it materially changes; a manually selected city is not overridden. Manual city selection remains available when permission, location services, accuracy or network lookup fails. No background tracking is introduced.
+- Prayer times use the measured coordinates and the selected calculation method. The API's location-based method suggestion is used on first setup; a previously chosen method remains under the user's control. The screen identifies whether displayed times came from the annual AlAdhan table or the local fallback.
+
 ### Session 2026-10-29
 
 - Q: If the city changes on the phone, should it also change on the desktop? → A: Each device retains its own selected city; changing one device does not change another device's city. Prayer reports still synchronize between devices.
@@ -21,7 +26,7 @@
 
 ### User Story 1 - See real prayer times for a chosen city (Priority: P1)
 
-As a user, I choose my city manually and see today's five prayer times, the next prayer and its remaining time, without needing to sign in during development or stay connected after choosing the city.
+As a user, I allow foreground location once and see today's five prayer times, the next prayer and its remaining time for my coordinates. I can choose a city manually if location is unavailable, and a saved location works offline.
 
 **Why this priority**: The location and date must be clear before a prayer schedule can be trusted.
 
@@ -29,15 +34,16 @@ As a user, I choose my city manually and see today's five prayer times, the next
 
 **Acceptance Scenarios**:
 
-1. **Given** no selected city, **When** Prayer opens, **Then** it prompts for city selection rather than silently assigning Cairo or another location.
+1. **Given** no saved location, **When** Prayer opens, **Then** it requests foreground location permission and never silently assigns Cairo or another location. A manual city option remains visible.
 2. **Given** a supported city is selected and saved, **When** the schedule appears, **Then** city, calculation method, civil date and applicable time zone identify it, and the choice survives an offline restart.
 3. **Given** a valid selected city, **When** the schedule loads, **Then** Fajr, Dhuhr, Asr, Maghrib and Isha appear in order, followed by sunrise, middle of the night and start of its last third.
 4. **Given** Isha has begun today, **When** Home shows the next prayer, **Then** it shows tomorrow's Fajr and following prayer, with a non-negative countdown and clear day context.
 5. **Given** midnight, a daylight-saving change, app resume or changed city/method, **When** the screen becomes current, **Then** affected times, date labels and countdown refresh without changing saved prayer reports.
 6. **Given** a valid time cannot be calculated, **When** the screen opens, **Then** the unavailable value is explained with a recovery action, without a guessed time presented as real.
 7. **Given** two devices with different selected cities, **When** one device changes city, **Then** the other keeps its own city and schedule; both still share reports identified by owner/date/prayer.
-8. **Given** no city has been saved and the device is offline, **When** city search is opened, **Then** the user is told internet is needed for a new search; no default location is silently assigned.
-9. **Given** a city has been saved, **When** several days pass offline or the app restarts, **Then** it calculates the new dates using saved location/time-zone information without downloading daily times again.
+8. **Given** no location has been saved and the device is offline or location permission is denied, **When** automatic location fails, **Then** the reason and manual city option are visible; no default location is silently assigned.
+9. **Given** a city has been saved and its annual timetable downloaded, **When** several days pass offline or the app restarts, **Then** it reads the saved timetable without downloading daily times again.
+10. **Given** the saved annual timetable no longer covers the displayed day and there is no internet, **When** Prayer opens, **Then** a local calculation uses the saved city, zone and method and clearly identifies itself as the fallback source.
 
 ---
 
@@ -117,10 +123,10 @@ As an account user, I synchronize prayer reports safely while Home reflects the 
 ### Functional Requirements
 
 - **FR-001**: Prayer MUST be a bounded feature comprising schedule, today's manual reports, prototype-derived UI, Home integration, persistence and synchronization. Public sign-in/registration stays deferred; isolated development preview MUST open directly.
-- **FR-002**: Users MUST manually find and choose a city by recognizable city/country name through online search. Searching for a new city requires connectivity and MUST disclose that requirement. The confirmed selection MUST retain location and time-zone information for fully offline calculation. Automatic detection and continuous location access are outside 008.
-- **FR-003**: Schedule preferences MUST be retained independently per owner on each device, identify city, time zone and method, and MUST NOT overwrite another device's schedule preferences through synchronization. Prayer reports remain synchronized account data. Supported methods MUST match the prototype: Egyptian, Muslim World League, Umm al-Qura, Dubai, North America, Kuwait and Qatar. Egyptian is the explicit initial default; method can change independently of city.
+- **FR-002**: First setup MUST request foreground device location permission, resolve measured coordinates and their IANA time zone, and save that context locally for offline use. It MUST reject unavailable or grossly imprecise fixes and MUST NOT perform background tracking. Manual city search remains an explicit fallback; it requires connectivity for a new city and discloses that requirement.
+- **FR-003**: Schedule preferences MUST be retained independently per owner on each device, identify coordinates, time zone and method, and MUST NOT overwrite another device's schedule preferences through synchronization. Prayer reports remain synchronized account data. Supported methods MUST match the prototype: Egyptian, Muslim World League, Umm al-Qura, Dubai, North America, Kuwait and Qatar. Automatic first setup uses a supported method suggested by the location-based provider (otherwise Muslim World League); the user can change it independently of location.
 - **FR-004**: New city selection MUST be confirmed before replacing a valid choice. Search/loading/validation/no-results/offline/unavailable/saved states MUST be distinguishable. Failed or cancelled search MUST retain the saved city and its working schedule. Without a saved city, offline search MUST explain the connectivity requirement rather than invent a location.
-- **FR-005**: Times MUST use the chosen city's civil date/time zone and a verified calculation method. A city label MUST NOT substitute for actual location; zero-valued coordinates MUST NOT trigger a Cairo fallback.
+- **FR-005**: Times MUST use the chosen city's civil date/time zone and method. AlAdhan's annual timetable for the chosen coordinates, zone and method is the primary source; a complete year is retained locally. If a date is not covered and the service is unavailable, the verified on-device calculator is an explicitly identified fallback. A city label MUST NOT substitute for actual location; zero-valued coordinates MUST NOT trigger a Cairo fallback.
 - **FR-006**: Exactly five obligatory prayers MUST appear in Fajr, Dhuhr, Asr, Maghrib, Isha order. Sunrise, middle of night and start of last third MUST be separate informational values, not additional obligatory completions.
 - **FR-007**: Next/following prayer, their dates and non-negative remaining time MUST derive from the same schedule, including tomorrow after Isha. They MUST refresh at time boundaries, preference changes and app resume.
 - **FR-008**: Each owner/date/prayer MUST have one report with pending, completed on time, completed late or missed state. Pending means unconfirmed; only an explicit user choice can record missed. Time passage, notification or absence of interaction MUST NOT infer religious failure.
@@ -141,14 +147,15 @@ As an account user, I synchronize prayer reports safely while Home reflects the 
 - **FR-023**: Layout MUST follow the prototype's compact heading, rounded spaced cards and adaptive action rows. Content MUST grow/wrap with text and accessibility scaling rather than overlap controls or be hidden by fixed heights.
 - **FR-024**: Arabic/English MUST cover names, states, plurals/counts, times/dates, city/method selection, guidance, errors and accessibility labels. Both themes MUST support RTL/LTR, mixed-direction times, visible keyboard focus and state cues beyond color on mobile/desktop.
 - **FR-025**: Recitation/rak'ah/guidance copy MUST be verified against an attributable approved reference before acceptance. The prototype is a presentation reference, not sufficient validation for religious instruction. No Quran text or new religious ruling is generated in 008.
-- **FR-026**: Saved-city schedules and reports MUST be usable after offline restart and on subsequent days using retained location/time-zone data. Daily calculation MUST NOT require a new search or a download of daily times. Unavailable schedule fields MUST stay distinct from unconfirmed reports.
+- **FR-026**: Saved-city schedules and reports MUST be usable after offline restart and on subsequent days. The saved annual timetable MUST cover its complete Gregorian year, remain owner/context-isolated and survive restart. A partial or invalid download MUST NOT replace valid cached times. When its coverage ends without internet, saved location/time-zone data MUST enable a clearly labelled local calculation. Daily display MUST NOT require a new search or a daily download. Unavailable schedule fields MUST stay distinct from unconfirmed reports.
 - **FR-027**: Adhan playback, notification permissions, scheduling/delivery and device-specific notification preferences are deferred to Notifications. Any exposed affordance MUST explicitly say coming soon and MUST NOT claim an active reminder.
-- **FR-028**: Quran, Dhikr, Qiyam tracking/reminders, Pomodoro, location onboarding, new general Settings, religious exemptions/travel adjustments and advanced calculation adjustments are outside 008. Future domains may consume Prayer boundaries without taking ownership of the schedule.
+- **FR-028**: Quran, Dhikr, Qiyam tracking/reminders, Pomodoro, background location tracking, new general Settings, religious exemptions/travel adjustments and advanced calculation adjustments are outside 008. Future domains may consume Prayer boundaries without taking ownership of the schedule.
 
 ### Key Entities *(include if feature involves data)*
 
 - **Prayer Preferences**: Owner/device-scoped confirmed city/country, coordinates, time-zone identity and method, retained locally rather than synchronized to other devices. These determine calculation context, not reported completion.
-- **Daily Prayer Schedule**: Derived city-local date/context with five times, sunrise, next-day boundaries, night fractions and field availability; not a completion record.
+- **Daily Prayer Schedule**: City-local date/context with five times, sunrise, next-day boundaries, night fractions, field availability and explicit API-cache or local-fallback provenance; not a completion record.
+- **Annual Prayer Timetable**: Encrypted owner/device/context/year cache of a validated complete AlAdhan response. Its validity is by covered dates and selected city coordinates, zone and method, not an arbitrary elapsed-time promise.
 - **Prayer Report**: One owner/date/prayer, its status, reported completion time when applicable, original date/zone context and version. Different prayers can reconcile independently.
 - **Prayer Reward Identity**: Unique owner/date/prayer relationship to one centralized reward, distinct from current report status and preserved across correction/replay.
 - **Prayer Guidance**: Reviewed bilingual names, rak'ah counts, recitation descriptions and explanatory copy with attributable source.
@@ -163,7 +170,7 @@ As an account user, I synchronize prayer reports safely while Home reflects the 
 - **SC-003**: All four-state transitions keep correct 0/5 through 5/5 completed counts, survive offline restart, and produce zero automatic missed reports.
 - **SC-004**: Ten replays/reconnects of one operation produce one report and at most one reward. Two-device scenarios retain independent edits, expose same-prayer/date conflicts and leak zero records across owners.
 - **SC-005**: At 320, 390, 430, 768 and 1200 logical-pixel widths, Arabic/English, both themes and 100%/150% text, all four groups and five prayer actions stay operable with zero clipped primary text, overlap or horizontal page overflow.
-- **SC-006**: On named phone/desktop test targets, saved Prayer content becomes readable offline within two seconds, a saved status action appears within one second, and midnight/resume selects the correct prayer/day without changing saved reports. Advancing through seven consecutive dates offline calculates the saved city's schedules without contacting city search or a daily-times service.
+- **SC-006**: On named phone/desktop test targets, saved Prayer content becomes readable offline within two seconds, a saved status action appears within one second, and midnight/resume selects the correct prayer/day without changing saved reports. Advancing through seven consecutive cached dates offline reads the saved year's schedules without contacting city search or a daily-times service; advancing beyond coverage offline uses an explicitly labelled local fallback.
 - **SC-007**: On each device, Prayer and Home agree on city, next/following prayer and count in every setup/change/unavailable/offline fixture. A city change leaves the other device's selection unchanged; differing city-local dates read the correct shared reports without relabelling them. Real Prayer values have no sample marker; remaining sample-domain values keep theirs.
 - **SC-008**: A recorded prototype comparison accounts for every group, card field and action. Differences are limited to the explicitly documented identity, navigation, integrity, setup and deferred-feature adaptations.
 
@@ -171,6 +178,7 @@ As an account user, I synchronize prayer reports safely while Home reflects the 
 
 - Prayer is next after Core Productivity in Namaa Plan sections 8, 24 and 27. The remaining final prototype audit of 007 stays an existing follow-up; starting 008 does not complete it.
 - User decisions, 2026-10-29: manual city selection saved for offline use; Adhan and notifications deferred to their later phase.
+- User decision, 2026-10-31: use an AlAdhan annual timetable as the primary schedule, keep it on-device for offline use, and fall back to local calculation after the saved year's coverage ends without internet.
 - Namaa's existing colors, ThmanyahSans primary font, icon and shared controls take precedence over the prototype's selectable fonts/themes.
 - Parity does not copy the prototype's silent Cairo assumption, unrelated global streak, whole-day overwrites or editable reward authority.
 - No GPS is required. The user approved online search for new cities and fully offline calculation after saving a city, including subsequent dates. Search-provider coverage, location/time-zone provenance, limits and failure behavior must be documented in planning; a bundled offline city catalog is not required in 008.

@@ -49,6 +49,7 @@ void main() {
           first,
           operationId: 'op-1',
           acknowledgedBase: null,
+          expectedCurrentVersion: null,
         )).failureOrNull,
         isNull,
       );
@@ -103,6 +104,7 @@ void main() {
           report,
           operationId: 'rollback-op',
           acknowledgedBase: null,
+          expectedCurrentVersion: null,
         );
         expect(saved.failureOrNull, isNull);
         return AppResult.failure(

@@ -133,20 +133,59 @@ Future<FoundationDatabase> _installed(
 
 void main() {
   final key = List<int>.generate(32, (index) => index + 70);
-  test('fresh v8 has Prayer indexes and no Task completion_xp', () async {
+  test('installed v8 upgrades to v9 without changing Prayer reports', () async {
+    final temp = TemporaryDatabasePath();
+    FoundationDatabase? db;
+    try {
+      final path = temp.allocate();
+      db = await FoundationDatabase.openEncrypted(
+        path: path,
+        key: key,
+        schemaVersion: 8,
+      );
+      await db.customStatement('''
+        INSERT INTO prayer_reports (account_id, local_date, prayer_name,
+          report_id, status, recorded_zone_id, recorded_offset_minutes,
+          created_at, updated_at)
+        VALUES ('owner', '2026-10-31', 'fajr', 'old-report', 'pending',
+          'Africa/Cairo', 120, '2026-10-31T00:00:00Z',
+          '2026-10-31T00:00:00Z')
+      ''');
+      await db.close();
+      db = await FoundationDatabase.openEncrypted(path: path, key: key);
+      expect(db.schemaVersion, 9);
+      expect(
+        await db.rawScalar(
+          "SELECT report_id FROM prayer_reports WHERE account_id='owner'",
+        ),
+        'old-report',
+      );
+      expect(
+        await db.rawScalar(
+          "SELECT count(*) FROM sqlite_master WHERE type='table' "
+          "AND name='prayer_annual_timetables'",
+        ),
+        1,
+      );
+    } finally {
+      await db?.close();
+      temp.dispose();
+    }
+  });
+  test('fresh v9 has Prayer tables and no Task completion_xp', () async {
     final temp = TemporaryDatabasePath();
     final db = await FoundationDatabase.openEncrypted(
       path: temp.allocate(),
       key: key,
     );
     try {
-      expect(db.schemaVersion, 8);
+      expect(db.schemaVersion, 9);
       expect(
         await db.rawScalar(
           'SELECT count(*) FROM sqlite_master '
           "WHERE type='table' AND name LIKE 'prayer_%'",
         ),
-        2,
+        3,
       );
       expect(
         await db.rawScalar(
@@ -170,7 +209,7 @@ void main() {
 
   for (var version = 1; version <= 7; version++) {
     test(
-      'physical v$version upgrades to v8, retains rows and restarts',
+      'physical v$version upgrades to v9, retains rows and restarts',
       () async {
         final temp = TemporaryDatabasePath();
         FoundationDatabase? db;
@@ -179,7 +218,7 @@ void main() {
           db = await _installed(path, key, version);
           await db.close();
           db = await FoundationDatabase.openEncrypted(path: path, key: key);
-          expect(await db.journalStatusFor(8), 'completed');
+          expect(await db.journalStatusFor(9), 'completed');
           expect(
             await db.rawScalar('SELECT value FROM foundation_preferences'),
             'ar',
@@ -240,7 +279,7 @@ void main() {
               'SELECT count(*) FROM sqlite_master '
               "WHERE type='table' AND name LIKE 'prayer_%'",
             ),
-            2,
+            3,
           );
           await db.close();
           db = await FoundationDatabase.openEncrypted(path: path, key: key);
@@ -267,6 +306,7 @@ void main() {
         FoundationDatabase.openEncrypted(
           path: path,
           key: key,
+          schemaVersion: 8,
           testMigrationHook: (migrator, from, to) async {
             if (to == 8) throw StateError('injected failure');
           },
@@ -296,7 +336,11 @@ void main() {
         0,
       );
       await db.close();
-      db = await FoundationDatabase.openEncrypted(path: path, key: key);
+      db = await FoundationDatabase.openEncrypted(
+        path: path,
+        key: key,
+        schemaVersion: 8,
+      );
       expect(await db.journalStatusFor(8), 'recovered');
       expect(
         await db.rawScalar(
@@ -312,6 +356,9 @@ void main() {
         ),
         greaterThanOrEqualTo(1),
       );
+      await db.close();
+      db = await FoundationDatabase.openEncrypted(path: path, key: key);
+      expect(await db.journalStatusFor(9), 'completed');
     } finally {
       await db?.close();
       temp.dispose();

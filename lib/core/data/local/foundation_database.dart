@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 8;
+const int kFoundationSchemaVersion = 9;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -524,6 +524,7 @@ class FoundationDatabase extends _$FoundationDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (migrator) async {
       await migrator.createAll();
+      if (schemaVersion >= 9) await _createPrayerAnnualTimetables();
       // A fresh create is recorded as a completed journal entry.
       await _recordJournalStep(schemaVersion);
     },
@@ -641,6 +642,9 @@ class FoundationDatabase extends _$FoundationDatabase {
           );
         }
       }
+      if (to >= 9 && from < 9) {
+        await _createPrayerAnnualTimetables();
+      }
       await _recordJournalComplete(to);
     },
     beforeOpen: (details) async {
@@ -657,6 +661,17 @@ class FoundationDatabase extends _$FoundationDatabase {
       );
     },
   );
+
+  Future<void> _createPrayerAnnualTimetables() => customStatement('''
+    CREATE TABLE IF NOT EXISTS prayer_annual_timetables (
+      account_id TEXT NOT NULL,
+      context_key TEXT NOT NULL,
+      calendar_year INTEGER NOT NULL,
+      days_json TEXT NOT NULL,
+      fetched_at TEXT NOT NULL,
+      PRIMARY KEY (account_id, context_key, calendar_year)
+    )
+  ''');
 
   Future<void> _createIndexIfMissing(Migrator migrator, Index index) async {
     final existing = await customSelect(

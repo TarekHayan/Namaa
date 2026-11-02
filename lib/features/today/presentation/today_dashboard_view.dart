@@ -56,10 +56,12 @@ class TodayDashboardView extends StatelessWidget {
     required this.onTasks,
     required this.onHabits,
     required this.onMindMaps,
+    this.onPrayer,
     required this.onPreferences,
     required this.onRetryTasks,
     required this.onRetryHabits,
     required this.onRetryXp,
+    this.onRetryPrayer,
     required this.onSetTaskCompleted,
     required this.onSetHabitCompleted,
     this.onNewTask,
@@ -74,10 +76,12 @@ class TodayDashboardView extends StatelessWidget {
   final VoidCallback onTasks;
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
+  final VoidCallback? onPrayer;
   final VoidCallback onPreferences;
   final VoidCallback onRetryTasks;
   final VoidCallback onRetryHabits;
   final VoidCallback onRetryXp;
+  final VoidCallback? onRetryPrayer;
   final void Function(String, bool) onSetTaskCompleted;
   final void Function(String, bool) onSetHabitCompleted;
   final VoidCallback? onNewTask;
@@ -160,6 +164,7 @@ class TodayDashboardView extends StatelessWidget {
             onTasks: onTasks,
             onHabits: onHabits,
             onMindMaps: onMindMaps,
+            onPrayer: onPrayer,
             onPreferences: onPreferences,
             xpAmount: state.xp.value?.amount,
             child: Scaffold(
@@ -222,6 +227,7 @@ class TodayDashboardView extends StatelessWidget {
                                         colors: colors,
                                         onOpenHabits: onHabits,
                                         onOpenTasks: onTasks,
+                                        onOpenPrayer: onPrayer,
                                         onRetryTasks: onRetryTasks,
                                         onRetryHabits: onRetryHabits,
                                         onRetryXp: onRetryXp,
@@ -229,7 +235,12 @@ class TodayDashboardView extends StatelessWidget {
                                       const SizedBox(height: 20),
 
                                       // 2. NEXT PRAYER CARD
-                                      TodayPrayerCard(colors: colors),
+                                      TodayPrayerCard(
+                                        colors: colors,
+                                        prayer: state.prayer,
+                                        onTap: onPrayer,
+                                        onRetry: onRetryPrayer,
+                                      ),
                                       const SizedBox(height: 20),
 
                                       // 3. DAILY QURAN WIRD CARD
@@ -237,7 +248,10 @@ class TodayDashboardView extends StatelessWidget {
                                       const SizedBox(height: 20),
 
                                       // 4. QUICK ACTION HUBS
-                                      TodayQuickHubs(colors: colors),
+                                      TodayQuickHubs(
+                                        colors: colors,
+                                        onPrayer: onPrayer,
+                                      ),
                                       const SizedBox(height: 20),
 
                                       // 5. SMART DAILY TIMELINE

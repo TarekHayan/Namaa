@@ -75,7 +75,7 @@ Owner/report identity, stable conflict_id, both semantic versions, chosen active
 
 Reuse existing UUID source_id column and source='prayer_done'; no separate prayer balance. Insert-only canonical amount derived from the eligible submitted report status,10/5. Server-committed first eligible award wins even if that incoming report loses newest-version selection to a later reset. Newer corrections never rewrite the award.
 
-Cloud device preferences, daily schedule rows and global Prayer streak rows are deliberately absent.
+Cloud device preferences, daily schedule rows and global Prayer streak rows are deliberately absent. The encrypted device database additionally stores a complete annual AlAdhan timetable keyed by owner, selected city coordinates/zone/method and Gregorian year; a malformed or partial response cannot replace it.
 
 ## Reward lifecycle
 
@@ -99,7 +99,7 @@ Report UI remains saved/offline independent of reward synchronization. A provisi
 - PrayerActionFeedback: per-prayer pending/saved/failed plus captured date/context; late results cannot cross owner generations.
 - TodayPrayerReference: mapped read-only snapshot with explicit prayer date/zone; no Prayer repository/database dependency in Today presentation.
 
-Schedule cache is bounded to current/next civil days per active context. Tick changes countdown only; it does not read all historical reports, persist schedules or make network calls.
+The in-memory projection is bounded to current/next civil days per active context. The durable annual timetable covers the selected Gregorian year, with next year prefetched for at least twelve months of offline coverage after initial download. Tick changes countdown only; it does not read all historical reports, persist schedules or make network calls.
 
 ## Date and transition rules
 
@@ -111,9 +111,9 @@ Every explicit status may transition to any other status; missing→pending is a
 
 ## Migration integrity
 
-- Upgrade true historical local schemas v1…v7 to v8 before opening owner features.
+- Upgrade true historical local schemas v1…v8 to v9 before opening owner features; v8→v9 adds only the encrypted annual timetable.
 - Add the two Prayer tables/indexes; preserve existing tasks, habit counters/history, maps/links, XP, outbox/base metadata and conflicts.
 - Remove unused task_records.completion_xp and dependent generated mapper writes. Check actual physical existence before dropping: newest table declarations used by early upgrade paths may never create it.
 - Keep existing v7 base_updated_at upgrade guards working for every older starting version.
 - Use rollback/recoverable journal behavior; an injected failure must leave the old database readable.
-- Test fresh v8, each historical path, restart after upgrade and deliberate migration failure/recovery. Changing only a target version number is not a historical-schema fixture.
+- Test fresh v9, each historical path including an installed v8, restart after upgrade and deliberate migration failure/recovery. Changing only a target version number is not a historical-schema fixture.

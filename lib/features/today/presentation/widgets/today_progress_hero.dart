@@ -21,6 +21,7 @@ class TodayProgressHero extends StatelessWidget {
     this.presentation,
     this.onOpenHabits,
     this.onOpenTasks,
+    this.onOpenPrayer,
     this.onRetryTasks,
     this.onRetryHabits,
     this.onRetryXp,
@@ -32,6 +33,7 @@ class TodayProgressHero extends StatelessWidget {
   final DashboardPresentation? presentation;
   final VoidCallback? onOpenHabits;
   final VoidCallback? onOpenTasks;
+  final VoidCallback? onOpenPrayer;
   final VoidCallback? onRetryTasks;
   final VoidCallback? onRetryHabits;
   final VoidCallback? onRetryXp;
@@ -138,6 +140,11 @@ class TodayProgressHero extends StatelessWidget {
     final gap = 8.0;
     final width = (maxWidth - (columns - 1) * gap) / columns;
     final preview = pres.preview;
+    final prayer = state.prayer?.value;
+    final prayerValue =
+        prayer?.reportsAvailable == true && prayer?.completedCount != null
+        ? '${prayer!.completedCount}/5'
+        : '—/5';
 
     final taskVal = pres.isTasksLoading
         ? '--/--'
@@ -158,15 +165,14 @@ class TodayProgressHero extends StatelessWidget {
           semanticsLabel: '${copy.dashboardTasksProgress}: $taskVal',
           onTap: onOpenTasks,
         ),
-        // 2. Prayer (Sample)
+        // 2. Prayer (live local report count; no fabricated preview value)
         _metricTile(
           width: width,
           title: copy.dashboardPrayerShort,
-          value: '4/5',
+          value: prayerValue,
           isHighlight: true,
-          semanticsLabel:
-              '${copy.dashboardSampleValue}: ${copy.dashboardPrayerShort} 4/5',
-          sampleLabel: copy.dashboardSampleBadge,
+          semanticsLabel: '${copy.dashboardPrayerShort}: $prayerValue',
+          onTap: onOpenPrayer,
         ),
         // 3. Quran (Sample)
         _metricTile(

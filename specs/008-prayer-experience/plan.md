@@ -6,7 +6,7 @@
 
 ## Summary
 
-Implement the next Namaa domain with the prototype's four ordered Prayer groups and current Namaa colors, ThmanyahSans, icon and shared controls. Manually search for a city online, persist its coordinates/IANA zone per owner on this installation, calculate schedules offline and maintain today's deliberate reports. Replace Home's sample Prayer card/metric with an explicit Prayer-owned projection.
+Implement the next Namaa domain with the prototype's four ordered Prayer groups and current Namaa colors, ThmanyahSans, icon and shared controls. Manually search for a city online, persist its coordinates/IANA zone per owner on this installation, download and encrypt an AlAdhan annual timetable, and maintain today's deliberate reports. Read cached times offline; use the local calculator with a visible source label beyond cached coverage. Replace Home's sample Prayer card/metric with an explicit Prayer-owned projection.
 
 Add per-prayer synchronization and immutable first-completion rewards using the existing encrypted store/outbox/central ledger. Preserve independent device cities and the existing device calendar for Tasks/Habits. No public Auth, notification delivery, history editor or new streak algorithm.
 
@@ -18,7 +18,7 @@ This command produces design artifacts only; dependency adoption, migrations, ap
 
 **Primary Dependencies**: Existing flutter_bloc, Drift/sqlite3mc, Supabase Flutter, get_it/injectable, go_router, intl and ARB/gen_l10n. Planned exact additions: adhan_dart 2.0.1 (MIT), timezone 0.11.2 (BSD-2-Clause), uuid 4.6.0 (MIT), Dio 5.11.1 (MIT). Verify release archives/licenses, dependency resolution and five-target imports before committing adoption. No SDK/package-wide upgrade.
 
-**Storage**: Encrypted Foundation schema 7→8; owner-local Prayer device preferences, per-date/prayer reports, shared XP ledger/outbox/conflicts. Supabase migration 0015 adds Prayer reports, receipts/conflicts and native typed RPC; UUIDv5 extension availability is explicitly checked. No cloud preference or schedule table.
+**Storage**: Encrypted Foundation schema 7→9; owner-local Prayer device preferences, validated annual timetable per owner/context/year, per-date/prayer reports, shared XP ledger/outbox/conflicts. Supabase migration 0015 adds Prayer reports, receipts/conflicts and native typed RPC; UUIDv5 extension availability is explicitly checked. No cloud preference or schedule table.
 
 **Testing**: Calculation/reference/zone fixtures; command transactions; actual historical-schema upgrades v1…v7; SQL RLS/replay/conflict/reward tests; adapter/Cubit/lifecycle tests; bilingual/theme/150% responsive widgets; focused five-target device integration, named phone/desktop timing and source-to-screen comparison.
 
@@ -26,9 +26,9 @@ This command produces design artifacts only; dependency adoption, migrations, ap
 
 **Project Type**: Existing Flutter mobile/desktop application and Supabase backend.
 
-**Performance Goals**: Saved offline Prayer readable ≤2s; local report visible ≤1s; scripted city→Prayer→Home journey ≤60s. Foreground countdown ticks each second, recalculates only on day/preferences change or explicit recovery; resume refresh starts immediately. Seven consecutive offline dates need no daily-times service.
+**Performance Goals**: Saved offline Prayer readable ≤2s; local report visible ≤1s; scripted city→Prayer→Home journey ≤60s. Foreground countdown ticks each second; timetable reads occur on day/preferences change or recovery, not per tick. Seven consecutive cached offline dates need no daily-times service.
 
-**Constraints**: Manual city selection; saved coordinates/zone survive offline restart; device-independent choices; today-only edits; manual states; never infer missed; one first 10/5 reward; protected owners/preview; no hidden high-latitude fallback; no daily network calculation; no commercial key in client.
+**Constraints**: Foreground device location with explicit OS permission and manual city fallback; saved coordinates/zone and annual table survive offline restart; device-independent choices; today-only edits; manual states; never infer missed; one first 10/5 reward; protected owners/preview; no hidden high-latitude fallback; no daily network calculation; no commercial key in client.
 
 **Scale/Scope**: Five logical reports/day/owner, one device preference/owner/installation, at most 10 city results per search, retained history without product deletion cap. Validate an 18,300-report fixture covering at least ten years with indexed day reads; no whole-history projection per tick. Sync uses bounded pages. Existing unrelated sync optimization backlog is not silently included.
 
@@ -40,7 +40,7 @@ This command produces design artifacts only; dependency adoption, migrations, ap
 | --- | --- | --- |
 | I. Five-target parity | PASS: shared feature behavior. | PASS: pure-Dart math/zone adapters and five-target import/device checks; platform input adapts only. |
 | II. Explicit ownership | PASS: Prayer owns its data. | PASS: application ports, composition-owned routes and Today bridge; Home owns no Prayer rows. |
-| III. Durable/local-first | PASS: reuse encrypted runtime. | PASS: v8 migration matrix; transaction writes report+reward+outbox; saved schedules calculated locally. |
+| III. Durable/local-first | PASS: reuse encrypted runtime. | PASS: v8 report migration and v9 annual-cache migration; transaction writes report+reward+outbox; saved schedules read locally with labelled fallback. |
 | IV. Safe synchronization | PASS: account/date/prayer identity. | PASS: typed base version, receipts, per-entity locks, visible preserved conflicts, fixed identity and late-result guards. |
 | V. Sacred/financial invariants | PASS: no Quran/Finance edits. | PASS: attributable guidance review, explicit calculation policy, no invented missed state or high-latitude time. |
 | VI. Central state/XP | PASS: Cubit and one reward authority. | PASS: generalize Task-only ledger type, keep Task20, add prayer_done10/5; server freezes first committed eligible award. |
@@ -52,7 +52,7 @@ No exception required. Package/platform adoption, reference fixtures, guidance r
 
 ## Phase 0: Research
 
-[research.md](research.md) resolves calculation library/preset policy, explicit IANA dates, online city provider/terms, device-local preference ownership, v8 migration, UUID identity, reward authority/concurrency, resolved Prayer conflicts, Home/navigation and verification.
+[research.md](research.md) resolves API timetable/local fallback policy, explicit IANA dates, online city provider/terms, device-local preference ownership, v8/v9 migrations, UUID identity, reward authority/concurrency, resolved Prayer conflicts, Home/navigation and verification.
 
 Key decisions:
 - Use explicit city date D and D+1, independently computed, then UTC→IANA conversion; do not change global device time zone.
@@ -74,7 +74,7 @@ Key decisions:
 
 1. Adopt/pin calculation, zone, UUID and HTTP dependencies behind adapters; capture independent reference and prototype fixtures; validate solar preflight and time-zone behavior.
 2. Generalize the shared XP model without changing Task semantics; introduce Prayer domain values/ports/commands and deterministic identity.
-3. Add v8 tables/migration (including planned unused Task XP-column cleanup), real old-schema fixtures and atomic local report/reward/outbox operations.
+3. Add v8 report tables/migration (including planned unused Task XP-column cleanup), v9 annual-cache table, real old-schema fixtures and atomic local report/reward/outbox operations.
 4. Add migration0015, strict RPC/locks/receipts/RLS, Prayer dispatch/reconciliation and shared-ledger award reading.
 5. Wire preview/account ownership and a shared Prayer read model; extend Today projection and routes while preserving existing source/date boundaries.
 6. Build the prototype-aligned Prayer groups, city/method editor, ARB copy and conflict review with current shared components; validate both input styles.
@@ -132,7 +132,7 @@ lib/app/
 ├── l10n/           # AR/EN prayer strings and adapter
 └── widgets/        # reuse existing controls; no separate UI kit
 lib/core/data/
-├── local/foundation_database.dart  # v8 and generated code
+├── local/foundation_database.dart  # v8 reports, v9 annual timetable and generated code
 └── sync/entity_dispatch_router.dart
 supabase/migrations/0015_prayer_reports_and_rewards.sql
 supabase/tests/     # prayer account/RPC/conflict/reward integrity

@@ -1,0 +1,155 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:dio/dio.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:namma_project/features/prayer/data/dio_city_search.dart';
+import 'package:namma_project/features/prayer/data/prayer_search_configuration.dart';
+
+void main() {
+  test(
+    'captured Open-Meteo fixture preserves distinct Cairo candidates',
+    () async {
+      final fixture =
+          jsonDecode(
+                File(
+                  'test/fixtures/prayer/cities/open_meteo_cairo.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, dynamic>;
+      final dio = Dio()
+        ..interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) => handler.resolve(
+              Response(requestOptions: options, data: fixture['response']),
+            ),
+          ),
+        );
+      final adapter = DioCitySearch(
+        configuration: PrayerSearchConfiguration.resolve().valueOrNull!,
+        dio: dio,
+      );
+      final result = await adapter.search(
+        query: 'Cairo',
+        locale: 'en',
+        ownerId: 'owner',
+        generation: 1,
+      );
+      expect(result.valueOrNull, hasLength(3));
+      expect(result.valueOrNull!.first.timeZoneId, 'Africa/Cairo');
+      expect(result.valueOrNull![1].timeZoneId, 'America/Chicago');
+      expect(result.valueOrNull!.first.providerCityId, '360630');
+    },
+  );
+
+  test(
+    'normalizes provider results, keeps zero coordinates and skips bad zone',
+    () async {
+      final dio = Dio();
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            expect(options.uri.queryParameters['count'], '10');
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                data: {
+                  'results': [
+                    {
+                      'id': 1,
+                      'name': 'Zero',
+                      'country_code': 'GB',
+                      'country': 'United Kingdom',
+                      'latitude': 0,
+                      'longitude': 0,
+                      'timezone': 'Europe/London',
+                    },
+                    {
+                      'id': 2,
+                      'name': 'Broken',
+                      'country_code': 'GB',
+                      'country': 'United Kingdom',
+                      'latitude': 51,
+                      'longitude': 0,
+                      'timezone': 'Missing/Zone',
+                    },
+                  ],
+                },
+              ),
+            );
+          },
+        ),
+      );
+      final adapter = DioCitySearch(
+        configuration: PrayerSearchConfiguration.resolve().valueOrNull!,
+        dio: dio,
+      );
+      final result = await adapter.search(
+        query: ' Ze ',
+        locale: 'en',
+        ownerId: 'owner',
+        generation: 1,
+      );
+      expect(
+        result.valueOrNull,
+        hasLength(1),
+        reason: '${result.failureOrNull}',
+      );
+      expect(result.valueOrNull!.single.latitude, 0);
+      expect(result.valueOrNull!.single.timeZoneId, 'Europe/London');
+    },
+  );
+
+  test(
+    'empty, malformed, throttled and offline responses stay distinct',
+    () async {
+      final cases = <(Object?, String)>[
+        ({'results': <Object>[]}, 'empty'),
+        ({'results': 'bad'}, 'prayerSearchInvalidResponse'),
+        (429, 'prayerSearchThrottled'),
+        (DioExceptionType.connectionError, 'prayerSearchOffline'),
+      ];
+      for (final (reply, expected) in cases) {
+        final dio = Dio()
+          ..interceptors.add(
+            InterceptorsWrapper(
+              onRequest: (options, handler) {
+                if (reply == 429) {
+                  handler.reject(
+                    DioException(
+                      requestOptions: options,
+                      response: Response(
+                        requestOptions: options,
+                        statusCode: 429,
+                      ),
+                      type: DioExceptionType.badResponse,
+                    ),
+                  );
+                } else if (reply == DioExceptionType.connectionError) {
+                  handler.reject(
+                    DioException(
+                      requestOptions: options,
+                      type: DioExceptionType.connectionError,
+                    ),
+                  );
+                } else {
+                  handler.resolve(
+                    Response(requestOptions: options, data: reply),
+                  );
+                }
+              },
+            ),
+          );
+        final result = await DioCitySearch(
+          configuration: PrayerSearchConfiguration.resolve().valueOrNull!,
+          dio: dio,
+        ).search(query: 'Cairo', locale: 'ar', ownerId: 'owner', generation: 1);
+        if (expected == 'empty') {
+          expect(result.valueOrNull, isEmpty);
+        } else {
+          expect(result.failureOrNull?.messageKey, expected);
+        }
+      }
+    },
+  );
+}

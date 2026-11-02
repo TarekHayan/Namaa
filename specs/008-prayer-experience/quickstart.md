@@ -47,7 +47,7 @@ supabase test db
 
 Expected: migration0015 applied locally; anon/foreign-owner denial; native typed RPC; stable UUID vectors; no ordinary-edit false conflict; equal-time conflict retained visibly; first10/5 once-only award; invalid operation reuse rejected; losing completion followed by reset still awards once.
 
-Real historical v1…v7→v8 fixtures must preserve existing records, base_updated_at, counters/maps/links/XP/conflicts and remove physical unused completion_xp only when present. Include failed-upgrade rollback/journal recovery. A new database opened with a lower version argument is insufficient migration evidence.
+Real historical v1…v7→v9 and installed v8→v9 fixtures must preserve existing records, base_updated_at, counters/maps/links/XP/conflicts and remove physical unused completion_xp only when present. The v9 cache must be created without changing Prayer reports. Include failed-upgrade rollback/journal recovery. A new database opened with a lower version argument is insufficient migration evidence.
 
 ## Open the feature preview
 
@@ -58,8 +58,8 @@ flutter run -d windows --dart-define=NAMAA_TASKS_PREVIEW=true --dart-define=NAMA
 Use flutter devices to select an Android/iOS target. Profile performance builds retain preview only with the explicit preview define; release never bypasses the real session boundary.
 
 1. Open Track→Prayer, Home prayer card/hub, desktop direct Prayer entry. No sign-up prompt in development preview.
-2. With no saved city, verify setup is honest; offline first search explains internet requirement.
-3. Search Cairo in Arabic and English; confirm country/admin, coordinates/zone validity, method and attribution. Cancel another search: prior choice persists.
+2. With no saved location, open Prayer and grant the foreground location request. Verify the measured coordinates and zone appear, and that the timetable identifies AlAdhan or the local fallback. If permission is denied or the fix is unavailable, verify the manual city option remains usable.
+3. Test the manual fallback by searching Cairo in Arabic and English; confirm country/admin, coordinates/zone validity, method and attribution. Cancel another search: prior choice persists. Returning to a manually chosen city must not silently replace it with the device location.
 4. Inspect all four ordered groups, the five cards, separate information cards and reviewed guidance. Streak/other religious features say coming soon.
 5. Mark one prayer on time and another late; progress2/5 and local first awards10+5. Correct/reset them: counts follow state; awarded points stay fixed.
 6. Restart offline and advance the injected date through seven days. New schedules calculate from saved city; old records stay attached to their dates, never auto-missed.

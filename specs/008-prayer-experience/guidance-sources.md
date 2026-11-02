@@ -52,6 +52,8 @@ Shared role `residentFardRakahs`: source R1; values Fajr 2, Dhuhr 4, Asr 4, Magh
 
 ## Handoff to final content acceptance
 
+Current ARB key mapping: `prayerResidentRakahs` → residentFardRakahs (R1); `prayerRecitationFajr`, `prayerRecitationQuiet`, `prayerRecitationMaghrib`, `prayerRecitationIsha` → corresponding recitation roles (R2); `prayerOptionalFajr`, `prayerOptionalMaghrib`, `prayerOptionalIsha`, `prayerGuidanceContext` → optional roles (R4); `prayerOptionalDhuhr`, `prayerOptionalAsr` → optional roles (R5); `prayerJahrDefinition`, `prayerSirrDefinition` → panel roles (R3); `prayerGuidanceScope` → editorial boundary (R2/R3). The AR and EN entries follow the paraphrases above; final rendered content acceptance remains T127.
+
 1. Link every final ARB guidance key to one role above and its reference ID; validate AR/EN meaning together.
 2. Keep resident/optional/recitation distinctions in visible copy and semantics. A link list alone is not a final string review.
 3. T077 implements reviewed strings; T127 records final copy/theme/layout comparison. Both remain **pending** after this setup phase.
