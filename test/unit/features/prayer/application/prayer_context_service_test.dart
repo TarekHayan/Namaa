@@ -106,6 +106,20 @@ class _Annual extends Fake implements PrayerAnnualSchedulePort {
       : null;
 }
 
+class _DelayedAnnual extends Fake implements PrayerAnnualSchedulePort {
+  final pending = <int, List<Completer<PrayerSchedule?>>>{};
+
+  @override
+  Future<PrayerSchedule?> forDate({
+    required PrayerPreferences preferences,
+    required PrayerLocalDate date,
+  }) {
+    final result = Completer<PrayerSchedule?>();
+    pending.putIfAbsent(preferences.revision, () => []).add(result);
+    return result.future;
+  }
+}
+
 PrayerCity _city(String id, String zone) => PrayerCity(
   provider: 'fixture',
   providerCityId: id,
@@ -140,6 +154,82 @@ PrayerReport _report(PrayerStatus status, DateTime at) => PrayerReport(
 );
 
 void main() {
+  testWidgets('foreground second updates countdown without refetching data', (
+    tester,
+  ) async {
+    final preferences = _Preferences();
+    final reports = _Reports();
+    final calculator = _Calculator();
+    var now = DateTime.utc(2026, 3, 20, 12);
+    final context = PrayerContextService(
+      preferences: preferences,
+      reports: reports,
+      calculator: calculator,
+      clock: ZonedPrayerClock(now: () => now),
+    );
+    final snapshots = <PrayerDaySnapshot>[];
+    final subscription = context.watch('owner').listen(snapshots.add);
+    preferences.controller.add(_preference(revision: 1, now: now));
+    await tester.pump();
+    final calculations = calculator.calls;
+    final reportWatches = reports.days.length;
+    now = now.add(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(snapshots.last.nowUtc, now);
+    expect(calculator.calls, calculations);
+    expect(reports.days.length, reportWatches);
+    unawaited(subscription.cancel());
+    await tester.pump();
+    unawaited(preferences.controller.close());
+  });
+
+  test('late annual response cannot replace a newer city revision', () async {
+    final preferences = _Preferences();
+    final annual = _DelayedAnnual();
+    final now = DateTime.utc(2026, 3, 20, 12);
+    final calculator = _Calculator();
+    final context = PrayerContextService(
+      preferences: preferences,
+      reports: _Reports(),
+      calculator: calculator,
+      annualSchedules: annual,
+      clock: ZonedPrayerClock(now: () => now),
+    );
+    final snapshots = <PrayerDaySnapshot>[];
+    final subscription = context.watch('owner').listen(snapshots.add);
+    addTearDown(() async {
+      await subscription.cancel();
+      await preferences.controller.close();
+    });
+    preferences.controller.add(_preference(revision: 1, now: now));
+    await Future<void>.delayed(Duration.zero);
+    expect(annual.pending[1], hasLength(2));
+    preferences.controller.add(_preference(revision: 2, now: now));
+    await Future<void>.delayed(Duration.zero);
+    expect(annual.pending[2], hasLength(2));
+    final first = calculator
+        .calculate(
+          preferences: _preference(revision: 1, now: now),
+          date: PrayerLocalDate.parse('2026-03-20'),
+        )
+        .valueOrNull!
+        .copyWith(provenance: 'obsolete annual result');
+    for (final request in annual.pending[1]!) {
+      request.complete(first);
+    }
+    await Future<void>.delayed(Duration.zero);
+    expect(snapshots.last.preferences?.revision, 2);
+    expect(
+      snapshots.last.schedule?.provenance,
+      isNot('obsolete annual result'),
+    );
+    for (final request in annual.pending[2]!) {
+      request.complete(null);
+    }
+    await Future<void>.delayed(Duration.zero);
+    expect(snapshots.last.preferences?.revision, 2);
+  });
+
   test(
     'cached year wins; after coverage ends offline local fallback is labelled',
     () async {

@@ -87,28 +87,31 @@ void main() {
     }
   });
 
-  test('an accepted action crossing midnight retains its captured identity', () async {
-    final clock = _Clock();
-    final unit = _Unit();
-    final command = PrayerReportCommands(
-      ownerId: 'owner',
-      repository: _Repo(() => clock.value = DateTime.utc(2026, 11, 2)),
-      unitOfWork: unit,
-      identity: _Identity(),
-      clock: clock,
-      isCurrentScope: (_) => true,
-      isCurrentOwnerContext: (_) => true,
-      queueForSync: true,
-    );
-    final result = await command.setStatus(
-      name: PrayerName.isha,
-      status: PrayerStatus.missed,
-      capturedContext: _context(_day),
-    );
-    expect(result.failureOrNull, isNull);
-    expect(unit.value?.report.date, _day);
-    expect(unit.value?.report.reportId, 'stable-report');
-  });
+  test(
+    'an accepted action crossing midnight retains its captured identity',
+    () async {
+      final clock = _Clock();
+      final unit = _Unit();
+      final command = PrayerReportCommands(
+        ownerId: 'owner',
+        repository: _Repo(() => clock.value = DateTime.utc(2026, 11, 2)),
+        unitOfWork: unit,
+        identity: _Identity(),
+        clock: clock,
+        isCurrentScope: (_) => true,
+        isCurrentOwnerContext: (_) => true,
+        queueForSync: true,
+      );
+      final result = await command.setStatus(
+        name: PrayerName.isha,
+        status: PrayerStatus.missed,
+        capturedContext: _context(_day),
+      );
+      expect(result.failureOrNull, isNull);
+      expect(unit.value?.report.date, _day);
+      expect(unit.value?.report.reportId, 'stable-report');
+    },
+  );
 
   test('owner or preference replacement rejects before commit', () async {
     var current = true;

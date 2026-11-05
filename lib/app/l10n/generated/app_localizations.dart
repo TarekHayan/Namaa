@@ -1907,6 +1907,12 @@ abstract class FoundationLocalizations {
   /// **'Prayer'**
   String get dashboardPrayerShort;
 
+  /// No description provided for @dashboardXpPendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting sync confirmation'**
+  String get dashboardXpPendingSync;
+
   /// No description provided for @dashboardMore.
   ///
   /// In en, this message translates to:
@@ -2699,6 +2705,12 @@ abstract class FoundationLocalizations {
   /// **'Prayer streak: coming soon'**
   String get prayerStreakSoon;
 
+  /// No description provided for @prayerProgressBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/5 Complete ({percent}%)'**
+  String prayerProgressBadge(int done, int percent);
+
   /// No description provided for @prayerSetupTitle.
   ///
   /// In en, this message translates to:
@@ -2888,7 +2900,7 @@ abstract class FoundationLocalizations {
   /// No description provided for @prayerUmmAlQura.
   ///
   /// In en, this message translates to:
-  /// **'Umm al-Qura (fixed 90-minute Isha)'**
+  /// **'Umm al-Qura (Isha 90 minutes after Maghrib, 120 in Ramadan)'**
   String get prayerUmmAlQura;
 
   /// No description provided for @prayerDubai.
@@ -2992,6 +3004,30 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Selected: {status}'**
   String prayerStatusSelected(String status);
+
+  /// No description provided for @prayerConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer changes to review'**
+  String get prayerConflicts;
+
+  /// No description provided for @prayerConflictActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version'**
+  String get prayerConflictActive;
+
+  /// No description provided for @prayerConflictRetained.
+  ///
+  /// In en, this message translates to:
+  /// **'Other saved version'**
+  String get prayerConflictRetained;
+
+  /// No description provided for @prayerConflictReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Past prayer records are read-only'**
+  String get prayerConflictReadOnly;
 }
 
 class _FoundationLocalizationsDelegate

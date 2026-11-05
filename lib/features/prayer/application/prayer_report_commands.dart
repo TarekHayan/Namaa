@@ -38,12 +38,8 @@ final class PrayerReportCommandContext {
       other.scopeGeneration == scopeGeneration;
 
   @override
-  int get hashCode => Object.hash(
-    localDate,
-    timeZoneId,
-    preferenceRevision,
-    scopeGeneration,
-  );
+  int get hashCode =>
+      Object.hash(localDate, timeZoneId, preferenceRevision, scopeGeneration);
 }
 
 /// Owns today's explicit Prayer state transition. It never infers a state from

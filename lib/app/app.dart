@@ -35,8 +35,11 @@ import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_screen.dart';
 import 'package:namma_project/features/prayer/application/city_search_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_conflict_reader.dart';
 import 'package:namma_project/features/prayer/application/prayer_device_location_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_preferences_commands.dart';
+import 'package:namma_project/features/prayer/application/prayer_sync_service.dart';
+import 'package:namma_project/features/prayer/domain/prayer_conflict_evidence.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
@@ -812,6 +815,17 @@ class _PrayerRouteScopeState extends State<_PrayerRouteScope> {
   late final PrayerCubit _cubit = GetIt.instance<PrayerCubit>(
     param1: widget.accountId,
   );
+  // One Drift watch per route scope; rebuilding must not resubscribe.
+  late final Stream<List<PrayerConflictEvidence>> _conflicts =
+      GetIt.instance<PrayerConflictReader>().watchConflicts(widget.accountId);
+
+  @override
+  void initState() {
+    super.initState();
+    if (GetIt.instance.isRegistered<PrayerSyncService>()) {
+      unawaited(GetIt.instance<PrayerSyncService>().synchronize());
+    }
+  }
 
   @override
   void dispose() {
@@ -828,6 +842,7 @@ class _PrayerRouteScopeState extends State<_PrayerRouteScope> {
       search: GetIt.instance<CitySearchPort>(),
       commands: GetIt.instance<PrayerPreferencesCommands>(),
       location: GetIt.instance<PrayerDeviceLocationPort>(),
+      conflicts: _conflicts,
     ),
   );
 }

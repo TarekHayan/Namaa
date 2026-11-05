@@ -11,7 +11,7 @@ import 'package:namma_project/features/prayer/domain/prayer_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 void main() {
-  test('all seven calculator presets match the prototype JS instants', () {
+  test('prototype parity excludes the approved Ramadan Isha adjustment', () {
     final source =
         (jsonDecode(
                   File(
@@ -76,14 +76,28 @@ void main() {
         final utc = DateTime.parse(reference[entry.key] as String);
         final seconds = entry.value!.difference(utc).abs().inSeconds;
         if (seconds > 60) {
-          differences.add(
-            '${row['city']} ${row['method']} ${date.value} '
-            '${entry.key}: ${seconds}s',
+          final detail =
+              '${row['city']} ${row['method']} ${date.value} '
+              '${entry.key}: ${seconds}s';
+          final isRamadanIsha =
+              row['method'] == 'ummAlQura' &&
+              date.value == '2026-03-08' &&
+              entry.key == 'isha' &&
+              seconds == 1800;
+          final isDubaiPresetAdjustment =
+              row['method'] == 'dubai' &&
+              ((entry.key == 'sunrise' && seconds == 180) ||
+                  (entry.key == 'asr' && seconds == 240));
+          expect(
+            isRamadanIsha || isDubaiPresetAdjustment,
+            isTrue,
+            reason: detail,
           );
+          differences.add(detail);
         }
       }
     }
-    expect(differences, isEmpty, reason: differences.join('\n'));
+    expect(differences, hasLength(27));
   });
 
   test('seven presets cover all independently captured cities and dates', () {
@@ -108,7 +122,6 @@ void main() {
     );
 
     final unexpected = <String>[];
-    final knownReferenceDifferences = <String>[];
     for (final row in rows) {
       final parts = (row['date'] as String).split('-').map(int.parse).toList();
       final date = PrayerLocalDate.parse(
@@ -168,27 +181,128 @@ void main() {
         if (delta <= const Duration(minutes: 1)) continue;
         final detail =
             '${row['city']} ${row['method']} ${row['date']} ${entry.key}: ${delta.inSeconds}s';
-        // Source-method differences remain open; README.md preserves evidence.
-        final preset = row['method'] as String;
-        final isDubaiAsr = preset == 'dubai' && entry.key == 'Asr';
-        final isDubaiSunrise = preset == 'dubai' && entry.key == 'Sunrise';
-        final isRamadanUmmIsha =
-            preset == 'ummAlQura' &&
-            row['date'] == '08-03-2026' &&
-            entry.key == 'Isha';
-        final isNewYorkAsr =
-            row['city'] == 'New York' &&
-            entry.key == 'Asr' &&
-            (row['date'] == '08-03-2026' || row['date'] == '20-03-2026');
-        if (isDubaiAsr || isDubaiSunrise || isRamadanUmmIsha || isNewYorkAsr) {
-          knownReferenceDifferences.add(detail);
-        } else {
-          unexpected.add(detail);
-        }
+        unexpected.add(detail);
       }
     }
     expect(unexpected, isEmpty);
-    // Regression guard for new discrepancies; not SC-002 acceptance.
-    expect(knownReferenceDifferences.length, lessThanOrEqualTo(39));
+  });
+
+  test('Umm al-Qura uses 120-minute Isha in Ramadan and 90 otherwise', () {
+    final ramadan = AdhanPrayerCalculator.parameters(
+      'ummAlQura',
+      date: DateTime.utc(2026, 3, 8),
+    );
+    final outsideRamadan = AdhanPrayerCalculator.parameters(
+      'ummAlQura',
+      date: DateTime.utc(2026, 6, 21),
+    );
+    expect(ramadan.ishaInterval, 120);
+    expect(outsideRamadan.ishaInterval, 90);
+    expect(
+      AdhanPrayerCalculator.parameters(
+        'qatar',
+        date: DateTime.utc(2026, 3, 8),
+      ).ishaInterval,
+      90,
+    );
+  });
+
+  test('adjacent city dates are calculated independently', () {
+    final preferences = PrayerPreferences(
+      accountId: 'owner',
+      city: PrayerCity(
+        provider: 'fixture',
+        providerCityId: 'cairo',
+        name: 'Cairo',
+        countryCode: 'EG',
+        countryName: 'Egypt',
+        latitude: 30.0444,
+        longitude: 31.2357,
+        timeZoneId: 'Africa/Cairo',
+      ),
+      calculationMethod: 'egyptian',
+      revision: 1,
+      updatedAt: DateTime.utc(2026),
+    );
+    final calculator = AdhanPrayerCalculator();
+    final today = calculator
+        .calculate(
+          preferences: preferences,
+          date: PrayerLocalDate.parse('2026-03-20'),
+        )
+        .valueOrNull;
+    final tomorrow = calculator
+        .calculate(
+          preferences: preferences,
+          date: PrayerLocalDate.parse('2026-03-21'),
+        )
+        .valueOrNull;
+    expect(today, isNotNull);
+    expect(tomorrow, isNotNull);
+    expect(today!.date.value, '2026-03-20');
+    expect(tomorrow!.date.value, '2026-03-21');
+    expect(tomorrow.sunriseUtc!.difference(today.sunriseUtc!).inHours, 23);
+  });
+
+  test('zero-coordinate and polar output follows independent edge fixtures', () {
+    initializePrayerTimeZones();
+    final rows =
+        (jsonDecode(
+                  File(
+                    'test/fixtures/prayer/calculation/praytimes_edge_reference.json',
+                  ).readAsStringSync(),
+                )
+                as List)
+            .cast<Map<String, dynamic>>();
+    expect(rows, hasLength(2));
+    for (final row in rows) {
+      final day = PrayerLocalDate.parse(row['date'] as String);
+      final city = PrayerCity(
+        provider: 'fixture',
+        providerCityId: row['case'] as String,
+        name: row['case'] as String,
+        countryCode: 'XX',
+        countryName: 'Fixture',
+        latitude: (row['latitude'] as num).toDouble(),
+        longitude: (row['longitude'] as num).toDouble(),
+        timeZoneId: row['zone'] as String,
+      );
+      final schedule = AdhanPrayerCalculator()
+          .calculate(
+            preferences: PrayerPreferences(
+              accountId: 'owner',
+              city: city,
+              calculationMethod: row['method'] as String,
+              revision: 1,
+              updatedAt: DateTime.utc(2026),
+            ),
+            date: day,
+          )
+          .valueOrNull;
+      expect(schedule, isNotNull, reason: row['case'] as String);
+      final actual = <String, DateTime?>{
+        'fajr': schedule!.times[PrayerName.fajr]?.instantUtc,
+        'sunrise': schedule.sunriseUtc,
+        'dhuhr': schedule.times[PrayerName.dhuhr]?.instantUtc,
+        'asr': schedule.times[PrayerName.asr]?.instantUtc,
+        'maghrib': schedule.times[PrayerName.maghrib]?.instantUtc,
+        'isha': schedule.times[PrayerName.isha]?.instantUtc,
+      };
+      final reference = row['utc'] as Map<String, dynamic>;
+      for (final entry in reference.entries) {
+        final observed = actual[entry.key];
+        if (entry.value == null) {
+          expect(observed, isNull, reason: '${row['case']} ${entry.key}');
+          continue;
+        }
+        final expected = DateTime.parse(entry.value as String);
+        expect(observed, isNotNull, reason: '${row['case']} ${entry.key}');
+        expect(
+          observed!.difference(expected).abs(),
+          lessThanOrEqualTo(const Duration(minutes: 1)),
+          reason: '${row['case']} ${entry.key}',
+        );
+      }
+    }
   });
 }

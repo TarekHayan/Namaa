@@ -11,6 +11,7 @@ final class PrayerPayloadCodec {
     'reportedCompletionAt': report.reportedCompletionAt?.toIso8601String(),
     'recordedZoneId': report.recordedZoneId,
     'recordedOffsetMinutes': report.recordedOffsetMinutes,
+    'createdAt': report.createdAt.toIso8601String(),
     'updatedAt': report.updatedAt.toIso8601String(),
   };
 }

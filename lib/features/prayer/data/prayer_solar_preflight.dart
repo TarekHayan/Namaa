@@ -37,8 +37,20 @@ final class PrayerSolarPreflight {
   bool get sunsetAvailable =>
       _altitudeReachable(-50 / 60) && _solar.sunset.isFinite;
   bool get dhuhrAvailable => _solar.transit.isFinite;
-  bool get asrAvailable =>
-      sunriseAvailable && sunsetAvailable && _solar.afternoon(1).isFinite;
+  bool get asrAvailable {
+    // The Asr shadow angle can be reached even when a polar day has no
+    // sunrise or sunset. Check its own geometry before exposing the library's
+    // potentially clamped result.
+    final latitude = _solar.observer.latitude;
+    final declination = _solar.solar.declination!;
+    final tangent = (latitude - declination).abs() * math.pi / 180;
+    final inverse = 1 + math.tan(tangent);
+    final angle = math.atan(1 / inverse) * 180 / math.pi;
+    return angle.isFinite &&
+        _altitudeReachable(angle) &&
+        _solar.afternoon(1).isFinite;
+  }
+
   bool get fajrAvailable =>
       sunriseAvailable &&
       _altitudeReachable(-_parameters.fajrAngle) &&

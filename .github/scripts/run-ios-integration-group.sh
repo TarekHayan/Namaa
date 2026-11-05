@@ -29,6 +29,9 @@ case "${IOS_GROUP:-}" in
   today)
     suites=(today-dashboard today-sync)
     ;;
+  prayer)
+    suites=(prayer-schedule prayer-reports prayer-offline-sync prayer-localized-route)
+    ;;
   *)
     echo "Unknown iOS integration group: ${IOS_GROUP:-<unset>}" >&2
     exit 2
@@ -36,19 +39,34 @@ case "${IOS_GROUP:-}" in
 esac
 
 if [[ -n "${IOS_SUITES:-}" ]]; then
-  IFS=',' read -r -a wanted <<< "${IOS_SUITES// /}"
+  selection="${IOS_SUITES// /}"
+  if [[ -z "$selection" || "$selection" == ,* || "$selection" == *, || "$selection" == *,,* ]]; then
+    echo "Invalid iOS suite selection: IOS_SUITES=$IOS_SUITES" >&2
+    exit 2
+  fi
+  IFS=',' read -r -a wanted <<< "$selection"
   selected=()
+  for want in "${wanted[@]}"; do
+    found=false
+    for suite in "${suites[@]}"; do
+      if [[ "$suite" == "$want" ]]; then
+        found=true
+        break
+      fi
+    done
+    if [[ "$found" == false ]]; then
+      echo "Unknown iOS integration suite for group $IOS_GROUP: $want" >&2
+      exit 2
+    fi
+  done
   for suite in "${suites[@]}"; do
     for want in "${wanted[@]}"; do
       if [[ "$suite" == "$want" ]]; then
         selected+=("$suite")
+        break
       fi
     done
   done
-  if [[ "${#selected[@]}" -eq 0 ]]; then
-    echo "No suite of group $IOS_GROUP matches IOS_SUITES=$IOS_SUITES; skipping."
-    exit 0
-  fi
   suites=("${selected[@]}")
 fi
 
@@ -57,7 +75,7 @@ suite_file() {
     migration|offline|platform|sync|staging-supabase)
       echo "integration_test/foundation_${1//-/_}_test.dart"
       ;;
-    tasks-*|habits-*|mind-maps-*|today-*)
+    tasks-*|habits-*|mind-maps-*|today-*|prayer-*)
       echo "integration_test/${1//-/_}_test.dart"
       ;;
     *) echo "Unknown iOS integration suite: $1" >&2; return 2 ;;
@@ -96,6 +114,10 @@ failed=()
 for suite in "${suites[@]}"; do
   test_file="$(suite_file "$suite")"
   echo "::group::iOS $IOS_GROUP / $suite ($test_file)"
+  suite_defines=("${staging_defines[@]}")
+  if [[ "$suite" == prayer-offline-sync ]]; then
+    suite_defines+=(--dart-define=NAMAA_SUPABASE_ENV=non-production)
+  fi
   # XCTest can activate native accessibility after the first test begins.
   # Establish it before testWidgets records its semantics-handle baseline.
   # The entry point path stays fixed, so Generated.xcconfig does not change
@@ -114,7 +136,7 @@ void main() {
 DART
   status=0
   flutter build ios --simulator --debug --no-codesign --no-pub --config-only \
-    "${staging_defines[@]}" --target=build/ios_integration/entrypoint.dart || status=$?
+    "${suite_defines[@]}" --target=build/ios_integration/entrypoint.dart || status=$?
   if [[ "$status" -eq 0 ]]; then
     python3 .github/scripts/run-ios-integration.py --build-only -- \
       xcodebuild -quiet build-for-testing -workspace ios/Runner.xcworkspace -scheme Runner \

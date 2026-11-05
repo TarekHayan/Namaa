@@ -13,17 +13,19 @@ import 'package:namma_project/features/today/presentation/widgets/today_prayer_c
 import 'package:namma_project/features/today/presentation/widgets/today_quran_card.dart';
 
 void main() {
-  final prayer = TodaySection.available(TodayPrayerReference(
-    ownerId: 'preview',
-    city: 'Cairo',
-    timeZoneId: 'Africa/Cairo',
-    localDate: '2026-03-20',
-    nextName: PrayerName.asr,
-    nextUtc: DateTime.utc(2026, 3, 20, 13, 30),
-    followingName: PrayerName.maghrib,
-    followingUtc: DateTime.utc(2026, 3, 20, 16, 10),
-    nowUtc: DateTime.utc(2026, 3, 20, 13),
-  ));
+  final prayer = TodaySection.available(
+    TodayPrayerReference(
+      ownerId: 'preview',
+      city: 'Cairo',
+      timeZoneId: 'Africa/Cairo',
+      localDate: '2026-03-20',
+      nextName: PrayerName.asr,
+      nextUtc: DateTime.utc(2026, 3, 20, 13, 30),
+      followingName: PrayerName.maghrib,
+      followingUtc: DateTime.utc(2026, 3, 20, 16, 10),
+      nowUtc: DateTime.utc(2026, 3, 20, 13),
+    ),
+  );
   for (final locale in const [Locale('ar'), Locale('en')]) {
     for (final brightness in Brightness.values) {
       testWidgets(

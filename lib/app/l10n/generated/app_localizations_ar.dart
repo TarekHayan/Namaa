@@ -930,6 +930,9 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get dashboardPrayerShort => 'الصلوات';
 
   @override
+  String get dashboardXpPendingSync => 'بانتظار تأكيد المزامنة';
+
+  @override
   String get dashboardMore => 'المزيد';
 
   @override
@@ -1352,6 +1355,11 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get prayerStreakSoon => 'سلسلة الصلاة: قريبًا';
 
   @override
+  String prayerProgressBadge(int done, int percent) {
+    return '$done/5 مكتمل ($percent%)';
+  }
+
+  @override
   String get prayerSetupTitle => 'مواقيت الصلاة حسب موقعك';
 
   @override
@@ -1450,7 +1458,8 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get prayerMwl => 'رابطة العالم الإسلامي';
 
   @override
-  String get prayerUmmAlQura => 'أم القرى (العشاء بعد ٩٠ دقيقة)';
+  String get prayerUmmAlQura =>
+      'أم القرى (العشاء بعد ٩٠ دقيقة، و١٢٠ دقيقة في رمضان)';
 
   @override
   String get prayerDubai => 'دبي';
@@ -1507,4 +1516,16 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String prayerStatusSelected(String status) {
     return 'الحالة المختارة: $status';
   }
+
+  @override
+  String get prayerConflicts => 'تغييرات الصلاة للمراجعة';
+
+  @override
+  String get prayerConflictActive => 'النسخة الحالية';
+
+  @override
+  String get prayerConflictRetained => 'النسخة الأخرى المحفوظة';
+
+  @override
+  String get prayerConflictReadOnly => 'سجلات الأيام السابقة للعرض فقط';
 }

@@ -50,7 +50,7 @@ List<String> _violations(String path, String source) {
   }
   if (path.contains('/features/prayer/data/') &&
       RegExp(
-        r'''\.from\s*\(\s*['"](?:xp_awards|prayer_reports)['"]''',
+        r'''\.from\s*\(\s*['"](?:xp_awards|prayer_reports|prayer_conflicts)['"]\s*\)\s*\.(?:insert|upsert|update|delete)\s*\(''',
       ).hasMatch(source)) {
     violations.add('$path writes remote stores directly');
   }
@@ -72,6 +72,20 @@ void main() {
         "import 'package:namma_project/features/prayer/data/drift_prayer_repository.dart';",
       ),
       isNotEmpty,
+    );
+    expect(
+      _violations(
+        'lib/features/prayer/data/example.dart',
+        "client.from('prayer_reports').insert({'status': 'pending'});",
+      ),
+      isNotEmpty,
+    );
+    expect(
+      _violations(
+        'lib/features/prayer/data/example.dart',
+        "client.from('prayer_reports').select().eq('owner', accountId);",
+      ),
+      isEmpty,
     );
   });
 

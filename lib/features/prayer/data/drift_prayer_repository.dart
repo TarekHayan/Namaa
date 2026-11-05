@@ -9,21 +9,225 @@ import 'package:namma_project/core/data/local/foundation_database.dart'
     show PrayerReport;
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/core/domain/values/version_source.dart';
 
+import '../application/prayer_conflict_reader.dart';
 import '../application/prayer_repository.dart';
+import '../domain/prayer_conflict_evidence.dart';
 import '../domain/prayer_local_date.dart';
 import '../domain/prayer_name.dart';
 import '../domain/prayer_report.dart';
 import '../domain/prayer_status.dart';
 import 'prayer_payload_codec.dart';
+import 'prayer_remote_models.dart';
 
 /// Owner/day indexed encrypted report store. Commands compose its transaction
 /// with the shared award ledger in the next story.
-final class DriftPrayerRepository implements PrayerRepository {
+final class DriftPrayerRepository
+    implements PrayerRepository, PrayerConflictReader {
   DriftPrayerRepository(this._database);
 
   final FoundationDatabase _database;
   final PrayerPayloadCodec _codec = const PrayerPayloadCodec();
+
+  @override
+  Stream<List<PrayerConflictEvidence>> watchConflicts(String accountId) =>
+      (_database.select(_database.conflictRecords)
+            ..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.entityType.equals('prayer_report'),
+            )
+            ..orderBy([(table) => OrderingTerm.desc(table.detectedAt)]))
+          .watch()
+          .map(
+            (rows) => List.unmodifiable(
+              rows.map((row) {
+                final active =
+                    jsonDecode(row.activePayload) as Map<String, dynamic>;
+                final retained =
+                    jsonDecode(row.retainedPayload) as Map<String, dynamic>;
+                return PrayerConflictEvidence(
+                  id: row.conflictId,
+                  date: PrayerLocalDate.parse(active['localDate'] as String),
+                  name: PrayerNameWire.parse(active['prayerName'] as String),
+                  activeStatus: PrayerStatusWire.parse(
+                    active['status'] as String,
+                  ),
+                  retainedStatus: PrayerStatusWire.parse(
+                    retained['status'] as String,
+                  ),
+                  activeAt: row.activeTimestamp.toUtc(),
+                  retainedAt: row.retainedTimestamp.toUtc(),
+                );
+              }),
+            ),
+          );
+
+  /// Returns the stable creation instant for an outbox snapshot. The local
+  /// row can have newer edits, but creation never changes for this identity.
+  Future<AppResult<DateTime>> createdAtFor({
+    required String accountId,
+    required PrayerLocalDate date,
+    required PrayerName prayerName,
+    required String reportId,
+  }) async {
+    final result = await readFresh(
+      accountId: accountId,
+      date: date,
+      prayerName: prayerName,
+    );
+    if (result.failureOrNull case final failure?) {
+      return AppResult.failure(failure);
+    }
+    final row = result.valueOrNull;
+    if (row == null || row.reportId != reportId) {
+      return AppResult.failure(
+        _failure(const FormatException('Prayer outbox report missing')),
+      );
+    }
+    return AppResult.success(row.createdAt);
+  }
+
+  /// Commit the server receipt before the generic outbox ACK. A retry of a
+  /// lost ACK is safe; a later local edit cannot be overwritten by this one.
+  Future<AppResult<void>> finalizeReceipt({
+    required String accountId,
+    required String reportId,
+    required DateTime outboundVersion,
+    required PrayerDispatchReceipt receipt,
+  }) async {
+    try {
+      if (receipt.active.accountId != accountId ||
+          receipt.active.reportId != reportId ||
+          (receipt.award != null &&
+              (receipt.award!.accountId != accountId ||
+                  receipt.award!.sourceId != reportId))) {
+        throw const FormatException('Foreign Prayer receipt');
+      }
+      await _database.transaction(() async {
+        final read = await readFresh(
+          accountId: accountId,
+          date: receipt.active.date,
+          prayerName: receipt.active.name,
+        );
+        if (read.failureOrNull != null) {
+          throw StateError('Prayer local read failed');
+        }
+        final current = read.valueOrNull;
+        if (current == null || current.reportId != reportId) {
+          throw StateError('Prayer receipt has no local report');
+        }
+        if (receipt.award case final award?) {
+          await _database
+              .into(_database.xpAwards)
+              .insertOnConflictUpdate(
+                XpAwardsCompanion.insert(
+                  accountId: award.accountId,
+                  source: award.source,
+                  sourceId: award.sourceId,
+                  amount: award.amount,
+                  awardedAt: award.awardedAt,
+                ),
+              );
+        }
+        if (receipt.conflict case final conflict?) {
+          await _insertConflict(conflict, accountId);
+        }
+        final canReplace = current.updatedAt == outboundVersion;
+        final newerAck =
+            current.lastAcknowledgedUpdatedAt != null &&
+            current.lastAcknowledgedUpdatedAt!.isAfter(
+              receipt.active.updatedAt,
+            );
+        if (canReplace && !newerAck) {
+          await _upsert(
+            PrayerReport(
+              accountId: accountId,
+              reportId: reportId,
+              date: receipt.active.date,
+              name: receipt.active.name,
+              status: receipt.active.status,
+              reportedCompletionAt: receipt.active.reportedCompletionAt,
+              recordedZoneId: receipt.active.recordedZoneId,
+              recordedOffsetMinutes: receipt.active.recordedOffsetMinutes,
+              createdAt: receipt.active.createdAt,
+              updatedAt: receipt.active.updatedAt,
+              lastAcknowledgedUpdatedAt: receipt.active.updatedAt,
+              canonicalRewardConfirmedAt: receipt.award == null
+                  ? current.canonicalRewardConfirmedAt
+                  : current.canonicalRewardConfirmedAt ??
+                        DateTime.now().toUtc(),
+            ),
+          );
+        } else if (!newerAck) {
+          await (_database.update(_database.prayerReports)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.reportId.equals(reportId),
+              ))
+              .write(
+                PrayerReportsCompanion(
+                  lastAcknowledgedUpdatedAt: Value(
+                    receipt.active.updatedAt.toIso8601String(),
+                  ),
+                  canonicalRewardConfirmedAt: receipt.award == null
+                      ? const Value.absent()
+                      : Value(
+                          (current.canonicalRewardConfirmedAt ??
+                                  DateTime.now().toUtc())
+                              .toIso8601String(),
+                        ),
+                ),
+              );
+        }
+      });
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  Future<void> _insertConflict(
+    PrayerRemoteConflict conflict,
+    String owner,
+  ) async {
+    if (conflict.active.accountId != owner ||
+        conflict.retained.accountId != owner ||
+        conflict.active.reportId != conflict.retained.reportId) {
+      throw const FormatException('Foreign Prayer conflict');
+    }
+    await _database
+        .into(_database.conflictRecords)
+        .insert(
+          ConflictRecordsCompanion.insert(
+            conflictId: conflict.id,
+            accountId: owner,
+            entityType: 'prayer_report',
+            entityId: conflict.active.reportId,
+            activeSource: VersionSource.remote,
+            activeTimestamp: conflict.active.updatedAt,
+            activePayload: PrayerRemoteModels.payload(conflict.active),
+            retainedSource: VersionSource.remote,
+            retainedTimestamp: conflict.retained.updatedAt,
+            retainedPayload: PrayerRemoteModels.payload(conflict.retained),
+            detectedAt: conflict.detectedAt,
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+  }
+
+  Future<AppResult<void>> applyRemoteConflict(
+    PrayerRemoteConflict conflict, {
+    required String accountId,
+  }) async {
+    try {
+      await _insertConflict(conflict, accountId);
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
 
   @override
   Future<AppResult<T>> runInTransaction<T>(
@@ -39,6 +243,21 @@ final class DriftPrayerRepository implements PrayerRepository {
       });
     } on _TransactionFailure catch (error) {
       return AppResult.failure(error.failure);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  /// Every local report of one owner, read in one query so a full inbound
+  /// pass does not issue one SELECT per remote row.
+  Future<AppResult<List<PrayerReport>>> readAllForOwner(
+    String accountId,
+  ) async {
+    try {
+      final rows = await (_database.select(
+        _database.prayerReports,
+      )..where((table) => table.accountId.equals(accountId))).get();
+      return AppResult.success(List.unmodifiable(rows.map(_decode)));
     } catch (error) {
       return AppResult.failure(_failure(error));
     }

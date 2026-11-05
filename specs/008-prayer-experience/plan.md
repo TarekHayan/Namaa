@@ -56,7 +56,7 @@ No exception required. Package/platform adoption, reference fixtures, guidance r
 
 Key decisions:
 - Use explicit city date D and D+1, independently computed, then UTC→IANA conversion; do not change global device time zone.
-- Preserve prototype method presets with standard/Shafi Asr; fixed90-minute Umm al-Qura/Qatar Isha behavior is labelled as the selected calculation preset, not a claim of every official seasonal timetable.
+- Use the seven method presets with standard/Shafi Asr, normalize the Dubai Sunrise/Asr offsets absent from the frozen AlAdhan method, shift local Asr one minute earlier across methods to align the captured matrix, and apply the user's approved AlAdhan-aligned Umm al-Qura Ramadan Isha interval: 120 minutes after Maghrib in Ramadan and 90 otherwise. Qatar remains 90 minutes. Label the selected source/method rather than claiming agreement with every local timetable.
 - Deep-import only the pinned raw SolarTime API inside the data adapter to reject substituted/uncomputable twilight results. No speculative fork or alternate-location fallback.
 - Open-Meteo geocoding for noncommercial development; licensed configurable first-party gateway required before commercial search deployment. Saved-city use stays offline regardless of provider availability.
 - First server-committed eligible award is canonical. Offline local award is provisional until sync and may reconcile once against a concurrent device's canonical award.

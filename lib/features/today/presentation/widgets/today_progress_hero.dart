@@ -524,7 +524,19 @@ class TodayProgressHero extends StatelessWidget {
       return strings.unavailable;
     }
     final stale = pres.isXpStale ? ' · ${strings.outdated}' : '';
-    return '${pres.xpAmount} XP$stale';
+    final unconfirmed =
+        state.prayer?.value?.unconfirmedReportIds.toSet() ?? const <String>{};
+    final hasProvisionalPrayerAward =
+        pres.xp.value?.awards.any(
+          (award) =>
+              award.source == 'prayer_done' &&
+              unconfirmed.contains(award.sourceId),
+        ) ??
+        false;
+    final provisional = hasProvisionalPrayerAward
+        ? ' · ${copy.dashboardXpPendingSync}'
+        : '';
+    return '${pres.xpAmount} XP$provisional$stale';
   }
 
   Widget _metricTile({

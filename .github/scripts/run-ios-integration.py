@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bound native XCTest and require a nonempty, successful result bundle.
 
-The workflow maps suite names (including Today) to Dart entry points; this
+The workflow maps suite names (including Today and Prayer) to Dart entry points; this
 shared runner preserves the same native result requirement for every suite.
 """
 

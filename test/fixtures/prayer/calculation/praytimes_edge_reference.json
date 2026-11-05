@@ -1,0 +1,44 @@
+[
+  {
+    "case": "zero_coordinates",
+    "date": "2026-03-20",
+    "latitude": 0.0,
+    "longitude": 0.0,
+    "zone": "Etc/UTC",
+    "method": "egyptian",
+    "asr": "Standard",
+    "highLats": "None",
+    "source": "https://github.com/abodehq/Pray-Times/blob/5202ceb8b2cbb17848a227753f7bd0ac8b4c649f/Code/v2/js/PrayTimes.js",
+    "sourceVersion": "PrayTimes.js 2.3",
+    "capturedUtc": "2026-11-03T01:47:11Z",
+    "utc": {
+      "fajr": "2026-03-20T04:50:00Z",
+      "sunrise": "2026-03-20T06:04:00Z",
+      "dhuhr": "2026-03-20T12:07:00Z",
+      "asr": "2026-03-20T15:08:00Z",
+      "maghrib": "2026-03-20T18:11:00Z",
+      "isha": "2026-03-20T19:17:00Z"
+    }
+  },
+  {
+    "case": "tromso_polar_day",
+    "date": "2026-06-21",
+    "latitude": 69.6492,
+    "longitude": 18.9553,
+    "zone": "Europe/Oslo",
+    "method": "egyptian",
+    "asr": "Standard",
+    "highLats": "None",
+    "source": "https://github.com/abodehq/Pray-Times/blob/5202ceb8b2cbb17848a227753f7bd0ac8b4c649f/Code/v2/js/PrayTimes.js",
+    "sourceVersion": "PrayTimes.js 2.3",
+    "capturedUtc": "2026-11-03T01:47:11Z",
+    "utc": {
+      "fajr": null,
+      "sunrise": null,
+      "dhuhr": "2026-06-21T10:46:00Z",
+      "asr": "2026-06-21T15:58:00Z",
+      "maghrib": null,
+      "isha": null
+    }
+  }
+]

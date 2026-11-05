@@ -216,6 +216,106 @@ void main() {
   });
 
   test(
+    'annual response with an offset inconsistent with its IANA zone is rejected',
+    () async {
+      final path = TemporaryDatabasePath();
+      final db = await FoundationDatabase.openEncrypted(
+        path: path.allocate(),
+        key: key,
+      );
+      try {
+        final body = _year();
+        final first = (body['data'] as Map<String, dynamic>)['1'] as List;
+        final timings =
+            (first.first as Map<String, dynamic>)['timings']
+                as Map<String, dynamic>;
+        // Same UTC instant and civil day as the original 05:00Z, but the
+        // provider claims a +01:00 offset for Etc/UTC.
+        timings['Fajr'] = '2026-01-01T06:00:00+01:00';
+        final source = AlAdhanAnnualSchedule(
+          db,
+          hasNetwork: () async => true,
+          dio: Dio()
+            ..interceptors.add(
+              InterceptorsWrapper(
+                onRequest: (options, handler) => handler.resolve(
+                  Response(requestOptions: options, data: body),
+                ),
+              ),
+            ),
+        );
+        expect(
+          await source.forDate(
+            preferences: _preference('owner'),
+            date: PrayerLocalDate.parse('2026-01-01'),
+          ),
+          isNull,
+        );
+        expect(
+          await db.rawScalar('SELECT count(*) FROM prayer_annual_timetables'),
+          0,
+        );
+      } finally {
+        await db.close();
+        path.dispose();
+      }
+    },
+  );
+
+  test('a provider year cannot expose substituted summer twilight', () async {
+    final path = TemporaryDatabasePath();
+    final db = await FoundationDatabase.openEncrypted(
+      path: path.allocate(),
+      key: key,
+    );
+    try {
+      final preference = PrayerPreferences(
+        accountId: 'owner',
+        city: PrayerCity(
+          provider: 'fixture',
+          providerCityId: 'high-latitude',
+          name: 'High latitude',
+          countryCode: 'XX',
+          countryName: 'Fixture',
+          latitude: 59.3293,
+          longitude: 18.0686,
+          timeZoneId: 'Etc/UTC',
+        ),
+        calculationMethod: 'egyptian',
+        revision: 1,
+        updatedAt: DateTime.utc(2026),
+      );
+      final source = AlAdhanAnnualSchedule(
+        db,
+        hasNetwork: () async => true,
+        dio: Dio()
+          ..interceptors.add(
+            InterceptorsWrapper(
+              onRequest: (options, handler) => handler.resolve(
+                Response(
+                  requestOptions: options,
+                  data: _year(year: int.parse(options.uri.pathSegments.last)),
+                ),
+              ),
+            ),
+          ),
+      );
+      final schedule = await source.forDate(
+        preferences: preference,
+        date: PrayerLocalDate.parse('2026-06-21'),
+      );
+      expect(schedule, isNotNull);
+      expect(schedule!.times[PrayerName.fajr]?.instantUtc, isNull);
+      expect(schedule.times[PrayerName.isha]?.instantUtc, isNull);
+      expect(schedule.times[PrayerName.dhuhr]?.instantUtc, isNotNull);
+      expect(schedule.sunriseUtc, isNotNull);
+    } finally {
+      await db.close();
+      path.dispose();
+    }
+  });
+
+  test(
     'transient provider failure retries before using local fallback',
     () async {
       final path = TemporaryDatabasePath();

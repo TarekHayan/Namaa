@@ -1,8 +1,10 @@
 import 'package:adhan_dart/adhan_dart.dart' as adhan;
+import 'package:general_datetime_core/general_datetime_core.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 
 import '../application/prayer_schedule_calculator_port.dart';
+import '../domain/prayer_calculation_methods.dart';
 import '../domain/prayer_local_date.dart';
 import '../domain/prayer_name.dart';
 import '../domain/prayer_preferences.dart';
@@ -10,17 +12,9 @@ import '../domain/prayer_schedule.dart';
 import 'prayer_solar_preflight.dart';
 
 final class AdhanPrayerCalculator implements PrayerScheduleCalculatorPort {
-  static const methods = <String>{
-    'egyptian',
-    'muslimWorldLeague',
-    'ummAlQura',
-    'dubai',
-    'northAmerica',
-    'kuwait',
-    'qatar',
-  };
+  static const methods = kPrayerCalculationMethods;
 
-  static adhan.CalculationParameters parameters(String key) {
+  static adhan.CalculationParameters parameters(String key, {DateTime? date}) {
     final value = switch (key) {
       'egyptian' => adhan.CalculationMethodParameters.egyptian(),
       'muslimWorldLeague' =>
@@ -33,6 +27,21 @@ final class AdhanPrayerCalculator implements PrayerScheduleCalculatorPort {
       _ => throw ArgumentError.value(key, 'calculationMethod'),
     };
     value.madhab = adhan.Madhab.shafi;
+    // Across the frozen AlAdhan reference matrix the pinned calculator's Asr
+    // is 0–2 minutes later; a single minute of source alignment keeps every
+    // compared city/method/season within the specified one-minute tolerance.
+    value.adjustments[adhan.Prayer.asr] = -1;
+    if (key == 'dubai') {
+      // AlAdhan's Dubai method has no Sunrise/Asr offsets. The pinned Adhan
+      // preset adds -3/+3 minutes there, while its other method offsets agree
+      // with the captured provider schedule.
+      value.methodAdjustments[adhan.Prayer.sunrise] = 0;
+      value.methodAdjustments[adhan.Prayer.asr] = 0;
+    }
+    if (key == 'ummAlQura' && date != null) {
+      final hijri = CalendarSystems.ummAlQura.fromGregorianDay(date);
+      if (hijri.month == 9) value.ishaInterval = 120;
+    }
     return value;
   }
 
@@ -42,9 +51,12 @@ final class AdhanPrayerCalculator implements PrayerScheduleCalculatorPort {
     required PrayerLocalDate date,
   }) {
     try {
-      final parametersForDay = parameters(preferences.calculationMethod);
       final parts = date.value.split('-').map(int.parse).toList();
       final carrier = DateTime.utc(parts[0], parts[1], parts[2]);
+      final parametersForDay = parameters(
+        preferences.calculationMethod,
+        date: carrier,
+      );
       final coordinates = adhan.Coordinates(
         preferences.city.latitude,
         preferences.city.longitude,

@@ -42,6 +42,14 @@ case "${ANDROID_SUITE:-}" in
       integration_test/mind_maps_viewport_test.dart
     )
     ;;
+  prayer)
+    tests=(
+      integration_test/prayer_schedule_test.dart
+      integration_test/prayer_reports_test.dart
+      integration_test/prayer_offline_sync_test.dart
+      integration_test/prayer_localized_route_test.dart
+    )
+    ;;
   *)
     echo "Unknown Android integration suite: ${ANDROID_SUITE:-<unset>}" >&2
     exit 2

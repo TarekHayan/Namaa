@@ -11,9 +11,11 @@ import 'package:namma_project/app/widgets/app_status_view.dart';
 import '../application/city_search_port.dart';
 import '../application/prayer_device_location_port.dart';
 import '../application/prayer_preferences_commands.dart';
+import '../domain/prayer_conflict_evidence.dart';
 import '../domain/prayer_day_snapshot.dart';
 import '../domain/prayer_preferences.dart';
 import 'prayer_city_editor.dart';
+import 'prayer_conflicts_view.dart';
 import 'prayer_cubit.dart';
 import 'prayer_state.dart';
 import 'widgets/prayer_guidance_section.dart';
@@ -29,12 +31,14 @@ class PrayerScreen extends StatelessWidget {
     required this.search,
     required this.commands,
     this.location,
+    this.conflicts,
   });
   final String ownerId;
   final PrayerCubit cubit;
   final CitySearchPort search;
   final PrayerPreferencesCommands commands;
   final PrayerDeviceLocationPort? location;
+  final Stream<List<PrayerConflictEvidence>>? conflicts;
 
   void _edit(BuildContext context, PrayerDaySnapshot? snapshot) {
     Widget editor(BuildContext editorContext, {required bool asSheet}) =>
@@ -45,6 +49,17 @@ class PrayerScreen extends StatelessWidget {
           current: snapshot?.preferences,
           asSheet: asSheet,
           onSaved: () => Navigator.pop(editorContext),
+          // Location lives with the other location settings, not on the
+          // Prayer screen itself.
+          leading: location == null
+              ? null
+              : _LocationAction(
+                  ownerId: ownerId,
+                  location: location!,
+                  commands: commands,
+                  current: snapshot?.preferences,
+                  onSaved: () => Navigator.pop(editorContext),
+                ),
         );
     if (MediaQuery.sizeOf(context).width < 600) {
       showModalBottomSheet<void>(
@@ -62,6 +77,16 @@ class PrayerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
+    // Like every other feature route, the screen owns its Material surface.
+    // Without it, unstyled text falls back to Flutter's debug style (large
+    // red text with a yellow underline) inside the navigation shell.
+    return Scaffold(backgroundColor: colors.background, body: _body(context));
+  }
+
+  Widget _body(BuildContext context) {
     final copy = FoundationLocalizations.of(context);
     return BlocBuilder<PrayerCubit, PrayerState>(
       bloc: cubit,
@@ -118,43 +143,44 @@ class PrayerScreen extends StatelessWidget {
                           : '${pref.city.name}, ${pref.city.countryName}',
                       details:
                           '${prayerLocalDateLabel(snapshot.localDate!, locale)} · ${pref.city.timeZoneId} · ${prayerMethodLabel(copy, pref.calculationMethod)}',
+                      // Only the labelled local fallback needs a warning;
+                      // the cached annual timetable is the normal source.
+                      source:
+                          schedule != null &&
+                              !schedule.provenance.startsWith('AlAdhan')
+                          ? copy.prayerSourceLocal
+                          : null,
                       completedCount: snapshot.completedCount,
                       actions: [
-                        if (location != null)
-                          _LocationAction(
-                            ownerId: ownerId,
-                            location: location!,
-                            commands: commands,
-                            current: pref,
-                            autoStart: pref.city.provider == 'device',
-                          ),
-                        AppButton(
-                          label: copy.prayerCityEdit,
-                          variant: AppButtonVariant.secondary,
+                        IconButton(
+                          key: const Key('prayer_settings'),
+                          tooltip: copy.prayerCityEdit,
+                          icon: const Icon(Icons.tune_rounded),
+                          color: colors.textSecondary,
                           onPressed: () => _edit(context, snapshot),
-                          icon: Icons.edit_location_alt_outlined,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    if (schedule == null)
+                    // A device location is re-checked quietly on each visit;
+                    // once granted, it needs no permanent on-screen control.
+                    if (location != null && pref.city.provider == 'device')
+                      _LocationAction(
+                        ownerId: ownerId,
+                        location: location!,
+                        commands: commands,
+                        current: pref,
+                        autoStart: true,
+                        silent: true,
+                      ),
+                    const SizedBox(height: 16),
+                    if (schedule == null) ...[
                       AppStatusView.error(
                         title: copy.prayerScheduleUnavailable,
                         actionLabel: copy.retry,
                         onAction: cubit.retry,
-                      )
-                    else ...[
-                      Text(
-                        schedule.provenance.startsWith('AlAdhan')
-                            ? copy.prayerSourceApi
-                            : copy.prayerSourceLocal,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.textSecondary,
-                        ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 16),
                     ],
-                    const SizedBox(height: 10),
                     PrayerScheduleList(
                       schedule: schedule,
                       timeZoneId: pref.city.timeZoneId,
@@ -162,25 +188,28 @@ class PrayerScreen extends StatelessWidget {
                       actions: result.actions,
                       onStatusChanged: cubit.setStatus,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     PrayerSupplementaryTimes(
                       timeZoneId: pref.city.timeZoneId,
                       sunriseUtc: schedule?.sunriseUtc,
                       middleOfNightUtc: projection?.middleOfNightUtc,
                       lastThirdUtc: projection?.lastThirdUtc,
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      copy.prayerGuidanceContext,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+                    if (conflicts != null) ...[
+                      PrayerConflictsView(conflicts: conflicts!),
+                      const SizedBox(height: 16),
+                    ],
                     const PrayerGuidanceSection(),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 16),
                     Text(
                       copy.prayerAttribution,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -256,12 +285,20 @@ class _LocationAction extends StatefulWidget {
     required this.commands,
     this.current,
     this.autoStart = false,
+    this.silent = false,
+    this.onSaved,
   });
   final String ownerId;
   final PrayerDeviceLocationPort location;
   final PrayerPreferencesCommands commands;
   final PrayerPreferences? current;
   final bool autoStart;
+
+  /// Re-check without any visible control (a saved device location).
+  final bool silent;
+
+  /// Called once the device location is saved or confirmed unchanged.
+  final VoidCallback? onSaved;
 
   @override
   State<_LocationAction> createState() => _LocationActionState();
@@ -295,6 +332,7 @@ class _LocationActionState extends State<_LocationAction> {
           (current!.latitude - resolved.city.latitude).abs() < 0.025 &&
           (current.longitude - resolved.city.longitude).abs() < 0.025 &&
           current.timeZoneId == resolved.city.timeZoneId) {
+        widget.onSaved?.call();
         return;
       }
       final saved = await widget.commands.confirm(
@@ -307,6 +345,7 @@ class _LocationActionState extends State<_LocationAction> {
       if (saved.valueOrNull == null) {
         throw const PrayerLocationException(PrayerLocationProblem.unavailable);
       }
+      if (mounted) widget.onSaved?.call();
     } on PrayerLocationException catch (error) {
       if (mounted) setState(() => _problem = error.problem);
     } catch (_) {
@@ -320,6 +359,8 @@ class _LocationActionState extends State<_LocationAction> {
 
   @override
   Widget build(BuildContext context) {
+    // A failed quiet re-check keeps the saved location; nothing to show.
+    if (widget.silent) return const SizedBox.shrink();
     final copy = FoundationLocalizations.of(context);
     final error = switch (_problem) {
       PrayerLocationProblem.serviceDisabled => copy.prayerLocationDisabled,

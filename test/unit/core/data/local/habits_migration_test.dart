@@ -27,7 +27,9 @@ void main() {
     // test opens an older version. Reproduce an installed v3 file explicitly.
     await database.rawExecute('DROP TABLE IF EXISTS habit_day_records');
     await database.rawExecute('DROP TABLE IF EXISTS habit_records');
-    await database.rawExecute('ALTER TABLE task_records ADD COLUMN completion_xp INTEGER');
+    await database.rawExecute(
+      'ALTER TABLE task_records ADD COLUMN completion_xp INTEGER',
+    );
     return (database.resolvedPath, database);
   }
 

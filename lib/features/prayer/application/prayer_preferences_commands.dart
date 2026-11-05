@@ -27,6 +27,7 @@ final class PrayerPreferencesCommands {
     try {
       if (ownerId.trim().isEmpty ||
           !nowUtc.isUtc ||
+          (expectedRevision != null && expectedRevision < 0) ||
           !methods.contains(method)) {
         throw ArgumentError('invalid prayer context');
       }

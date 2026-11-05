@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
-import 'package:namma_project/app/widgets/app_button.dart';
 import 'package:namma_project/features/prayer/domain/prayer_name.dart';
 import 'package:namma_project/features/prayer/domain/prayer_status.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_state.dart';
@@ -48,7 +47,7 @@ void main() {
       await tester.pump();
       final focus = FocusManager.instance.primaryFocus?.context;
       if (focus == null || !focus.mounted) continue;
-      final button = focus.findAncestorWidgetOfExactType<AppButton>();
+      final button = focus.findAncestorWidgetOfExactType<PrayerStatusButton>();
       if (button?.key is ValueKey<String>) {
         reached.add((button!.key! as ValueKey<String>).value);
       }

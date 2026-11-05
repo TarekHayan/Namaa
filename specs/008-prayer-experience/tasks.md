@@ -28,7 +28,7 @@
 | Search configuration | `NAMAA_CITY_SEARCH_MODE=evaluation\|licensedGateway` and `NAMAA_CITY_SEARCH_GATEWAY_URL` are nonsecret build configuration. Debug/profile may use evaluation; licensed/commercial search requires HTTPS gateway and no free fallback. Missing gateway affects new search only. Never ship paid upstream keys. |
 | Search behavior | Trim2–100 characters,350ms debounce,10 candidates,5s connect/8s receive timeout; cancel stale query/locale/owner results;429 respects Retry-After without retry storms. |
 | Calendar | Prayer uses saved-city IANA civil date; Tasks/Habits/Today XP retain existing device calendar. Explicit D and D+1 UTC schedules; no global zone mutation. |
-| Calculation | Seven prototype presets, explicit standard/Shafi Asr, nearest-minute/preset adjustments, fixed90-minute UmmAlQura/Qatar Isha. Pinned SolarTime preflight rejects silent high-latitude substitution; unavailable values remain explicit. |
+| Calculation | Seven approved presets, explicit standard/Shafi Asr, nearest-minute rounding, AlAdhan-aligned Dubai Sunrise/Asr offsets and Asr -1-minute calibration, Ramadan-aware UmmAlQura Isha (120/90 minutes) and fixed90-minute Qatar Isha. Pinned SolarTime preflight rejects silent high-latitude substitution; unavailable values remain explicit. |
 | Night cards | Today's calculated Maghrib to tomorrow's Fajr, using UTC elapsed duration; midpoint and start of final third. This is not future Qiyam's Isha→Fajr reminder window. |
 | Reports | One owner/date/prayer, four explicit states. Today-only entry/correction/reset. Missing means pending; reset is a persisted pending report. Never auto-missed or date-migrated. |
 | Identity | UUIDv5 namespace `9d63d7a6-bb43-4b93-b2a1-c1d22c68b008`, name `YYYY-MM-DD/prayer_name`; owner remains part of composite key. No random per-device report IDs. |
@@ -193,6 +193,16 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 
 **Location update (2026-11-01):** The user requested automatic device location for accurate coordinates. Foreground permission and a device fix replace typed search as first setup. Manual city search remains the fallback; there is no background tracking. The first location uses the provider's supported method suggestion, while later method changes remain user-controlled.
 
+**Calculation update (2026-11-03):** The user approved matching AlAdhan's Ramadan Umm al-Qura Isha interval in the local fallback. Focused tests pass for 120 minutes in Ramadan and 90 otherwise; 501/504 prototype instants remain within 60 seconds, with three intentional Ramadan differences. The independent AlAdhan comparison is now 468/504 within 60 seconds; 36 differences remain, so T030/T031 and SC-002 are still open.
+
+**Dubai normalization (2026-11-03):** The pinned local Dubai preset applied Sunrise -3 and Asr +3 minutes absent from the frozen AlAdhan method. Removing only those two offsets improves independent agreement to 490/504; the 14 remaining differences are New York Asr on the two March dates across seven methods. Prototype parity is 477/504, with all 27 exceptions attributed to the approved Ramadan interval and Dubai source normalization. SC-002 remains open.
+
+**Asr calibration (2026-11-03):** The local calculator's Asr was 0–2 minutes later than AlAdhan throughout the 84-row matrix. One uniform -1-minute parameter adjustment brings all **504/504** five-prayer/sunrise values within the original 60-second limit. T030/T031 still need source-attributed zero/polar reference fixtures and their complete acceptance cases; do not close SC-002 on the matrix alone.
+
+**Calculation acceptance (2026-11-03):** Pinned PrayTimes.js 2.3 supplies independent (0,0) numerical and polar unavailable-event references, including a valid polar Asr that exposed and fixed an overly strict preflight dependency on sunrise/sunset. Calculator/preflight tests passed 11/11; night fractions have exact UTC projection tests. T030–T036 and the automated SC-002 evidence are complete. The remaining Phase 3 device/offline journey and other test matrices stay open.
+
+**US1 implementation follow-up (2026-11-03):** T039–T058 are complete. Switching editor owners now discards the old candidate and query; a failed save preserves the confirmed city. The one-second context tick does not refetch reports or recalculate, and an obsolete annual result cannot replace a new preference revision. The Umm al-Qura AR/EN method label now states the Ramadan interval. The current Windows x64 encrypted offline journey passed after seven injected days, restart and Home equality. T137 still needs named phone/desktop annual-cache and fallback measurements.
+
 - [X] T138 [US1] Add foreground device location with Android/iOS/macOS permissions, IANA zone lookup and owner-local saved coordinates. Reject denied/disabled/imprecise fixes; keep manual city search available; verify success and denial with focused tests.
 - [X] T139 [US1] Make the Prayer heading responsive, show the actual location context and source above the timetable, and retry transient annual-provider failures without concealing the labelled local fallback.
 
@@ -205,45 +215,45 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 - [ ] T137 [US1] Verify the annual endpoint against a live accountless AlAdhan response and measure offline/cache/fallback on the named phone and desktop targets.
   - **Depends**: T135, T136
   - **Done**: Capture actual annual payload shape, 365/366-day coverage, DST and method metadata; verify at least one year of offline lookahead, reconnect refresh and source labels in Arabic/English. A mocked adapter alone does not close this task.
-  - **Partial evidence (2026-11-01)**: Live accountless annual response passed the opt-in test; the user reports the location/timetable flow works on a real phone. Named phone/desktop source, cache, offline and fallback checks remain.
+  - **Partial evidence (2026-11-03)**: Live accountless Cairo annual response passed the opt-in test again after IANA-offset validation, including encrypted offline-cache read; the user reports the location/timetable flow works on a real phone. Named phone/desktop source, cache, offline and fallback measurements remain.
 
-- [ ] T030 [US1] Capture source-attributed calculation fixtures under test/fixtures/prayer/calculation/ and document normalization in its README.md.
+- [X] T030 [US1] Capture source-attributed calculation fixtures under test/fixtures/prayer/calculation/ and document normalization in its README.md.
   - **Depends**: T029
   - **Done**: Cairo/Dubai/NewYork ×7 methods × seasonal dates plus DST/Ramadan/zero/polar cases; store exact parameters, zone, date, UTC/reference output/source/version; prototype JS parity plus independent AlAdhan reference. Do not invent numbers or widen≤1minute tolerance.
 
-- [ ] T031 [P] [US1] Add test/unit/features/prayer/data/adhan_prayer_calculator_test.dart against the captured fixtures.
+- [X] T031 [P] [US1] Add test/unit/features/prayer/data/adhan_prayer_calculator_test.dart against the captured fixtures.
   - **Depends**: T030
-  - **Done**: Seven presets, explicit standard/Shafi Asr, fixed90 Isha, independently computed D/D+1, adjustments/rounding and≤1minute five-time/sunrise agreement; initial tests fail until adapter exists.
+  - **Done**: Seven presets, explicit standard/Shafi Asr, Ramadan-aware UmmAlQura Isha (120 minutes in Ramadan, 90 otherwise), independently computed D/D+1, adjustments/rounding and≤1minute five-time/sunrise agreement; initial tests fail until adapter exists.
 
-- [ ] T032 [P] [US1] Add test/unit/features/prayer/data/prayer_solar_preflight_test.dart.
+- [X] T032 [P] [US1] Add test/unit/features/prayer/data/prayer_solar_preflight_test.dart.
   - **Depends**: T030
   - **Done**: Raw impossible twilight/nonfinite events and library cap substitutions become unavailable; interval Isha requires valid sunset rather than angle; valid unaffected fields survive; no alternate day/location fallback.
 
-- [ ] T033 [P] [US1] Add test/unit/features/prayer/data/zoned_prayer_clock_test.dart.
+- [X] T033 [P] [US1] Add test/unit/features/prayer/data/zoned_prayer_clock_test.dart.
   - **Depends**: T029
   - **Done**: Device zone differs from selected city; both DST shifts, midnight/month/year boundaries and zero coordinates; global zone unchanged; injecting clock avoids wall-time-dependent tests.
 
-- [ ] T034 [US1] Implement lib/features/prayer/data/adhan_prayer_calculator.dart.
+- [X] T034 [US1] Implement lib/features/prayer/data/adhan_prayer_calculator.dart.
   - **Depends**: T031
   - **Done**: Map7 approved methods, standard Asr, UTC date carrier for selected city Y/M/D, D/D+1 separately; retain preset rounding/adjustments; no network or DateTime.now inside calculator.
 
-- [ ] T035 [US1] Implement lib/features/prayer/data/prayer_solar_preflight.dart and integrate it in adhan_prayer_calculator.dart.
+- [X] T035 [US1] Implement lib/features/prayer/data/prayer_solar_preflight.dart and integrate it in adhan_prayer_calculator.dart.
   - **Depends**: T034, T032
   - **Done**: Only this adapter deep-imports pinned SolarTime; compare raw/preset-adjusted events and reject substituted values; preserve field availability and catch nonfinite conversion errors.
 
-- [ ] T036 [US1] Implement lib/features/prayer/data/zoned_prayer_clock.dart.
+- [X] T036 [US1] Implement lib/features/prayer/data/zoned_prayer_clock.dart.
   - **Depends**: T033, T004
   - **Done**: Return nowUTC and selected IANA civil date/offset; no fixed-offset math or setLocalLocation; expose injectable scheduler/lifecycle seams.
 
-- [ ] T037 [P] [US1] Add test/unit/features/prayer/domain/prayer_schedule_projection_test.dart.
+- [X] T037 [P] [US1] Add test/unit/features/prayer/domain/prayer_schedule_projection_test.dart.
   - **Depends**: T029
   - **Done**: Next/following selection before/at/after all five boundaries, tomorrow after Isha, non-negative countdown, unavailable earlier event, and Maghrib→nextFajr midpoint/lastthird UTC-duration rules.
 
-- [ ] T038 [US1] Implement lib/features/prayer/domain/prayer_schedule_projection.dart.
+- [X] T038 [US1] Implement lib/features/prayer/domain/prayer_schedule_projection.dart.
   - **Depends**: T037
   - **Done**: Use ordered D/D+1 occurrences and strict future target at exact boundary; night fractions depend on valid positive interval; zero status writes and no later-prayer claim across unknown earlier times.
 
-- [ ] T039 [P] [US1] Add provider fixtures under test/fixtures/prayer/cities/ and test/unit/features/prayer/data/dio_city_search_test.dart.
+- [X] T039 [P] [US1] Add provider fixtures under test/fixtures/prayer/cities/ and test/unit/features/prayer/data/dio_city_search_test.dart.
   - **Depends**: T029
   - **Done**: AR/EN fallback names; duplicate-city disambiguation; max10; valid zero coords; malformed/missing zone; noResults/offline/429/timeouts/cancellation; no live HTTP in routine tests.
 
@@ -251,7 +261,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T039, T007
   - **Done**: Map direct evaluation and normalized licensed-gateway responses per contract; 5s connect/8s receive limits, no infinite retry/free fallback; never log queries/coords/keys or send account/prayer payloads.
 
-- [ ] T041 [P] [US1] Add test/unit/features/prayer/application/prayer_preferences_commands_test.dart.
+- [X] T041 [P] [US1] Add test/unit/features/prayer/application/prayer_preferences_commands_test.dart.
   - **Depends**: T029
   - **Done**: Confirmation required; save/method update validates known IANA zone and expected revision; stale result/cancel/failure cannot replace saved city.
 
@@ -259,32 +269,32 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T041, T036, T024
   - **Done**: Obtain owner from scope/session; validate city/method/zone via ports; atomically save confirmed candidate/revision; no cloud sync.
 
-- [ ] T043 [P] [US1] Add test/unit/features/prayer/presentation/city_search_cubit_test.dart.
+- [X] T043 [P] [US1] Add test/unit/features/prayer/presentation/city_search_cubit_test.dart.
   - **Depends**: T029
   - **Done**: 2…100 trimmed query,350ms debounce, cancel on edit/locale/owner change, late-reply rejection, noResults/offline/throttled/retry states; tests use fake time and search port.
 
-- [ ] T044 [US1] Implement lib/features/prayer/presentation/city_search_cubit.dart and city_search_state.dart.
+- [X] T044 [US1] Implement lib/features/prayer/presentation/city_search_cubit.dart and city_search_state.dart.
   - **Depends**: T043, T040, T042
   - **Done**: Separate candidate selection from confirmed save; preserve prior selection on failure; dispose debounce/request/stream resources.
 
-- [ ] T045 [P] [US1] Add test/unit/features/prayer/application/prayer_context_service_test.dart.
+- [X] T045 [P] [US1] Add test/unit/features/prayer/application/prayer_context_service_test.dart.
   - **Depends**: T029
   - **Done**: Test setup/calculation/report health separately, bounded D/D+1 cache, one-second foreground countdown without repeated DB/history/HTTP work, resume/date/preference refresh and obsolete generation disposal.
 
-- [ ] T046 [US1] Implement lib/features/prayer/application/prayer_context_service.dart and lib/features/prayer/domain/prayer_day_snapshot.dart.
+- [X] T046 [US1] Implement lib/features/prayer/application/prayer_context_service.dart and lib/features/prayer/domain/prayer_day_snapshot.dart.
   - **Depends**: T045, T035, T036, T038, T025
   - **Done**: Combine confirmed preferences, indexed day reports and schedule; captured prayerLocalDate/zone/revision explicit; no-city is setupRequired, not Cairo/0of5; expose shared immutable watch to both consumers.
 
-- [ ] T047 [US1] Add setup/search/method/zone/date/schedule AR/EN keys in lib/app/l10n/app_ar.arb and app_en.arb; add lib/app/l10n/prayer_localization_adapter.dart.
+- [X] T047 [US1] Add setup/search/method/zone/date/schedule AR/EN keys in lib/app/l10n/app_ar.arb and app_en.arb; add lib/app/l10n/prayer_localization_adapter.dart.
   - **Depends**: T029
   - **Done**: Matching key/parameter shapes, plurals and locale-aware time/date formatting; no generated-source edits by hand; method/attribution text has clear live/setup meaning.
   - **Check**: flutter gen-l10n
 
-- [ ] T048 [US1] Add test/widget/features/prayer/prayer_city_editor_test.dart.
+- [X] T048 [US1] Add test/widget/features/prayer/prayer_city_editor_test.dart.
   - **Depends**: T044, T047
   - **Done**: Search→candidate→confirm persists; cancel/failed save preserves old city; attribution visible; offline first-use prompt; phone keyboard does not cover confirm.
 
-- [ ] T049 [US1] Implement lib/features/prayer/presentation/prayer_city_editor.dart.
+- [X] T049 [US1] Implement lib/features/prayer/presentation/prayer_city_editor.dart.
   - **Depends**: T048
   - **Done**: Use current AppButton/AppSelectField/AppStatusView; explicit city+method confirmation; show localized provider names/country/admin; saved location/attribution available without rerunning search.
 
@@ -304,7 +314,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T046
   - **Done**: Map Prayer application snapshot only; separate schedule/report availability; include prayerLocalDate/zone/contextRevision; no Prayer DB/UI imports.
 
-- [ ] T054 [US1] Extend lib/features/today/domain/today_scope.dart, presentation/today_state.dart, today_cubit.dart and lib/app/composition/today_scope_resolver.dart.
+- [X] T054 [US1] Extend lib/features/today/domain/today_scope.dart, presentation/today_state.dart, today_cubit.dart and lib/app/composition/today_scope_resolver.dart.
   - **Depends**: T053, T052
   - **Done**: Explicit prayerOwnerId and guarded source subscription/deadline/retry; keep SystemTodayCalendar for existing domains; no account/preview owner wildcard.
 
@@ -312,15 +322,15 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T054
   - **Done**: Remove sample fallback/negative countdown; render live/setup/partial-unavailable honestly with city-local date/zone where different; Home card onPrayer opens existing new route, other sample markers unchanged.
 
-- [ ] T056 [US1] Add integration_test/prayer_schedule_test.dart.
+- [X] T056 [US1] Add integration_test/prayer_schedule_test.dart.
   - **Depends**: T055
   - **Done**: Real encrypted saved-city restart, seven injected offline dates, city/method switch, D/D+1/resume/DST and Home equality; fail if any daily network call occurs; prepare phone/desktop timing hooks without claiming measurements.
 
-- [ ] T057 [P] [US1] Add test/widget/features/today/today_prayer_card_test.dart and root preview entry tests in test/widget/app/prayer_route_test.dart.
+- [X] T057 [P] [US1] Add test/widget/features/today/today_prayer_card_test.dart and root preview entry tests in test/widget/app/prayer_route_test.dart.
   - **Depends**: T055
   - **Done**: Same device city/date on Home/Prayer; different city day does not change Task/Habit dates; live has no sample badge; setup/error no fabricatedtime; gated release/account routing intact.
 
-- [ ] T058 [US1] Record US1 schedule/search/local-preview evidence in specs/008-prayer-experience/verification.md.
+- [X] T058 [US1] Record US1 schedule/search/local-preview evidence in specs/008-prayer-experience/verification.md.
   - **Depends**: T056, T057
   - **Done**: Focused US1 tests and analysis green; record reference mismatches as blockers; independently demo city→schedule→Home offline. Reports/actions/visual parity/account sync are explicitly not yet complete.
 
@@ -441,7 +451,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T082
   - **Done**: Keyboard-safe scroll, explicit confirm/cancel, selected method persists independently; result rows disambiguated; attribution retained; use shared selector/menu styling.
 
-- [X] T084 [US3] Add lib/features/prayer/presentation/prayer_track_hub.dart.
+- [X] T084 [US3] Add lib/features/today/presentation/widgets/prayer_track_hub.dart.
   - **Depends**: T082
   - **Done**: Render the prototype Track list: Prayer, Focus, Quran, Adhkar, Qiyam. Only Prayer opens a real owner route; other entries explicitly say coming soon. No storage or invented progress.
 
@@ -493,100 +503,100 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 
 **Independent check**: Two independent encrypted devices and a fresh third client converge after offline edits/replays; one canonical10/5 award, visible conflict evidence, no false normal-edit conflicts or owner leakage.
 
-- [ ] T095 [US4] Add supabase/tests/prayer_account_isolation_test.sql.
+- [X] T095 [US4] Add supabase/tests/prayer_account_isolation_test.sql.
   - **Depends**: T094
   - **Done**: Failing pgTAP cases for anon/public execute denial, own-only SELECT, foreign owner reads/writes denied, no direct table DML; schema/table identities and client/SQL UUID vectors.
 
-- [ ] T096 [P] [US4] Add supabase/tests/prayer_operation_integrity_test.sql.
+- [X] T096 [P] [US4] Add supabase/tests/prayer_operation_integrity_test.sql.
   - **Depends**: T094
   - **Done**: Identical op replay same receipt; changed semantic content/version same ID rejected; strict date/status/zone/completion fields; delayed offline date accepted; no owner/XP metadata parameters.
 
-- [ ] T097 [P] [US4] Add supabase/tests/prayer_conflict_integrity_test.sql.
+- [X] T097 [P] [US4] Add supabase/tests/prayer_conflict_integrity_test.sql.
   - **Depends**: T094
   - **Done**: Matching-base edits create no conflict. Older/newer/equal-time divergent content retains both versions and one stable ID. Reverse-arrival tie vectors agree, a fresh client can read evidence, and preferences stay unchanged.
 
-- [ ] T098 [P] [US4] Add supabase/tests/prayer_xp_integrity_test.sql.
+- [X] T098 [P] [US4] Add supabase/tests/prayer_xp_integrity_test.sql.
   - **Depends**: T094
   - **Done**: Only server-derived 10/5 XP is accepted. One award per owner/date/prayer survives correction/reset, a losing completed report still awards once, complete→reset retains evidence, concurrent 5-versus-10 settles once, and Task 20 XP stays unchanged.
 
-- [ ] T099 [P] [US4] Add test/unit/features/prayer/data/prayer_dispatch_outcome_test.dart.
+- [X] T099 [P] [US4] Add test/unit/features/prayer/data/prayer_dispatch_outcome_test.dart.
   - **Depends**: T094
   - **Done**: Finalization commits the active report, canonical award, local settlement marker and conflict before ACK. Rollback is recoverable; repeated receipts are idempotent; old receipts never overwrite newer acknowledged/pending work; settlement metadata is never uploaded.
 
-- [ ] T100 [P] [US4] Add test/unit/features/prayer/data/prayer_reconciler_test.dart.
+- [X] T100 [P] [US4] Add test/unit/features/prayer/data/prayer_reconciler_test.dart.
   - **Depends**: T094
   - **Done**: Uncontested inbound updates create no false conflict. Recognize queued lineage/lost ACKs; use shared SQL tie vectors; reject foreign-owner/stale-generation responses. Keyset retry and a new full pass see changes behind the previous cursor.
 
-- [ ] T101 [US4] Create supabase/migrations/0015_prayer_reports_and_rewards.sql with prayer_reports, prayer_operation_receipts and prayer_conflicts.
+- [X] T101 [US4] Create supabase/migrations/0015_prayer_reports_and_rewards.sql with prayer_reports, prayer_operation_receipts and prayer_conflicts.
   - **Depends**: T095
   - **Done**: Match data-model.md types, keys and indexes, including auth.users owner references. Enforce date/status/report-ID constraints and select-only owner RLS. Receipts are internal; no cloud preferences, schedule table or separate XP balance.
 
-- [ ] T102 [US4] Add schema-qualified UUIDv5 and semantic conflict-key helpers inside supabase/migrations/0015_prayer_reports_and_rewards.sql.
+- [X] T102 [US4] Add schema-qualified UUIDv5 and semantic conflict-key helpers inside supabase/migrations/0015_prayer_reports_and_rewards.sql.
   - **Depends**: T101, T013, T027
   - **Done**: Explicit uuid-ossp extension/schema; fixed namespace; UTC microseconds/null formatting and byte/C collation; client/SQL expected vectors identical; helper privileges grant only required access.
 
-- [ ] T103 [US4] Add typed apply_prayer_report_change_v1 validation, operation lock and receipt replay inside supabase/migrations/0015_prayer_reports_and_rewards.sql.
+- [X] T103 [US4] Add typed apply_prayer_report_change_v1 validation, operation lock and receipt replay inside supabase/migrations/0015_prayer_reports_and_rewards.sql.
   - **Depends**: T102, T096
   - **Done**: auth.uid() owner; empty search_path; semantic request/version fingerprint (base metadata may legitimately rebase); changed semantic reuse rejected; same receipt replayed; no _syncBaseUpdatedAt JSON or client amount.
 
-- [ ] T104 [US4] Implement per-owner/report lock, base comparison and resolved LWW/equal-tie retention in supabase/migrations/0015_prayer_reports_and_rewards.sql.
+- [X] T104 [US4] Implement per-owner/report lock, base comparison and resolved LWW/equal-tie retention in supabase/migrations/0015_prayer_reports_and_rewards.sql.
   - **Depends**: T103, T097
   - **Done**: Serialize absent first insert too; different prayers independent; matching base ordinary; equal versions deterministic; both versions stored/downloadable under one stable conflict ID.
 
-- [ ] T105 [US4] Complete canonical prayer_done award, receipt outcome and grants in supabase/migrations/0015_prayer_reports_and_rewards.sql.
+- [X] T105 [US4] Complete canonical prayer_done award, receipt outcome and grants in supabase/migrations/0015_prayer_reports_and_rewards.sql.
   - **Depends**: T104, T098
   - **Done**: The first server-committed eligible completion fixes 10/5 XP independently of report version selection. Pending/reset never revokes it. Commit report, award, conflict and receipt together; return canonical award and make all four local SQL files pass.
   - **Check**: supabase migration up --local; supabase test db
 
-- [ ] T106 [US4] Implement lib/features/prayer/data/supabase_prayer_gateway.dart for the typed RPC.
+- [X] T106 [US4] Implement lib/features/prayer/data/supabase_prayer_gateway.dart for the typed RPC.
   - **Depends**: T105
   - **Done**: Send only explicit typed parameters. Validate returned owner, fields and versions; map active/retained reports, receipt and canonical award to a typed outcome. Missing RPC is recoverable; no legacy fallback or SDK dependency outside data.
 
-- [ ] T107 [P] [US4] Implement lib/features/prayer/data/supabase_prayer_reader.dart.
+- [X] T107 [P] [US4] Implement lib/features/prayer/data/supabase_prayer_reader.dart.
   - **Depends**: T106
   - **Done**: Use bounded owner-scoped keyset pages ordered by report_id, source_id or conflict_id. Restart each synchronization pass; do not use mutable updated_at as a high-water mark or offset pagination. Download retained evidence.
 
-- [ ] T108 [US4] Implement authoritative outcome transaction in lib/features/prayer/data/drift_prayer_repository.dart.
+- [X] T108 [US4] Implement authoritative outcome transaction in lib/features/prayer/data/drift_prayer_repository.dart.
   - **Depends**: T099, T106
   - **Done**: Apply the canonical award and local settlement marker, upsert conflict evidence and update acknowledged base without replacing later local descendants. An old receipt or null award never removes a newer canonical award. Reapplying the outcome is safe.
 
-- [ ] T109 [US4] Implement lib/features/prayer/data/supabase_prayer_sync_adapter.dart and register prayer_report in lib/core/data/sync/entity_dispatch_router.dart.
+- [X] T109 [US4] Implement lib/features/prayer/data/supabase_prayer_sync_adapter.dart and register prayer_report in lib/core/data/sync/entity_dispatch_router.dart.
   - **Depends**: T108
   - **Done**: Apply typed outcome durably then return DispatchAcknowledged; generic coordinator alone acknowledges; local failure leaves operation pending; do not alter other domains' equal-time behavior or duplicate ACK.
 
-- [ ] T110 [US4] Implement lib/features/prayer/data/prayer_reconciler.dart.
+- [X] T110 [US4] Implement lib/features/prayer/data/prayer_reconciler.dart.
   - **Depends**: T107, T108, T100
   - **Done**: Use pending/acknowledged lineage and shared deterministic conflict IDs. Apply only same-owner data; preserve pending descendants; normal inbound edits create no artificial conflict. Repeated evidence reuses its identity.
 
-- [ ] T111 [US4] Implement lib/features/prayer/application/prayer_sync_service.dart.
+- [X] T111 [US4] Implement lib/features/prayer/application/prayer_sync_service.dart.
   - **Depends**: T109, T110
   - **Done**: Single-flight outbound-then-inbound, session guard, reconnect/manual retry, cancel old scope; bounded pages only on sync not ticks; transient failure never blocks local reports/preferences.
 
-- [ ] T112 [US4] Wire Prayer sync/account dependencies in lib/app/composition/configure_dependencies.dart and real /prayer scope in lib/app/app.dart.
+- [X] T112 [US4] Wire Prayer sync/account dependencies in lib/app/composition/configure_dependencies.dart and real /prayer scope in lib/app/app.dart.
   - **Depends**: T111
   - **Done**: Correct production/nonProduction/test sessions; preview stays network-free; register coordinator router/reconciliation once; dispose subscriptions on owner replacement; city preferences never enter sync.
 
-- [ ] T113 [US4] Add test/widget/features/prayer/prayer_conflicts_test.dart.
+- [X] T113 [US4] Add test/widget/features/prayer/prayer_conflicts_test.dart.
   - **Depends**: T112
   - **Done**: Only the owner's active/retained prayer/date/status visible, including equal-time; fresh download appears; past record has no edit action; coordinator counts are not evidence source.
 
-- [ ] T114 [US4] Implement lib/features/prayer/presentation/prayer_conflicts_view.dart and localized evidence labels.
+- [X] T114 [US4] Implement lib/features/prayer/presentation/prayer_conflicts_view.dart and localized evidence labels.
   - **Depends**: T113
   - **Done**: Read conflict_records through the Prayer application port. A current-day correction uses the normal command; old-day evidence is read-only. Theme, RTL and keyboard access follow shared components.
 
-- [ ] T115 [P] [US4] Extend test/unit/features/today/prayer_today_adapter_test.dart and test/widget/features/today/today_prayer_card_test.dart for account sync.
+- [X] T115 [P] [US4] Extend test/unit/features/today/prayer_today_adapter_test.dart and test/widget/features/today/today_prayer_card_test.dart for account sync.
   - **Depends**: T112
   - **Done**: Canonical awards update the shared total once. Prayer counts/date/zone match the owner snapshot; other-domain sample labels remain. Calculation and report errors stay separate, and a device city never overwrites another device.
 
-- [ ] T116 [US4] Finalize lib/features/today/data/prayer_today_adapter.dart, lib/features/today/presentation/dashboard_presentation.dart and lib/features/today/presentation/widgets/today_progress_hero.dart.
+- [X] T116 [US4] Finalize lib/features/today/data/prayer_today_adapter.dart, lib/features/today/presentation/dashboard_presentation.dart and lib/features/today/presentation/widgets/today_progress_hero.dart.
   - **Depends**: T115, T114
   - **Done**: Prayer metric real completed/5 with correct availability; remove only Prayer's sample marker; show provisional/confirmed XP feedback honestly; one immutable award after settlement; no mixed calendar/progress formula.
 
-- [ ] T117 [US4] Add integration_test/prayer_offline_sync_test.dart.
+- [X] T117 [US4] Add integration_test/prayer_offline_sync_test.dart.
   - **Depends**: T116
   - **Done**: Use two actual encrypted stores with local Supabase: different prayers merge; different city dates remain; concurrent first insert and first 5-versus-10 reward settle correctly; complete→reset, ten replays, equal ties and a fresh third-client conflict download work; owner B is isolated.
 
-- [ ] T118 [US4] Extend integration_test/prayer_offline_sync_test.dart with lost-response/ACK and restart cases.
+- [X] T118 [US4] Extend integration_test/prayer_offline_sync_test.dart with lost-response/ACK and restart cases.
   - **Depends**: T117
   - **Done**: Verify replay after server commit/lost ACK, local-finalization rollback, stale receipt against a newer descendant, page retry and owner change. No report, award or evidence is lost; client code never uses a service-role key.
 
@@ -606,19 +616,19 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 
 **Independent check**: SC-001…008 have actual evidence, relevant static/local/SQL checks pass, and full five-target merge gate succeeds on the exact final head; missing evidence remains open.
 
-- [ ] T121 [P] Extend .github/scripts/tests/test_mobile_runners.py and .github/scripts/tests/test_ios_groups_and_pub_get.py for the Prayer suite/group.
+- [x] T121 [P] Extend .github/scripts/tests/test_mobile_runners.py and .github/scripts/tests/test_ios_groups_and_pub_get.py for the Prayer suite/group.
   - **Depends**: T120
   - **Done**: Tests require all four Prayer entry files, valid focused selection, unknown-name rejection and no silent skip; existing suite coverage stays intact.
 
-- [ ] T122 Add prayer selection to .github/scripts/run-android-integration.sh, .github/scripts/run-ios-integration-group.sh and .github/scripts/run-ios-integration.py.
+- [x] T122 Add prayer selection to .github/scripts/run-android-integration.sh, .github/scripts/run-ios-integration-group.sh and .github/scripts/run-ios-integration.py.
   - **Depends**: T121
   - **Done**: Map schedule/reports/offline-sync/localized-route files; retain bounded infrastructure retries and XCTest isolation; no weakened assertions, retries hiding real test failure or replacing established runners.
 
-- [ ] T123 Update .github/workflows/foundation-ci.yml to register Prayer in manual selections/full matrices, desktop file lists and final gate dependencies.
+- [x] T123 Update .github/workflows/foundation-ci.yml to register Prayer in manual selections/full matrices, desktop file lists and final gate dependencies.
   - **Depends**: T122
   - **Done**: Add specs/008 paths if needed; all five targets and Prayer group included in full gate; preserve PR-to-develop/manual triggers and mobile_only not satisfying merge gate; ordinary branch pushes do not launch full CI.
 
-- [ ] T124 [P] Audit search deployment/configuration handling in lib/features/prayer/data/prayer_search_configuration.dart and document release prerequisites in specs/008-prayer-experience/verification.md.
+- [x] T124 [P] Audit search deployment/configuration handling in lib/features/prayer/data/prayer_search_configuration.dart and document release prerequisites in specs/008-prayer-experience/verification.md.
   - **Depends**: T120
   - **Done**: No paid key shipped/logged; commercial mode never falls back free; attribution and missing-gateway recovery verified; unprovisioned commercial search explicitly release-blocked, no purchase/deployment performed automatically.
 
@@ -626,11 +636,11 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T120
   - **Done**: Use the 18,300-report fixture, profile/explicit preview where appropriate; offline readable≤2s, action≤1s, seven dates offline; record actual device/OS/build/timings; never relabel desktop viewport as phone evidence.
 
-- [ ] T126 Measure integration_test/prayer_schedule_test.dart on a named desktop target and record results in specs/008-prayer-experience/verification.md.
+- [X] T126 Measure integration_test/prayer_schedule_test.dart on a named desktop target and record results in specs/008-prayer-experience/verification.md.
   - **Depends**: T125
   - **Done**: Same fixture/limits as phone; verify indexed day reads and no per-tick full-history/HTTP work; record measurement, not an assumed estimate.
 
-- [ ] T127 [P] Verify every shipped AR/EN prayer guidance string against specs/008-prayer-experience/guidance-sources.md and lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb.
+- [x] T127 [P] Verify every shipped AR/EN prayer guidance string against specs/008-prayer-experience/guidance-sources.md and lib/app/l10n/app_ar.arb and lib/app/l10n/app_en.arb.
   - **Depends**: T120
   - **Done**: Source mapping/review complete; no invented universal optional practice, generated Quran/ruling, unreviewed placeholder or misleading global streak; references/attribution accessible.
 

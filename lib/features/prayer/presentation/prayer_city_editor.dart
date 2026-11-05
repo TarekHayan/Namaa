@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
@@ -7,7 +9,7 @@ import 'package:namma_project/app/widgets/app_button.dart';
 
 import '../application/city_search_port.dart';
 import '../application/prayer_preferences_commands.dart';
-import '../data/adhan_prayer_calculator.dart';
+import '../domain/prayer_calculation_methods.dart';
 import '../domain/prayer_preferences.dart';
 import 'city_search_cubit.dart';
 import 'city_search_state.dart';
@@ -21,6 +23,7 @@ class PrayerCityEditor extends StatefulWidget {
     this.current,
     this.asSheet = false,
     required this.onSaved,
+    this.leading,
   });
   final String ownerId;
   final CitySearchPort search;
@@ -29,12 +32,15 @@ class PrayerCityEditor extends StatefulWidget {
   final bool asSheet;
   final VoidCallback onSaved;
 
+  /// Optional control shown above the search, e.g. "use my location".
+  final Widget? leading;
+
   @override
   State<PrayerCityEditor> createState() => _PrayerCityEditorState();
 }
 
 class _PrayerCityEditorState extends State<PrayerCityEditor> {
-  late final CitySearchCubit _cubit;
+  late CitySearchCubit _cubit;
   late String _method = widget.current?.calculationMethod ?? 'egyptian';
   bool _savingMethod = false;
   bool _saveFailed = false;
@@ -55,6 +61,27 @@ class _PrayerCityEditorState extends State<PrayerCityEditor> {
     }
   }
 
+  @override
+  void didUpdateWidget(covariant PrayerCityEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_initialized ||
+        (oldWidget.ownerId == widget.ownerId &&
+            identical(oldWidget.search, widget.search) &&
+            identical(oldWidget.commands, widget.commands))) {
+      return;
+    }
+    unawaited(_cubit.close());
+    _cubit = CitySearchCubit(
+      search: widget.search,
+      commands: widget.commands,
+      ownerId: widget.ownerId,
+      locale: Localizations.localeOf(context).languageCode,
+    );
+    _method = widget.current?.calculationMethod ?? 'egyptian';
+    _savingMethod = false;
+    _saveFailed = false;
+  }
+
   bool _initialized = false;
 
   @override
@@ -64,12 +91,13 @@ class _PrayerCityEditorState extends State<PrayerCityEditor> {
   }
 
   Future<void> _confirm(CitySearchState state) async {
+    final ownerId = widget.ownerId;
     if (state.candidate != null) {
       final saved = await _cubit.confirm(
         method: _method,
         expectedRevision: widget.current?.revision,
       );
-      if (saved && mounted) widget.onSaved();
+      if (saved && mounted && widget.ownerId == ownerId) widget.onSaved();
       return;
     }
     final current = widget.current;
@@ -85,7 +113,7 @@ class _PrayerCityEditorState extends State<PrayerCityEditor> {
       expectedRevision: current.revision,
       nowUtc: DateTime.now().toUtc(),
     );
-    if (!mounted) return;
+    if (!mounted || widget.ownerId != ownerId) return;
     setState(() {
       _savingMethod = false;
       _saveFailed = saved.valueOrNull == null;
@@ -123,15 +151,24 @@ class _PrayerCityEditorState extends State<PrayerCityEditor> {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
+              if (widget.leading != null) ...[
+                const SizedBox(height: 16),
+                widget.leading!,
+              ],
               const SizedBox(height: 16),
-              TextField(
-                key: const Key('prayer_city_search'),
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  labelText: copy.prayerCitySearch,
-                  prefixIcon: const Icon(Icons.search),
+              // A replaced cubit starts with an empty query, so the field
+              // must restart too (owner or port change).
+              KeyedSubtree(
+                key: ObjectKey(_cubit),
+                child: TextField(
+                  key: const Key('prayer_city_search'),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    labelText: copy.prayerCitySearch,
+                    prefixIcon: const Icon(Icons.search),
+                  ),
+                  onChanged: _cubit.updateQuery,
                 ),
-                onChanged: _cubit.updateQuery,
               ),
               const SizedBox(height: 12),
               BlocBuilder<CitySearchCubit, CitySearchState>(
@@ -183,7 +220,7 @@ class _PrayerCityEditorState extends State<PrayerCityEditor> {
                           labelText: copy.prayerMethod,
                         ),
                         items: [
-                          for (final key in AdhanPrayerCalculator.methods)
+                          for (final key in kPrayerCalculationMethods)
                             DropdownMenuItem(
                               value: key,
                               child: Text(prayerMethodLabel(copy, key)),

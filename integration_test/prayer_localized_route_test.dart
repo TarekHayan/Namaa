@@ -26,6 +26,7 @@ import 'package:namma_project/features/prayer/domain/prayer_city.dart';
 import 'package:namma_project/features/prayer/domain/prayer_name.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_screen.dart';
+import 'package:namma_project/features/prayer/presentation/widgets/prayer_status_actions.dart';
 import 'package:namma_project/features/today/domain/today_calendar.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_dashboard_view.dart';
@@ -201,8 +202,12 @@ void main() {
             final focused = FocusManager.instance.primaryFocus?.context;
             if (focused == null || !focused.mounted) continue;
             final button = focused.findAncestorWidgetOfExactType<AppButton>();
+            final status = focused
+                .findAncestorWidgetOfExactType<PrayerStatusButton>();
             final tile = focused.findAncestorWidgetOfExactType<ListTile>();
-            if (button?.key == Key(key) || tile?.key == Key(key)) {
+            if (button?.key == Key(key) ||
+                status?.key == Key(key) ||
+                tile?.key == Key(key)) {
               await tester.sendKeyEvent(LogicalKeyboardKey.enter);
               await tester.pump(const Duration(milliseconds: 250));
               return;

@@ -187,13 +187,38 @@ class TodaySuiteSelectionTest(unittest.TestCase):
         today = group_runner.split("  today)", 1)[1].split("    ;;", 1)[0]
         for suite in ("today-dashboard", "today-sync"):
             self.assertIn(suite, today)
-        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*)', group_runner)
+        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*|prayer-*)', group_runner)
         self.assertIn('run-ios-integration.py "$result_bundle"', group_runner)
         self.assertIn('CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-', group_runner)
         self.assertIn('stabilizeNativeIosSemantics(binding)', group_runner)
         runner = (ROOT / ".github/scripts/run-ios-integration.py").read_text()
         self.assertIn('totalTestCount', runner)
         self.assertIn('passedTests', runner)
+
+
+class PrayerSuiteRegistrationTest(unittest.TestCase):
+    def test_android_and_ios_register_every_prayer_entry_once(self):
+        android = (ROOT / ".github/scripts/run-android-integration.sh").read_text()
+        ios = (ROOT / ".github/scripts/run-ios-integration-group.sh").read_text()
+        android_group = android.split("  prayer)", 1)[1].split("    ;;", 1)[0]
+        ios_group = ios.split("  prayer)", 1)[1].split("    ;;", 1)[0]
+        for suite in ("schedule", "reports", "offline-sync", "localized-route"):
+            file = f"integration_test/prayer_{suite.replace('-', '_')}_test.dart"
+            self.assertTrue((ROOT / file).is_file(), file)
+            self.assertEqual(android_group.count(file), 1, file)
+            self.assertEqual(ios_group.count(f"prayer-{suite}"), 1, suite)
+
+    def test_unknown_android_suite_fails_before_running(self):
+        bash = r"C:\Program Files\Git\bin\bash.exe" if os.name == "nt" else shutil.which("bash")
+        if not bash or not Path(bash).is_file():
+            self.skipTest("Bash is unavailable")
+        result = subprocess.run(
+            [bash, ".github/scripts/run-android-integration.sh"], cwd=ROOT,
+            env={**os.environ, "ANDROID_SUITE": "prayer-typo"},
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("Unknown Android integration suite", result.stderr)
 
 
 if __name__ == "__main__":

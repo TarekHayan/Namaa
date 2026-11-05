@@ -306,6 +306,7 @@
   "dashboardSidebarTagline": "مساحتك ليوم متزن",
   "dashboardComingSoon": "قريبًا",
   "dashboardPrayerShort": "الصلوات",
+  "dashboardXpPendingSync": "بانتظار تأكيد المزامنة",
   "dashboardMore": "المزيد",
   "dashboardQuickAdd": "إضافة سريعة",
   "dashboardPrayer": "مواقيت الصلاة",
@@ -452,6 +453,7 @@
   "prayerGuidanceScope": "توضيح عام لصفة القراءة المعتادة، وليس حكمًا على صحة صلاة المستخدم.",
   "prayerGuidanceSource": "المصدر: دار الإفتاء المصرية",
   "prayerStreakSoon": "سلسلة الصلاة: قريبًا",
+  "prayerProgressBadge": "{done}/5 مكتمل ({percent}%)",
   "prayerSetupTitle": "مواقيت الصلاة حسب موقعك",
   "prayerSetupBody": "اسمح بتحديد الموقع أثناء استخدام التطبيق لحساب المواقيت عندك. يمكنك اختيار مدينة يدويًا بدلًا من ذلك، ويعمل الموقع المحفوظ دون إنترنت.",
   "prayerUseLocation": "استخدم موقعي الحالي",
@@ -483,7 +485,7 @@
   "prayerComingSoon": "قريبًا",
   "prayerEgyptian": "الهيئة المصرية العامة للمساحة",
   "prayerMwl": "رابطة العالم الإسلامي",
-  "prayerUmmAlQura": "أم القرى (العشاء بعد ٩٠ دقيقة)",
+  "prayerUmmAlQura": "أم القرى (العشاء بعد ٩٠ دقيقة، و١٢٠ دقيقة في رمضان)",
   "prayerDubai": "دبي",
   "prayerNorthAmerica": "أمريكا الشمالية",
   "prayerKuwait": "الكويت",
@@ -503,5 +505,9 @@
   "prayerStatusSelected": "الحالة المختارة: {status}",
   "@prayerStatusSelected": {
     "placeholders": {"status": {"type": "String"}}
-  }
+  },
+  "prayerConflicts": "تغييرات الصلاة للمراجعة",
+  "prayerConflictActive": "النسخة الحالية",
+  "prayerConflictRetained": "النسخة الأخرى المحفوظة",
+  "prayerConflictReadOnly": "سجلات الأيام السابقة للعرض فقط"
 }

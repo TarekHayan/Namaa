@@ -77,9 +77,9 @@ flutter test -d windows integration_test/prayer_offline_sync_test.dart
 flutter test -d windows integration_test/prayer_localized_route_test.dart
 ~~~
 
-Run affected files individually on Android/macOS/Linux. iOS uses the existing XCTest group runner, not a replacement ad-hoc driver; add a prayer group and four suite names to both group/suite mappings and validate their runner tests. Desktop/local SQL integration must use the local Supabase stack; isolated staging device evidence remains a release gate.
+Run affected files individually on Android/macOS/Linux. iOS uses the existing XCTest group runner, not a replacement ad-hoc driver. The Prayer group and four suite names are registered in both mobile runners. The Prayer offline-sync entry uses the local Supabase stack on Linux/Android and the isolated non-production project with the two injected test accounts on Windows/macOS/iOS. Apply and verify migration 0015 on that isolated project before requesting the hosted sync gate; never point these entry points at production. Local SQL pgTAP continues to use the local stack. Hosted two-device evidence remains a release gate.
 
-Add prayer as Android suite and iOS group during implementation. Only then is this focused CI command valid:
+Prayer is now registered as an Android suite and iOS group. Once the isolated test project is prepared, the focused CI command is:
 
 ~~~powershell
 gh workflow run foundation-ci.yml --ref namaa/008-prayer-experience -f mobile_only=true -f android_suites='["prayer"]' -f ios_groups='["prayer"]'

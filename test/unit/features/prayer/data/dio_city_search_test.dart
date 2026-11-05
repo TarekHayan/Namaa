@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -108,6 +109,8 @@ void main() {
         ({'results': 'bad'}, 'prayerSearchInvalidResponse'),
         (429, 'prayerSearchThrottled'),
         (DioExceptionType.connectionError, 'prayerSearchOffline'),
+        (DioExceptionType.connectionTimeout, 'prayerSearchOffline'),
+        (DioExceptionType.receiveTimeout, 'prayerSearchOffline'),
       ];
       for (final (reply, expected) in cases) {
         final dio = Dio()
@@ -125,12 +128,9 @@ void main() {
                       type: DioExceptionType.badResponse,
                     ),
                   );
-                } else if (reply == DioExceptionType.connectionError) {
+                } else if (reply is DioExceptionType) {
                   handler.reject(
-                    DioException(
-                      requestOptions: options,
-                      type: DioExceptionType.connectionError,
-                    ),
+                    DioException(requestOptions: options, type: reply),
                   );
                 } else {
                   handler.resolve(
@@ -152,4 +152,89 @@ void main() {
       }
     },
   );
+
+  test('Arabic query keeps at most ten disambiguated cities', () async {
+    final dio = Dio()
+      ..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            expect(options.uri.queryParameters['language'], 'ar');
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                data: {
+                  'results': [
+                    for (var index = 0; index < 12; index++)
+                      {
+                        'id': index + 1,
+                        'name': 'مدينة',
+                        'admin1': 'منطقة $index',
+                        'country_code': 'EG',
+                        'country': 'مصر',
+                        'latitude': 30.0,
+                        'longitude': 31.0,
+                        'timezone': 'Africa/Cairo',
+                      },
+                  ],
+                },
+              ),
+            );
+          },
+        ),
+      );
+    final result = await DioCitySearch(
+      configuration: PrayerSearchConfiguration.resolve().valueOrNull!,
+      dio: dio,
+    ).search(query: 'مدينة', locale: 'ar', ownerId: 'owner', generation: 1);
+    expect(result.valueOrNull, hasLength(10));
+    expect(result.valueOrNull!.first.name, 'مدينة');
+    expect(result.valueOrNull!.first.adminName, 'منطقة 0');
+    expect(result.valueOrNull!.last.providerCityId, '10');
+  });
+
+  test('cancelling a pending provider reply keeps it unselectable', () async {
+    final gate = Completer<void>();
+    final dio = Dio()
+      ..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            await gate.future;
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                data: {
+                  'results': [
+                    {
+                      'id': 1,
+                      'name': 'Cairo',
+                      'country_code': 'EG',
+                      'country': 'Egypt',
+                      'latitude': 30.0444,
+                      'longitude': 31.2357,
+                      'timezone': 'Africa/Cairo',
+                    },
+                  ],
+                },
+              ),
+            );
+          },
+        ),
+      );
+    final adapter = DioCitySearch(
+      configuration: PrayerSearchConfiguration.resolve().valueOrNull!,
+      dio: dio,
+    );
+    final pending = adapter.search(
+      query: 'Cairo',
+      locale: 'en',
+      ownerId: 'owner',
+      generation: 7,
+    );
+    await Future<void>.delayed(Duration.zero);
+    adapter.cancel(ownerId: 'owner', generation: 7);
+    gate.complete();
+    final result = await pending;
+    expect(result.valueOrNull, isNull);
+    expect(result.failureOrNull?.messageKey, 'prayerSearchCancelled');
+  });
 }

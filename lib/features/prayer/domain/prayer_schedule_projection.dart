@@ -54,7 +54,24 @@ final class PrayerScheduleProjection {
       final unknownBefore = PrayerName.values
           .take(candidate.name.index)
           .any((name) => schedule.times[name]?.instantUtc == null);
-      if (!unknownBefore) {
+      // If the candidate is tomorrow's Fajr, an unavailable prayer still due
+      // today may occur first. The latest known elapsed prayer lets us ignore
+      // unavailable prayers that are already behind a later confirmed event.
+      var lastElapsedToday = -1;
+      if (schedule == tomorrow) {
+        for (final name in PrayerName.values) {
+          final instant = today.times[name]?.instantUtc;
+          if (instant != null && !instant.isAfter(nowUtc)) {
+            lastElapsedToday = name.index;
+          }
+        }
+      }
+      final unknownTodayRemaining =
+          schedule == tomorrow &&
+          PrayerName.values
+              .skip(lastElapsedToday + 1)
+              .any((name) => today.times[name]?.instantUtc == null);
+      if (!unknownBefore && !unknownTodayRemaining) {
         next = candidate;
         if (nextIndex + 1 < occurrences.length) {
           following = occurrences[nextIndex + 1];

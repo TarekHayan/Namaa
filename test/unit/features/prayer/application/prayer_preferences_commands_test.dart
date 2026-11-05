@@ -62,4 +62,26 @@ void main() {
     expect(result.failureOrNull, isNotNull);
     expect(store.saved, isNull);
   });
+
+  test('negative revision and non-UTC clock never reach storage', () async {
+    final store = _Store();
+    final commands = PrayerPreferencesCommands(store);
+    final negative = await commands.confirm(
+      ownerId: 'owner',
+      city: city,
+      method: 'egyptian',
+      expectedRevision: -1,
+      nowUtc: DateTime.utc(2026),
+    );
+    expect(negative.failureOrNull, isNotNull);
+    final localClock = await commands.confirm(
+      ownerId: 'owner',
+      city: city,
+      method: 'egyptian',
+      expectedRevision: null,
+      nowUtc: DateTime(2026),
+    );
+    expect(localClock.failureOrNull, isNotNull);
+    expect(store.saved, isNull);
+  });
 }

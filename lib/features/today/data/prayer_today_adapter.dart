@@ -32,6 +32,10 @@ final class PrayerTodayAdapter implements TodayPrayerPort {
           contextRevision: snapshot.preferences?.revision,
           completedCount: snapshot.completedCount,
           reportsAvailable: snapshot.reportsAvailable,
+          unconfirmedReportIds: List.unmodifiable([
+            for (final report in snapshot.reports)
+              if (report.canonicalRewardConfirmedAt == null) report.reportId,
+          ]),
         ),
       );
 }

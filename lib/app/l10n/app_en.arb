@@ -306,6 +306,7 @@
   "dashboardSidebarTagline": "Space for a balanced day",
   "dashboardComingSoon": "Coming soon",
   "dashboardPrayerShort": "Prayer",
+  "dashboardXpPendingSync": "Awaiting sync confirmation",
   "dashboardMore": "More",
   "dashboardQuickAdd": "Quick add",
   "dashboardPrayer": "Prayer times",
@@ -452,6 +453,10 @@
   "prayerGuidanceScope": "General guidance on ordinary recitation, not a judgment on your prayer.",
   "prayerGuidanceSource": "Source: Egypt's Dar al-Ifta",
   "prayerStreakSoon": "Prayer streak: coming soon",
+  "prayerProgressBadge": "{done}/5 Complete ({percent}%)",
+  "@prayerProgressBadge": {
+    "placeholders": {"done": {"type": "int"}, "percent": {"type": "int"}}
+  },
   "prayerSetupTitle": "Prayer times for your location",
   "prayerSetupBody": "Allow location while using the app to get times for your area. You can choose a city instead. A saved location works offline.",
   "prayerUseLocation": "Use my current location",
@@ -483,7 +488,7 @@
   "prayerComingSoon": "Coming soon",
   "prayerEgyptian": "Egyptian",
   "prayerMwl": "Muslim World League",
-  "prayerUmmAlQura": "Umm al-Qura (fixed 90-minute Isha)",
+  "prayerUmmAlQura": "Umm al-Qura (Isha 90 minutes after Maghrib, 120 in Ramadan)",
   "prayerDubai": "Dubai",
   "prayerNorthAmerica": "North America",
   "prayerKuwait": "Kuwait",
@@ -503,5 +508,9 @@
   "prayerStatusSelected": "Selected: {status}",
   "@prayerStatusSelected": {
     "placeholders": {"status": {"type": "String"}}
-  }
+  },
+  "prayerConflicts": "Prayer changes to review",
+  "prayerConflictActive": "Current version",
+  "prayerConflictRetained": "Other saved version",
+  "prayerConflictReadOnly": "Past prayer records are read-only"
 }

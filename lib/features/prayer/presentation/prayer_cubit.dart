@@ -19,8 +19,10 @@ final class PrayerCubit extends Cubit<PrayerState> {
       PrayerScopeValidator ownerValidator,
     )?
     reportCommands,
+    void Function()? onReportSaved,
   }) : _context = context,
        _ownerId = ownerId,
+       _onReportSaved = onReportSaved,
        super(const PrayerState()) {
     _reportCommands = reportCommands?.call(
       _isCurrentScope,
@@ -31,6 +33,7 @@ final class PrayerCubit extends Cubit<PrayerState> {
 
   final PrayerContextService _context;
   final String _ownerId;
+  final void Function()? _onReportSaved;
   late final PrayerReportCommands? _reportCommands;
   StreamSubscription<PrayerDaySnapshot>? _subscription;
   int _scopeGeneration = 0;
@@ -82,6 +85,7 @@ final class PrayerCubit extends Cubit<PrayerState> {
       status: status,
       capturedContext: captured,
     );
+    if (result.failureOrNull == null) _onReportSaved?.call();
     if (isClosed || !_isCurrentScope(captured)) return;
     _setAction(
       name,

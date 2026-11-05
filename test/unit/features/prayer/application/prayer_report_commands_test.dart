@@ -24,7 +24,9 @@ PrayerReport _prior(PrayerStatus status) => PrayerReport(
   date: _day,
   name: PrayerName.fajr,
   status: status,
-  reportedCompletionAt: status.isCompleted ? DateTime.utc(2026, 11, 1, 5) : null,
+  reportedCompletionAt: status.isCompleted
+      ? DateTime.utc(2026, 11, 1, 5)
+      : null,
   recordedZoneId: 'Africa/Cairo',
   recordedOffsetMinutes: 120,
   createdAt: DateTime.utc(2026, 11, 1, 4),
@@ -66,74 +68,82 @@ class _Clock extends Fake implements PrayerClockPort {
 }
 
 void main() {
-  test('all sixteen existing-state transitions are explicit and idempotent', () async {
-    for (final from in PrayerStatus.values) {
-      for (final to in PrayerStatus.values) {
-        final repo = _Repo()..current = _prior(from);
-        final unit = _Unit();
-        final command = PrayerReportCommands(
-          ownerId: 'owner',
-          repository: repo,
-          unitOfWork: unit,
-          identity: _Identity(),
-          clock: _Clock(),
-          isCurrentScope: (value) => value == _context,
-          queueForSync: true,
-          nextOperationId: () => 'operation-id',
-        );
-        final result = await command.setStatus(
-          name: PrayerName.fajr,
-          status: to,
-          capturedContext: _context,
-        );
-        expect(result.failureOrNull, isNull, reason: '$from -> $to');
-        if (from == to) {
-          expect(unit.commits, isEmpty, reason: '$from -> $to');
-          expect(result.valueOrNull?.status, from);
-        } else {
-          expect(unit.commits, hasLength(1), reason: '$from -> $to');
-          expect(unit.commits.single.report.status, to);
-          expect(
-            unit.commits.single.report.updatedAt.isAfter(repo.current!.updatedAt),
-            isTrue,
+  test(
+    'all sixteen existing-state transitions are explicit and idempotent',
+    () async {
+      for (final from in PrayerStatus.values) {
+        for (final to in PrayerStatus.values) {
+          final repo = _Repo()..current = _prior(from);
+          final unit = _Unit();
+          final command = PrayerReportCommands(
+            ownerId: 'owner',
+            repository: repo,
+            unitOfWork: unit,
+            identity: _Identity(),
+            clock: _Clock(),
+            isCurrentScope: (value) => value == _context,
+            queueForSync: true,
+            nextOperationId: () => 'operation-id',
           );
+          final result = await command.setStatus(
+            name: PrayerName.fajr,
+            status: to,
+            capturedContext: _context,
+          );
+          expect(result.failureOrNull, isNull, reason: '$from -> $to');
+          if (from == to) {
+            expect(unit.commits, isEmpty, reason: '$from -> $to');
+            expect(result.valueOrNull?.status, from);
+          } else {
+            expect(unit.commits, hasLength(1), reason: '$from -> $to');
+            expect(unit.commits.single.report.status, to);
+            expect(
+              unit.commits.single.report.updatedAt.isAfter(
+                repo.current!.updatedAt,
+              ),
+              isTrue,
+            );
+          }
         }
       }
-    }
-  });
+    },
+  );
 
-  test('missing to pending is a no-op and completion XP is policy-owned', () async {
-    final repo = _Repo();
-    final unit = _Unit();
-    final clock = _Clock();
-    final command = PrayerReportCommands(
-      ownerId: 'owner',
-      repository: repo,
-      unitOfWork: unit,
-      identity: _Identity(),
-      clock: clock,
-      isCurrentScope: (_) => true,
-      queueForSync: true,
-      nextOperationId: () => 'operation-id',
-    );
-    expect(
-      (await command.setStatus(
+  test(
+    'missing to pending is a no-op and completion XP is policy-owned',
+    () async {
+      final repo = _Repo();
+      final unit = _Unit();
+      final clock = _Clock();
+      final command = PrayerReportCommands(
+        ownerId: 'owner',
+        repository: repo,
+        unitOfWork: unit,
+        identity: _Identity(),
+        clock: clock,
+        isCurrentScope: (_) => true,
+        queueForSync: true,
+        nextOperationId: () => 'operation-id',
+      );
+      expect(
+        (await command.setStatus(
+          name: PrayerName.fajr,
+          status: PrayerStatus.pending,
+          capturedContext: _context,
+        )).failureOrNull,
+        isNull,
+      );
+      expect(unit.commits, isEmpty);
+
+      await command.setStatus(
         name: PrayerName.fajr,
-        status: PrayerStatus.pending,
+        status: PrayerStatus.completedLate,
         capturedContext: _context,
-      )).failureOrNull,
-      isNull,
-    );
-    expect(unit.commits, isEmpty);
-
-    await command.setStatus(
-      name: PrayerName.fajr,
-      status: PrayerStatus.completedLate,
-      capturedContext: _context,
-    );
-    expect(unit.commits.single.firstAward?.amount, 5);
-    expect(unit.commits.single.firstAward?.source, 'prayer_done');
-  });
+      );
+      expect(unit.commits.single.firstAward?.amount, 5);
+      expect(unit.commits.single.firstAward?.source, 'prayer_done');
+    },
+  );
 
   test('stale day and stale scope are rejected before persistence', () async {
     final repo = _Repo();

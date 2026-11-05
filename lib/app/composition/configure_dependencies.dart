@@ -16,6 +16,7 @@
 ///   boots into a safe state.
 library;
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -81,8 +82,10 @@ import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.
 import 'package:namma_project/features/prayer/application/city_search_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_annual_schedule_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_clock_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_conflict_reader.dart';
 import 'package:namma_project/features/prayer/application/prayer_context_service.dart';
 import 'package:namma_project/features/prayer/application/prayer_device_location_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_inbound_sync_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_preferences_commands.dart';
 import 'package:namma_project/features/prayer/application/prayer_preferences_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_report_commands.dart';
@@ -90,11 +93,17 @@ import 'package:namma_project/features/prayer/application/prayer_report_identity
 import 'package:namma_project/features/prayer/application/prayer_report_unit_of_work.dart';
 import 'package:namma_project/features/prayer/application/prayer_repository.dart';
 import 'package:namma_project/features/prayer/application/prayer_schedule_calculator_port.dart';
+import 'package:namma_project/features/prayer/application/prayer_sync_service.dart';
 import 'package:namma_project/features/prayer/data/adhan_prayer_calculator.dart';
 import 'package:namma_project/features/prayer/data/aladhan_annual_schedule.dart';
 import 'package:namma_project/features/prayer/data/drift_prayer_preferences.dart';
 import 'package:namma_project/features/prayer/data/drift_prayer_repository.dart';
 import 'package:namma_project/features/prayer/data/geolocator_prayer_location.dart';
+import 'package:namma_project/features/prayer/data/prayer_inbound_synchronizer.dart';
+import 'package:namma_project/features/prayer/data/prayer_reconciler.dart';
+import 'package:namma_project/features/prayer/data/supabase_prayer_gateway.dart';
+import 'package:namma_project/features/prayer/data/supabase_prayer_reader.dart';
+import 'package:namma_project/features/prayer/data/supabase_prayer_sync_adapter.dart';
 import 'package:namma_project/features/prayer/data/uuid_prayer_report_identity.dart';
 import 'package:namma_project/features/prayer/data/zoned_prayer_clock.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
@@ -179,9 +188,10 @@ Future<void> configureDependencies({
     getIt.registerLazySingleton<PrayerPreferencesPort>(
       () => DriftPrayerPreferences(database),
     );
-    getIt.registerLazySingleton<PrayerRepository>(
-      () => DriftPrayerRepository(database),
-    );
+    final prayerRepository = DriftPrayerRepository(database);
+    getIt.registerLazySingleton<PrayerRepository>(() => prayerRepository);
+    getIt.registerLazySingleton<DriftPrayerRepository>(() => prayerRepository);
+    getIt.registerLazySingleton<PrayerConflictReader>(() => prayerRepository);
     getIt.registerLazySingleton<PrayerReportIdentityPort>(
       UuidPrayerReportIdentity.new,
     );
@@ -212,6 +222,9 @@ Future<void> configureDependencies({
       (ownerId, _) => PrayerCubit(
         context: getIt<PrayerContextService>(),
         ownerId: ownerId,
+        onReportSaved: preview
+            ? null
+            : () => unawaited(getIt<PrayerSyncService>().synchronize()),
         reportCommands: (scopeValidator, ownerValidator) =>
             PrayerReportCommands(
               ownerId: ownerId,
@@ -262,9 +275,15 @@ Future<void> configureDependencies({
       final habitAdapter = SupabaseHabitSyncAdapter(gateway: habitGateway);
       final mapGateway = SupabaseMapGatewayImpl(cloud.client);
       final mapAdapter = SupabaseMapSyncAdapter(gateway: mapGateway);
+      final prayerGateway = SupabasePrayerGatewayImpl(cloud.client);
+      final prayerAdapter = SupabasePrayerSyncAdapter(
+        gateway: prayerGateway,
+        repository: prayerRepository,
+      );
       getIt.registerLazySingleton<SupabaseTaskGateway>(() => taskGateway);
       getIt.registerLazySingleton<SupabaseHabitGateway>(() => habitGateway);
       getIt.registerLazySingleton<SupabaseMapGateway>(() => mapGateway);
+      getIt.registerLazySingleton<SupabasePrayerGateway>(() => prayerGateway);
       getIt.registerLazySingleton<CloudSyncPort>(
         () => EntityDispatchRouter(
           foundationAdapter: foundationSync,
@@ -272,6 +291,7 @@ Future<void> configureDependencies({
           habitAdapter: habitAdapter,
           habitDayAdapter: habitAdapter,
           mapAdapter: mapAdapter,
+          prayerAdapter: prayerAdapter,
         ),
       );
       final taskReader = SupabaseTaskReader(
@@ -285,6 +305,9 @@ Future<void> configureDependencies({
       );
       getIt.registerLazySingleton<MapRemoteReaderPort>(
         () => SupabaseMapReader(gateway: mapGateway),
+      );
+      getIt.registerLazySingleton<PrayerRemoteReader>(
+        () => SupabasePrayerReader(cloud.client),
       );
     }
 
@@ -462,6 +485,28 @@ Future<void> configureDependencies({
       ),
     );
     if (!preview) {
+      getIt.registerLazySingleton<PrayerReconciler>(
+        () => PrayerReconciler(
+          repository: prayerRepository,
+          localStore: localStore,
+          awards: getIt<SharedAwardLedgerPort>(),
+        ),
+      );
+      getIt.registerLazySingleton<PrayerInboundSyncPort>(
+        () => PrayerInboundSynchronizer(
+          reader: getIt<PrayerRemoteReader>(),
+          reconciler: getIt<PrayerReconciler>(),
+        ),
+      );
+      getIt.registerLazySingleton<PrayerSyncService>(
+        () => PrayerSyncService(
+          session: session,
+          connectivity: getIt<ConnectivityPort>(),
+          outbound: getIt<PendingSynchronizationEngine>(),
+          inbound: getIt<PrayerInboundSyncPort>(),
+        ),
+        dispose: (service) => service.dispose(),
+      );
       getIt.registerLazySingleton<MapReconciliationPort>(
         () => MapReconciler(
           store: getIt<MapReconciliationStorePort>(),

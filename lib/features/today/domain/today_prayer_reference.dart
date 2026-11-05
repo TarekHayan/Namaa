@@ -19,6 +19,7 @@ final class TodayPrayerReference {
     this.contextRevision,
     this.completedCount,
     this.reportsAvailable = false,
+    this.unconfirmedReportIds = const [],
   });
 
   final String ownerId;
@@ -37,6 +38,7 @@ final class TodayPrayerReference {
   final int? contextRevision;
   final int? completedCount;
   final bool reportsAvailable;
+  final List<String> unconfirmedReportIds;
 
   bool get needsSetup => city == null && !sourceUnavailable;
   bool get scheduleAvailable => nextName != null && nextUtc != null;

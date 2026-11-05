@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
-import 'package:namma_project/features/prayer/presentation/prayer_track_hub.dart';
 
 import '../dashboard_preview_data.dart';
+import 'prayer_track_hub.dart';
 import 'today_bottom_navigation.dart';
 import 'today_coming_soon_page.dart';
 import 'today_navigation_sidebar.dart';

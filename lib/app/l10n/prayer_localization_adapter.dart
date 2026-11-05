@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
+import 'package:timezone/data/latest_all.dart' as timezone_data;
 import 'package:timezone/timezone.dart' as tz;
 
-import '../../features/prayer/data/prayer_timezone_initializer.dart';
 import '../../features/prayer/domain/prayer_local_date.dart';
 import '../../features/prayer/domain/prayer_name.dart';
 import 'generated/app_localizations.dart';
@@ -28,7 +28,11 @@ String prayerMethodLabel(FoundationLocalizations copy, String key) =>
     };
 
 String prayerLocalTime(DateTime instantUtc, String zone, String locale) {
-  initializePrayerTimeZones();
+  // Composition loads the IANA database at startup; this view helper only
+  // loads it itself when rendered without composition (widget tests).
+  if (tz.timeZoneDatabase.locations.isEmpty) {
+    timezone_data.initializeTimeZones();
+  }
   final cityTime = tz.TZDateTime.from(instantUtc, tz.getLocation(zone));
   return DateFormat.jm(locale).format(cityTime);
 }

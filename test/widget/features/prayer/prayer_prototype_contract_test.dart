@@ -150,31 +150,22 @@ void main() {
         (cardSurface.decoration! as BoxDecoration).borderRadius,
         BorderRadius.circular(32),
       );
-      final supplementary = tester.widget<Card>(
+      final supplementary = tester.widget<Container>(
         find.byKey(const Key('prayer_supplementary_0')),
       );
+      expect(supplementary.padding, const EdgeInsets.all(16));
       expect(
-        (supplementary.shape! as RoundedRectangleBorder).borderRadius,
+        (supplementary.decoration! as BoxDecoration).borderRadius,
         BorderRadius.circular(16),
       );
-      final guidance = tester.widget<Card>(
+      final guidance = tester.widget<Container>(
         find.byKey(const Key('prayer_guidance_section')),
       );
       expect(
-        (guidance.shape! as RoundedRectangleBorder).borderRadius,
+        (guidance.decoration! as BoxDecoration).borderRadius,
         BorderRadius.circular(32),
       );
-      expect(
-        find.descendant(
-          of: find.byKey(const Key('prayer_guidance_section')),
-          matching: find.byWidgetPredicate(
-            (widget) =>
-                widget is Padding &&
-                widget.padding == EdgeInsets.all(phone ? 24 : 32),
-          ),
-        ),
-        findsOneWidget,
-      );
+      expect(guidance.padding, EdgeInsets.all(phone ? 24 : 32));
       expect(find.byKey(const Key('prayer_guidance_jahr')), findsOneWidget);
       expect(find.byKey(const Key('prayer_guidance_sirr')), findsOneWidget);
       final header = tester.widget<PrayerHeader>(groups.first);

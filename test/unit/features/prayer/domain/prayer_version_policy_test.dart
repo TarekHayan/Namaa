@@ -92,10 +92,11 @@ void main() {
           'reportedCompletionAt',
           'recordedZoneId',
           'recordedOffsetMinutes',
+          'createdAt',
           'updatedAt',
         ]),
       );
-      expect(encoded.keys, hasLength(7));
+      expect(encoded.keys, hasLength(8));
       expect(encoded['updatedAt'], '2026-10-29T10:01:02.003005Z');
       expect(encoded.toString(), isNot(contains('XP')));
       expect(encoded.toString(), isNot(contains('_syncBaseUpdatedAt')));

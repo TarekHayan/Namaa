@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:adhan_dart/adhan_dart.dart' as adhan;
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
@@ -11,6 +12,8 @@ import '../domain/prayer_local_date.dart';
 import '../domain/prayer_name.dart';
 import '../domain/prayer_preferences.dart';
 import '../domain/prayer_schedule.dart';
+import 'adhan_prayer_calculator.dart';
+import 'prayer_solar_preflight.dart';
 import 'prayer_timezone_initializer.dart';
 
 /// Downloads a Gregorian year once and keeps it in the encrypted local store.
@@ -73,6 +76,7 @@ final class AlAdhanAnnualSchedule implements PrayerAnnualSchedulePort {
       preferences.city.timeZoneId,
       methodId,
       0, // Standard/Shafi Asr.
+      'verified-zone-offset-v2', // Ignore timetables cached before offset validation.
     ]);
     final requestKey = jsonEncode([preferences.accountId, contextKey, year]);
     try {
@@ -100,13 +104,31 @@ final class AlAdhanAnnualSchedule implements PrayerAnnualSchedulePort {
       }
       final rawDay = days?[date.value];
       if (rawDay is! Map<String, dynamic>) return null;
+      final parts = date.value.split('-').map(int.parse).toList();
+      final solar = PrayerSolarPreflight(
+        DateTime.utc(parts[0], parts[1], parts[2]),
+        adhan.Coordinates(
+          preferences.city.latitude,
+          preferences.city.longitude,
+        ),
+        AdhanPrayerCalculator.parameters(preferences.calculationMethod),
+      );
+      bool possible(PrayerName name) => switch (name) {
+        PrayerName.fajr => solar.fajrAvailable,
+        PrayerName.dhuhr => solar.dhuhrAvailable,
+        PrayerName.asr => solar.asrAvailable,
+        PrayerName.maghrib => solar.sunsetAvailable,
+        PrayerName.isha => solar.ishaAvailable,
+      };
       final times = <PrayerName, PrayerTime>{};
       for (final name in PrayerName.values) {
         final value = rawDay[_apiName(name)];
         if (value is! String) return null;
+        final available = possible(name);
         times[name] = PrayerTime(
           name: name,
-          instantUtc: DateTime.parse(value).toUtc(),
+          instantUtc: available ? DateTime.parse(value).toUtc() : null,
+          unavailableReason: available ? null : 'solar_event_unavailable',
         );
       }
       final sunrise = rawDay['Sunrise'];
@@ -115,7 +137,9 @@ final class AlAdhanAnnualSchedule implements PrayerAnnualSchedulePort {
         date: date,
         contextRevision: preferences.revision,
         times: times,
-        sunriseUtc: DateTime.parse(sunrise).toUtc(),
+        sunriseUtc: solar.sunriseAvailable
+            ? DateTime.parse(sunrise).toUtc()
+            : null,
         provenance: 'AlAdhan API · ${preferences.calculationMethod}',
       );
     } catch (_) {
@@ -263,6 +287,8 @@ final class AlAdhanAnnualSchedule implements PrayerAnnualSchedulePort {
           if (raw is! String || !raw.contains('T')) return null;
           final instant = DateTime.tryParse(raw)?.toUtc();
           if (instant == null ||
+              _declaredOffsetMinutes(raw) !=
+                  tz.TZDateTime.from(instant, zone).timeZoneOffset.inMinutes ||
               _localDate(tz.TZDateTime.from(instant, zone)) != date) {
             return null;
           }
@@ -328,4 +354,15 @@ final class AlAdhanAnnualSchedule implements PrayerAnnualSchedulePort {
       '${value.year.toString().padLeft(4, '0')}-'
       '${value.month.toString().padLeft(2, '0')}-'
       '${value.day.toString().padLeft(2, '0')}';
+
+  static int? _declaredOffsetMinutes(String value) {
+    if (value.endsWith('Z')) return 0;
+    final match = RegExp(r'([+-])(\d{2}):(\d{2})$').firstMatch(value);
+    if (match == null) return null;
+    final hours = int.parse(match.group(2)!);
+    final minutes = int.parse(match.group(3)!);
+    if (hours > 23 || minutes > 59) return null;
+    final total = hours * 60 + minutes;
+    return match.group(1) == '-' ? -total : total;
+  }
 }

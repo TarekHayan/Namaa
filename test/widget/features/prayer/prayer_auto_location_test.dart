@@ -50,7 +50,10 @@ class _Reports extends Fake implements PrayerRepository {
   }) => Stream.value([]);
 }
 
-class _Search extends Fake implements CitySearchPort {}
+class _Search extends Fake implements CitySearchPort {
+  @override
+  void cancel({required String ownerId, required int generation}) {}
+}
 
 class _Location extends Fake implements PrayerDeviceLocationPort {
   _Location({this.denied = false});
@@ -175,6 +178,13 @@ void main() {
     final locationLabel = tester.widget<Text>(find.text('My current location'));
     expect(heading.style?.fontSize, lessThanOrEqualTo(40));
     expect(locationLabel.style?.fontSize, lessThanOrEqualTo(24));
+    // Once granted, location is re-checked quietly: no permanent button on
+    // the screen. It stays reachable from the settings sheet.
+    expect(find.byKey(const Key('prayer_use_location')), findsNothing);
+    await tester.tap(find.byKey(const Key('prayer_settings')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('prayer_use_location')), findsOneWidget);
+    expect(find.byKey(const Key('prayer_city_search')), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.runAsync(cubit.close);
   });

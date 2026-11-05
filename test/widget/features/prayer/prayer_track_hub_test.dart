@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
-import 'package:namma_project/features/prayer/presentation/prayer_track_hub.dart';
+import 'package:namma_project/features/today/presentation/widgets/prayer_track_hub.dart';
 
 void main() {
   testWidgets('track opens prayer and labels other entries coming soon', (

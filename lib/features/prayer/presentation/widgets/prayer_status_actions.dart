@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
-import 'package:namma_project/app/widgets/app_button.dart';
 
 import '../../domain/prayer_name.dart';
 import '../../domain/prayer_status.dart';
 import '../prayer_state.dart';
 
+/// Prototype actions: "on time" and "late" with labels, "missed" as an icon
+/// button. Reset-to-pending is Namaa's accessible addition (adaptation 4)
+/// and appears only once a state is recorded.
 class PrayerStatusActions extends StatelessWidget {
   const PrayerStatusActions({
     super.key,
@@ -24,47 +26,66 @@ class PrayerStatusActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final copy = FoundationLocalizations.of(context);
+    final colors = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
     final saving = phase == PrayerActionPhase.saving;
+    PrayerStatusButton button(
+      PrayerStatus value,
+      String label,
+      IconData icon,
+      Color accent, {
+      bool iconOnly = false,
+    }) => PrayerStatusButton(
+      key: Key('prayer_status_${name.wireName}_${value.wireName}'),
+      label: label,
+      icon: icon,
+      accent: accent,
+      iconOnly: iconOnly,
+      selected: status == value,
+      loading: saving && status == value,
+      onPressed: saving || status == value ? null : () => onChanged(value),
+    );
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
           spacing: 8,
           runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _choice(
-              context,
+            button(
               PrayerStatus.completedOnTime,
               copy.prayerStatusOnTime,
-              Icons.check_circle_outline,
-              saving,
+              Icons.check_circle_outline_rounded,
+              colors.success,
             ),
-            _choice(
-              context,
+            button(
               PrayerStatus.completedLate,
               copy.prayerStatusLate,
-              Icons.schedule_outlined,
-              saving,
+              Icons.error_outline_rounded,
+              colors.warning,
             ),
-            _choice(
-              context,
+            button(
               PrayerStatus.missed,
               copy.prayerStatusMissed,
-              Icons.remove_circle_outline,
-              saving,
+              Icons.cancel_outlined,
+              colors.error,
+              iconOnly: true,
             ),
             if (status != PrayerStatus.pending)
-              _choice(
-                context,
+              button(
                 PrayerStatus.pending,
                 copy.prayerStatusReset,
-                Icons.restart_alt,
-                saving,
+                Icons.restart_alt_rounded,
+                colors.primary,
+                iconOnly: true,
               ),
           ],
         ),
         if (phase != PrayerActionPhase.idle) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Semantics(
             liveRegion: phase == PrayerActionPhase.failed,
             child: Text(
@@ -74,10 +95,11 @@ class PrayerStatusActions extends StatelessWidget {
                 PrayerActionPhase.failed => copy.prayerStatusSaveFailed,
                 PrayerActionPhase.idle => '',
               },
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w500,
                 color: phase == PrayerActionPhase.failed
-                    ? Theme.of(context).colorScheme.error
-                    : null,
+                    ? colors.error
+                    : colors.textMuted,
               ),
             ),
           ),
@@ -85,39 +107,114 @@ class PrayerStatusActions extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget _choice(
-    BuildContext context,
-    PrayerStatus value,
-    String label,
-    IconData icon,
-    bool saving,
-  ) {
-    final selected = status == value;
+/// One rounded prototype status control. Selected: filled with its accent.
+/// Otherwise: the secondary surface with an accent hover tint.
+class PrayerStatusButton extends StatelessWidget {
+  const PrayerStatusButton({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.accent,
+    required this.selected,
+    required this.onPressed,
+    this.iconOnly = false,
+    this.loading = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color accent;
+  final bool selected;
+  final bool iconOnly;
+  final bool loading;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final copy = FoundationLocalizations.of(context);
     final colors = Theme.of(context).brightness == Brightness.dark
         ? AppColors.dark
         : AppColors.light;
-    final semanticLabel = selected
-        ? FoundationLocalizations.of(context).prayerStatusSelected(label)
-        : label;
-    return AppButton(
-      key: Key('prayer_status_${name.wireName}_${value.wireName}'),
-      label: label,
-      semanticLabel: semanticLabel,
+    // The selected state is named, not only coloured.
+    final semanticLabel = selected ? copy.prayerStatusSelected(label) : label;
+    final onAccent = accent.computeLuminance() > 0.22
+        ? const Color(0xFF0A0A0A)
+        : Colors.white;
+    final foreground = selected
+        ? onAccent
+        : iconOnly
+        ? colors.textMuted
+        : colors.textPrimary;
+    final glyph = loading
+        ? SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2, color: foreground),
+          )
+        : Icon(
+            icon,
+            size: iconOnly ? 18 : 15,
+            semanticLabel: iconOnly ? semanticLabel : null,
+          );
+    final style = ButtonStyle(
+      // Accessible target; the prototype's controls are smaller.
+      minimumSize: const WidgetStatePropertyAll(Size(40, 40)),
+      padding: WidgetStatePropertyAll(
+        iconOnly
+            ? const EdgeInsets.all(8)
+            : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      textStyle: WidgetStatePropertyAll(
+        Theme.of(context).textTheme.labelMedium,
+      ),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (selected) return accent;
+        final hot =
+            states.contains(WidgetState.hovered) ||
+            states.contains(WidgetState.focused);
+        return hot
+            ? Color.alphaBlend(
+                accent.withValues(alpha: 0.10),
+                colors.surfaceSecondary,
+              )
+            : colors.surfaceSecondary;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        if (selected) return onAccent;
+        if (iconOnly &&
+            (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.focused))) {
+          return accent;
+        }
+        return foreground;
+      }),
+      overlayColor: WidgetStatePropertyAll(accent.withValues(alpha: 0.08)),
+      elevation: WidgetStatePropertyAll(selected ? 4 : 0),
+      shadowColor: WidgetStatePropertyAll(accent.withValues(alpha: 0.25)),
+      side: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.focused)
+            ? BorderSide(color: accent, width: 1.5)
+            : BorderSide.none,
+      ),
+    );
+    final control = iconOnly
+        ? TextButton(onPressed: onPressed, style: style, child: glyph)
+        : TextButton.icon(
+            onPressed: onPressed,
+            style: style,
+            icon: glyph,
+            label: Text(label, semanticsLabel: semanticLabel),
+          );
+    return Semantics(
       selected: selected,
-      icon: selected ? Icons.check_rounded : icon,
-      size: AppButtonSize.large,
-      wrapLabel: true,
-      showDisabledColor: selected && !saving,
-      color: switch (value) {
-        PrayerStatus.completedOnTime => colors.success,
-        PrayerStatus.completedLate => colors.warning,
-        PrayerStatus.missed => colors.error,
-        PrayerStatus.pending => colors.primary,
-      },
-      variant: selected ? AppButtonVariant.primary : AppButtonVariant.outline,
-      loading: saving && selected,
-      onPressed: saving || selected ? null : () => onChanged(value),
+      child: iconOnly
+          ? Tooltip(message: label, excludeFromSemantics: true, child: control)
+          : control,
     );
   }
 }

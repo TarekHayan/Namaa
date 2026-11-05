@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
-import 'package:namma_project/app/widgets/app_button.dart';
 import 'package:namma_project/features/prayer/domain/prayer_name.dart';
 import 'package:namma_project/features/prayer/domain/prayer_status.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_state.dart';
@@ -45,10 +44,10 @@ void main() {
           onChanged: (_) {},
         ),
       );
-      final button = tester.widget<FilledButton>(
+      final button = tester.widget<ButtonStyleButton>(
         find.descendant(
           of: find.byKey(Key('prayer_status_fajr_${entry.$1.wireName}')),
-          matching: find.byType(FilledButton),
+          matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
         ),
       );
       expect(
@@ -88,7 +87,8 @@ void main() {
       await tester.pump();
       final focusContext = FocusManager.instance.primaryFocus?.context;
       if (focusContext != null) {
-        final action = focusContext.findAncestorWidgetOfExactType<AppButton>();
+        final action = focusContext
+            .findAncestorWidgetOfExactType<PrayerStatusButton>();
         if (action?.key case final ValueKey<String> key) {
           focusNodes.add(key.value);
         }
@@ -115,7 +115,8 @@ void main() {
       );
       expect(find.text('On time'), findsOneWidget);
       expect(find.text('Completed late'), findsOneWidget);
-      expect(find.text('Missed'), findsOneWidget);
+      // The prototype shows Missed as an icon button with a tooltip.
+      expect(find.byTooltip('Missed'), findsOneWidget);
       await tester.tap(
         find.byKey(const Key('prayer_status_fajr_completed_on_time')),
       );
@@ -129,7 +130,7 @@ void main() {
           onChanged: changes.add,
         ),
       );
-      expect(find.text('Reset'), findsOneWidget);
+      expect(find.byTooltip('Reset'), findsOneWidget);
       expect(find.text('Saved on this device'), findsOneWidget);
       final semantics = tester.getSemantics(
         find.byKey(const Key('prayer_status_fajr_completed_on_time')),

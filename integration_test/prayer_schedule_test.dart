@@ -1,17 +1,23 @@
 import 'dart:io';
 
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/data/local/foundation_database.dart'
+    show FoundationDatabase, PrayerReportsCompanion;
 import 'package:namma_project/features/prayer/application/prayer_context_service.dart';
 import 'package:namma_project/features/prayer/application/prayer_preferences_commands.dart';
 import 'package:namma_project/features/prayer/data/adhan_prayer_calculator.dart';
 import 'package:namma_project/features/prayer/data/drift_prayer_preferences.dart';
 import 'package:namma_project/features/prayer/data/drift_prayer_repository.dart';
+import 'package:namma_project/features/prayer/data/uuid_prayer_report_identity.dart';
 import 'package:namma_project/features/prayer/data/zoned_prayer_clock.dart';
 import 'package:namma_project/features/prayer/domain/prayer_city.dart';
 import 'package:namma_project/features/prayer/domain/prayer_day_snapshot.dart';
+import 'package:namma_project/features/prayer/domain/prayer_local_date.dart';
 import 'package:namma_project/features/prayer/domain/prayer_name.dart';
+import 'package:namma_project/features/prayer/domain/prayer_report.dart';
+import 'package:namma_project/features/prayer/domain/prayer_status.dart';
 import 'package:namma_project/features/today/data/prayer_today_adapter.dart';
 
 import '../test/support/foundation_test_support.dart';
@@ -37,6 +43,13 @@ final _newYork = PrayerCity(
   longitude: -74.0060,
   timeZoneId: 'America/New_York',
 );
+
+const _historyDays = 3660;
+
+String _dateValue(DateTime day) =>
+    '${day.year.toString().padLeft(4, '0')}-'
+    '${day.month.toString().padLeft(2, '0')}-'
+    '${day.day.toString().padLeft(2, '0')}';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -83,6 +96,95 @@ void main() {
       nowUtc: now,
     );
     expect(saved.valueOrNull?.revision, 1);
+
+    // SC-006 fixture: ten years of retained history (3,660 days x 5 =
+    // 18,300 reports) before the journey's first day. Day reads must stay
+    // indexed, so this volume must not slow the visible day.
+    final identity = UuidPrayerReportIdentity();
+    final firstJourneyDay = DateTime.utc(2026, 3, 7);
+    await database.batch((batch) {
+      for (var offset = _historyDays; offset >= 1; offset--) {
+        final day = firstJourneyDay.subtract(Duration(days: offset));
+        final date = PrayerLocalDate.parse(_dateValue(day));
+        for (final name in PrayerName.values) {
+          final done = (offset + name.index).isEven;
+          final at = day
+              .add(Duration(hours: 3 + name.index * 3))
+              .toIso8601String();
+          batch.insert(
+            database.prayerReports,
+            PrayerReportsCompanion.insert(
+              accountId: _owner,
+              localDate: date.value,
+              prayerName: name.wireName,
+              reportId: identity.reportId(date, name),
+              status: done ? 'completed_on_time' : 'missed',
+              reportedCompletionAt: Value(done ? at : null),
+              recordedZoneId: 'Africa/Cairo',
+              recordedOffsetMinutes: 120,
+              createdAt: at,
+              updatedAt: at,
+            ),
+          );
+        }
+      }
+    });
+    final stored = await database.prayerReports.count().getSingle();
+    expect(stored, _historyDays * PrayerName.values.length);
+    expect(stored, 18300);
+
+    // Cold start on the full history: encrypted reopen until the first
+    // readable day snapshot (schedule plus its reports).
+    await database.close();
+    final coldWatch = Stopwatch()..start();
+    database = await FoundationDatabase.openEncrypted(path: file, key: key);
+    final cold = await snapshot(service());
+    coldWatch.stop();
+    expect(cold.localDate?.value, '2026-03-07');
+    expect(cold.completedCount, 0);
+
+    // One status action: the local write until the visible day shows it.
+    final actionContext = service();
+    final actionStream = actionContext.watch(_owner);
+    final completedSeen = actionStream
+        .firstWhere((value) => value.completedCount == 1)
+        .timeout(const Duration(seconds: 5));
+    final today = PrayerLocalDate.parse('2026-03-07');
+    final actionWatch = Stopwatch()..start();
+    final written = await DriftPrayerRepository(database).writeLocal(
+      PrayerReport(
+        accountId: _owner,
+        reportId: identity.reportId(today, PrayerName.fajr),
+        date: today,
+        name: PrayerName.fajr,
+        status: PrayerStatus.completedOnTime,
+        reportedCompletionAt: now,
+        recordedZoneId: 'Africa/Cairo',
+        recordedOffsetMinutes: 120,
+        createdAt: now,
+        updatedAt: now,
+      ),
+      operationId: 'fixture-action',
+      acknowledgedBase: null,
+      expectedCurrentVersion: null,
+      queueForSync: false,
+    );
+    expect(written.failureOrNull, isNull);
+    await completedSeen;
+    actionWatch.stop();
+
+    // ignore: avoid_print
+    print(
+      'PRAYER_HISTORY_FIXTURE target=$target reports=$stored '
+      'cold_readable_ms=${coldWatch.elapsedMilliseconds} '
+      'action_visible_ms=${actionWatch.elapsedMilliseconds}',
+    );
+    // Limits apply to named measurement runs (T125/T126). An unnamed CI run
+    // still records numbers but does not fail on a slow shared emulator.
+    if (target != 'unspecified') {
+      expect(coldWatch.elapsedMilliseconds, lessThanOrEqualTo(2000));
+      expect(actionWatch.elapsedMilliseconds, lessThanOrEqualTo(1000));
+    }
 
     // A network attempt fails this journey. It uses only saved coordinates,
     // bundled IANA zone data and the on-device calculator.

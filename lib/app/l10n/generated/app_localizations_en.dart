@@ -938,6 +938,9 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get dashboardPrayerShort => 'Prayer';
 
   @override
+  String get dashboardXpPendingSync => 'Awaiting sync confirmation';
+
+  @override
   String get dashboardMore => 'More';
 
   @override
@@ -1366,6 +1369,11 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get prayerStreakSoon => 'Prayer streak: coming soon';
 
   @override
+  String prayerProgressBadge(int done, int percent) {
+    return '$done/5 Complete ($percent%)';
+  }
+
+  @override
   String get prayerSetupTitle => 'Prayer times for your location';
 
   @override
@@ -1466,7 +1474,8 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get prayerMwl => 'Muslim World League';
 
   @override
-  String get prayerUmmAlQura => 'Umm al-Qura (fixed 90-minute Isha)';
+  String get prayerUmmAlQura =>
+      'Umm al-Qura (Isha 90 minutes after Maghrib, 120 in Ramadan)';
 
   @override
   String get prayerDubai => 'Dubai';
@@ -1523,4 +1532,16 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String prayerStatusSelected(String status) {
     return 'Selected: $status';
   }
+
+  @override
+  String get prayerConflicts => 'Prayer changes to review';
+
+  @override
+  String get prayerConflictActive => 'Current version';
+
+  @override
+  String get prayerConflictRetained => 'Other saved version';
+
+  @override
+  String get prayerConflictReadOnly => 'Past prayer records are read-only';
 }
