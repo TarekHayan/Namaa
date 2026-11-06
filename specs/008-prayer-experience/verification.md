@@ -464,3 +464,18 @@ Offline, cache and fallback measurements on the named targets:
 - **SC-008.** Four-group prototype parity, including the corrected wide header, with the documented adaptations.
 
 Not covered here: T119/T120 (hosted two-device sync) and T131/T133 (five-target CI gate) run in CI next.
+
+### First PR CI run — failures and fix (2026-11-06)
+
+PR #11 run [42238217078](https://github.com/TarekHayan/Namaa/actions/runs/42238217078):
+- **Passed:** quality, Supabase/RLS, Linux, four Android groups and four iOS groups.
+- **Failed:** Windows, macOS and Android (prayer).
+
+**Windows and macOS.** Both failed at the first hosted dispatch in `prayer_offline_sync_test.dart` with `prayer.sync.failed`.
+- **Cause:** the hosted branch picked a random fixture day from the year 2100 onward, to avoid colliding with earlier runs on the shared staging account. Migration 0015's review hardening rejects a report dated more than two days ahead, so staging correctly refused it. Linux and local runs use a fixed past day and passed.
+- **Fix:** the hosted day is now a random day from the year 1000 to about 1999. That keeps the 365,000-day spread, with no server lower bound.
+- **Validation:** with the hosted date path forced against local Supabase on Windows, 2/2 runs passed.
+
+**Android (prayer).** `adb: device offline` and `Service connection disposed` appeared during driver connection on both attempts, after the app had started the test. The same emulator disconnect hit `prayer_schedule_test` before its retry passed.
+- **Local run:** `flutter drive -d emulator-5554 … prayer_offline_sync_test.dart` against local Supabase passed 2/2.
+- **Conclusion:** this is runner emulator instability, not an application failure. It is rerun on the new head.

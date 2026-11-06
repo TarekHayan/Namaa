@@ -177,10 +177,13 @@ void main() {
     ];
     // Staging users persist across runs. Use a fresh civil day so the exact
     // report identity and one-time XP assertions cannot inherit prior data.
+    // The shared staging account keeps every run's rows, so each hosted run
+    // picks its own random day. It must lie in the past: the server rejects
+    // a report dated more than two days ahead (migration 0015).
     final fixtureDay = local
         ? DateTime.utc(2026, 10, 29)
         : DateTime.utc(
-            2100,
+            1000,
           ).add(Duration(days: Random.secure().nextInt(365000)));
     String isoDay(DateTime value) =>
         '${value.year.toString().padLeft(4, '0')}-'
