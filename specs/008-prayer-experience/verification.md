@@ -513,3 +513,17 @@ Passed:
 4. **Emulator RAM.** `ram-size: 4096M`.
 
 New runner tests prove that a drop after an on-device pass is accepted and a drop after an on-device failure still fails. All 57 CI script tests pass, the workflow YAML parses, and `bash -n` is clean.
+
+**Fourth PR run [42283274633](https://github.com/TarekHayan/Namaa/actions/runs/42283274633) on `efc8ce3`.** Every job passed except iOS mind-maps. That includes all five Android groups, which confirms the Android runner hardening. Mind Maps code is unchanged in 008.
+
+**iOS mind-maps** failed in two stages:
+1. `mind_maps_library_test` produced no output in the simulator for 12 minutes, and the per-file limit stopped it (status 124).
+2. The next file, `mind_maps_editor_test`, then stopped producing output during build-for-testing and hung for 98 minutes, past its 25-minute limit, until the 125-minute step limit.
+
+**Cause:** after SIGKILL, `run_attempt` waited for the process with no bound. A process wedged in the simulator never exits, so the runner's own timeout could not take effect. The wedged xcodebuild/simulator state also carried over to the next file.
+
+**Fix:**
+- The post-SIGKILL wait is bounded to `KILL_GRACE_SECONDS = 30`. After that the runner abandons the process and reports the timeout.
+- After any timeout, the group script kills leftover `xcodebuild` processes and restarts the simulator.
+- A test run that timed out with no result is retried once on the restarted simulator. Real failures are not retried.
+- A new runner test proves that a process surviving SIGKILL returns a timeout instead of hanging. All 58 CI script tests pass, and `bash -n` is clean.

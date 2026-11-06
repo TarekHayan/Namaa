@@ -16,6 +16,10 @@ from typing import Optional
 
 ATTEMPT_TIMEOUT_SECONDS = 12 * 60
 BUILD_TIMEOUT_SECONDS = 25 * 60
+# A process wedged inside the simulator may never exit, even after SIGKILL.
+# Waiting for it without a bound once held a group until the 125-minute
+# step limit, so the runner gives up on it after this grace period.
+KILL_GRACE_SECONDS = 30
 
 
 def run_attempt(
@@ -55,7 +59,14 @@ def run_attempt(
                 os.killpg(process.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
-            process.wait()
+            try:
+                process.wait(timeout=KILL_GRACE_SECONDS)
+            except subprocess.TimeoutExpired:
+                print(
+                    "Timed-out process did not exit after SIGKILL; abandoning it.",
+                    file=sys.stderr,
+                    flush=True,
+                )
         reader.join(timeout=5)
         return None, "".join(output)
 

@@ -69,6 +69,35 @@ class IosResultsTest(unittest.TestCase):
         self.assertEqual(self.run_main(None), (124, 0))
 
 
+class IosUnkillableProcessTest(unittest.TestCase):
+    def test_process_that_survives_sigkill_does_not_hang_the_runner(self):
+        class Wedged:
+            pid = 4242
+            stdout = iter(())
+            waits = []
+
+            def wait(self, timeout=None):
+                # A process stuck inside the simulator never exits.
+                self.waits.append(timeout)
+                raise subprocess.TimeoutExpired("xcodebuild", timeout)
+
+        process = Wedged()
+        signals = []
+        with (
+            patch.object(ios_runner.subprocess, "Popen", return_value=process),
+            patch.object(ios_runner.signal, "SIGKILL", 9, create=True),
+            patch.object(
+                ios_runner.os, "killpg", create=True,
+                side_effect=lambda pid, sig: signals.append(sig),
+            ),
+        ):
+            result = ios_runner.run_attempt(["xcodebuild"], timeout_seconds=1)
+        self.assertEqual(result, (None, ""))
+        self.assertEqual(signals, [ios_runner.signal.SIGTERM, 9])
+        # Every wait is bounded: the attempt, the SIGTERM grace and SIGKILL.
+        self.assertEqual(process.waits, [1, 10, ios_runner.KILL_GRACE_SECONDS])
+
+
 class IosBuildTest(unittest.TestCase):
     def run_build(self, status):
         command = ["xcodebuild", "build-for-testing"]

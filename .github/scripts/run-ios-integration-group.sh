@@ -109,6 +109,14 @@ PY
 bundle_id="com.example.nammaProject"
 work="$PWD/build/ios_integration"
 mkdir -p "$work"
+# After a hang, xcodebuild and the simulator can stay wedged and stall every
+# later file. Kill leftovers and restart the simulator before going on.
+recover_simulator() {
+  pkill -9 -x xcodebuild >/dev/null 2>&1 || true
+  xcrun simctl shutdown "$IOS_DEVICE_ID" >/dev/null 2>&1 || true
+  xcrun simctl boot "$IOS_DEVICE_ID" >/dev/null 2>&1 || true
+}
+
 failed=()
 
 for suite in "${suites[@]}"; do
@@ -144,8 +152,14 @@ DART
       -destination "id=$IOS_DEVICE_ID" \
       -derivedDataPath "$work/DerivedData" \
       CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES || status=$?
+    if [[ "$status" -eq 124 ]]; then
+      recover_simulator
+    fi
   fi
-  if [[ "$status" -eq 0 ]]; then
+  # A run that produced no result before its time limit (a wedged simulator)
+  # is retried once on a restarted simulator. Real failures are not retried.
+  for test_attempt in 1 2; do
+    [[ "$status" -eq 0 ]] || break
     # Start each file from a clean app container and Keychain, as a fresh
     # simulator did when every file had a job of its own.
     xcrun simctl uninstall "$IOS_DEVICE_ID" "$bundle_id" >/dev/null 2>&1 || true
@@ -165,7 +179,15 @@ DART
       -maximum-test-execution-time-allowance 600 \
       -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES \
       || status=$?
-  fi
+    if [[ "$status" -ne 124 ]]; then
+      break
+    fi
+    recover_simulator
+    if [[ "$test_attempt" -eq 1 ]]; then
+      echo "::warning::$test_file produced no result within its time limit; restarted the simulator and retrying once."
+      status=0
+    fi
+  done
   echo "::endgroup::"
   if [[ "$status" -ne 0 ]]; then
     echo "::error title=iOS $suite failed::$test_file exited with status $status"
