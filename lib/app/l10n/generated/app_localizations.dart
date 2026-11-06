@@ -2567,16 +2567,10 @@ abstract class FoundationLocalizations {
   /// **'Back to Home'**
   String get dashboardBackToHome;
 
-  /// No description provided for @prayerSearchUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'City search is currently unavailable. Your saved city and its prayer times remain available offline.'**
-  String get prayerSearchUnavailable;
-
   /// No description provided for @prayerSaveFailed.
   ///
   /// In en, this message translates to:
-  /// **'Could not save your selection. Check the city and method, then try again.'**
+  /// **'Could not save. Try again.'**
   String get prayerSaveFailed;
 
   /// No description provided for @prayerTitle.
@@ -2726,13 +2720,13 @@ abstract class FoundationLocalizations {
   /// No description provided for @prayerSetupBody.
   ///
   /// In en, this message translates to:
-  /// **'Allow location while using the app to get times for your area. You can choose a city instead. A saved location works offline.'**
+  /// **'Allow location while using the app so prayer times are calculated for where you are. Your saved location keeps working offline.'**
   String get prayerSetupBody;
 
   /// No description provided for @prayerUseLocation.
   ///
   /// In en, this message translates to:
-  /// **'Use my current location'**
+  /// **'Update my location'**
   String get prayerUseLocation;
 
   /// No description provided for @prayerCurrentLocation.
@@ -2744,38 +2738,26 @@ abstract class FoundationLocalizations {
   /// No description provided for @prayerLocationDisabled.
   ///
   /// In en, this message translates to:
-  /// **'Enable device location and try again, or choose a city.'**
+  /// **'Device location is off. Turn it on, then try again.'**
   String get prayerLocationDisabled;
 
   /// No description provided for @prayerLocationDenied.
   ///
   /// In en, this message translates to:
-  /// **'Location permission was not granted. Enable it in device settings or choose a city.'**
+  /// **'Location permission is off. Allow it in the app settings to get your prayer times.'**
   String get prayerLocationDenied;
 
   /// No description provided for @prayerLocationUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Could not get an accurate location or its time zone. Try again or choose a city.'**
+  /// **'Could not get an accurate location right now. Try again.'**
   String get prayerLocationUnavailable;
-
-  /// No description provided for @prayerCitySearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Search cities'**
-  String get prayerCitySearch;
 
   /// No description provided for @prayerCityEdit.
   ///
   /// In en, this message translates to:
-  /// **'Change city or method'**
+  /// **'Prayer settings'**
   String get prayerCityEdit;
-
-  /// No description provided for @prayerCityConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Use this city'**
-  String get prayerCityConfirm;
 
   /// No description provided for @prayerMethod.
   ///
@@ -2794,42 +2776,6 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Time unavailable for this location and date'**
   String get prayerUnavailable;
-
-  /// No description provided for @prayerSearchNoResults.
-  ///
-  /// In en, this message translates to:
-  /// **'No matching cities'**
-  String get prayerSearchNoResults;
-
-  /// No description provided for @prayerSearchOffline.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to the internet to find a new city.'**
-  String get prayerSearchOffline;
-
-  /// No description provided for @prayerSearchThrottled.
-  ///
-  /// In en, this message translates to:
-  /// **'Search is busy. Try again shortly.'**
-  String get prayerSearchThrottled;
-
-  /// No description provided for @prayerSearchInvalidResponse.
-  ///
-  /// In en, this message translates to:
-  /// **'City results are unavailable. Try again.'**
-  String get prayerSearchInvalidResponse;
-
-  /// No description provided for @prayerSearchInvalidQuery.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter 2 to 100 characters.'**
-  String get prayerSearchInvalidQuery;
-
-  /// No description provided for @prayerSearchCancelled.
-  ///
-  /// In en, this message translates to:
-  /// **'Search cancelled.'**
-  String get prayerSearchCancelled;
 
   /// No description provided for @prayerScheduleUnavailable.
   ///
@@ -2936,7 +2882,7 @@ abstract class FoundationLocalizations {
   /// No description provided for @prayerAttribution.
   ///
   /// In en, this message translates to:
-  /// **'City data: Open-Meteo / GeoNames (CC BY 4.0). Times: AlAdhan API annual timetable, with a labelled local calculation fallback.'**
+  /// **'Times: AlAdhan API annual timetable, with a labelled local calculation fallback.'**
   String get prayerAttribution;
 
   /// No description provided for @prayerSourceApi.
@@ -3034,6 +2980,24 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Past prayer records are read-only'**
   String get prayerConflictReadOnly;
+
+  /// No description provided for @prayerLocationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get prayerLocationRetry;
+
+  /// No description provided for @prayerOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get prayerOpenSettings;
+
+  /// No description provided for @prayerSettingsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get prayerSettingsSave;
 }
 
 class _FoundationLocalizationsDelegate

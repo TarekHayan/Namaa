@@ -8,16 +8,14 @@ import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/widgets/app_button.dart';
 import 'package:namma_project/app/widgets/app_status_view.dart';
 
-import '../application/city_search_port.dart';
-import '../application/prayer_city_name_localizer.dart';
 import '../application/prayer_device_location_port.dart';
 import '../application/prayer_preferences_commands.dart';
 import '../domain/prayer_conflict_evidence.dart';
 import '../domain/prayer_day_snapshot.dart';
 import '../domain/prayer_preferences.dart';
-import 'prayer_city_editor.dart';
 import 'prayer_conflicts_view.dart';
 import 'prayer_cubit.dart';
+import 'prayer_settings_sheet.dart';
 import 'prayer_state.dart';
 import 'widgets/prayer_guidance_section.dart';
 import 'widgets/prayer_header.dart';
@@ -29,49 +27,44 @@ class PrayerScreen extends StatelessWidget {
     super.key,
     required this.ownerId,
     required this.cubit,
-    required this.search,
     required this.commands,
     this.location,
     this.conflicts,
   });
   final String ownerId;
   final PrayerCubit cubit;
-  final CitySearchPort search;
   final PrayerPreferencesCommands commands;
   final PrayerDeviceLocationPort? location;
   final Stream<List<PrayerConflictEvidence>>? conflicts;
 
-  void _edit(BuildContext context, PrayerDaySnapshot? snapshot) {
-    Widget editor(BuildContext editorContext, {required bool asSheet}) =>
-        PrayerCityEditor(
+  void _edit(BuildContext context, PrayerPreferences current) {
+    Widget sheet(BuildContext sheetContext, {required bool asSheet}) =>
+        PrayerSettingsSheet(
           ownerId: ownerId,
-          search: search,
           commands: commands,
-          current: snapshot?.preferences,
+          current: current,
           asSheet: asSheet,
-          onSaved: () => Navigator.pop(editorContext),
-          // Location lives with the other location settings, not on the
-          // Prayer screen itself.
-          leading: location == null
+          onSaved: () => Navigator.pop(sheetContext),
+          location: location == null
               ? null
               : _LocationAction(
                   ownerId: ownerId,
                   location: location!,
                   commands: commands,
-                  current: snapshot?.preferences,
-                  onSaved: () => Navigator.pop(editorContext),
+                  current: current,
+                  onSaved: () => Navigator.pop(sheetContext),
                 ),
         );
     if (MediaQuery.sizeOf(context).width < 600) {
       showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
-        builder: (sheetContext) => editor(sheetContext, asSheet: true),
+        builder: (sheetContext) => sheet(sheetContext, asSheet: true),
       );
     } else {
       showDialog<void>(
         context: context,
-        builder: (dialogContext) => editor(dialogContext, asSheet: false),
+        builder: (dialogContext) => sheet(dialogContext, asSheet: false),
       );
     }
   }
@@ -104,19 +97,18 @@ class PrayerScreen extends StatelessWidget {
         }
         final snapshot = result.snapshot!;
         if (snapshot.health == PrayerSnapshotHealth.setupRequired) {
+          // Times come from the device location only; there is no city
+          // search to fall back to.
           if (location != null) {
             return _LocationSetup(
               ownerId: ownerId,
               location: location!,
               commands: commands,
-              onManual: () => _edit(context, snapshot),
             );
           }
           return AppStatusView.error(
             title: copy.prayerSetupTitle,
             message: copy.prayerSetupBody,
-            actionLabel: copy.prayerCitySearch,
-            onAction: () => _edit(context, snapshot),
           );
         }
         if (snapshot.preferences == null) {
@@ -158,7 +150,7 @@ class PrayerScreen extends StatelessWidget {
                           tooltip: copy.prayerCityEdit,
                           icon: const Icon(Icons.tune_rounded),
                           color: colors.textSecondary,
-                          onPressed: () => _edit(context, snapshot),
+                          onPressed: () => _edit(context, pref),
                         ),
                       ],
                     ),
@@ -173,13 +165,6 @@ class PrayerScreen extends StatelessWidget {
                         autoStart: true,
                         silent: true,
                       ),
-                    _CityNameFollowsLocale(
-                      preferences: pref,
-                      localizer: PrayerCityNameLocalizer(
-                        search: search,
-                        commands: commands,
-                      ),
-                    ),
                     const SizedBox(height: 16),
                     if (schedule == null) ...[
                       AppStatusView.error(
@@ -229,61 +214,15 @@ class PrayerScreen extends StatelessWidget {
   }
 }
 
-/// Invisible: brings a manually chosen city's name into the app language.
-class _CityNameFollowsLocale extends StatefulWidget {
-  const _CityNameFollowsLocale({
-    required this.preferences,
-    required this.localizer,
-  });
-  final PrayerPreferences preferences;
-  final PrayerCityNameLocalizer localizer;
-
-  @override
-  State<_CityNameFollowsLocale> createState() => _CityNameFollowsLocaleState();
-}
-
-class _CityNameFollowsLocaleState extends State<_CityNameFollowsLocale> {
-  // One attempt per city and language for this visit, so an offline or
-  // untranslated city never retries in a loop.
-  final _attempted = <String>{};
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _check();
-  }
-
-  @override
-  void didUpdateWidget(covariant _CityNameFollowsLocale oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _check();
-  }
-
-  void _check() {
-    final locale = Localizations.localeOf(context).languageCode;
-    final city = widget.preferences.city;
-    if (PrayerCityNameLocalizer.matches(city, locale)) return;
-    if (!_attempted.add('${city.provider}/${city.providerCityId}/$locale')) {
-      return;
-    }
-    unawaited(widget.localizer.localize(widget.preferences, locale));
-  }
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
-}
-
 class _LocationSetup extends StatelessWidget {
   const _LocationSetup({
     required this.ownerId,
     required this.location,
     required this.commands,
-    required this.onManual,
   });
   final String ownerId;
   final PrayerDeviceLocationPort location;
   final PrayerPreferencesCommands commands;
-  final VoidCallback onManual;
 
   @override
   Widget build(BuildContext context) {
@@ -314,12 +253,6 @@ class _LocationSetup extends StatelessWidget {
                   location: location,
                   commands: commands,
                   autoStart: true,
-                ),
-                const SizedBox(height: 8),
-                AppButton(
-                  label: copy.prayerCitySearch,
-                  variant: AppButtonVariant.secondary,
-                  onPressed: onManual,
                 ),
               ],
             ),
@@ -356,18 +289,41 @@ class _LocationAction extends StatefulWidget {
   State<_LocationAction> createState() => _LocationActionState();
 }
 
-class _LocationActionState extends State<_LocationAction> {
+class _LocationActionState extends State<_LocationAction>
+    with WidgetsBindingObserver {
   bool _busy = false;
   PrayerLocationProblem? _problem;
+  bool _openedSettings = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (widget.autoStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) unawaited(_useLocation());
       });
     }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Coming back from the system settings page retries once by itself.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _openedSettings) {
+      _openedSettings = false;
+      unawaited(_useLocation());
+    }
+  }
+
+  Future<void> _openSettings(PrayerLocationProblem problem) async {
+    _openedSettings = true;
+    await widget.location.openSettings(problem);
   }
 
   Future<void> _useLocation() async {
@@ -425,11 +381,24 @@ class _LocationActionState extends State<_LocationAction> {
       children: [
         AppButton(
           key: const Key('prayer_use_location'),
-          label: copy.prayerUseLocation,
+          label: _problem == null
+              ? copy.prayerUseLocation
+              : copy.prayerLocationRetry,
           icon: Icons.my_location,
           loading: _busy,
           onPressed: _busy ? null : _useLocation,
         ),
+        if (_problem == PrayerLocationProblem.permissionDenied ||
+            _problem == PrayerLocationProblem.serviceDisabled) ...[
+          const SizedBox(height: 8),
+          AppButton(
+            key: const Key('prayer_open_settings'),
+            label: copy.prayerOpenSettings,
+            icon: Icons.settings_outlined,
+            variant: AppButtonVariant.secondary,
+            onPressed: _busy ? null : () => _openSettings(_problem!),
+          ),
+        ],
         if (error != null) ...[
           const SizedBox(height: 8),
           Text(

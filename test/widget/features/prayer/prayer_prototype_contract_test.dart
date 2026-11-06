@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
-import 'package:namma_project/features/prayer/application/city_search_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_clock_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_context_service.dart';
 import 'package:namma_project/features/prayer/application/prayer_preferences_commands.dart';
@@ -44,8 +43,6 @@ class _Clock extends Fake implements PrayerClockPort {
   PrayerLocalDate cityDate(DateTime nowUtc, String timeZoneId) =>
       PrayerLocalDate.parse('2026-11-01');
 }
-
-class _Search extends Fake implements CitySearchPort {}
 
 void main() {
   for (final locale in [const Locale('ar'), const Locale('en')]) {
@@ -94,7 +91,6 @@ void main() {
             body: PrayerScreen(
               ownerId: 'owner',
               cubit: cubit,
-              search: _Search(),
               commands: PrayerPreferencesCommands(preferences),
             ),
           ),

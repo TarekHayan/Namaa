@@ -59,6 +59,19 @@ final class GeolocatorPrayerLocation implements PrayerDeviceLocationPort {
     }
   }
 
+  @override
+  Future<void> openSettings(PrayerLocationProblem problem) async {
+    try {
+      if (problem == PrayerLocationProblem.serviceDisabled) {
+        await Geolocator.openLocationSettings();
+      } else {
+        await Geolocator.openAppSettings();
+      }
+    } catch (_) {
+      // Some desktop targets have no settings page; the retry stays available.
+    }
+  }
+
   /// Kept separate from the platform permission flow for deterministic tests.
   Future<PrayerDeviceLocation> resolveCoordinates({
     required double latitude,

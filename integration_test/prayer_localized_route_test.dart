@@ -12,9 +12,8 @@ import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/widgets/app_button.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/local/prayer_report_unit_of_work.dart';
-import 'package:namma_project/core/domain/results/app_result.dart';
-import 'package:namma_project/features/prayer/application/city_search_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_context_service.dart';
+import 'package:namma_project/features/prayer/application/prayer_device_location_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_preferences_commands.dart';
 import 'package:namma_project/features/prayer/application/prayer_report_commands.dart';
 import 'package:namma_project/features/prayer/data/adhan_prayer_calculator.dart';
@@ -39,27 +38,24 @@ import '../test/support/foundation_test_support.dart';
 
 const owner = kPrayerPreviewAccountId;
 
-class _CitySearch extends Fake implements CitySearchPort {
+class _Location implements PrayerDeviceLocationPort {
   @override
-  Future<AppResult<List<PrayerCity>>> search({
-    required String query,
-    required String locale,
-    required String ownerId,
-    required int generation,
-  }) async => AppResult.success([
-    PrayerCity(
-      provider: 'fixture',
-      providerCityId: 'cairo',
-      name: 'Cairo',
-      countryCode: 'EG',
-      countryName: 'Egypt',
+  Future<PrayerDeviceLocation> locate() async => PrayerDeviceLocation(
+    city: PrayerCity(
+      provider: 'device',
+      providerCityId: '30.0444,31.2357',
+      name: 'Current location',
+      countryCode: 'XX',
+      countryName: 'GPS',
       latitude: 30.0444,
       longitude: 31.2357,
       timeZoneId: 'Africa/Cairo',
     ),
-  ]);
+    suggestedMethod: 'egyptian',
+  );
+
   @override
-  void cancel({required String ownerId, required int generation}) {}
+  Future<void> openSettings(PrayerLocationProblem problem) async {}
 }
 
 void main() {
@@ -71,7 +67,7 @@ void main() {
     (const Locale('en'), true),
   ]) {
     testWidgets(
-      'localized preview saves city and prayer actions in $locale keyboard=$keyboard',
+      'localized preview saves location and prayer actions in $locale keyboard=$keyboard',
       (tester) async {
         final path = TemporaryDatabasePath();
         final file = path.allocate();
@@ -172,8 +168,8 @@ void main() {
                 body: PrayerScreen(
                   ownerId: routeOwner,
                   cubit: cubit!,
-                  search: _CitySearch(),
                   commands: PrayerPreferencesCommands(prefs),
+                  location: _Location(),
                 ),
               ),
             ),
@@ -217,35 +213,13 @@ void main() {
         }
 
         await openScreen();
-        final setup = find.text(
-          locale.languageCode == 'ar' ? 'ابحث عن مدينة' : 'Search cities',
-        );
-        expect(setup, findsOneWidget);
-        await tester.tap(setup);
-        await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const Key('prayer_city_search')),
-          'Cairo',
-        );
-        await tester.pump(const Duration(milliseconds: 500));
-        await tester.pump();
-        if (keyboard) {
-          await activateByKeyboard('prayer_city_cairo');
-        } else {
-          await tester.tap(find.byKey(const Key('prayer_city_cairo')));
+        // First visit uses the device location; there is no city search.
+        for (var i = 0; i < 10; i++) {
+          if (find.byKey(const Key('prayer_header')).evaluate().isNotEmpty) {
+            break;
+          }
+          await tester.pump(const Duration(milliseconds: 200));
         }
-        await tester.testTextInput.receiveAction(TextInputAction.done);
-        await tester.ensureVisible(
-          find.byKey(const Key('prayer_city_confirm')),
-        );
-        await tester.pump();
-        if (keyboard) {
-          await activateByKeyboard('prayer_city_confirm');
-        } else {
-          await tester.tap(find.byKey(const Key('prayer_city_confirm')));
-        }
-        await tester.pump(const Duration(milliseconds: 500));
-        await tester.pump(const Duration(milliseconds: 500));
         expect(find.byKey(const Key('prayer_header')), findsOneWidget);
         for (final name in PrayerName.values) {
           final action = find.byKey(
@@ -300,10 +274,11 @@ void main() {
         db = await FoundationDatabase.openEncrypted(path: file, key: key);
         await openScreen();
         expect(find.byKey(const Key('prayer_header')), findsOneWidget);
-        expect(
-          (await DriftPrayerPreferences(db).read(owner)).valueOrNull?.city.name,
-          'Cairo',
-        );
+        final saved = (await DriftPrayerPreferences(
+          db,
+        ).read(owner)).valueOrNull?.city;
+        expect(saved?.provider, 'device');
+        expect(saved?.timeZoneId, 'Africa/Cairo');
         expect(await db.rawScalar('SELECT count(*) FROM prayer_reports'), 5);
         expect(
           await db.rawScalar(

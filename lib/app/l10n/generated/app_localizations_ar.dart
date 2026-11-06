@@ -1269,12 +1269,7 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get dashboardBackToHome => 'العودة إلى الرئيسية';
 
   @override
-  String get prayerSearchUnavailable =>
-      'البحث عن مدينة غير متاح الآن. تظل مدينتك المحفوظة ومواقيتها متاحة دون إنترنت.';
-
-  @override
-  String get prayerSaveFailed =>
-      'تعذر حفظ اختيارك. تأكد من المدينة والطريقة ثم حاول مرة أخرى.';
+  String get prayerSaveFailed => 'تعذر الحفظ. حاول مرة أخرى.';
 
   @override
   String get prayerTitle => 'مواقيت الصلاة';
@@ -1367,34 +1362,28 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get prayerSetupBody =>
-      'اسمح بتحديد الموقع أثناء استخدام التطبيق لحساب المواقيت عندك. يمكنك اختيار مدينة يدويًا بدلًا من ذلك، ويعمل الموقع المحفوظ دون إنترنت.';
+      'اسمح بتحديد الموقع أثناء استخدام التطبيق لحساب مواقيت الصلاة حيث أنت. يعمل موقعك المحفوظ دون إنترنت.';
 
   @override
-  String get prayerUseLocation => 'استخدم موقعي الحالي';
+  String get prayerUseLocation => 'تحديث موقعي';
 
   @override
   String get prayerCurrentLocation => 'موقعي الحالي';
 
   @override
   String get prayerLocationDisabled =>
-      'فعّل خدمة الموقع في الجهاز ثم حاول مرة أخرى، أو اختر مدينة يدويًا.';
+      'خدمة الموقع في الجهاز مغلقة. فعّلها ثم حاول مرة أخرى.';
 
   @override
   String get prayerLocationDenied =>
-      'لم يُمنح إذن الموقع. يمكنك السماح به من إعدادات الجهاز أو اختيار مدينة يدويًا.';
+      'إذن الموقع مغلق. اسمح به من إعدادات التطبيق للحصول على مواقيت الصلاة.';
 
   @override
   String get prayerLocationUnavailable =>
-      'تعذر تحديد موقع دقيق أو منطقته الزمنية الآن. حاول مجددًا أو اختر مدينة يدويًا.';
+      'تعذر تحديد موقع دقيق الآن. حاول مرة أخرى.';
 
   @override
-  String get prayerCitySearch => 'ابحث عن مدينة';
-
-  @override
-  String get prayerCityEdit => 'تغيير المدينة أو طريقة الحساب';
-
-  @override
-  String get prayerCityConfirm => 'اعتماد هذه المدينة';
+  String get prayerCityEdit => 'إعدادات الصلاة';
 
   @override
   String get prayerMethod => 'طريقة الحساب';
@@ -1404,25 +1393,6 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get prayerUnavailable => 'الوقت غير متاح لهذا المكان والتاريخ';
-
-  @override
-  String get prayerSearchNoResults => 'لا توجد مدن مطابقة';
-
-  @override
-  String get prayerSearchOffline => 'اتصل بالإنترنت للبحث عن مدينة جديدة.';
-
-  @override
-  String get prayerSearchThrottled => 'البحث مشغول الآن. حاول بعد قليل.';
-
-  @override
-  String get prayerSearchInvalidResponse =>
-      'نتائج المدن غير متاحة. حاول مجددًا.';
-
-  @override
-  String get prayerSearchInvalidQuery => 'اكتب من حرفين إلى ١٠٠ حرف.';
-
-  @override
-  String get prayerSearchCancelled => 'أُلغي البحث.';
 
   @override
   String get prayerScheduleUnavailable => 'تعذر حساب المواقيت لهذا اليوم.';
@@ -1478,7 +1448,7 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get prayerAttribution =>
-      'بيانات المدن: Open-Meteo / GeoNames ‏(CC BY 4.0). المواقيت: جدول سنوي من AlAdhan، مع حساب محلي احتياطي موضح.';
+      'المواقيت: جدول سنوي من AlAdhan، مع حساب محلي احتياطي موضح.';
 
   @override
   String get prayerSourceApi =>
@@ -1531,4 +1501,13 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get prayerConflictReadOnly => 'سجلات الأيام السابقة للعرض فقط';
+
+  @override
+  String get prayerLocationRetry => 'حاول مرة أخرى';
+
+  @override
+  String get prayerOpenSettings => 'فتح الإعدادات';
+
+  @override
+  String get prayerSettingsSave => 'حفظ';
 }

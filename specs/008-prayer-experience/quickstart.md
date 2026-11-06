@@ -8,8 +8,8 @@ These are post-implementation commands/scenarios. Planned Prayer files, suite ma
 - Dependency adoption records exact adhan_dart2.0.1, timezone0.11.2, uuid4.6.0 and Dio5.11.1 versions/licenses plus solar preflight/reference evidence.
 - Docker/Supabase CLI for isolated automated SQL/cloud tests. Never reset a production/linked project as a local-test shortcut.
 - Real-device account synchronization uses the existing isolated non-production project/test users through protected configuration; no service-role secret in app/test logs.
-- Debug/profile preview is local and public-login-free. First city search needs internet; saved-city schedules do not.
-- Commercial search uses a configured licensed gateway; see contracts/prayer-ui-city.md. Do not commit keys or put a paid provider key in dart-defines.
+- Debug/profile preview is local and public-login-free. The first location lookup needs internet; saved-location schedules do not.
+- There is no city search (removed 2026-11-06), so no geocoding provider, key or licence is involved.
 
 After implementation:
 
@@ -60,12 +60,12 @@ Use flutter devices to select an Android/iOS target. Profile performance builds 
 > Profile/release runs on a phone do not enter the local preview by default (`NAMAA_TASKS_PREVIEW` defaults to debug mode). Without an account they stop at "This section is unavailable right now." For a preview journey use `flutter run --profile -d YOUR_PHONE_ID --dart-define=NAMAA_TASKS_PREVIEW=true --dart-define=NAMAA_DEVICE_PREVIEW=false`.
 
 1. Open Track→Prayer, Home prayer card/hub, desktop direct Prayer entry. No sign-up prompt in development preview.
-2. With no saved location, open Prayer and grant the foreground location request. Verify the measured coordinates and zone appear, and that the timetable identifies AlAdhan or the local fallback. If permission is denied or the fix is unavailable, verify the manual city option remains usable.
-3. Test the manual fallback by searching Cairo in Arabic and English; confirm country/admin, coordinates/zone validity, method and attribution. Cancel another search: prior choice persists. Returning to a manually chosen city must not silently replace it with the device location.
+2. With no saved location, open Prayer and grant the foreground location request. Verify the measured coordinates and zone appear, and that the timetable identifies AlAdhan or the local fallback. If permission is denied, services are off or the fix is unavailable, verify the reason, **Try again** and **Open settings** appear, no location is assigned, and returning from settings retries by itself.
+3. Open the settings icon beside the title: **Update my location** and the calculation method are the only controls; changing the method needs **Save**, and **Cancel** keeps the saved choice.
 4. Inspect all four ordered groups, the five cards, separate information cards and reviewed guidance. Streak/other religious features say coming soon.
 5. Mark one prayer on time and another late; progress2/5 and local first awards10+5. Correct/reset them: counts follow state; awarded points stay fixed.
 6. Restart offline and advance the injected date through seven days. New schedules calculate from saved city; old records stay attached to their dates, never auto-missed.
-7. Try new-city search offline, throttled, no results and malformed zone fixtures. Existing city/report operations remain available.
+7. Refresh the location offline or with a failing fix. The saved location, its schedule and report operations remain available.
 8. Change device city/method, resume after midnight/DST and test after-Isha next-day context. Home and Prayer agree while Task/Habit calendar remains device-local.
 
 ## Focused device tests

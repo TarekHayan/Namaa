@@ -79,7 +79,6 @@ import 'package:namma_project/features/mind_maps/data/supabase_map_reader.dart';
 import 'package:namma_project/features/mind_maps/data/supabase_map_sync_adapter.dart';
 import 'package:namma_project/features/mind_maps/data/tasks_map_link_adapter.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
-import 'package:namma_project/features/prayer/application/city_search_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_annual_schedule_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_clock_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_conflict_reader.dart';
@@ -217,7 +216,6 @@ Future<void> configureDependencies({
         clock: getIt<PrayerClockPort>(),
       ),
     );
-    getIt.registerLazySingleton<CitySearchPort>(createPrayerCitySearch);
     getIt.registerFactoryParam<PrayerCubit, String, void>(
       (ownerId, _) => PrayerCubit(
         context: getIt<PrayerContextService>(),

@@ -3,6 +3,10 @@ import '../domain/prayer_city.dart';
 /// A foreground, user-authorized fix. No background location tracking.
 abstract interface class PrayerDeviceLocationPort {
   Future<PrayerDeviceLocation> locate();
+
+  /// Opens the system page that fixes [problem]: location services when they
+  /// are off, otherwise this app's permission settings.
+  Future<void> openSettings(PrayerLocationProblem problem);
 }
 
 final class PrayerDeviceLocation {

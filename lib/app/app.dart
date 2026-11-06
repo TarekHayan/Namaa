@@ -34,7 +34,6 @@ import 'package:namma_project/features/habits/presentation/habits_cubit.dart';
 import 'package:namma_project/features/habits/presentation/habits_screen.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_screen.dart';
-import 'package:namma_project/features/prayer/application/city_search_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_conflict_reader.dart';
 import 'package:namma_project/features/prayer/application/prayer_device_location_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_preferences_commands.dart';
@@ -831,7 +830,6 @@ class _PrayerRouteScopeState extends State<_PrayerRouteScope> {
     child: PrayerScreen(
       ownerId: widget.accountId,
       cubit: _cubit,
-      search: GetIt.instance<CitySearchPort>(),
       commands: GetIt.instance<PrayerPreferencesCommands>(),
       location: GetIt.instance<PrayerDeviceLocationPort>(),
       conflicts: _conflicts,

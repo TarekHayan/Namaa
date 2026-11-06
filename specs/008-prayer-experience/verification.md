@@ -350,7 +350,7 @@ All 8 SCs: SC-002, SC-003, SC-004 and SC-006 are complete. SC-001, SC-005, SC-00
 4. **T133 (needs push approval):** the full PR-to-develop gate on the final head.
 5. **T132 / T134:** final doc/task-state pass and closure recommendation after items 1–4. The pre-gate pass is recorded here.
 
-**Release-only prerequisite (does not block closing the spec):** the commercial city-search provider stays release-blocked until it is licensed.
+**Release-only prerequisite:** none from city search. Search was removed on 2026-11-06 (see below), so no geocoding licence is needed.
 
 ### Migration 0015 on the isolated staging project (2026-11-06, user-approved)
 
@@ -404,3 +404,34 @@ This covers the settings-sheet flow and the English capture.
 - New unit tests cover the lookup request and the localizer. A screen test checks that an English app renames a city saved as القاهرة to Cairo.
 - `dart format` changed 0 of 450 files, `flutter analyze` reported no issues, and the full `flutter test` run gave **767 passed, 1 skipped**.
 - Home shows the new name after a Prayer visit in the new language.
+
+### Scope change: location only, city search removed (2026-11-06, user decision)
+
+The user decided that prayer times come only from the device location and that users do not need city search. Its commercial licensing cost was not worth it.
+
+**Removed:**
+- `CitySearchPort`, `DioCitySearch` and `PrayerSearchConfiguration`;
+- `CitySearchCubit`/`CitySearchState` and `PrayerCityEditor`;
+- the same-day `PrayerCityNameLocalizer`, which is no longer needed;
+- the preview search adapter and its DI registration;
+- nine search strings per language;
+- the `test/fixtures/prayer/cities` fixtures and five search test files.
+
+**Setup without a location:**
+- shows the reason;
+- shows **Try again**;
+- for denied permission or disabled services, shows **Open settings**: `openAppSettings` or `openLocationSettings` through the new `PrayerDeviceLocationPort.openSettings`;
+- retries once by itself when the app resumes from settings;
+- never assigns a default location.
+
+**Settings sheet:** the new `PrayerSettingsSheet` has **Update my location**, the calculation method with **Save**/**Cancel**, and the AlAdhan attribution.
+
+A city saved manually before this change still displays and calculates. Its settings sheet offers only the device location.
+
+**Docs:** spec (new 2026-11-06 clarification, US1/AS1/AS8, edge cases, FR-002, FR-004, SC-001, assumptions), quickstart and tasks (scope note and T140) are updated.
+
+**Checks:**
+- `flutter analyze`: no issues.
+- `flutter test`: **729 passed, 1 skipped**. The count is lower than the previous 767 because the deleted search tests are gone.
+- Widget tests cover the new paths: denied → open settings → resume retry → saved, and a settings sheet with the method and no search.
+- `flutter test -d windows integration_test/prayer_localized_route_test.dart`: **4/4**, AR/EN × touch/keyboard, with the device location saved.

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
-import 'package:namma_project/features/prayer/application/city_search_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_clock_port.dart';
 import 'package:namma_project/features/prayer/application/prayer_context_service.dart';
 import 'package:namma_project/features/prayer/application/prayer_device_location_port.dart';
@@ -50,36 +49,15 @@ class _Reports extends Fake implements PrayerRepository {
   }) => Stream.value([]);
 }
 
-class _Search extends Fake implements CitySearchPort {
-  final lookups = <String>[];
-  @override
-  void cancel({required String ownerId, required int generation}) {}
-
-  @override
-  Future<AppResult<PrayerCity?>> lookup({
-    required PrayerCity city,
-    required String locale,
-  }) async {
-    lookups.add('${city.providerCityId}/$locale');
-    return AppResult.success(
-      PrayerCity(
-        provider: city.provider,
-        providerCityId: city.providerCityId,
-        name: 'Cairo',
-        countryCode: 'EG',
-        countryName: 'Egypt',
-        latitude: city.latitude,
-        longitude: city.longitude,
-        timeZoneId: city.timeZoneId,
-      ),
-    );
-  }
-}
-
 class _Location extends Fake implements PrayerDeviceLocationPort {
   _Location({this.denied = false});
-  final bool denied;
+  bool denied;
   int calls = 0;
+  final opened = <PrayerLocationProblem>[];
+
+  @override
+  Future<void> openSettings(PrayerLocationProblem problem) async =>
+      opened.add(problem);
   @override
   Future<PrayerDeviceLocation> locate() async {
     calls++;
@@ -108,9 +86,8 @@ void main() {
   Future<PrayerCubit> show(
     WidgetTester tester,
     _Preferences preferences,
-    _Location location, {
-    _Search? search,
-  }) async {
+    _Location location,
+  ) async {
     final cubit = PrayerCubit(
       context: PrayerContextService(
         preferences: preferences,
@@ -128,7 +105,6 @@ void main() {
           body: PrayerScreen(
             ownerId: 'owner-a',
             cubit: cubit,
-            search: search ?? _Search(),
             commands: PrayerPreferencesCommands(preferences),
             location: location,
           ),
@@ -161,8 +137,21 @@ void main() {
     final cubit = await show(tester, preferences, location);
     expect(location.calls, 1);
     expect(preferences.saved, isNull);
-    expect(find.text('Search cities'), findsOneWidget);
+    // No city search: the way forward is the permission itself.
+    expect(find.text('Search cities'), findsNothing);
     expect(find.textContaining('Location permission'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('prayer_open_settings')));
+    await tester.pump();
+    expect(location.opened, [PrayerLocationProblem.permissionDenied]);
+    // Returning from settings with permission granted retries by itself.
+    location.denied = false;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(location.calls, 2);
+    expect(preferences.saved?.city.latitude, 30.0444);
     await tester.runAsync(cubit.close);
   });
 
@@ -206,7 +195,8 @@ void main() {
     await tester.tap(find.byKey(const Key('prayer_settings')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('prayer_use_location')), findsOneWidget);
-    expect(find.byKey(const Key('prayer_city_search')), findsOneWidget);
+    expect(find.byKey(const Key('prayer_method')), findsOneWidget);
+    expect(find.byKey(const Key('prayer_city_search')), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.runAsync(cubit.close);
   });
@@ -266,37 +256,6 @@ void main() {
     );
     expect(find.text('Prayer streak: coming soon'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.runAsync(cubit.close);
-  });
-
-  testWidgets('English app renames a city saved with its Arabic name', (
-    tester,
-  ) async {
-    final preferences = _Preferences(
-      initial: PrayerPreferences(
-        accountId: 'owner-a',
-        city: PrayerCity(
-          provider: 'open-meteo/geonames',
-          providerCityId: '360630',
-          name: 'القاهرة',
-          countryCode: 'EG',
-          countryName: 'مصر',
-          latitude: 30.06263,
-          longitude: 31.24967,
-          timeZoneId: 'Africa/Cairo',
-        ),
-        calculationMethod: 'egyptian',
-        revision: 2,
-        updatedAt: DateTime.utc(2026),
-      ),
-    );
-    final search = _Search();
-    final cubit = await show(tester, preferences, _Location(), search: search);
-    expect(search.lookups, ['360630/en']);
-    expect(preferences.saved?.city.name, 'Cairo');
-    expect(preferences.saved?.city.countryName, 'Egypt');
-    expect(preferences.saved?.city.latitude, 30.06263);
-    expect(preferences.saved?.revision, 3);
     await tester.runAsync(cubit.close);
   });
 }

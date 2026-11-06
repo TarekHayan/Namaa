@@ -1280,12 +1280,7 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get dashboardBackToHome => 'Back to Home';
 
   @override
-  String get prayerSearchUnavailable =>
-      'City search is currently unavailable. Your saved city and its prayer times remain available offline.';
-
-  @override
-  String get prayerSaveFailed =>
-      'Could not save your selection. Check the city and method, then try again.';
+  String get prayerSaveFailed => 'Could not save. Try again.';
 
   @override
   String get prayerTitle => 'Prayer times';
@@ -1381,34 +1376,28 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get prayerSetupBody =>
-      'Allow location while using the app to get times for your area. You can choose a city instead. A saved location works offline.';
+      'Allow location while using the app so prayer times are calculated for where you are. Your saved location keeps working offline.';
 
   @override
-  String get prayerUseLocation => 'Use my current location';
+  String get prayerUseLocation => 'Update my location';
 
   @override
   String get prayerCurrentLocation => 'My current location';
 
   @override
   String get prayerLocationDisabled =>
-      'Enable device location and try again, or choose a city.';
+      'Device location is off. Turn it on, then try again.';
 
   @override
   String get prayerLocationDenied =>
-      'Location permission was not granted. Enable it in device settings or choose a city.';
+      'Location permission is off. Allow it in the app settings to get your prayer times.';
 
   @override
   String get prayerLocationUnavailable =>
-      'Could not get an accurate location or its time zone. Try again or choose a city.';
+      'Could not get an accurate location right now. Try again.';
 
   @override
-  String get prayerCitySearch => 'Search cities';
-
-  @override
-  String get prayerCityEdit => 'Change city or method';
-
-  @override
-  String get prayerCityConfirm => 'Use this city';
+  String get prayerCityEdit => 'Prayer settings';
 
   @override
   String get prayerMethod => 'Calculation method';
@@ -1418,26 +1407,6 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get prayerUnavailable => 'Time unavailable for this location and date';
-
-  @override
-  String get prayerSearchNoResults => 'No matching cities';
-
-  @override
-  String get prayerSearchOffline =>
-      'Connect to the internet to find a new city.';
-
-  @override
-  String get prayerSearchThrottled => 'Search is busy. Try again shortly.';
-
-  @override
-  String get prayerSearchInvalidResponse =>
-      'City results are unavailable. Try again.';
-
-  @override
-  String get prayerSearchInvalidQuery => 'Enter 2 to 100 characters.';
-
-  @override
-  String get prayerSearchCancelled => 'Search cancelled.';
 
   @override
   String get prayerScheduleUnavailable =>
@@ -1494,7 +1463,7 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get prayerAttribution =>
-      'City data: Open-Meteo / GeoNames (CC BY 4.0). Times: AlAdhan API annual timetable, with a labelled local calculation fallback.';
+      'Times: AlAdhan API annual timetable, with a labelled local calculation fallback.';
 
   @override
   String get prayerSourceApi =>
@@ -1547,4 +1516,13 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get prayerConflictReadOnly => 'Past prayer records are read-only';
+
+  @override
+  String get prayerLocationRetry => 'Try again';
+
+  @override
+  String get prayerOpenSettings => 'Open settings';
+
+  @override
+  String get prayerSettingsSave => 'Save';
 }
