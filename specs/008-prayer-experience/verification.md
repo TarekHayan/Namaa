@@ -479,3 +479,18 @@ PR #11 run [42238217078](https://github.com/TarekHayan/Namaa/actions/runs/422382
 **Android (prayer).** `adb: device offline` and `Service connection disposed` appeared during driver connection on both attempts, after the app had started the test. The same emulator disconnect hit `prayer_schedule_test` before its retry passed.
 - **Local run:** `flutter drive -d emulator-5554 … prayer_offline_sync_test.dart` against local Supabase passed 2/2.
 - **Conclusion:** this is runner emulator instability, not an application failure. It is rerun on the new head.
+
+**Second PR run [42250392086](https://github.com/TarekHayan/Namaa/actions/runs/42250392086) on `5b273c5`.**
+
+Passed: quality, Supabase/RLS, Windows, Linux, all five Android groups (including prayer), and iOS today, tasks and habits.
+
+**macOS and iOS (prayer)** failed again with `prayer.sync.failed` at the first hosted dispatch.
+- **Cause:** the test's operation IDs were fixed strings (`device-a-fajr`, …). Receipts are keyed by owner and operation ID, and 0015 rejects a reused ID with different content ("Prayer operation ID reused with different content"). Windows ran first on the shared staging account and stored those receipts. The concurrent macOS/iOS runs then sent the same IDs for a different random day.
+- **Fix:** hosted runs append a random per-run tag to all 16 operation IDs through `op(...)`. Local runs keep the plain IDs on a fresh account.
+- **Validation:** the hosted date and ID path, forced against local Supabase on Windows, passed.
+
+**iOS foundation and iOS mind-maps** were runner infrastructure failures, with no Prayer involvement.
+- iOS foundation: "Set up Flutter" timed out.
+- iOS mind-maps: "The hosted runner lost communication with the server".
+
+Both groups passed on the first run.

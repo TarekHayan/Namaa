@@ -185,6 +185,13 @@ void main() {
         : DateTime.utc(
             1000,
           ).add(Duration(days: Random.secure().nextInt(365000)));
+    // Receipts are kept per account and operation ID, and the server rejects
+    // a reused ID with different content. Hosted runs share one account
+    // across platforms and runs, so each run tags its operation IDs.
+    final runTag = local
+        ? ''
+        : '-${Random.secure().nextInt(1 << 32).toRadixString(16)}';
+    String op(String name) => '$name$runTag';
     String isoDay(DateTime value) =>
         '${value.year.toString().padLeft(4, '0')}-'
         '${value.month.toString().padLeft(2, '0')}-'
@@ -275,7 +282,7 @@ void main() {
     expect(
       (await stores[0].writeLocal(
         fajr,
-        operationId: 'device-a-fajr',
+        operationId: op('device-a-fajr'),
         acknowledgedBase: null,
         expectedCurrentVersion: null,
       )).failureOrNull,
@@ -284,14 +291,14 @@ void main() {
     expect(
       (await stores[1].writeLocal(
         dhuhr,
-        operationId: 'device-b-dhuhr',
+        operationId: op('device-b-dhuhr'),
         acknowledgedBase: null,
         expectedCurrentVersion: null,
       )).failureOrNull,
       isNull,
     );
-    await dispatch(0, await pending(0, 'device-a-fajr'));
-    await dispatch(1, await pending(1, 'device-b-dhuhr'));
+    await dispatch(0, await pending(0, op('device-a-fajr')));
+    await dispatch(1, await pending(1, op('device-b-dhuhr')));
     await receive(0);
     await receive(1);
     for (final store in stores) {
@@ -328,13 +335,13 @@ void main() {
     expect(
       (await stores[1].writeLocal(
         londonIsha,
-        operationId: 'device-b-next-day',
+        operationId: op('device-b-next-day'),
         acknowledgedBase: null,
         expectedCurrentVersion: null,
       )).failureOrNull,
       isNull,
     );
-    await dispatch(1, await pending(1, 'device-b-next-day'));
+    await dispatch(1, await pending(1, op('device-b-next-day')));
     await receive(0);
     expect(
       (await stores[0].readFresh(
@@ -359,7 +366,7 @@ void main() {
     expect(
       (await stores[0].writeLocal(
         tieA,
-        operationId: 'device-a-tie',
+        operationId: op('device-a-tie'),
         acknowledgedBase: null,
         expectedCurrentVersion: null,
       )).failureOrNull,
@@ -368,14 +375,14 @@ void main() {
     expect(
       (await stores[1].writeLocal(
         tieB,
-        operationId: 'device-b-tie',
+        operationId: op('device-b-tie'),
         acknowledgedBase: null,
         expectedCurrentVersion: null,
       )).failureOrNull,
       isNull,
     );
-    final tieChangeA = await pending(0, 'device-a-tie');
-    final tieChangeB = await pending(1, 'device-b-tie');
+    final tieChangeA = await pending(0, op('device-a-tie'));
+    final tieChangeB = await pending(1, op('device-b-tie'));
     await Future.wait([dispatch(0, tieChangeA), dispatch(1, tieChangeB)]);
     await receive(0);
     await receive(1);
@@ -413,7 +420,7 @@ void main() {
     expect(
       (await stores[0].writeLocal(
         asrA,
-        operationId: 'device-a-asr',
+        operationId: op('device-a-asr'),
         acknowledgedBase: null,
         expectedCurrentVersion: null,
       )).failureOrNull,
@@ -422,15 +429,15 @@ void main() {
     expect(
       (await stores[1].writeLocal(
         asrB,
-        operationId: 'device-b-asr',
+        operationId: op('device-b-asr'),
         acknowledgedBase: null,
         expectedCurrentVersion: null,
       )).failureOrNull,
       isNull,
     );
-    final firstChange = await pending(0, 'device-a-asr');
+    final firstChange = await pending(0, op('device-a-asr'));
     await dispatch(0, firstChange, acknowledge: false);
-    await dispatch(1, await pending(1, 'device-b-asr'));
+    await dispatch(1, await pending(1, op('device-b-asr')));
     for (var i = 0; i < 10; i++) {
       await dispatch(0, firstChange, acknowledge: false);
     }
@@ -475,13 +482,13 @@ void main() {
     expect(
       (await stores[0].writeLocal(
         reset,
-        operationId: 'device-a-reset',
+        operationId: op('device-a-reset'),
         acknowledgedBase: current.lastAcknowledgedUpdatedAt,
         expectedCurrentVersion: current.updatedAt,
       )).failureOrNull,
       isNull,
     );
-    await dispatch(0, await pending(0, 'device-a-reset'));
+    await dispatch(0, await pending(0, op('device-a-reset')));
     final afterReset = await readers[2].readAll(owner);
     expect(afterReset.awards.singleWhere((a) => a.sourceId == asrId).amount, 5);
     expect(
