@@ -445,3 +445,22 @@ The wide header now follows the prototype's `sm:flex-row sm:items-center justify
 - everything vertically centred.
 
 Phones keep the icon beside the title. A widget test pins the wide order and that the icon sits at the far end, centred against the badge block. Real-font 1500 px captures (Arabic light, English dark) were inspected. Prayer widget tests passed 62/62; `flutter analyze` reported no issues.
+
+### T128 / T137 closed (2026-11-06)
+
+**Location-only on the phone (user-run).** With location permission off, Prayer refused to show times. It showed the reason, **Try again** and **Open settings**, and loaded the times only after permission was granted.
+
+**T137 — live annual endpoint.** `flutter test test/unit/features/prayer/data/aladhan_live_annual_test.dart --dart-define=PRAYER_LIVE_API=true` passed: a live, accountless AlAdhan annual calendar for Cairo was accepted and cached for offline use.
+
+Offline, cache and fallback measurements on the named targets:
+- **CPH2481 phone (Android 15, profile):** readable in 16 ms, action visible in 10 ms, seven offline days in 11 ms (T125). The user also saw the saved schedule with airplane mode on.
+- **Windows desktop:** measured under T126.
+- **Fallback label:** the local fallback appears labelled ("Times: local calculation fallback…") when the annual table is unavailable.
+
+**T128 — scenario evidence:**
+- **SC-001.** The scripted journey (`integration_test/prayer_localized_route_test.dart`, Windows) takes about 10 s per run, AR/EN × touch/keyboard, 4/4. It covers location → five times → actions → back to Home → reopen. The phone touch journey was run by hand by the user; it was not timed with a stopwatch.
+- **SC-005.** Phone, emulator and desktop captures were reviewed in Arabic/English and light/dark. The automated responsive matrix (320–1200 px, 100 %/150 %) passes in the widget suite.
+- **SC-007.** Home and Prayer agreed on the phone (5/5) and the emulator (next prayer and countdown). Differing civil dates between the device zone and the location zone behave as specified.
+- **SC-008.** Four-group prototype parity, including the corrected wide header, with the documented adaptations.
+
+Not covered here: T119/T120 (hosted two-device sync) and T131/T133 (five-target CI gate) run in CI next.

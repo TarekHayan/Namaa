@@ -215,7 +215,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
 - [X] T136 [US1] Add AlAdhan annual calendar adapter, prefetch the following Gregorian year and replace the immediate labelled local schedule with validated cached API times when available.
   - **Done**: Explicit coordinates, zone, method and Shafi school; no daily download; cache survives offline restart; malformed annual response rejected; Home and Prayer share one source.
 
-- [ ] T137 [US1] Verify the annual endpoint against a live accountless AlAdhan response and measure offline/cache/fallback on the named phone and desktop targets.
+- [X] T137 [US1] Verify the annual endpoint against a live accountless AlAdhan response and measure offline/cache/fallback on the named phone and desktop targets.
   - **Depends**: T135, T136
   - **Done**: Capture actual annual payload shape, 365/366-day coverage, DST and method metadata; verify at least one year of offline lookahead, reconnect refresh and source labels in Arabic/English. A mocked adapter alone does not close this task.
   - **Partial evidence (2026-11-03)**: Live accountless Cairo annual response passed the opt-in test again after IANA-offset validation, including encrypted offline-cache read; the user reports the location/timetable flow works on a real phone. Named phone/desktop source, cache, offline and fallback measurements remain.
@@ -647,7 +647,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T120
   - **Done**: Source mapping/review complete; no invented universal optional practice, generated Quran/ruling, unreviewed placeholder or misleading global streak; references/attribution accessible.
 
-- [ ] T128 Execute SC-001/005/007/008 scenarios from specs/008-prayer-experience/quickstart.md, capture the Prayer screen on a named phone and desktop for final visual comparison, and record evidence in verification.md.
+- [X] T128 Execute SC-001/005/007/008 scenarios from specs/008-prayer-experience/quickstart.md, capture the Prayer screen on a named phone and desktop for final visual comparison, and record evidence in verification.md.
   - **Depends**: T127, T126
   - **Done**: Phone touch and desktop keyboard journey≤60s; full responsive/theme/locale matrix; real Home/provenance/date agreement; final four-group prototype inventory; no fabricated human-test result.
 
