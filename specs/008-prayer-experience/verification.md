@@ -435,3 +435,13 @@ A city saved manually before this change still displays and calculates. Its sett
 - `flutter test`: **729 passed, 1 skipped**. The count is lower than the previous 767 because the deleted search tests are gone.
 - Widget tests cover the new paths: denied → open settings → resume retry → saved, and a settings sheet with the method and no search.
 - `flutter test -d windows integration_test/prayer_localized_route_test.dart`: **4/4**, AR/EN × touch/keyboard, with the device location saved.
+
+**Desktop header order (2026-11-06, user-reported on Windows).** On wide layouts the settings icon sat in the middle of the card, because it was attached to the title row inside the expanded heading. The badges took half the row (`Flexible` beside `Expanded`) and so sat in the middle too.
+
+The wide header now follows the prototype's `sm:flex-row sm:items-center justify-between`:
+- the heading (title, subtitle, location, date/zone/method, source) at the start;
+- the streak and progress badges (capped at 45 % of the width, aligned to the end) at the far end;
+- the settings icon after the badges;
+- everything vertically centred.
+
+Phones keep the icon beside the title. A widget test pins the wide order and that the icon sits at the far end, centred against the badge block. Real-font 1500 px captures (Arabic light, English dark) were inspected. Prayer widget tests passed 62/62; `flutter analyze` reported no issues.

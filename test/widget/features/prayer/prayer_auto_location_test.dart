@@ -255,6 +255,19 @@ void main() {
       lessThan(tester.getTopLeft(guidance).dy),
     );
     expect(find.text('Prayer streak: coming soon'), findsOneWidget);
+    // Wide header follows the prototype: heading at the start, then the
+    // badges, then the settings icon at the far end, on one centred row.
+    final title = tester.getCenter(find.text('Prayer times'));
+    final streak = tester.getCenter(find.text('Prayer streak: coming soon'));
+    final settings = tester.getCenter(find.byKey(const Key('prayer_settings')));
+    expect(title.dx, lessThan(streak.dx));
+    expect(streak.dx, lessThan(settings.dx));
+    // Centred against the badge block, which may wrap onto two lines.
+    final top = tester.getRect(find.text('Prayer streak: coming soon')).top;
+    final bottom = tester.getRect(find.textContaining('/5 Complete')).bottom;
+    expect(settings.dy, inInclusiveRange(top - 12, bottom + 12));
+    final headerBox = tester.getRect(header);
+    expect(headerBox.right - settings.dx, lessThan(80));
     expect(tester.takeException(), isNull);
     await tester.runAsync(cubit.close);
   });

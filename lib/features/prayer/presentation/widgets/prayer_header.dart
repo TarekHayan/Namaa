@@ -43,8 +43,9 @@ class PrayerHeader extends StatelessWidget {
                 style: text.titleLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
             ),
-            // Compact entry points (e.g. the location/city settings icon).
-            ...actions,
+            // Phones keep the settings icon beside the title; wide layouts
+            // place it at the far end, after the badges.
+            if (!wide) ...actions,
           ],
         ),
         const SizedBox(height: 2),
@@ -77,6 +78,7 @@ class PrayerHeader extends StatelessWidget {
     final badges = Wrap(
       spacing: 8,
       runSpacing: 8,
+      alignment: wide ? WrapAlignment.end : WrapAlignment.start,
       children: [
         _Badge(
           color: colors.warning,
@@ -105,13 +107,28 @@ class PrayerHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Prototype `sm:flex-row sm:items-center justify-between`: the
+          // heading at the start, the badges (and the settings icon) at the
+          // far end, vertically centred.
           if (wide)
-            Row(
-              children: [
-                Expanded(child: heading),
-                const SizedBox(width: 12),
-                Flexible(child: badges),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) => Row(
+                key: const Key('prayer_header_wide'),
+                children: [
+                  Expanded(child: heading),
+                  const SizedBox(width: 16),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: constraints.maxWidth * 0.45,
+                    ),
+                    child: badges,
+                  ),
+                  if (actions.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    ...actions,
+                  ],
+                ],
+              ),
             )
           else ...[
             heading,
