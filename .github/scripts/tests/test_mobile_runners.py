@@ -108,7 +108,8 @@ class AndroidRetryTest(unittest.TestCase):
                 return "/" + value[0].lower() + value[2:] if os.name == "nt" else value
 
             scripts = {
-                "adb": "exit 0\n",
+                # A booted emulator answers getprop sys.boot_completed with 1.
+                "adb": 'if [[ "$*" == *getprop* ]]; then echo 1; fi\nexit 0\n',
                 "timeout": 'while [[ "$1" == -* ]]; do shift; done\nshift\n"$@"\n',
                 "flutter": '''echo "$*" >> "$PROBE_CALLS"
 if [[ ! -f "$PROBE_MARKER" ]]; then
@@ -119,6 +120,18 @@ if [[ ! -f "$PROBE_MARKER" ]]; then
   if [[ "$PROBE_SCENARIO" == assertion ]]; then
     echo 'Failure Details: assertion failed'
     exit 1
+  fi
+  if [[ "$PROBE_SCENARIO" == driver-drop ]]; then
+    echo 'I/flutter ( 4681): 00:03 +2: All tests passed!'
+    echo 'getIsolate: (-32000) Service connection disposed'
+    echo 'adb: device offline'
+    exit 255
+  fi
+  if [[ "$PROBE_SCENARIO" == driver-drop-failed ]]; then
+    echo 'I/flutter ( 4681): 00:03 +1 -1: two devices converge [E]'
+    echo 'I/flutter ( 4681): 00:03 +1 -1: Some tests failed.'
+    echo 'getIsolate: (-32000) Service connection disposed'
+    exit 255
   fi
   exit 137
 fi
@@ -163,6 +176,17 @@ echo 'All tests passed'
     def test_real_test_failure_is_not_retried(self):
         result, calls = self.run_probe("assertion")
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual(len(calls), 1)
+
+    def test_driver_drop_after_on_device_pass_is_accepted(self):
+        result, calls = self.run_probe("driver-drop")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(len(calls), 4)
+        self.assertIn("accepting the on-device result", result.stdout)
+
+    def test_driver_drop_after_on_device_failure_still_fails(self):
+        result, calls = self.run_probe("driver-drop-failed")
+        self.assertEqual(result.returncode, 255, result.stdout + result.stderr)
         self.assertEqual(len(calls), 1)
 
     def test_timeout_after_test_started_is_not_retried(self):

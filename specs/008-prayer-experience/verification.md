@@ -494,3 +494,22 @@ Passed: quality, Supabase/RLS, Windows, Linux, all five Android groups (includin
 - iOS mind-maps: "The hosted runner lost communication with the server".
 
 Both groups passed on the first run.
+
+**Third PR run [42268038318](https://github.com/TarekHayan/Namaa/actions/runs/42268038318) on `be7d158`.**
+
+Passed:
+- macOS and iOS prayer, which confirms the operation-ID fix;
+- every iOS group, Windows, Linux, quality, Supabase/RLS;
+- Android tasks, habits-today and mind-maps.
+
+**Failed: Android foundation and Android prayer.** Both are runner emulator disconnects, not test failures.
+- **Android foundation, attempt 2:** the app logged `00:03 +2: All tests passed!`. The driver then lost the VM service (`Service connection disposed`, `adb: device offline`) while collecting the result, and the job failed.
+- **Android prayer:** the emulator dropped right after boot, before `prayer_schedule_test` produced any output, on both attempts.
+
+008 adds a fifth Android group and runs local Supabase in Docker on the same runner, so these drops now hit often enough to fail the gate. Hardening in the Android runner, with no change to what counts as a test pass:
+1. **Boot wait.** Before the first suite, the runner waits up to 120 s until `sys.boot_completed` is 1 and the package manager answers.
+2. **Third attempt.** A disconnect before the test connects now gets a third attempt. Real test failures and post-start timeouts are still not retried.
+3. **On-device pass.** If the driver loses the device after the app itself logged a final `All tests passed!` with no `[E]` or `Some tests failed`, the on-device result is accepted, with a `::warning::`.
+4. **Emulator RAM.** `ram-size: 4096M`.
+
+New runner tests prove that a drop after an on-device pass is accepted and a drop after an on-device failure still fails. All 57 CI script tests pass, the workflow YAML parses, and `bash -n` is clean.
