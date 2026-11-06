@@ -351,3 +351,19 @@ All 8 SCs: SC-002, SC-003, SC-004 and SC-006 are complete. SC-001, SC-005, SC-00
 5. **T132 / T134:** final doc/task-state pass and closure recommendation after items 1–4. The pre-gate pass is recorded here.
 
 **Release-only prerequisite (does not block closing the spec):** the commercial city-search provider stays release-blocked until it is licensed.
+
+### Migration 0015 on the isolated staging project (2026-11-06, user-approved)
+
+The user explicitly approved applying 0015 to staging. The linked project is `namaa_satging` (`qfjwybbmqhpxxikubhuh`, eu-west-1), the same isolated staging project used by 004–007. The production project (`Namaa Project`) was not touched.
+
+1. **Restore.** Staging had been paused (`INACTIVE`) by the free tier. The user restored it from the dashboard, and the CLI then reported `ACTIVE_HEALTHY`.
+2. **Before.** `supabase migration list --linked` showed 0001–0014 applied remotely, with only 0015 missing.
+3. **Dry run.** `supabase db push --linked --dry-run` listed only `0015_prayer_reports_and_rewards.sql`, with no seeds and no roles.
+4. **Push.** `supabase db push --linked` applied 0015, and the list now shows 0015 both locally and remotely.
+5. **Read-only verification query:**
+   - `prayer_reports`, `prayer_conflicts` and `prayer_operation_receipts` exist, all with RLS enabled;
+   - `apply_prayer_report_change_v1` is `SECURITY DEFINER`;
+   - `anon` cannot execute it;
+   - `prayer_reports` has 0 rows.
+
+T119/T120 are not done yet. The hosted two-device sync entry needs the two staging test accounts, which come from repository secrets, so it runs through the Foundation CI workflow. That needs the branch pushed first.
