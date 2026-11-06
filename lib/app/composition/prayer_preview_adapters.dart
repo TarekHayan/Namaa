@@ -48,6 +48,12 @@ final class UnavailablePrayerCitySearch implements CitySearchPort {
   void cancel({required String ownerId, required int generation}) {}
 
   @override
+  Future<AppResult<PrayerCity?>> lookup({
+    required PrayerCity city,
+    required String locale,
+  }) async => const AppResult.success(null);
+
+  @override
   Future<AppResult<List<PrayerCity>>> search({
     required String query,
     required String locale,

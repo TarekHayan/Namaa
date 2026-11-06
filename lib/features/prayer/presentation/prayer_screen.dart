@@ -9,6 +9,7 @@ import 'package:namma_project/app/widgets/app_button.dart';
 import 'package:namma_project/app/widgets/app_status_view.dart';
 
 import '../application/city_search_port.dart';
+import '../application/prayer_city_name_localizer.dart';
 import '../application/prayer_device_location_port.dart';
 import '../application/prayer_preferences_commands.dart';
 import '../domain/prayer_conflict_evidence.dart';
@@ -172,6 +173,13 @@ class PrayerScreen extends StatelessWidget {
                         autoStart: true,
                         silent: true,
                       ),
+                    _CityNameFollowsLocale(
+                      preferences: pref,
+                      localizer: PrayerCityNameLocalizer(
+                        search: search,
+                        commands: commands,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     if (schedule == null) ...[
                       AppStatusView.error(
@@ -219,6 +227,50 @@ class PrayerScreen extends StatelessWidget {
       },
     );
   }
+}
+
+/// Invisible: brings a manually chosen city's name into the app language.
+class _CityNameFollowsLocale extends StatefulWidget {
+  const _CityNameFollowsLocale({
+    required this.preferences,
+    required this.localizer,
+  });
+  final PrayerPreferences preferences;
+  final PrayerCityNameLocalizer localizer;
+
+  @override
+  State<_CityNameFollowsLocale> createState() => _CityNameFollowsLocaleState();
+}
+
+class _CityNameFollowsLocaleState extends State<_CityNameFollowsLocale> {
+  // One attempt per city and language for this visit, so an offline or
+  // untranslated city never retries in a loop.
+  final _attempted = <String>{};
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _check();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CityNameFollowsLocale oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _check();
+  }
+
+  void _check() {
+    final locale = Localizations.localeOf(context).languageCode;
+    final city = widget.preferences.city;
+    if (PrayerCityNameLocalizer.matches(city, locale)) return;
+    if (!_attempted.add('${city.provider}/${city.providerCityId}/$locale')) {
+      return;
+    }
+    unawaited(widget.localizer.localize(widget.preferences, locale));
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 class _LocationSetup extends StatelessWidget {

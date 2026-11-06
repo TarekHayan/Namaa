@@ -113,6 +113,53 @@ final class DioCitySearch implements CitySearchPort {
     }
   }
 
+  @override
+  Future<AppResult<PrayerCity?>> lookup({
+    required PrayerCity city,
+    required String locale,
+  }) async {
+    // The licensed gateway contract has no lookup-by-id route yet.
+    if (_configuration.mode != PrayerSearchMode.evaluation ||
+        city.provider != 'open-meteo/geonames') {
+      return const AppResult.success(null);
+    }
+    try {
+      final response = await _dio.getUri<dynamic>(
+        _configuration.endpoint.replace(
+          path: '/v1/get',
+          queryParameters: {
+            'id': city.providerCityId,
+            'language': locale == 'ar' ? 'ar' : 'en',
+          },
+        ),
+      );
+      final body = response.data;
+      if (body is! Map<Object?, Object?>) {
+        return _lookupFailure('prayerSearchInvalidResponse');
+      }
+      final found = _city(body, evaluation: true);
+      return AppResult.success(
+        found.providerCityId == city.providerCityId ? found : null,
+      );
+    } on DioException catch (error) {
+      return _lookupFailure(
+        error.response?.statusCode == 429
+            ? 'prayerSearchThrottled'
+            : 'prayerSearchOffline',
+      );
+    } catch (_) {
+      return _lookupFailure('prayerSearchInvalidResponse');
+    }
+  }
+
+  AppResult<PrayerCity?> _lookupFailure(String key) => AppResult.failure(
+    AppFailure.recoverable(
+      category: AppFailureCategory.network,
+      messageKey: key,
+      occurredAt: DateTime.now().toUtc(),
+    ),
+  );
+
   PrayerCity _city(Map<Object?, Object?> row, {required bool evaluation}) {
     String field(String a, [String? b]) =>
         (row[a] ?? (b == null ? null : row[b]))?.toString() ?? '';

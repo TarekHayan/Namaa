@@ -51,8 +51,29 @@ class _Reports extends Fake implements PrayerRepository {
 }
 
 class _Search extends Fake implements CitySearchPort {
+  final lookups = <String>[];
   @override
   void cancel({required String ownerId, required int generation}) {}
+
+  @override
+  Future<AppResult<PrayerCity?>> lookup({
+    required PrayerCity city,
+    required String locale,
+  }) async {
+    lookups.add('${city.providerCityId}/$locale');
+    return AppResult.success(
+      PrayerCity(
+        provider: city.provider,
+        providerCityId: city.providerCityId,
+        name: 'Cairo',
+        countryCode: 'EG',
+        countryName: 'Egypt',
+        latitude: city.latitude,
+        longitude: city.longitude,
+        timeZoneId: city.timeZoneId,
+      ),
+    );
+  }
 }
 
 class _Location extends Fake implements PrayerDeviceLocationPort {
@@ -87,8 +108,9 @@ void main() {
   Future<PrayerCubit> show(
     WidgetTester tester,
     _Preferences preferences,
-    _Location location,
-  ) async {
+    _Location location, {
+    _Search? search,
+  }) async {
     final cubit = PrayerCubit(
       context: PrayerContextService(
         preferences: preferences,
@@ -106,7 +128,7 @@ void main() {
           body: PrayerScreen(
             ownerId: 'owner-a',
             cubit: cubit,
-            search: _Search(),
+            search: search ?? _Search(),
             commands: PrayerPreferencesCommands(preferences),
             location: location,
           ),
@@ -244,6 +266,37 @@ void main() {
     );
     expect(find.text('Prayer streak: coming soon'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    await tester.runAsync(cubit.close);
+  });
+
+  testWidgets('English app renames a city saved with its Arabic name', (
+    tester,
+  ) async {
+    final preferences = _Preferences(
+      initial: PrayerPreferences(
+        accountId: 'owner-a',
+        city: PrayerCity(
+          provider: 'open-meteo/geonames',
+          providerCityId: '360630',
+          name: 'القاهرة',
+          countryCode: 'EG',
+          countryName: 'مصر',
+          latitude: 30.06263,
+          longitude: 31.24967,
+          timeZoneId: 'Africa/Cairo',
+        ),
+        calculationMethod: 'egyptian',
+        revision: 2,
+        updatedAt: DateTime.utc(2026),
+      ),
+    );
+    final search = _Search();
+    final cubit = await show(tester, preferences, _Location(), search: search);
+    expect(search.lookups, ['360630/en']);
+    expect(preferences.saved?.city.name, 'Cairo');
+    expect(preferences.saved?.city.countryName, 'Egypt');
+    expect(preferences.saved?.city.latitude, 30.06263);
+    expect(preferences.saved?.revision, 3);
     await tester.runAsync(cubit.close);
   });
 }

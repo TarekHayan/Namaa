@@ -6,8 +6,60 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/features/prayer/data/dio_city_search.dart';
 import 'package:namma_project/features/prayer/data/prayer_search_configuration.dart';
+import 'package:namma_project/features/prayer/domain/prayer_city.dart';
 
 void main() {
+  test(
+    'lookup fetches the same city by id in the requested language',
+    () async {
+      late Uri requested;
+      final dio = Dio()
+        ..interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              requested = options.uri;
+              handler.resolve(
+                Response(
+                  requestOptions: options,
+                  data: {
+                    'id': 5128581,
+                    'name': 'New York',
+                    'country_code': 'US',
+                    'country': 'United States',
+                    'admin1': 'New York',
+                    'latitude': 40.71427,
+                    'longitude': -74.00597,
+                    'timezone': 'America/New_York',
+                  },
+                ),
+              );
+            },
+          ),
+        );
+      final adapter = DioCitySearch(
+        configuration: PrayerSearchConfiguration.resolve().valueOrNull!,
+        dio: dio,
+      );
+      final found = await adapter.lookup(
+        city: PrayerCity(
+          provider: 'open-meteo/geonames',
+          providerCityId: '5128581',
+          name: 'نيويورك',
+          countryCode: 'US',
+          countryName: 'US',
+          latitude: 40.71427,
+          longitude: -74.00597,
+          timeZoneId: 'America/New_York',
+        ),
+        locale: 'en',
+      );
+      expect(requested.path, '/v1/get');
+      expect(requested.queryParameters, {'id': '5128581', 'language': 'en'});
+      expect(found.valueOrNull?.name, 'New York');
+      expect(found.valueOrNull?.countryName, 'United States');
+    },
+  );
+
   test(
     'captured Open-Meteo fixture preserves distinct Cairo candidates',
     () async {

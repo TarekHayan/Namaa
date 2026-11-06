@@ -10,4 +10,11 @@ abstract interface class CitySearchPort {
   });
 
   void cancel({required String ownerId, required int generation});
+
+  /// The same provider city with its names in [locale]. Succeeds with null
+  /// when the provider cannot look a city up by id.
+  Future<AppResult<PrayerCity?>> lookup({
+    required PrayerCity city,
+    required String locale,
+  });
 }

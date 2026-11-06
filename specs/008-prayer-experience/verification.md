@@ -367,3 +367,40 @@ The user explicitly approved applying 0015 to staging. The linked project is `na
    - `prayer_reports` has 0 rows.
 
 T119/T120 are not done yet. The hosted two-device sync entry needs the two staging test accounts, which come from repository secrets, so it runs through the Foundation CI workflow. That needs the branch pushed first.
+
+### User hands-on round 2 (2026-11-06)
+
+**Physical phone (CPH2481, Cairo, Egyptian method).** The user compared the five times with the local mosque timetable and found them within 1–2 minutes for most prayers. Printed mosque timetables often add a precautionary minute or two. The ≤1-minute SC-002 check against an independent calculation reference stays the automated 504/504 matrix.
+
+**Android emulator, light theme, Arabic.** The emulator's default GPS fix is Mountain View, CA, so it resolved to `America/Los_Angeles` with the North America method. Times on Thursday 5 November 2026:
+- Fajr 5:34 AM
+- Dhuhr 11:53 AM
+- Asr 2:45 PM
+- Isha 6:20 PM
+- next-day Fajr 5:35 AM
+
+These are consistent with Mountain View after the 1 November DST end (PST, solar noon ≈ 11:52). With the clock about 5:57 PM, Home showed Isha as the next prayer, a 23-minute countdown, and Fajr as the following prayer. That is correct, because Maghrib had passed.
+
+The Home header shows Friday 6 November while Prayer shows Thursday 5 November. The emulator's system zone is not the GPS zone, and per FR-012/SC-007 the Prayer day follows the location's zone while the Home/Task/Habit calendar stays device-local. This is intended behaviour.
+
+The phone status actions render on one row, and the Finance tab label fits on one line.
+
+**Manual city and English UI (emulator).** The user opened the settings sheet, chose New York manually, and switched the app to English.
+
+- The header shows `America/New_York` and North America.
+- Fajr 5:14 AM and Dhuhr 11:40 AM are consistent with New York's solar noon on 5 November 2026 (EST).
+- The English cards, the rak'ahs pill wrapping, the one-row actions ("On time", "Completed late", missed), and the English bottom bar all render without clipping.
+
+This covers the settings-sheet flow and the English capture.
+
+**Observed (fixed below):** the saved city name stayed in the language it was searched in. The English screen shows "نيويورك، الولايات المتحدة الأمريكية", because `PrayerCity` stores a single `name`/`countryName` returned by the provider for the search locale. Re-selecting the city while in English shows the English name.
+
+**Denied permission.** The user ran these checks with location permission off for the app. Setup fell back to manual city search, which then saved New York. This covers the denied → manual path on the emulator.
+
+**Fix (2026-11-06, user-requested): the city name follows the app language.**
+- `CitySearchPort.lookup` fetches the same provider city by id in a given language. The evaluation provider uses Open-Meteo `/v1/get?id=…&language=…`. The licensed gateway and the unavailable adapter return null, since that contract has no lookup route yet.
+- `PrayerCityNameLocalizer` replaces only the saved display names (city, country, admin), as a new preference revision. Coordinates, zone and method are kept, so times do not change. The annual-cache key excludes names, so nothing is re-downloaded.
+- The Prayer screen attempts this quietly, once per city and language per visit. Offline, unsupported, device-location and already-matching cases save nothing.
+- New unit tests cover the lookup request and the localizer. A screen test checks that an English app renames a city saved as القاهرة to Cairo.
+- `dart format` changed 0 of 450 files, `flutter analyze` reported no issues, and the full `flutter test` run gave **767 passed, 1 skipped**.
+- Home shows the new name after a Prayer visit in the new language.
