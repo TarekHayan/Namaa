@@ -12,12 +12,16 @@ class TodayComingSoonPage extends StatelessWidget {
     this.icon,
     this.feature,
     this.colors,
+    this.showBack = true,
   });
 
   final String title;
   final IconData? icon;
   final DashboardPreviewFeature? feature;
   final AppColors? colors;
+
+  /// Inside the navigation shell the bar is the way out, so no back arrow.
+  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,10 @@ class TodayComingSoonPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: themeColors.background,
       appBar: AppBar(
-        leading: BackButton(onPressed: () => Navigator.of(context).pop()),
+        automaticallyImplyLeading: false,
+        leading: showBack
+            ? BackButton(onPressed: () => Navigator.of(context).pop())
+            : null,
         title: Text(title),
         backgroundColor: themeColors.background,
       ),
@@ -59,7 +66,8 @@ class TodayComingSoonPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
+                // maybePop lets the shell route this to Home.
+                onPressed: () => Navigator.of(context).maybePop(),
                 style: FilledButton.styleFrom(
                   backgroundColor: themeColors.primary,
                 ),

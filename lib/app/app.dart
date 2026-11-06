@@ -644,32 +644,24 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
     child: TodayScreen(
       cubit: _cubit,
       stringsResolver: resolveTodayStrings,
-      onTasks: () => unawaited(GoRouter.of(context).push<void>(kTasksRoute)),
-      onTaskMatrix: () => unawaited(
-        GoRouter.of(
-          context,
-        ).push<void>(kTasksRoute, extra: OwnerEntryIntent.taskMatrix),
-      ),
-      onTaskOverdue: () => unawaited(
-        GoRouter.of(
-          context,
-        ).push<void>(kTasksRoute, extra: OwnerEntryIntent.taskOverdue),
-      ),
-      onHabits: () => unawaited(GoRouter.of(context).push<void>(kHabitsRoute)),
-      onMindMaps: () =>
-          unawaited(GoRouter.of(context).push<void>(kMindMapsRoute)),
-      onPrayer: () => unawaited(GoRouter.of(context).push<void>(kPrayerRoute)),
+      // Sections are tabs: switching replaces the page instead of
+      // stacking it, so no back arrow appears.
+      onTasks: () => GoRouter.of(context).go(kTasksRoute),
+      onTaskMatrix: () => GoRouter.of(
+        context,
+      ).go(kTasksRoute, extra: OwnerEntryIntent.taskMatrix),
+      onTaskOverdue: () => GoRouter.of(
+        context,
+      ).go(kTasksRoute, extra: OwnerEntryIntent.taskOverdue),
+      onHabits: () => GoRouter.of(context).go(kHabitsRoute),
+      onMindMaps: () => GoRouter.of(context).go(kMindMapsRoute),
+      onPrayer: () => GoRouter.of(context).go(kPrayerRoute),
       onPreferences: () => showAppPreferencesSheet(context),
-      onNewTask: () => unawaited(
-        GoRouter.of(
-          context,
-        ).push<void>(kTasksRoute, extra: OwnerEntryIntent.newTask),
-      ),
-      onNewHabit: () => unawaited(
-        GoRouter.of(
-          context,
-        ).push<void>(kHabitsRoute, extra: OwnerEntryIntent.newHabit),
-      ),
+      onNewTask: () =>
+          GoRouter.of(context).go(kTasksRoute, extra: OwnerEntryIntent.newTask),
+      onNewHabit: () => GoRouter.of(
+        context,
+      ).go(kHabitsRoute, extra: OwnerEntryIntent.newHabit),
     ),
   );
 }

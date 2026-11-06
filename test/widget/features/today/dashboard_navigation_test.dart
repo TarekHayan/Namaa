@@ -111,6 +111,10 @@ Widget _wrapView({
   );
 }
 
+/// The device back button: tabs have no on-screen back arrow.
+Future<void> _deviceBack(WidgetTester tester) =>
+    tester.state<NavigatorState>(find.byType(Navigator).first).maybePop();
+
 void main() {
   group('T037 Dashboard Navigation Tests', () {
     testWidgets('timeline places timed owner tasks among sample checkpoints', (
@@ -292,7 +296,7 @@ void main() {
         expect(find.text('Coming soon'), findsOneWidget);
 
         // Return to Home via back button
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsNothing);
 
@@ -389,14 +393,14 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Track'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         await tester.tap(find.byKey(kTodaySidebarPrayerKey));
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Prayer'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         // Finance in sidebar opens TodayComingSoonPage
@@ -404,7 +408,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Finance'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         // Habits in sidebar
@@ -473,7 +477,7 @@ void main() {
           expect(find.text('Coming soon'), findsOneWidget);
 
           // Pop back
-          await tester.tap(find.byType(BackButton));
+          await _deviceBack(tester);
           await tester.pumpAndSettle();
         }
       },
@@ -517,7 +521,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Quran'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         // 3. Finance Card
@@ -531,7 +535,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Finance'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         // 4. Counters Card
@@ -545,7 +549,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Counters'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
       },
     );

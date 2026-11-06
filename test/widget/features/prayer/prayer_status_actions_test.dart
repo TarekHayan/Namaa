@@ -30,6 +30,46 @@ Widget _app({
 );
 
 void main() {
+  testWidgets('phone row keeps reset beside the other actions', (tester) async {
+    for (final locale in const [Locale('ar'), Locale('en')]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: locale,
+          supportedLocales: FoundationLocalizations.supportedLocales,
+          localizationsDelegates:
+              FoundationLocalizations.localizationsDelegates,
+          home: Scaffold(
+            body: Center(
+              // A 390 dp phone's card content width.
+              child: SizedBox(
+                width: 300,
+                child: PrayerStatusActions(
+                  name: PrayerName.fajr,
+                  status: PrayerStatus.completedOnTime,
+                  phase: PrayerActionPhase.idle,
+                  onChanged: (_) {},
+                  fillWidth: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      final row = tester
+          .getCenter(
+            find.byKey(const Key('prayer_status_fajr_completed_on_time')),
+          )
+          .dy;
+      for (final status in ['completed_late', 'missed', 'pending']) {
+        expect(
+          tester.getCenter(find.byKey(Key('prayer_status_fajr_$status'))).dy,
+          row,
+          reason: '$status in ${locale.languageCode}',
+        );
+      }
+      expect(tester.takeException(), isNull);
+    }
+  });
   testWidgets('selected late and missed actions retain distinct colors', (
     tester,
   ) async {

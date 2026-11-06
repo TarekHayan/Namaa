@@ -632,7 +632,7 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T120
   - **Done**: No paid key shipped/logged; commercial mode never falls back free; attribution and missing-gateway recovery verified; unprovisioned commercial search explicitly release-blocked, no purchase/deployment performed automatically.
 
-- [ ] T125 Measure the implemented integration_test/prayer_schedule_test.dart timing scenario on a named phone target and record results in specs/008-prayer-experience/verification.md.
+- [X] T125 Measure the implemented integration_test/prayer_schedule_test.dart timing scenario on a named phone target and record results in specs/008-prayer-experience/verification.md.
   - **Depends**: T120
   - **Done**: Use the 18,300-report fixture, profile/explicit preview where appropriate; offline readable≤2s, action≤1s, seven dates offline; record actual device/OS/build/timings; never relabel desktop viewport as phone evidence.
 
@@ -648,11 +648,11 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T127, T126
   - **Done**: Phone touch and desktop keyboard journey≤60s; full responsive/theme/locale matrix; real Home/provenance/date agreement; final four-group prototype inventory; no fabricated human-test result.
 
-- [ ] T129 Run targeted owner/secret/architecture/migration checks and record results in specs/008-prayer-experience/verification.md.
+- [X] T129 Run targeted owner/secret/architecture/migration checks and record results in specs/008-prayer-experience/verification.md.
   - **Depends**: T128
   - **Done**: Fresh8 and all real1…7 upgrades pass; preview/owner isolation, confirmed award metadata local-only, no leaked payload/query/key; release Android INTERNET present; unrelated .metadata preserved.
 
-- [ ] T130 Run final formatting/static analysis and relevant feature/shared-XP/Today/SQL suites from specs/008-prayer-experience/quickstart.md; record exact commands/results in verification.md.
+- [X] T130 Run final formatting/static analysis and relevant feature/shared-XP/Today/SQL suites from specs/008-prayer-experience/quickstart.md; record exact commands/results in verification.md.
   - **Depends**: T129, T123, T124
   - **Done**: All required relevant tests pass; inspect failure logs and fix specific cause. Do not repeat successful device suites without a new risk/change; generated artifacts are current.
 

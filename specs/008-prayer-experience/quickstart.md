@@ -57,6 +57,8 @@ flutter run -d windows --dart-define=NAMAA_TASKS_PREVIEW=true --dart-define=NAMA
 
 Use flutter devices to select an Android/iOS target. Profile performance builds retain preview only with the explicit preview define; release never bypasses the real session boundary.
 
+> Profile/release runs on a phone do not enter the local preview by default (`NAMAA_TASKS_PREVIEW` defaults to debug mode). Without an account they stop at "This section is unavailable right now." For a preview journey use `flutter run --profile -d YOUR_PHONE_ID --dart-define=NAMAA_TASKS_PREVIEW=true --dart-define=NAMAA_DEVICE_PREVIEW=false`.
+
 1. Open Track→Prayer, Home prayer card/hub, desktop direct Prayer entry. No sign-up prompt in development preview.
 2. With no saved location, open Prayer and grant the foreground location request. Verify the measured coordinates and zone appear, and that the timetable identifies AlAdhan or the local fallback. If permission is denied or the fix is unavailable, verify the manual city option remains usable.
 3. Test the manual fallback by searching Cairo in Arabic and English; confirm country/admin, coordinates/zone validity, method and attribution. Cancel another search: prior choice persists. Returning to a manually chosen city must not silently replace it with the device location.

@@ -68,27 +68,75 @@ class TodayNavigationShell extends StatelessWidget {
         }
       }
 
+      // Sections behave as tabs, never as a stack. Track, Finance and the
+      // coming-soon previews open as a single page over the current section;
+      // a second one replaces the first, and leaving to any destination
+      // closes it first. No back arrow is shown anywhere.
+      final overlay =
+          section == TodayNavigationSection.track ||
+          section == TodayNavigationSection.finance ||
+          section == TodayNavigationSection.preview;
+      VoidCallback leave(VoidCallback action) => overlay
+          ? () {
+              Navigator.of(context).pop();
+              action();
+            }
+          : action;
+      final home = leave(goHome);
+      final tasks = leave(onTasks);
+      final habits = leave(onHabits);
+      final mindMaps = leave(onMindMaps);
+      final prayer = onPrayer == null ? null : leave(onPrayer!);
+
+      void open(BuildContext source, Route<void> route) {
+        final navigator = Navigator.of(source);
+        if (overlay) {
+          navigator.pushReplacement<void, void>(route);
+        } else {
+          navigator.push<void>(route);
+        }
+      }
+
+      // Overlays receive the original destination callbacks; each overlay
+      // wraps them with its own "close first" step when it builds.
+      TodayNavigationShell overlayShell(
+        TodayNavigationSection target,
+        Widget child,
+      ) => TodayNavigationShell(
+        colors: colors,
+        section: target,
+        onHome: goHome,
+        onTasks: onTasks,
+        onHabits: onHabits,
+        onMindMaps: onMindMaps,
+        onPrayer: onPrayer,
+        onPreferences: onPreferences,
+        xpAmount: xpAmount,
+        child: child,
+      );
+
       void openPreview(
         BuildContext source,
         String title,
         DashboardPreviewFeature? feature,
       ) {
-        Navigator.of(source).push<void>(
+        final target = feature == DashboardPreviewFeature.finance
+            ? TodayNavigationSection.finance
+            : TodayNavigationSection.preview;
+        // Re-tapping the open Finance tab does nothing.
+        if (target == TodayNavigationSection.finance && section == target) {
+          return;
+        }
+        open(
+          source,
           MaterialPageRoute<void>(
-            builder: (_) => TodayNavigationShell(
-              colors: colors,
-              section: TodayNavigationSection.preview,
-              onHome: goHome,
-              onTasks: onTasks,
-              onHabits: onHabits,
-              onMindMaps: onMindMaps,
-              onPrayer: onPrayer,
-              onPreferences: onPreferences,
-              xpAmount: xpAmount,
-              child: TodayComingSoonPage(
+            builder: (_) => overlayShell(
+              target,
+              TodayComingSoonPage(
                 title: title,
                 feature: feature,
                 colors: colors,
+                showBack: false,
               ),
             ),
           ),
@@ -97,19 +145,12 @@ class TodayNavigationShell extends StatelessWidget {
 
       void openTrack() {
         if (onPrayer == null || section == TodayNavigationSection.track) return;
-        Navigator.of(context).push<void>(
+        open(
+          context,
           MaterialPageRoute<void>(
-            builder: (trackContext) => TodayNavigationShell(
-              colors: colors,
-              section: TodayNavigationSection.track,
-              onHome: goHome,
-              onTasks: onTasks,
-              onHabits: onHabits,
-              onMindMaps: onMindMaps,
-              onPrayer: onPrayer,
-              onPreferences: onPreferences,
-              xpAmount: xpAmount,
-              child: PrayerTrackHub(
+            builder: (trackContext) => overlayShell(
+              TodayNavigationSection.track,
+              PrayerTrackHub(
                 onPrayer: () {
                   Navigator.of(trackContext).pop();
                   onPrayer!();
@@ -120,36 +161,31 @@ class TodayNavigationShell extends StatelessWidget {
         );
       }
 
+      final Widget frame;
       if (wide) {
-        return _TodayNavigationActions(
-          openPreview: openPreview,
-          child: Row(
-            children: [
-              SizedBox(
-                width: kTodaySidebarWidth,
-                child: TodayNavigationSidebar(
-                  colors: colors,
-                  section: section,
-                  onHome: goHome,
-                  onTasks: onTasks,
-                  onHabits: onHabits,
-                  onMindMaps: onMindMaps,
-                  onPrayer: onPrayer,
-                  onTrack: onPrayer == null ? null : openTrack,
-                  onPreferences: onPreferences,
-                  onPreview: openPreview,
-                  xpAmount: xpAmount,
-                ),
+        frame = Row(
+          children: [
+            SizedBox(
+              width: kTodaySidebarWidth,
+              child: TodayNavigationSidebar(
+                colors: colors,
+                section: section,
+                onHome: home,
+                onTasks: tasks,
+                onHabits: habits,
+                onMindMaps: mindMaps,
+                onPrayer: prayer,
+                onTrack: onPrayer == null ? null : openTrack,
+                onPreferences: onPreferences,
+                onPreview: openPreview,
+                xpAmount: xpAmount,
               ),
-              Expanded(child: child),
-            ],
-          ),
+            ),
+            Expanded(child: child),
+          ],
         );
-      }
-
-      return _TodayNavigationActions(
-        openPreview: openPreview,
-        child: Scaffold(
+      } else {
+        frame = Scaffold(
           backgroundColor: colors.background,
           body: child,
           bottomNavigationBar: TodayBottomNavigation(
@@ -159,20 +195,36 @@ class TodayNavigationShell extends StatelessWidget {
               TodayNavigationSection.tasks => 1,
               TodayNavigationSection.prayer ||
               TodayNavigationSection.track => 2,
+              TodayNavigationSection.finance => 3,
               TodayNavigationSection.habits ||
               TodayNavigationSection.mindMaps ||
               TodayNavigationSection.preview => 4,
             },
-            onHome: goHome,
-            onTasks: onTasks,
-            onHabits: onHabits,
-            onMindMaps: onMindMaps,
-            onPrayer: onPrayer,
+            onHome: home,
+            onTasks: tasks,
+            onHabits: habits,
+            onMindMaps: mindMaps,
+            onPrayer: prayer,
             onTrack: onPrayer == null ? null : openTrack,
             onPreferences: onPreferences,
             onPreview: openPreview,
           ),
-        ),
+        );
+      }
+
+      return _TodayNavigationActions(
+        openPreview: openPreview,
+        // The device back button never walks through visited sections: from
+        // any section it returns to Home, and from Home it leaves the app.
+        child: section == TodayNavigationSection.home
+            ? frame
+            : PopScope(
+                canPop: false,
+                onPopInvokedWithResult: (didPop, _) {
+                  if (!didPop) home();
+                },
+                child: frame,
+              ),
       );
     },
   );

@@ -1955,6 +1955,12 @@ abstract class FoundationLocalizations {
   /// **'Personal finances'**
   String get dashboardFinance;
 
+  /// No description provided for @dashboardNavFinance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance'**
+  String get dashboardNavFinance;
+
   /// No description provided for @dashboardFinanceDetail.
   ///
   /// In en, this message translates to:

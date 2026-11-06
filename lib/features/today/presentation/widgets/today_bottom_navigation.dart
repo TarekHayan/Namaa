@@ -138,7 +138,8 @@ class TodayBottomNavigation extends StatelessWidget {
               key: kTodayBottomFinanceKey,
               icon: const Icon(Icons.account_balance_wallet_outlined),
               selectedIcon: const Icon(Icons.account_balance_wallet_rounded),
-              label: copy.dashboardFinance,
+              // The prototype's short tab label keeps one line on phones.
+              label: copy.dashboardNavFinance,
               tooltip: copy.dashboardFinance,
             ),
             NavigationDestination(

@@ -16,12 +16,17 @@ class PrayerStatusActions extends StatelessWidget {
     required this.status,
     required this.phase,
     required this.onChanged,
+    this.fillWidth = false,
   });
 
   final PrayerName name;
   final PrayerStatus status;
   final PrayerActionPhase phase;
   final ValueChanged<PrayerStatus> onChanged;
+
+  /// Phone layout: keep every control on one row, with the two labelled
+  /// actions sharing the width, so reset never drops onto a line of its own.
+  final bool fillWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -46,44 +51,59 @@ class PrayerStatusActions extends StatelessWidget {
       loading: saving && status == value,
       onPressed: saving || status == value ? null : () => onChanged(value),
     );
+    final onTime = button(
+      PrayerStatus.completedOnTime,
+      copy.prayerStatusOnTime,
+      Icons.check_circle_outline_rounded,
+      colors.success,
+    );
+    final late = button(
+      PrayerStatus.completedLate,
+      copy.prayerStatusLate,
+      Icons.error_outline_rounded,
+      colors.warning,
+    );
+    final missed = button(
+      PrayerStatus.missed,
+      copy.prayerStatusMissed,
+      Icons.cancel_outlined,
+      colors.error,
+      iconOnly: true,
+    );
+    final reset = status == PrayerStatus.pending
+        ? null
+        : button(
+            PrayerStatus.pending,
+            copy.prayerStatusReset,
+            Icons.restart_alt_rounded,
+            colors.primary,
+            iconOnly: true,
+          );
+    // Large text cannot share one row; it falls back to wrapping.
+    final oneRow =
+        fillWidth && MediaQuery.textScalerOf(context).scale(1) <= 1.3;
+    final controls = oneRow
+        ? Row(
+            children: [
+              Expanded(child: onTime),
+              const SizedBox(width: 6),
+              Expanded(child: late),
+              const SizedBox(width: 6),
+              missed,
+              if (reset != null) ...[const SizedBox(width: 6), reset],
+            ],
+          )
+        : Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [onTime, late, missed, ?reset],
+          );
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            button(
-              PrayerStatus.completedOnTime,
-              copy.prayerStatusOnTime,
-              Icons.check_circle_outline_rounded,
-              colors.success,
-            ),
-            button(
-              PrayerStatus.completedLate,
-              copy.prayerStatusLate,
-              Icons.error_outline_rounded,
-              colors.warning,
-            ),
-            button(
-              PrayerStatus.missed,
-              copy.prayerStatusMissed,
-              Icons.cancel_outlined,
-              colors.error,
-              iconOnly: true,
-            ),
-            if (status != PrayerStatus.pending)
-              button(
-                PrayerStatus.pending,
-                copy.prayerStatusReset,
-                Icons.restart_alt_rounded,
-                colors.primary,
-                iconOnly: true,
-              ),
-          ],
-        ),
+        controls,
         if (phase != PrayerActionPhase.idle) ...[
           const SizedBox(height: 6),
           Semantics(
@@ -164,7 +184,7 @@ class PrayerStatusButton extends StatelessWidget {
       padding: WidgetStatePropertyAll(
         iconOnly
             ? const EdgeInsets.all(8)
-            : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            : const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       ),
       shape: WidgetStatePropertyAll(
         RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -208,7 +228,10 @@ class PrayerStatusButton extends StatelessWidget {
             onPressed: onPressed,
             style: style,
             icon: glyph,
-            label: Text(label, semanticsLabel: semanticLabel),
+            label: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label, semanticsLabel: semanticLabel, maxLines: 1),
+            ),
           );
     return Semantics(
       selected: selected,

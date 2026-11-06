@@ -954,6 +954,9 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get dashboardFinance => 'المالية الشخصية';
 
   @override
+  String get dashboardNavFinance => 'المالية';
+
+  @override
   String get dashboardFinanceDetail => 'هدف الشهر · ٤٬٢٥٠ / ٨٬٠٠٠';
 
   @override

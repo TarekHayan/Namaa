@@ -31,6 +31,7 @@ enum TodayNavigationSection {
   mindMaps,
   prayer,
   track,
+  finance,
   preview,
 }
 
@@ -194,6 +195,7 @@ class TodayNavigationSidebar extends StatelessWidget {
                       copy.dashboardComingSoonFinanceTitle,
                       DashboardPreviewFeature.finance,
                     ),
+                    selected: section == TodayNavigationSection.finance,
                     comingSoon: true,
                   ),
                   _item(

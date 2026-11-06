@@ -962,6 +962,9 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
   String get dashboardFinance => 'Personal finances';
 
   @override
+  String get dashboardNavFinance => 'Finance';
+
+  @override
   String get dashboardFinanceDetail => 'Monthly goal · 4,250 / 8,000';
 
   @override

@@ -165,12 +165,14 @@ class PrayerCard extends StatelessWidget {
       ],
     );
 
-    final actions = PrayerStatusActions(
-      name: name,
-      status: status,
-      phase: phase,
-      onChanged: onStatusChanged,
-    );
+    PrayerStatusActions actions({required bool fillWidth}) =>
+        PrayerStatusActions(
+          name: name,
+          status: status,
+          phase: phase,
+          onChanged: onStatusChanged,
+          fillWidth: fillWidth,
+        );
 
     return AppHoverSurface(
       radius: 32,
@@ -201,7 +203,7 @@ class PrayerCard extends StatelessWidget {
                 children: [
                   Expanded(child: info),
                   const SizedBox(width: 12),
-                  actions,
+                  actions(fillWidth: false),
                 ],
               );
             }
@@ -215,7 +217,7 @@ class PrayerCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border(top: BorderSide(color: colors.border)),
                   ),
-                  child: actions,
+                  child: actions(fillWidth: true),
                 ),
               ],
             );

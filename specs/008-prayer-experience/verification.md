@@ -258,3 +258,96 @@ Retained adaptations:
 - **Source label:** shown only for the local fallback.
 
 Rendered captures with the real fonts were inspected at 1180 px (Arabic dark, English light) and 390 px (Arabic dark, English light with a device location). These are host renders, not physical-device evidence for T128. Prayer widget and unit tests, Today widget tests and the architecture suites passed **243/243**, including a new assertion that a saved device location shows no on-screen location button but offers it in the settings sheet.
+
+### T125 physical-phone measurement (2026-11-05)
+
+Ran `flutter drive --profile -d UGGAHM8PC6WGJZNF --driver=test_driver/integration_test.dart --target=integration_test/prayer_schedule_test.dart --dart-define=PRAYER_TEST_TARGET=CPH2481-android15-profile` on a physical **CPH2481, Android 15, profile build**, with the encrypted local store and the 18,300-report history fixture. Result: **2/2 passed**.
+
+Measurements:
+- `PRAYER_HISTORY_FIXTURE reports=18300 cold_readable_ms=16 action_visible_ms=10`
+- `PRAYER_OFFLINE_SEVEN_DAY_MS elapsed=11`
+
+Both are against the ≤2000 ms readable and ≤1000 ms action limits, which were enforced because the target is named. The seven offline dates ran with every HTTP request failing.
+
+Scope: these times measure the data path from an encrypted reopen to the first readable day snapshot, and from a local status write to the visible day count. They are not a frame-render timing of the full route. The manual offline/permission/visual phone checks remain under T137/T128.
+
+### Hands-on phone check (2026-11-05, user-run)
+
+The user ran `flutter run --profile -d UGGAHM8PC6WGJZNF --dart-define=NAMAA_TASKS_PREVIEW=true --dart-define=NAMAA_DEVICE_PREVIEW=false` on the CPH2481 (Android 15) and sent three screenshots (Arabic, dark theme):
+
+- **Granted location:** the header shows "موقعي الحالي", Thursday 5 November 2026, `Africa/Cairo`, Egyptian General Authority method. There is no on-screen location button; only the settings (tune) icon sits beside the title.
+- **Times:** Fajr 4:44 AM and Dhuhr 11:39 AM, which are plausible for Cairo on that date with the Egyptian method. A comparison against the mosque timetable or AlAdhan has not been recorded yet.
+- **Offline:** with airplane mode on, the same schedule and statuses were still rendered.
+- **Home agreement:** the Home "Prayers" tile shows 5/5, matching the Prayer header's "5/5 complete (100%)" badge. The hero shows "awaiting sync confirmation" because the local preview has no server, which is expected.
+- **Visual note:** on this phone width, the reset button on a completed card wraps onto its own second row under the three status buttons.
+
+Still open under T128/T137: the settings-sheet flow, denied permission falling back to manual search, English and light-theme phone captures, a desktop capture, and the timetable comparison.
+
+**Fix (2026-11-06):** on phones, `PrayerStatusActions(fillWidth: true)` lays the controls out in one row. "On time" and "late" share the width, and their labels scale down if needed. They are followed by the missed and reset icons, so reset no longer wraps onto its own line. With text scale above 1.3, or on wide layouts, the controls keep the wrapping layout. A new widget test pins all four controls to one row at a 300 dp width in Arabic and English. Prayer widget/unit tests and the architecture suites passed (196, 1 skipped). This still needs a look on the phone.
+
+### Phone bottom navigation fix (2026-11-06, user-reported)
+
+From the phone review: "المالية الشخصية" wrapped onto two lines in the bottom bar, and taps sometimes landed on the wrong tab.
+
+- **Label:** the bar now uses the prototype's short `navFinance` label ("المالية" / "Finance") through `dashboardNavFinance`. The tooltip keeps the full name.
+- **Highlight:** Finance now has its own `TodayNavigationSection.finance`, so it highlights tab 3. Before, it highlighted "More".
+- **No stacking:** a tab opened from another pushed tab (Track, Finance, preview) replaces it instead of stacking on top. Back now returns to the starting page, and re-tapping Finance does nothing.
+- **Sidebar:** the wide sidebar highlights Finance too.
+
+A new shell widget test covers the highlight, the replacement, and back. `flutter analyze` reports only the existing `lib/main.dart` warning. The full suite ran 761 passed, 1 skipped, and 1 failure, which was the dashboard contract test's old label; that test has been updated and the Today widget tests now pass 49/49. Still to check on the phone.
+
+**Follow-up (2026-11-06, user direction): tab navigation, no back stack.** The user wants sections to behave as tabs. Switching sections must not pile pages up, there should be no top back arrow, and the bar or sidebar is the way to move.
+
+- **Switching sections:** Home now switches with `GoRouter.go` instead of `push`, the same as the feature shells, so Tasks, Habits, Mind Maps and Prayer open as the only page.
+- **Track, Finance and previews:** these open as a single page over the current section. A second one replaces the first, and choosing any destination closes it first.
+- **No back arrows:** `TodayComingSoonPage(showBack: false)` inside the shell, and `PrayerTrackHub` lost its back button.
+- **Device back button:** from any section it goes to Home; on Home it leaves the app.
+
+Tests:
+- The tests that tapped the back arrow now use the device back.
+- New shell tests check: no back arrow; Finance → Tasks leaves Tasks as the only page; back from Track goes Home.
+- `flutter analyze`: only the existing `lib/main.dart` warning.
+- Full `flutter test`: **763 passed, 1 skipped**.
+- Still needs a phone check.
+
+## Closeout checks and pre-gate audit (2026-11-06)
+
+### T129 — owner/secret/architecture/migration
+
+- **Migration upgrades:** `flutter test test/unit/core/data/local/prayer_migration_test.dart` passed **10/10**. This covers the fresh v8 database, the real v1…v7 → v9 and installed v8 → v9 upgrades that preserve records, and the failed v8 upgrade that rolls back and records recovery later.
+- **Architecture and boundaries:** the architecture suites pass inside the full run below; they cover owner/preview isolation, Prayer/Today boundaries and the no-direct-XP-write rules. The isolation tests themselves sit in the Prayer unit suites in the same run.
+- **Secret scan:** the branch diff against `main` was searched for service-role keys, JWTs, `sk_live`, private keys and inline API secrets. The only hits are the existing secret-guard implementation and its synthetic test fixtures; no real credential appears. Prayer code has no `print`/`debugPrint`/`log` call that could leak a payload, query or key. `gitleaks` is not installed on this host, so that scan stays with the CI gate.
+- **Android release permission:** the main manifest declares `INTERNET`, `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION`.
+- **`.metadata`:** identical to `main` (`git diff main -- .metadata` is empty).
+
+### T130 — format, analysis, suites
+
+- `dart format --output=none --set-exit-if-changed lib test integration_test`: 448 files, 0 changed.
+- `flutter analyze`: one warning, `lib/main.dart:28` `unused_local_variable`. It comes from the user's uncommitted local DevicePreview toggle; the committed tree is analyzer-clean.
+- `flutter test` (full suite, which includes the Prayer, XP, Today, app and architecture tests): **763 passed, 1 skipped**.
+- `supabase test db` against local Docker with migration 0015: **251/251** in 16 files, PASS.
+- No device suite was repeated: since the last device runs there have been only presentation/navigation changes, which the widget tests cover.
+
+### Requirement coverage
+
+All 28 FRs have their owner tasks complete except two:
+- **FR-014** owns T129, which is closed by the checks above.
+- **FR-028** owns T134, this audit.
+
+All 8 SCs: SC-002, SC-003, SC-004 and SC-006 are complete. SC-001, SC-005, SC-007 and SC-008 still wait on **T128**, the hands-on phone/desktop journey.
+
+### Remaining blockers before 008 can close
+
+1. **T128 / T137 (user, on device):**
+   - the settings sheet;
+   - denied permission → manual search;
+   - English and light-theme phone captures, and a desktop capture;
+   - the timetable compared with AlAdhan or a mosque;
+   - the ≤60 s scripted journey;
+   - a recheck of the new tab navigation and the one-row status actions.
+2. **T119 / T120 (needs explicit approval):** migration 0015 on the isolated staging project, then the two-device sync run.
+3. **T131:** iOS, macOS and Linux cannot run on this Windows host. Android (CPH2481) and Windows have passed; the other three come from the CI gate.
+4. **T133 (needs push approval):** the full PR-to-develop gate on the final head.
+5. **T132 / T134:** final doc/task-state pass and closure recommendation after items 1–4. The pre-gate pass is recorded here.
+
+**Release-only prerequisite (does not block closing the spec):** the commercial city-search provider stays release-blocked until it is licensed.

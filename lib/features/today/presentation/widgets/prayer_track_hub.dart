@@ -22,16 +22,10 @@ class PrayerTrackHub extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              Row(
-                children: [
-                  if (Navigator.of(context).canPop()) const BackButton(),
-                  Expanded(
-                    child: Text(
-                      copy.dashboardTrack,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                  ),
-                ],
+              // A tab page: the navigation bar is the way out.
+              Text(
+                copy.dashboardTrack,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 16),
               for (var i = 0; i < entries.length; i++)
