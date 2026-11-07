@@ -63,10 +63,39 @@ class IosResultsTest(unittest.TestCase):
         self.assertEqual(self.run_main(65, summary_status=1), (65, 1))
 
     def test_xcode_success_requires_readable_bundle(self):
-        self.assertEqual(self.run_main(0, summary_status=1), (1, 1))
+        with patch.object(ios_runner.time, "sleep"):
+            self.assertEqual(
+                self.run_main(0, summary_status=1),
+                (1, ios_runner.SUMMARY_READ_ATTEMPTS),
+            )
 
     def test_timeout_cannot_pass(self):
         self.assertEqual(self.run_main(None), (124, 0))
+
+    def test_summary_read_is_retried_before_rejecting(self):
+        good = subprocess.CompletedProcess(
+            [], 0, json.dumps({"totalTestCount": 1, "passedTests": 1, "failedTests": 0})
+        )
+        bad = subprocess.CompletedProcess([], 1, "")
+        with (
+            patch.object(sys, "argv", ["runner", "results.xcresult", "--", "xcodebuild"]),
+            patch.object(ios_runner, "run_attempt", return_value=(0, "")),
+            patch.object(ios_runner.time, "sleep"),
+            patch.object(ios_runner.subprocess, "run", side_effect=[bad, bad, good]) as read,
+        ):
+            self.assertEqual(ios_runner.main(), 0)
+        self.assertEqual(read.call_count, 3)
+
+    def test_unreadable_summary_still_fails_after_retries(self):
+        bad = subprocess.CompletedProcess([], 1, "")
+        with (
+            patch.object(sys, "argv", ["runner", "results.xcresult", "--", "xcodebuild"]),
+            patch.object(ios_runner, "run_attempt", return_value=(0, "")),
+            patch.object(ios_runner.time, "sleep"),
+            patch.object(ios_runner.subprocess, "run", return_value=bad) as read,
+        ):
+            self.assertEqual(ios_runner.main(), 1)
+        self.assertEqual(read.call_count, ios_runner.SUMMARY_READ_ATTEMPTS)
 
 
 class IosUnkillableProcessTest(unittest.TestCase):

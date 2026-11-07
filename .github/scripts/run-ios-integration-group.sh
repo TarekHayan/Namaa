@@ -117,14 +117,31 @@ recover_simulator() {
   xcrun simctl boot "$IOS_DEVICE_ID" >/dev/null 2>&1 || true
 }
 
+# XCTest reports only the first line of a Flutter failure. Print the
+# app's own Flutter messages from the simulator log into the job log
+# (where GitHub masks secrets) so the full exception is visible. Result
+# bundles are not uploaded: this repository is public.
+print_flutter_log() {
+  echo "::group::Flutter log from the simulator for $1"
+  xcrun simctl spawn "$IOS_DEVICE_ID" log show --style compact --last 15m \
+    --predicate 'process == "Runner" AND eventMessage CONTAINS "flutter:"' \
+    2>/dev/null | tail -n 400 || true
+  echo "::endgroup::"
+}
+
 failed=()
 
 for suite in "${suites[@]}"; do
   test_file="$(suite_file "$suite")"
   echo "::group::iOS $IOS_GROUP / $suite ($test_file)"
   suite_defines=("${staging_defines[@]}")
+  # XCTest's per-test allowance also covers app launch. The hosted two-device
+  # Prayer sync makes many round trips to staging and takes 3.5-4 minutes on
+  # every desktop target, so 300 s leaves it no margin on a slow simulator.
+  test_allowance=300
   if [[ "$suite" == prayer-offline-sync ]]; then
     suite_defines+=(--dart-define=NAMAA_SUPABASE_ENV=non-production)
+    test_allowance=600
   fi
   # XCTest can activate native accessibility after the first test begins.
   # Establish it before testWidgets records its semantics-handle baseline.
@@ -175,7 +192,7 @@ DART
       -derivedDataPath "$work/DerivedData" \
       -destination "id=$IOS_DEVICE_ID" -parallel-testing-enabled NO \
       -only-testing:RunnerTests/RunnerTests/testFlutterIntegration \
-      -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
+      -test-timeouts-enabled YES -default-test-execution-time-allowance "$test_allowance" \
       -maximum-test-execution-time-allowance 600 \
       -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES \
       || status=$?
@@ -190,6 +207,7 @@ DART
   done
   echo "::endgroup::"
   if [[ "$status" -ne 0 ]]; then
+    print_flutter_log "$suite"
     echo "::error title=iOS $suite failed::$test_file exited with status $status"
     failed+=("$suite")
   else

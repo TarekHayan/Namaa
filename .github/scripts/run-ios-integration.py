@@ -11,6 +11,7 @@ import signal
 import subprocess
 import sys
 import threading
+import time
 from typing import Optional
 
 
@@ -74,7 +75,13 @@ def run_attempt(
     return return_code, "".join(output)
 
 
-def read_result_summary(result_bundle: str) -> Optional[dict]:
+# xcresulttool can fail to read a bundle that xcodebuild has only just
+# finalized, so a successful run is read a few times before it is rejected.
+SUMMARY_READ_ATTEMPTS = 3
+SUMMARY_RETRY_DELAY_SECONDS = 5
+
+
+def _read_summary_once(result_bundle: str) -> Optional[dict]:
     try:
         summary = subprocess.run(
             ["xcrun", "xcresulttool", "get", "test-results", "summary", "--path", result_bundle],
@@ -84,10 +91,21 @@ def read_result_summary(result_bundle: str) -> Optional[dict]:
             check=False,
         )
         if summary.returncode != 0:
-            print("Unable to read iOS XCTest result summary.", file=sys.stderr)
             return None
-        result = json.loads(summary.stdout)
+        return json.loads(summary.stdout)
     except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+
+
+def read_result_summary(result_bundle: str, attempts: int = 1) -> Optional[dict]:
+    result = None
+    for attempt in range(attempts):
+        if attempt:
+            time.sleep(SUMMARY_RETRY_DELAY_SECONDS)
+        result = _read_summary_once(result_bundle)
+        if result is not None:
+            break
+    if result is None:
         print("Unable to read iOS XCTest result summary.", file=sys.stderr)
         return None
 
@@ -115,7 +133,11 @@ def main() -> int:
         return 124
     # Even a quiet Xcode failure keeps its assertion/crash details in xcresult.
     # Print those details before propagating the original failure status.
-    result = read_result_summary(result_bundle)
+    # Only a successful run is worth re-reading; a failed one is read once to
+    # print its details before the original status is propagated.
+    result = read_result_summary(
+        result_bundle, attempts=SUMMARY_READ_ATTEMPTS if return_code == 0 else 1
+    )
     if return_code != 0:
         return return_code
     if result is None:

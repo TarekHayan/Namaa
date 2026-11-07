@@ -527,3 +527,21 @@ New runner tests prove that a drop after an on-device pass is accepted and a dro
 - After any timeout, the group script kills leftover `xcodebuild` processes and restarts the simulator.
 - A test run that timed out with no result is retried once on the restarted simulator. Real failures are not retried.
 - A new runner test proves that a process surviving SIGKILL returns a timeout instead of hanging. All 58 CI script tests pass, and `bash -n` is clean.
+
+**Fifth PR run [42310343642](https://github.com/TarekHayan/Namaa/actions/runs/42310343642) on `dfdf366`.**
+
+Passed: all Android, Windows, Linux, macOS, quality, Supabase/RLS, and iOS foundation, tasks and today. The runner hardening worked: no group hung, and iOS mind-maps finished in 24 minutes.
+
+Three iOS files failed, each for a different reason:
+- **iOS prayer — `prayer_offline_sync_test`: "Test exceeded execution time allowance of 5 minutes".**
+  - The hosted two-device sync takes about 3.5–4 minutes against staging on every target: Windows 3:37, macOS 3:49. It passed on iOS in the previous run at 224 s. Staging holds only 50 Prayer reports, so the time is round trips, not data growth.
+  - XCTest's 300 s allowance includes the simulator app launch.
+  - **Fix:** this one suite gets a 600 s allowance, the existing maximum. Every other suite keeps 300 s.
+- **iOS habits — `habits_offline_sync_test`.** xcodebuild succeeded, but `xcresulttool` could not read the just-written bundle, so the runner rejected it.
+  - **Fix:** after a successful xcodebuild, the summary is read up to three times, 5 s apart. A failed run is still read once. New tests cover retry-then-pass and still-unreadable-fails.
+- **iOS mind-maps — `mind_maps_localized_route_test`: "Multiple exceptions (2)".** XCTest reports only the first line.
+  - The same app code passed this file on iOS at `be7d158` (no `lib/` change since), and it passes on Windows, macOS, Linux and Android in this run, so it looks flaky on the iOS simulator.
+  - It cannot be fixed blind. On any failure the group now prints the app's `flutter:` messages from the simulator log into the masked job log.
+  - Result bundles are not uploaded as artifacts, because the repository is public.
+
+All 60 CI script tests pass, and `bash -n` is clean.
