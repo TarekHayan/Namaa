@@ -584,7 +584,7 @@ The failed job was rerun as attempt 3 on the same head.
 - Windows, macOS and Linux;
 - the five-target gate.
 
-Attempts 2 and 3 reran only failed jobs on the same head, after reading their logs: an iOS DNS failure, then a SpringBoard crash. This closeout commit changes only `specs/`, which is outside the workflow's `pull_request` paths. It does not start a new run, and it does not change any code the gate validated.
+Attempts 2 and 3 reran only failed jobs on the same head, after reading their logs: an iOS DNS failure, then a SpringBoard crash. The closeout commits after `947a332` change only `specs/` (`git diff --stat 947a332..HEAD`). GitHub's `pull_request` paths filter looks at the whole PR diff, so it still queued a new full run. That run was cancelled as redundant: it would only re-test the same code, and iOS has proven flaky on the hosted runners. The code that merges is exactly the code the gate validated.
 
 **T119 / T120 — hosted sync and integrity.**
 - Migration 0015 was applied to the isolated staging project, with the user's approval. Production was not touched.
