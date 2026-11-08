@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bound native XCTest and require a nonempty, successful result bundle.
 
-The workflow maps suite names (including Today) to Dart entry points; this
+The workflow maps suite names (including Today and Prayer) to Dart entry points; this
 shared runner preserves the same native result requirement for every suite.
 """
 
@@ -11,11 +11,16 @@ import signal
 import subprocess
 import sys
 import threading
+import time
 from typing import Optional
 
 
 ATTEMPT_TIMEOUT_SECONDS = 12 * 60
 BUILD_TIMEOUT_SECONDS = 25 * 60
+# A process wedged inside the simulator may never exit, even after SIGKILL.
+# Waiting for it without a bound once held a group until the 125-minute
+# step limit, so the runner gives up on it after this grace period.
+KILL_GRACE_SECONDS = 30
 
 
 def run_attempt(
@@ -55,7 +60,14 @@ def run_attempt(
                 os.killpg(process.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
-            process.wait()
+            try:
+                process.wait(timeout=KILL_GRACE_SECONDS)
+            except subprocess.TimeoutExpired:
+                print(
+                    "Timed-out process did not exit after SIGKILL; abandoning it.",
+                    file=sys.stderr,
+                    flush=True,
+                )
         reader.join(timeout=5)
         return None, "".join(output)
 
@@ -63,7 +75,13 @@ def run_attempt(
     return return_code, "".join(output)
 
 
-def read_result_summary(result_bundle: str) -> Optional[dict]:
+# xcresulttool can fail to read a bundle that xcodebuild has only just
+# finalized, so a successful run is read a few times before it is rejected.
+SUMMARY_READ_ATTEMPTS = 3
+SUMMARY_RETRY_DELAY_SECONDS = 5
+
+
+def _read_summary_once(result_bundle: str) -> Optional[dict]:
     try:
         summary = subprocess.run(
             ["xcrun", "xcresulttool", "get", "test-results", "summary", "--path", result_bundle],
@@ -73,10 +91,21 @@ def read_result_summary(result_bundle: str) -> Optional[dict]:
             check=False,
         )
         if summary.returncode != 0:
-            print("Unable to read iOS XCTest result summary.", file=sys.stderr)
             return None
-        result = json.loads(summary.stdout)
+        return json.loads(summary.stdout)
     except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+
+
+def read_result_summary(result_bundle: str, attempts: int = 1) -> Optional[dict]:
+    result = None
+    for attempt in range(attempts):
+        if attempt:
+            time.sleep(SUMMARY_RETRY_DELAY_SECONDS)
+        result = _read_summary_once(result_bundle)
+        if result is not None:
+            break
+    if result is None:
         print("Unable to read iOS XCTest result summary.", file=sys.stderr)
         return None
 
@@ -104,7 +133,11 @@ def main() -> int:
         return 124
     # Even a quiet Xcode failure keeps its assertion/crash details in xcresult.
     # Print those details before propagating the original failure status.
-    result = read_result_summary(result_bundle)
+    # Only a successful run is worth re-reading; a failed one is read once to
+    # print its details before the original status is propagated.
+    result = read_result_summary(
+        result_bundle, attempts=SUMMARY_READ_ATTEMPTS if return_code == 0 else 1
+    )
     if return_code != 0:
         return return_code
     if result is None:

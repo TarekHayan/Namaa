@@ -101,9 +101,11 @@ _Layer _layerOf(String libPath) {
   // These directories contain reusable view resources, not the app's
   // composition root. Feature views may depend on them without depending on
   // app wiring, navigation, repositories, or services.
+  // Localization helpers under app/l10n/ are label/format resources too;
+  // they may read Domain values but never app wiring or infrastructure.
   if (p.startsWith('app/theme/') ||
       p.startsWith('app/widgets/') ||
-      p.startsWith('app/l10n/generated/')) {
+      p.startsWith('app/l10n/')) {
     return _Layer.presentation;
   }
   if (p.startsWith('app/')) {

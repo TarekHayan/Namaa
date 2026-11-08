@@ -63,10 +63,68 @@ class IosResultsTest(unittest.TestCase):
         self.assertEqual(self.run_main(65, summary_status=1), (65, 1))
 
     def test_xcode_success_requires_readable_bundle(self):
-        self.assertEqual(self.run_main(0, summary_status=1), (1, 1))
+        with patch.object(ios_runner.time, "sleep"):
+            self.assertEqual(
+                self.run_main(0, summary_status=1),
+                (1, ios_runner.SUMMARY_READ_ATTEMPTS),
+            )
 
     def test_timeout_cannot_pass(self):
         self.assertEqual(self.run_main(None), (124, 0))
+
+    def test_summary_read_is_retried_before_rejecting(self):
+        good = subprocess.CompletedProcess(
+            [], 0, json.dumps({"totalTestCount": 1, "passedTests": 1, "failedTests": 0})
+        )
+        bad = subprocess.CompletedProcess([], 1, "")
+        with (
+            patch.object(sys, "argv", ["runner", "results.xcresult", "--", "xcodebuild"]),
+            patch.object(ios_runner, "run_attempt", return_value=(0, "")),
+            patch.object(ios_runner.time, "sleep"),
+            patch.object(ios_runner.subprocess, "run", side_effect=[bad, bad, good]) as read,
+        ):
+            self.assertEqual(ios_runner.main(), 0)
+        self.assertEqual(read.call_count, 3)
+
+    def test_unreadable_summary_still_fails_after_retries(self):
+        bad = subprocess.CompletedProcess([], 1, "")
+        with (
+            patch.object(sys, "argv", ["runner", "results.xcresult", "--", "xcodebuild"]),
+            patch.object(ios_runner, "run_attempt", return_value=(0, "")),
+            patch.object(ios_runner.time, "sleep"),
+            patch.object(ios_runner.subprocess, "run", return_value=bad) as read,
+        ):
+            self.assertEqual(ios_runner.main(), 1)
+        self.assertEqual(read.call_count, ios_runner.SUMMARY_READ_ATTEMPTS)
+
+
+class IosUnkillableProcessTest(unittest.TestCase):
+    def test_process_that_survives_sigkill_does_not_hang_the_runner(self):
+        class Wedged:
+            pid = 4242
+            stdout = iter(())
+            waits = []
+
+            def wait(self, timeout=None):
+                # A process stuck inside the simulator never exits.
+                self.waits.append(timeout)
+                raise subprocess.TimeoutExpired("xcodebuild", timeout)
+
+        process = Wedged()
+        signals = []
+        with (
+            patch.object(ios_runner.subprocess, "Popen", return_value=process),
+            patch.object(ios_runner.signal, "SIGKILL", 9, create=True),
+            patch.object(
+                ios_runner.os, "killpg", create=True,
+                side_effect=lambda pid, sig: signals.append(sig),
+            ),
+        ):
+            result = ios_runner.run_attempt(["xcodebuild"], timeout_seconds=1)
+        self.assertEqual(result, (None, ""))
+        self.assertEqual(signals, [ios_runner.signal.SIGTERM, 9])
+        # Every wait is bounded: the attempt, the SIGTERM grace and SIGKILL.
+        self.assertEqual(process.waits, [1, 10, ios_runner.KILL_GRACE_SECONDS])
 
 
 class IosBuildTest(unittest.TestCase):
@@ -108,7 +166,8 @@ class AndroidRetryTest(unittest.TestCase):
                 return "/" + value[0].lower() + value[2:] if os.name == "nt" else value
 
             scripts = {
-                "adb": "exit 0\n",
+                # A booted emulator answers getprop sys.boot_completed with 1.
+                "adb": 'if [[ "$*" == *getprop* ]]; then echo 1; fi\nexit 0\n',
                 "timeout": 'while [[ "$1" == -* ]]; do shift; done\nshift\n"$@"\n',
                 "flutter": '''echo "$*" >> "$PROBE_CALLS"
 if [[ ! -f "$PROBE_MARKER" ]]; then
@@ -119,6 +178,18 @@ if [[ ! -f "$PROBE_MARKER" ]]; then
   if [[ "$PROBE_SCENARIO" == assertion ]]; then
     echo 'Failure Details: assertion failed'
     exit 1
+  fi
+  if [[ "$PROBE_SCENARIO" == driver-drop ]]; then
+    echo 'I/flutter ( 4681): 00:03 +2: All tests passed!'
+    echo 'getIsolate: (-32000) Service connection disposed'
+    echo 'adb: device offline'
+    exit 255
+  fi
+  if [[ "$PROBE_SCENARIO" == driver-drop-failed ]]; then
+    echo 'I/flutter ( 4681): 00:03 +1 -1: two devices converge [E]'
+    echo 'I/flutter ( 4681): 00:03 +1 -1: Some tests failed.'
+    echo 'getIsolate: (-32000) Service connection disposed'
+    exit 255
   fi
   exit 137
 fi
@@ -165,6 +236,17 @@ echo 'All tests passed'
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertEqual(len(calls), 1)
 
+    def test_driver_drop_after_on_device_pass_is_accepted(self):
+        result, calls = self.run_probe("driver-drop")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(len(calls), 4)
+        self.assertIn("accepting the on-device result", result.stdout)
+
+    def test_driver_drop_after_on_device_failure_still_fails(self):
+        result, calls = self.run_probe("driver-drop-failed")
+        self.assertEqual(result.returncode, 255, result.stdout + result.stderr)
+        self.assertEqual(len(calls), 1)
+
     def test_timeout_after_test_started_is_not_retried(self):
         result, calls = self.run_probe("test-kill")
         self.assertEqual(result.returncode, 137, result.stdout + result.stderr)
@@ -187,13 +269,38 @@ class TodaySuiteSelectionTest(unittest.TestCase):
         today = group_runner.split("  today)", 1)[1].split("    ;;", 1)[0]
         for suite in ("today-dashboard", "today-sync"):
             self.assertIn(suite, today)
-        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*)', group_runner)
+        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*|prayer-*)', group_runner)
         self.assertIn('run-ios-integration.py "$result_bundle"', group_runner)
         self.assertIn('CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-', group_runner)
         self.assertIn('stabilizeNativeIosSemantics(binding)', group_runner)
         runner = (ROOT / ".github/scripts/run-ios-integration.py").read_text()
         self.assertIn('totalTestCount', runner)
         self.assertIn('passedTests', runner)
+
+
+class PrayerSuiteRegistrationTest(unittest.TestCase):
+    def test_android_and_ios_register_every_prayer_entry_once(self):
+        android = (ROOT / ".github/scripts/run-android-integration.sh").read_text()
+        ios = (ROOT / ".github/scripts/run-ios-integration-group.sh").read_text()
+        android_group = android.split("  prayer)", 1)[1].split("    ;;", 1)[0]
+        ios_group = ios.split("  prayer)", 1)[1].split("    ;;", 1)[0]
+        for suite in ("schedule", "reports", "offline-sync", "localized-route"):
+            file = f"integration_test/prayer_{suite.replace('-', '_')}_test.dart"
+            self.assertTrue((ROOT / file).is_file(), file)
+            self.assertEqual(android_group.count(file), 1, file)
+            self.assertEqual(ios_group.count(f"prayer-{suite}"), 1, suite)
+
+    def test_unknown_android_suite_fails_before_running(self):
+        bash = r"C:\Program Files\Git\bin\bash.exe" if os.name == "nt" else shutil.which("bash")
+        if not bash or not Path(bash).is_file():
+            self.skipTest("Bash is unavailable")
+        result = subprocess.run(
+            [bash, ".github/scripts/run-android-integration.sh"], cwd=ROOT,
+            env={**os.environ, "ANDROID_SUITE": "prayer-typo"},
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("Unknown Android integration suite", result.stderr)
 
 
 if __name__ == "__main__":

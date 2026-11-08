@@ -28,6 +28,8 @@ class TodayBottomNavigation extends StatelessWidget {
     required this.onTasks,
     required this.onHabits,
     required this.onMindMaps,
+    this.onPrayer,
+    this.onTrack,
     required this.onPreferences,
     this.onHome,
     this.selectedIndex = 0,
@@ -38,6 +40,8 @@ class TodayBottomNavigation extends StatelessWidget {
   final VoidCallback onTasks;
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
+  final VoidCallback? onPrayer;
+  final VoidCallback? onTrack;
   final VoidCallback onPreferences;
   final VoidCallback? onHome;
   final int selectedIndex;
@@ -95,7 +99,11 @@ class TodayBottomNavigation extends StatelessWidget {
                 onTasks();
                 break;
               case 2:
-                _showTrackPreview(context, copy);
+                if (onTrack != null) {
+                  onTrack!();
+                } else {
+                  _showTrackPreview(context, copy);
+                }
                 break;
               case 3:
                 _showFinancePreview(context, copy);
@@ -130,7 +138,8 @@ class TodayBottomNavigation extends StatelessWidget {
               key: kTodayBottomFinanceKey,
               icon: const Icon(Icons.account_balance_wallet_outlined),
               selectedIcon: const Icon(Icons.account_balance_wallet_rounded),
-              label: copy.dashboardFinance,
+              // The prototype's short tab label keeps one line on phones.
+              label: copy.dashboardNavFinance,
               tooltip: copy.dashboardFinance,
             ),
             NavigationDestination(
@@ -147,6 +156,10 @@ class TodayBottomNavigation extends StatelessWidget {
   }
 
   void _showTrackPreview(BuildContext context, FoundationLocalizations copy) {
+    if (onPrayer != null) {
+      onPrayer!();
+      return;
+    }
     if (onPreview != null) {
       onPreview!(
         context,
@@ -290,7 +303,6 @@ class TodayBottomNavigation extends StatelessWidget {
                   ),
                 ),
               ),
-              _upcoming(copy.dashboardPrayer, Icons.schedule_rounded, copy),
               _upcoming(copy.dashboardQuran, Icons.menu_book_rounded, copy),
               _upcoming(
                 copy.dashboardAdhkarTitle,

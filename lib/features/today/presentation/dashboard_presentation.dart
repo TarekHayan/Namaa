@@ -93,7 +93,8 @@ final class DashboardPresentation {
   /// Live or status-indicated timeline tasks.
   final DashboardDisplayValue<List<TodayTaskReference>> timelineTasks;
 
-  /// Central fixture for sample values (prayer, quran, finance, counters, etc.).
+  /// Central fixture for unfinished sections (Quran, finance, counters, etc.).
+  /// Prayer status and count come from the owner-scoped live Today state.
   final DashboardPreviewData preview;
 
   // Task metrics

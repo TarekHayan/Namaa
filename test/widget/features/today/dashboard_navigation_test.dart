@@ -80,6 +80,7 @@ Widget _wrapView({
   VoidCallback? onNewHabit,
   VoidCallback? onTaskMatrix,
   VoidCallback? onTaskOverdue,
+  VoidCallback? onPrayer,
   void Function(String, bool)? onSetTaskCompleted,
 }) {
   return MaterialApp(
@@ -99,6 +100,7 @@ Widget _wrapView({
         onNewHabit: onNewHabit,
         onTaskMatrix: onTaskMatrix,
         onTaskOverdue: onTaskOverdue,
+        onPrayer: onPrayer,
         onRetryTasks: () {},
         onRetryHabits: () {},
         onRetryXp: () {},
@@ -108,6 +110,10 @@ Widget _wrapView({
     ),
   );
 }
+
+/// The device back button: tabs have no on-screen back arrow.
+Future<void> _deviceBack(WidgetTester tester) =>
+    tester.state<NavigatorState>(find.byType(Navigator).first).maybePop();
 
 void main() {
   group('T037 Dashboard Navigation Tests', () {
@@ -290,7 +296,7 @@ void main() {
         expect(find.text('Coming soon'), findsOneWidget);
 
         // Return to Home via back button
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsNothing);
 
@@ -387,14 +393,14 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Track'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         await tester.tap(find.byKey(kTodaySidebarPrayerKey));
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Prayer'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         // Finance in sidebar opens TodayComingSoonPage
@@ -402,7 +408,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Finance'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         // Habits in sidebar
@@ -423,13 +429,14 @@ void main() {
     );
 
     testWidgets(
-      'Each quick hub opens TodayComingSoonPage with matching title',
+      'Prayer quick hub opens Prayer and other hubs open coming-soon pages',
       (tester) async {
         tester.view.physicalSize = const Size(400 * 3, 1600 * 3);
         tester.view.devicePixelRatio = 3.0;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
+        var prayerOpened = 0;
         await tester.pumpWidget(
           _wrapView(
             state: _createTestState(),
@@ -437,18 +444,20 @@ void main() {
             onHabits: () {},
             onMindMaps: () {},
             onPreferences: () {},
+            onPrayer: () => prayerOpened++,
           ),
         );
         await tester.pumpAndSettle();
 
-        final hubTitles = [
-          'Prayer',
-          'Focus',
-          'Quran',
-          'Adhkar',
-          'Qiyam',
-          'Counters',
-        ];
+        final prayerHub = find.descendant(
+          of: find.byKey(kDashboardHubsGroup),
+          matching: find.text('Prayer times'),
+        );
+        await tester.ensureVisible(prayerHub);
+        await tester.tap(prayerHub);
+        expect(prayerOpened, 1);
+
+        final hubTitles = ['Focus', 'Quran', 'Adhkar', 'Qiyam', 'Counters'];
 
         for (final title in hubTitles) {
           final hubFinder = find.descendant(
@@ -468,7 +477,7 @@ void main() {
           expect(find.text('Coming soon'), findsOneWidget);
 
           // Pop back
-          await tester.tap(find.byType(BackButton));
+          await _deviceBack(tester);
           await tester.pumpAndSettle();
         }
       },
@@ -482,6 +491,7 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
+        var prayerOpened = 0;
         await tester.pumpWidget(
           _wrapView(
             state: _createTestState(),
@@ -489,6 +499,7 @@ void main() {
             onHabits: () {},
             onMindMaps: () {},
             onPreferences: () {},
+            onPrayer: () => prayerOpened++,
           ),
         );
         await tester.pumpAndSettle();
@@ -497,10 +508,7 @@ void main() {
         await tester.ensureVisible(find.byKey(kDashboardPrayerGroup));
         await tester.tap(find.byKey(kDashboardPrayerGroup));
         await tester.pumpAndSettle();
-        expect(find.byType(TodayComingSoonPage), findsOneWidget);
-        expect(find.text('Prayer'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
-        await tester.pumpAndSettle();
+        expect(prayerOpened, 1);
 
         // 2. Quran Card
         await tester.ensureVisible(find.byKey(kDashboardQuranGroup));
@@ -513,7 +521,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Quran'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         // 3. Finance Card
@@ -527,7 +535,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Finance'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
 
         // 4. Counters Card
@@ -541,7 +549,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TodayComingSoonPage), findsOneWidget);
         expect(find.text('Counters'), findsWidgets);
-        await tester.tap(find.byType(BackButton));
+        await _deviceBack(tester);
         await tester.pumpAndSettle();
       },
     );

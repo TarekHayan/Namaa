@@ -930,6 +930,9 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
   String get dashboardPrayerShort => 'الصلوات';
 
   @override
+  String get dashboardXpPendingSync => 'بانتظار تأكيد المزامنة';
+
+  @override
   String get dashboardMore => 'المزيد';
 
   @override
@@ -949,6 +952,9 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get dashboardFinance => 'المالية الشخصية';
+
+  @override
+  String get dashboardNavFinance => 'المالية';
 
   @override
   String get dashboardFinanceDetail => 'هدف الشهر · ٤٬٢٥٠ / ٨٬٠٠٠';
@@ -1261,4 +1267,247 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get dashboardBackToHome => 'العودة إلى الرئيسية';
+
+  @override
+  String get prayerSaveFailed => 'تعذر الحفظ. حاول مرة أخرى.';
+
+  @override
+  String get prayerTitle => 'مواقيت الصلاة';
+
+  @override
+  String get prayerSubtitle => 'تابع مواقيت الصلاة وسجّل صلوات اليوم';
+
+  @override
+  String get prayerCancel => 'إلغاء';
+
+  @override
+  String prayerResidentRakahs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ركعة فرض للمقيم',
+      few: '$count ركعات فرض للمقيم',
+      two: 'ركعتان فرض للمقيم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prayerRecitationFajr => 'القراءة جهرية في الركعتين.';
+
+  @override
+  String get prayerRecitationQuiet => 'القراءة سرية.';
+
+  @override
+  String get prayerRecitationMaghrib =>
+      'الجهر في الأوليين والإسرار في الثالثة.';
+
+  @override
+  String get prayerRecitationIsha => 'الجهر في الأوليين والإسرار في الأخيرتين.';
+
+  @override
+  String get prayerOptionalFajr => 'من السنن الراتبة ركعتان قبل الفجر.';
+
+  @override
+  String get prayerOptionalDhuhr =>
+      'من السنن المروية أربع قبل الظهر وركعتان بعدها.';
+
+  @override
+  String get prayerOptionalAsr =>
+      'ورد استحباب أربع قبل العصر بعد دخول وقته، وهي نافلة غير راتبة.';
+
+  @override
+  String get prayerOptionalMaghrib => 'من السنن الراتبة ركعتان بعد المغرب.';
+
+  @override
+  String get prayerOptionalIsha => 'من السنن الراتبة ركعتان بعد العشاء.';
+
+  @override
+  String get prayerGuidanceContext =>
+      'إرشادات مختصرة للنوافل؛ تختلف بعض التفاصيل باختلاف المذاهب.';
+
+  @override
+  String get prayerRecitationHeading => 'الجهر والإسرار';
+
+  @override
+  String get prayerJahrTitle => 'الجهر';
+
+  @override
+  String get prayerJahrDefinition => 'القراءة بصوت يسمعه من حول المصلي.';
+
+  @override
+  String get prayerSirrTitle => 'الإسرار';
+
+  @override
+  String get prayerSirrDefinition =>
+      'القراءة بصوت خافت، وليست قراءة صامتة بالقلب وحده.';
+
+  @override
+  String get prayerGuidanceScope =>
+      'توضيح عام لصفة القراءة المعتادة، وليس حكمًا على صحة صلاة المستخدم.';
+
+  @override
+  String get prayerGuidanceSource => 'المصدر: دار الإفتاء المصرية';
+
+  @override
+  String get prayerStreakSoon => 'سلسلة الصلاة: قريبًا';
+
+  @override
+  String prayerProgressBadge(int done, int percent) {
+    return '$done/5 مكتمل ($percent%)';
+  }
+
+  @override
+  String get prayerSetupTitle => 'مواقيت الصلاة حسب موقعك';
+
+  @override
+  String get prayerSetupBody =>
+      'اسمح بتحديد الموقع أثناء استخدام التطبيق لحساب مواقيت الصلاة حيث أنت. يعمل موقعك المحفوظ دون إنترنت.';
+
+  @override
+  String get prayerUseLocation => 'تحديث موقعي';
+
+  @override
+  String get prayerCurrentLocation => 'موقعي الحالي';
+
+  @override
+  String get prayerLocationDisabled =>
+      'خدمة الموقع في الجهاز مغلقة. فعّلها ثم حاول مرة أخرى.';
+
+  @override
+  String get prayerLocationDenied =>
+      'إذن الموقع مغلق. اسمح به من إعدادات التطبيق للحصول على مواقيت الصلاة.';
+
+  @override
+  String get prayerLocationUnavailable =>
+      'تعذر تحديد موقع دقيق الآن. حاول مرة أخرى.';
+
+  @override
+  String get prayerCityEdit => 'إعدادات الصلاة';
+
+  @override
+  String get prayerMethod => 'طريقة الحساب';
+
+  @override
+  String get prayerDateZone => 'تاريخ المدينة ومنطقتها الزمنية';
+
+  @override
+  String get prayerUnavailable => 'الوقت غير متاح لهذا المكان والتاريخ';
+
+  @override
+  String get prayerScheduleUnavailable => 'تعذر حساب المواقيت لهذا اليوم.';
+
+  @override
+  String get prayerFajr => 'الفجر';
+
+  @override
+  String get prayerDhuhr => 'الظهر';
+
+  @override
+  String get prayerAsr => 'العصر';
+
+  @override
+  String get prayerMaghrib => 'المغرب';
+
+  @override
+  String get prayerIsha => 'العشاء';
+
+  @override
+  String get prayerSunrise => 'الشروق';
+
+  @override
+  String get prayerMiddleNight => 'منتصف الليل';
+
+  @override
+  String get prayerLastThird => 'الثلث الأخير من الليل';
+
+  @override
+  String get prayerComingSoon => 'قريبًا';
+
+  @override
+  String get prayerEgyptian => 'الهيئة المصرية العامة للمساحة';
+
+  @override
+  String get prayerMwl => 'رابطة العالم الإسلامي';
+
+  @override
+  String get prayerUmmAlQura =>
+      'أم القرى (العشاء بعد ٩٠ دقيقة، و١٢٠ دقيقة في رمضان)';
+
+  @override
+  String get prayerDubai => 'دبي';
+
+  @override
+  String get prayerNorthAmerica => 'أمريكا الشمالية';
+
+  @override
+  String get prayerKuwait => 'الكويت';
+
+  @override
+  String get prayerQatar => 'قطر (العشاء بعد ٩٠ دقيقة)';
+
+  @override
+  String get prayerAttribution =>
+      'المواقيت: جدول سنوي من AlAdhan، مع حساب محلي احتياطي موضح.';
+
+  @override
+  String get prayerSourceApi =>
+      'المواقيت: جدول AlAdhan السنوي المحفوظ على هذا الجهاز';
+
+  @override
+  String get prayerSourceLocal =>
+      'المواقيت: حساب محلي احتياطي؛ تأكد من مسجد منطقتك';
+
+  @override
+  String get prayerSignInRequired => 'افتح مواقيت الصلاة بعد تسجيل الدخول.';
+
+  @override
+  String get prayerStatusOnTime => 'في وقتها';
+
+  @override
+  String get prayerStatusLate => 'أُديت متأخرًا';
+
+  @override
+  String get prayerStatusMissed => 'فاتتني';
+
+  @override
+  String get prayerStatusPending => 'غير مسجلة';
+
+  @override
+  String get prayerStatusReset => 'إلغاء التسجيل';
+
+  @override
+  String get prayerStatusSaving => 'جارٍ الحفظ…';
+
+  @override
+  String get prayerStatusSaved => 'حُفظت على هذا الجهاز';
+
+  @override
+  String get prayerStatusSaveFailed => 'تعذر حفظ الحالة. حاول مرة أخرى.';
+
+  @override
+  String prayerStatusSelected(String status) {
+    return 'الحالة المختارة: $status';
+  }
+
+  @override
+  String get prayerConflicts => 'تغييرات الصلاة للمراجعة';
+
+  @override
+  String get prayerConflictActive => 'النسخة الحالية';
+
+  @override
+  String get prayerConflictRetained => 'النسخة الأخرى المحفوظة';
+
+  @override
+  String get prayerConflictReadOnly => 'سجلات الأيام السابقة للعرض فقط';
+
+  @override
+  String get prayerLocationRetry => 'حاول مرة أخرى';
+
+  @override
+  String get prayerOpenSettings => 'فتح الإعدادات';
+
+  @override
+  String get prayerSettingsSave => 'حفظ';
 }

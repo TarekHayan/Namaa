@@ -242,7 +242,8 @@ void main() {
         'Home',
         'Tasks',
         'Track',
-        'Personal finances',
+        // The prototype's short tab label; the tooltip keeps the full name.
+        'Finance',
         'More',
       ]);
     },

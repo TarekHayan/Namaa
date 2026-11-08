@@ -25,12 +25,10 @@ Future<void> main() async {
         : FoundationEnvironment.local,
   );
 
+  // DevicePreview is off by default; it is used for the final multi-screen
+  // review of a feature: --dart-define=NAMAA_DEVICE_PREVIEW=true.
   final enableDevicePreview =
-      !kReleaseMode &&
-      const bool.fromEnvironment(
-        'NAMAA_DEVICE_PREVIEW',
-        defaultValue: kDebugMode,
-      );
+      !kReleaseMode && const bool.fromEnvironment('NAMAA_DEVICE_PREVIEW');
 
   runApp(
     DevicePreview(

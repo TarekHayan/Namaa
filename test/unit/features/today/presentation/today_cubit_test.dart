@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/features/prayer/domain/prayer_name.dart';
 import 'package:namma_project/features/today/application/today_calendar_port.dart';
 import 'package:namma_project/features/today/application/today_habits_port.dart';
+import 'package:namma_project/features/today/application/today_prayer_port.dart';
 import 'package:namma_project/features/today/application/today_tasks_port.dart';
 import 'package:namma_project/features/today/application/today_xp_port.dart';
 import 'package:namma_project/features/today/domain/today_calendar.dart';
 import 'package:namma_project/features/today/domain/today_models.dart';
+import 'package:namma_project/features/today/domain/today_prayer_reference.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/domain/today_section.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
@@ -90,7 +93,77 @@ class _Xp implements TodayXpPort {
       stream.stream;
 }
 
+class _Prayer implements TodayPrayerPort {
+  final a = StreamController<TodayPrayerReference>.broadcast(sync: true);
+  final b = StreamController<TodayPrayerReference>.broadcast(sync: true);
+
+  @override
+  Stream<TodayPrayerReference> watchPrayer(String ownerId) =>
+      ownerId == 'a' ? a.stream : b.stream;
+
+  Future<void> close() async {
+    await a.close();
+    await b.close();
+  }
+}
+
+TodayPrayerReference _prayerFor(
+  String owner,
+  String city, {
+  String date = '2026-10-12',
+}) => TodayPrayerReference(
+  ownerId: owner,
+  city: city,
+  timeZoneId: 'Africa/Cairo',
+  localDate: date,
+  nextName: PrayerName.asr,
+  nextUtc: DateTime.utc(2026, 10, 12, 13),
+  followingName: PrayerName.maghrib,
+  followingUtc: DateTime.utc(2026, 10, 12, 16),
+  nowUtc: DateTime.utc(2026, 10, 12, 12),
+);
+
 void main() {
+  test('Prayer follows the exact owner and can retry independently', () async {
+    final tasks = _Tasks();
+    final habits = _Habits();
+    final xp = _Xp();
+    final prayer = _Prayer();
+    final cubit = TodayCubit(
+      scope: TodayScope.account(accountId: 'a', generation: 1),
+      calendar: _Clock(),
+      tasks: tasks,
+      habits: habits,
+      xp: xp,
+      prayer: prayer,
+    );
+    prayer.a.add(_prayerFor('b', 'Wrong owner'));
+    expect(cubit.state.prayer!.status, TodaySectionStatus.loading);
+    prayer.a.add(_prayerFor('a', 'Cairo'));
+    expect(cubit.state.prayer!.value?.city, 'Cairo');
+    cubit.changeScope(TodayScope.account(accountId: 'b', generation: 2));
+    expect(cubit.state.prayer!.value, isNull);
+    prayer.a.add(_prayerFor('a', 'Stale'));
+    expect(cubit.state.prayer!.value, isNull);
+    prayer.b.addError(StateError('offline'));
+    expect(cubit.state.prayer!.status, TodaySectionStatus.unavailable);
+    cubit.retryPrayer();
+    prayer.b.add(_prayerFor('b', 'Dubai', date: '2026-10-13'));
+    tasks.b.add(_TaskSnapshot('b'));
+    expect(cubit.state.prayer!.value?.city, 'Dubai');
+    expect(cubit.state.prayer!.value?.localDate, '2026-10-13');
+    expect(
+      cubit.state.tasks.value?.items.single.scheduledLocalDate,
+      TodayLocalDate(2026, 10, 12),
+    );
+    await cubit.close();
+    await tasks.a.close();
+    await tasks.b.close();
+    await habits.stream.close();
+    await xp.stream.close();
+    await prayer.close();
+  });
+
   test(
     'each source becomes available independently; identity change clears old values',
     () async {

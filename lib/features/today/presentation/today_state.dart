@@ -3,6 +3,7 @@ library;
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 
 import '../domain/today_calendar.dart';
+import '../domain/today_prayer_reference.dart';
 import '../domain/today_projection.dart';
 import '../domain/today_scope.dart';
 import '../domain/today_section.dart';
@@ -27,24 +28,30 @@ final class TodayState {
     required this.tasks,
     required this.habits,
     required this.xp,
+    this.prayer,
     this.taskActions = const {},
     this.habitActions = const {},
   });
 
-  factory TodayState.loading(TodayScope scope, TodayCalendar calendar) =>
-      TodayState(
-        scope: scope,
-        calendar: calendar,
-        tasks: TodaySection.loading(),
-        habits: TodaySection.loading(),
-        xp: TodaySection.loading(),
-      );
+  factory TodayState.loading(
+    TodayScope scope,
+    TodayCalendar calendar, {
+    bool prayerEnabled = false,
+  }) => TodayState(
+    scope: scope,
+    calendar: calendar,
+    tasks: TodaySection.loading(),
+    habits: TodaySection.loading(),
+    xp: TodaySection.loading(),
+    prayer: prayerEnabled ? TodaySection.loading() : null,
+  );
 
   final TodayScope scope;
   final TodayCalendar calendar;
   final TodaySection<TodayTaskSummary> tasks;
   final TodaySection<TodayHabitSummary> habits;
   final TodaySection<TodayXpSummary> xp;
+  final TodaySection<TodayPrayerReference>? prayer;
   final Map<String, TodayActionFeedback> taskActions;
   final Map<String, TodayActionFeedback> habitActions;
 
@@ -53,6 +60,7 @@ final class TodayState {
     TodaySection<TodayTaskSummary>? tasks,
     TodaySection<TodayHabitSummary>? habits,
     TodaySection<TodayXpSummary>? xp,
+    TodaySection<TodayPrayerReference>? prayer,
     Map<String, TodayActionFeedback>? taskActions,
     Map<String, TodayActionFeedback>? habitActions,
   }) => TodayState(
@@ -61,6 +69,7 @@ final class TodayState {
     tasks: tasks ?? this.tasks,
     habits: habits ?? this.habits,
     xp: xp ?? this.xp,
+    prayer: prayer ?? this.prayer,
     taskActions: taskActions ?? this.taskActions,
     habitActions: habitActions ?? this.habitActions,
   );

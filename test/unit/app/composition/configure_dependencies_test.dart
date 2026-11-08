@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/composition/configure_dependencies.dart';
+import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
@@ -161,6 +162,8 @@ void main() {
       final todayScope = await getIt<TodayScopeResolver>().resolveInitial();
       expect(todayScope?.taskOwnerId, kTasksPreviewAccountId);
       expect(todayScope?.habitOwnerId, isNot(kTasksPreviewAccountId));
+      expect(todayScope?.prayerOwnerId, kPrayerPreviewAccountId);
+      expect(getIt<PrayerPreviewSession>(), isNotNull);
       final todayCubit = getIt<TodayCubit>(param1: todayScope);
       expect(todayCubit.state.scope, same(todayScope));
       await todayCubit.close();

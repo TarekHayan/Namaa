@@ -1907,6 +1907,12 @@ abstract class FoundationLocalizations {
   /// **'Prayer'**
   String get dashboardPrayerShort;
 
+  /// No description provided for @dashboardXpPendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting sync confirmation'**
+  String get dashboardXpPendingSync;
+
   /// No description provided for @dashboardMore.
   ///
   /// In en, this message translates to:
@@ -1948,6 +1954,12 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Personal finances'**
   String get dashboardFinance;
+
+  /// No description provided for @dashboardNavFinance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance'**
+  String get dashboardNavFinance;
 
   /// No description provided for @dashboardFinanceDetail.
   ///
@@ -2554,6 +2566,438 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Back to Home'**
   String get dashboardBackToHome;
+
+  /// No description provided for @prayerSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Try again.'**
+  String get prayerSaveFailed;
+
+  /// No description provided for @prayerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer times'**
+  String get prayerTitle;
+
+  /// No description provided for @prayerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow prayer times and record today\'s prayers'**
+  String get prayerSubtitle;
+
+  /// No description provided for @prayerCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get prayerCancel;
+
+  /// No description provided for @prayerResidentRakahs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} obligatory rak\'ah for a resident} other{{count} obligatory rak\'ahs for a resident}}'**
+  String prayerResidentRakahs(int count);
+
+  /// No description provided for @prayerRecitationFajr.
+  ///
+  /// In en, this message translates to:
+  /// **'Recitation is aloud in both rak\'ahs.'**
+  String get prayerRecitationFajr;
+
+  /// No description provided for @prayerRecitationQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Recitation is quiet.'**
+  String get prayerRecitationQuiet;
+
+  /// No description provided for @prayerRecitationMaghrib.
+  ///
+  /// In en, this message translates to:
+  /// **'The first two are aloud; the third is quiet.'**
+  String get prayerRecitationMaghrib;
+
+  /// No description provided for @prayerRecitationIsha.
+  ///
+  /// In en, this message translates to:
+  /// **'The first two are aloud; the last two are quiet.'**
+  String get prayerRecitationIsha;
+
+  /// No description provided for @prayerOptionalFajr.
+  ///
+  /// In en, this message translates to:
+  /// **'Two regular Sunnah rak\'ahs before Fajr.'**
+  String get prayerOptionalFajr;
+
+  /// No description provided for @prayerOptionalDhuhr.
+  ///
+  /// In en, this message translates to:
+  /// **'A reported regular Sunnah pattern is four before Dhuhr and two after.'**
+  String get prayerOptionalDhuhr;
+
+  /// No description provided for @prayerOptionalAsr.
+  ///
+  /// In en, this message translates to:
+  /// **'Four before Asr after its time begins are recommended voluntary prayer, not regular Sunnah.'**
+  String get prayerOptionalAsr;
+
+  /// No description provided for @prayerOptionalMaghrib.
+  ///
+  /// In en, this message translates to:
+  /// **'Two regular Sunnah rak\'ahs after Maghrib.'**
+  String get prayerOptionalMaghrib;
+
+  /// No description provided for @prayerOptionalIsha.
+  ///
+  /// In en, this message translates to:
+  /// **'Two regular Sunnah rak\'ahs after Isha.'**
+  String get prayerOptionalIsha;
+
+  /// No description provided for @prayerGuidanceContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief voluntary-prayer guidance; some details differ between schools.'**
+  String get prayerGuidanceContext;
+
+  /// No description provided for @prayerRecitationHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Aloud and quiet recitation'**
+  String get prayerRecitationHeading;
+
+  /// No description provided for @prayerJahrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Aloud'**
+  String get prayerJahrTitle;
+
+  /// No description provided for @prayerJahrDefinition.
+  ///
+  /// In en, this message translates to:
+  /// **'Recitation that can be heard by those nearby.'**
+  String get prayerJahrDefinition;
+
+  /// No description provided for @prayerSirrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet'**
+  String get prayerSirrTitle;
+
+  /// No description provided for @prayerSirrDefinition.
+  ///
+  /// In en, this message translates to:
+  /// **'Recitation in a lowered voice, not only reading mentally.'**
+  String get prayerSirrDefinition;
+
+  /// No description provided for @prayerGuidanceScope.
+  ///
+  /// In en, this message translates to:
+  /// **'General guidance on ordinary recitation, not a judgment on your prayer.'**
+  String get prayerGuidanceScope;
+
+  /// No description provided for @prayerGuidanceSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: Egypt\'s Dar al-Ifta'**
+  String get prayerGuidanceSource;
+
+  /// No description provided for @prayerStreakSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer streak: coming soon'**
+  String get prayerStreakSoon;
+
+  /// No description provided for @prayerProgressBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/5 Complete ({percent}%)'**
+  String prayerProgressBadge(int done, int percent);
+
+  /// No description provided for @prayerSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer times for your location'**
+  String get prayerSetupTitle;
+
+  /// No description provided for @prayerSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location while using the app so prayer times are calculated for where you are. Your saved location keeps working offline.'**
+  String get prayerSetupBody;
+
+  /// No description provided for @prayerUseLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Update my location'**
+  String get prayerUseLocation;
+
+  /// No description provided for @prayerCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'My current location'**
+  String get prayerCurrentLocation;
+
+  /// No description provided for @prayerLocationDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Device location is off. Turn it on, then try again.'**
+  String get prayerLocationDisabled;
+
+  /// No description provided for @prayerLocationDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is off. Allow it in the app settings to get your prayer times.'**
+  String get prayerLocationDenied;
+
+  /// No description provided for @prayerLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get an accurate location right now. Try again.'**
+  String get prayerLocationUnavailable;
+
+  /// No description provided for @prayerCityEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer settings'**
+  String get prayerCityEdit;
+
+  /// No description provided for @prayerMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculation method'**
+  String get prayerMethod;
+
+  /// No description provided for @prayerDateZone.
+  ///
+  /// In en, this message translates to:
+  /// **'City date and time zone'**
+  String get prayerDateZone;
+
+  /// No description provided for @prayerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Time unavailable for this location and date'**
+  String get prayerUnavailable;
+
+  /// No description provided for @prayerScheduleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer times could not be calculated for this date.'**
+  String get prayerScheduleUnavailable;
+
+  /// No description provided for @prayerFajr.
+  ///
+  /// In en, this message translates to:
+  /// **'Fajr'**
+  String get prayerFajr;
+
+  /// No description provided for @prayerDhuhr.
+  ///
+  /// In en, this message translates to:
+  /// **'Dhuhr'**
+  String get prayerDhuhr;
+
+  /// No description provided for @prayerAsr.
+  ///
+  /// In en, this message translates to:
+  /// **'Asr'**
+  String get prayerAsr;
+
+  /// No description provided for @prayerMaghrib.
+  ///
+  /// In en, this message translates to:
+  /// **'Maghrib'**
+  String get prayerMaghrib;
+
+  /// No description provided for @prayerIsha.
+  ///
+  /// In en, this message translates to:
+  /// **'Isha'**
+  String get prayerIsha;
+
+  /// No description provided for @prayerSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get prayerSunrise;
+
+  /// No description provided for @prayerMiddleNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Middle of night'**
+  String get prayerMiddleNight;
+
+  /// No description provided for @prayerLastThird.
+  ///
+  /// In en, this message translates to:
+  /// **'Last third of night'**
+  String get prayerLastThird;
+
+  /// No description provided for @prayerComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get prayerComingSoon;
+
+  /// No description provided for @prayerEgyptian.
+  ///
+  /// In en, this message translates to:
+  /// **'Egyptian'**
+  String get prayerEgyptian;
+
+  /// No description provided for @prayerMwl.
+  ///
+  /// In en, this message translates to:
+  /// **'Muslim World League'**
+  String get prayerMwl;
+
+  /// No description provided for @prayerUmmAlQura.
+  ///
+  /// In en, this message translates to:
+  /// **'Umm al-Qura (Isha 90 minutes after Maghrib, 120 in Ramadan)'**
+  String get prayerUmmAlQura;
+
+  /// No description provided for @prayerDubai.
+  ///
+  /// In en, this message translates to:
+  /// **'Dubai'**
+  String get prayerDubai;
+
+  /// No description provided for @prayerNorthAmerica.
+  ///
+  /// In en, this message translates to:
+  /// **'North America'**
+  String get prayerNorthAmerica;
+
+  /// No description provided for @prayerKuwait.
+  ///
+  /// In en, this message translates to:
+  /// **'Kuwait'**
+  String get prayerKuwait;
+
+  /// No description provided for @prayerQatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Qatar (fixed 90-minute Isha)'**
+  String get prayerQatar;
+
+  /// No description provided for @prayerAttribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Times: AlAdhan API annual timetable, with a labelled local calculation fallback.'**
+  String get prayerAttribution;
+
+  /// No description provided for @prayerSourceApi.
+  ///
+  /// In en, this message translates to:
+  /// **'Times: AlAdhan API annual timetable (saved on this device)'**
+  String get prayerSourceApi;
+
+  /// No description provided for @prayerSourceLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Times: local calculation fallback; confirm with your local mosque'**
+  String get prayerSourceLocal;
+
+  /// No description provided for @prayerSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Prayer after signing in.'**
+  String get prayerSignInRequired;
+
+  /// No description provided for @prayerStatusOnTime.
+  ///
+  /// In en, this message translates to:
+  /// **'On time'**
+  String get prayerStatusOnTime;
+
+  /// No description provided for @prayerStatusLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed late'**
+  String get prayerStatusLate;
+
+  /// No description provided for @prayerStatusMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get prayerStatusMissed;
+
+  /// No description provided for @prayerStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get prayerStatusPending;
+
+  /// No description provided for @prayerStatusReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get prayerStatusReset;
+
+  /// No description provided for @prayerStatusSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get prayerStatusSaving;
+
+  /// No description provided for @prayerStatusSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device'**
+  String get prayerStatusSaved;
+
+  /// No description provided for @prayerStatusSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this status. Try again.'**
+  String get prayerStatusSaveFailed;
+
+  /// No description provided for @prayerStatusSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {status}'**
+  String prayerStatusSelected(String status);
+
+  /// No description provided for @prayerConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer changes to review'**
+  String get prayerConflicts;
+
+  /// No description provided for @prayerConflictActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version'**
+  String get prayerConflictActive;
+
+  /// No description provided for @prayerConflictRetained.
+  ///
+  /// In en, this message translates to:
+  /// **'Other saved version'**
+  String get prayerConflictRetained;
+
+  /// No description provided for @prayerConflictReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Past prayer records are read-only'**
+  String get prayerConflictReadOnly;
+
+  /// No description provided for @prayerLocationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get prayerLocationRetry;
+
+  /// No description provided for @prayerOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get prayerOpenSettings;
+
+  /// No description provided for @prayerSettingsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get prayerSettingsSave;
 }
 
 class _FoundationLocalizationsDelegate

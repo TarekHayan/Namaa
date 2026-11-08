@@ -14,6 +14,7 @@ const String kMindMapEntityType = 'mind_map';
 const String kMindMapNodeEntityType = 'mind_map_node';
 const String kMindMapParentSlotEntityType = 'mind_map_parent_slot';
 const String kMindMapSideLinkEntityType = 'mind_map_side_link';
+const String kPrayerReportEntityType = 'prayer_report';
 const String _unsupportedEntityMessageKey = 'foundation.cloud.recoverable';
 
 /// Routes each durable outbox entity to the adapter that owns its remote
@@ -28,6 +29,7 @@ final class EntityDispatchRouter implements CloudSyncPort {
     CloudSyncPort? habitAdapter,
     CloudSyncPort? habitDayAdapter,
     CloudSyncPort? mapAdapter,
+    CloudSyncPort? prayerAdapter,
   }) : _adapters = {
          kFoundationRecordEntityType: foundationAdapter,
          kTaskEntityType: taskAdapter,
@@ -37,6 +39,7 @@ final class EntityDispatchRouter implements CloudSyncPort {
          kMindMapNodeEntityType: ?mapAdapter,
          kMindMapParentSlotEntityType: ?mapAdapter,
          kMindMapSideLinkEntityType: ?mapAdapter,
+         kPrayerReportEntityType: ?prayerAdapter,
        };
 
   final Map<String, CloudSyncPort> _adapters;

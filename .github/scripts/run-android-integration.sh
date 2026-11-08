@@ -42,27 +42,46 @@ case "${ANDROID_SUITE:-}" in
       integration_test/mind_maps_viewport_test.dart
     )
     ;;
+  prayer)
+    tests=(
+      integration_test/prayer_schedule_test.dart
+      integration_test/prayer_reports_test.dart
+      integration_test/prayer_offline_sync_test.dart
+      integration_test/prayer_localized_route_test.dart
+    )
+    ;;
   *)
     echo "Unknown Android integration suite: ${ANDROID_SUITE:-<unset>}" >&2
     exit 2
     ;;
 esac
 
+# A freshly booted emulator keeps optimizing packages for a while and can
+# drop its ADB link while it does. Wait until boot has completed and the
+# package manager answers before the first suite.
+for _ in $(seq 1 60); do
+  if [[ "$(adb -s emulator-5554 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" == "1" ]] &&
+    adb -s emulator-5554 shell cmd package list packages >/dev/null 2>&1; then
+    break
+  fi
+  sleep 2
+done
+
 for test_file in "${tests[@]}"; do
   if [[ ! -f "$test_file" ]]; then
     echo "Android integration test is missing: $test_file" >&2
     exit 2
   fi
-  for attempt in 1 2; do
+  for attempt in 1 2 3; do
     if ! timeout 90s adb -s emulator-5554 wait-for-device ||
       ! adb -s emulator-5554 reverse tcp:54321 tcp:54321; then
-      if [[ "$attempt" -eq 1 ]]; then
-        echo "Android emulator disconnected before $test_file; resetting ADB and retrying once."
+      if [[ "$attempt" -lt 3 ]]; then
+        echo "Android emulator disconnected before $test_file; resetting ADB and retrying."
         adb kill-server || true
         adb start-server || true
         continue
       fi
-      echo "Android emulator unavailable before $test_file after two attempts." >&2
+      echo "Android emulator unavailable before $test_file after three attempts." >&2
       exit 1
     fi
     log_file="$(mktemp)"
@@ -85,18 +104,29 @@ for test_file in "${tests[@]}"; do
       rm -f -- "$log_file"
       break
     fi
+    # The emulator's ADB link can drop after the app has finished: the app
+    # prints its own integration_test summary to logcat before the driver
+    # collects it. A complete on-device pass with no failure is accepted;
+    # anything less still fails or retries below.
+    if grep -Eq 'Service connection disposed|Service has disappeared|device offline' "$log_file" &&
+      grep -Eq 'I/flutter \([ 0-9]+\): [0-9:]+ \+[0-9]+[^:]*: All tests passed!' "$log_file" &&
+      ! grep -Eq 'I/flutter \([ 0-9]+\): .*(Some tests failed|\[E\])' "$log_file"; then
+      echo "::warning::Android lost the driver connection after $test_file passed on the device; accepting the on-device result."
+      rm -f -- "$log_file"
+      break
+    fi
     if [[ "$test_status" -eq 124 || "$test_status" -eq 137 ]]; then
       echo "Android integration timed out for $test_file."
       adb -s emulator-5554 logcat -d -t 100 -s AndroidRuntime:E flutter:E DartVM:E || true
     fi
 
-    if [[ "$attempt" -eq 1 ]] &&
+    if [[ "$attempt" -lt 3 ]] &&
       { [[ "$test_status" -eq 124 || "$test_status" -eq 137 ]] ||
         grep -Eq 'Service has disappeared|adb: device offline|device offline' "$log_file" ||
         { grep -Fq 'Failed to load' "$log_file" &&
           grep -Fq 'Failed to start Dart Development Service' "$log_file"; }; } &&
       ! grep -Fq 'VMServiceFlutterDriver: Connected to Flutter application.' "$log_file"; then
-      echo "Android test service failed before $test_file started; retrying once."
+      echo "Android test service failed before $test_file started; retrying (attempt $attempt of 3)."
       rm -f -- "$log_file"
       adb -s emulator-5554 shell am force-stop com.example.namma_project || true
       adb kill-server || true

@@ -40,8 +40,8 @@ void main() {
         await database.close();
         database = await FoundationDatabase.openEncrypted(path: file, key: key);
 
-        expect(database.schemaVersion, 7);
-        expect(await database.journalStatusFor(7), 'completed');
+        expect(database.schemaVersion, 9);
+        expect(await database.journalStatusFor(9), 'completed');
         final outboxColumns = await database
             .customSelect('PRAGMA table_info(pending_changes)')
             .get();

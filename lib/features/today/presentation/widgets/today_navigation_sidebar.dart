@@ -24,7 +24,16 @@ const Key kTodaySidebarPreferencesKey = Key('today_sidebar_preferences');
 const double kTodaySidebarWidth = 252;
 const double kTodaySidebarBreakpoint = 1100;
 
-enum TodayNavigationSection { home, tasks, habits, mindMaps, preview }
+enum TodayNavigationSection {
+  home,
+  tasks,
+  habits,
+  mindMaps,
+  prayer,
+  track,
+  finance,
+  preview,
+}
 
 /// Wide-screen navigation shows each destination directly. The five-tab More
 /// hub remains a phone-only space saver.
@@ -35,6 +44,8 @@ class TodayNavigationSidebar extends StatelessWidget {
     required this.onTasks,
     required this.onHabits,
     required this.onMindMaps,
+    this.onPrayer,
+    this.onTrack,
     required this.onPreferences,
     this.onHome,
     this.section = TodayNavigationSection.home,
@@ -46,6 +57,8 @@ class TodayNavigationSidebar extends StatelessWidget {
   final VoidCallback onTasks;
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
+  final VoidCallback? onPrayer;
+  final VoidCallback? onTrack;
   final VoidCallback onPreferences;
   final VoidCallback? onHome;
   final TodayNavigationSection section;
@@ -161,11 +174,14 @@ class TodayNavigationSidebar extends StatelessWidget {
                     key: kTodaySidebarTrackKey,
                     icon: Icons.insights_rounded,
                     label: copy.dashboardTrack,
-                    onTap: () => _openPreview(
-                      context,
-                      copy.dashboardComingSoonTrackTitle,
-                    ),
-                    comingSoon: true,
+                    onTap:
+                        onTrack ??
+                        () => _openPreview(
+                          context,
+                          copy.dashboardComingSoonTrackTitle,
+                        ),
+                    selected: section == TodayNavigationSection.track,
+                    comingSoon: onTrack == null,
                   ),
 
                   // 4. Finance
@@ -179,19 +195,22 @@ class TodayNavigationSidebar extends StatelessWidget {
                       copy.dashboardComingSoonFinanceTitle,
                       DashboardPreviewFeature.finance,
                     ),
+                    selected: section == TodayNavigationSection.finance,
                     comingSoon: true,
                   ),
                   _item(
                     context,
                     key: kTodaySidebarPrayerKey,
                     icon: Icons.schedule_rounded,
-                    label: copy.dashboardComingSoonPrayerTitle,
-                    onTap: () => _openPreview(
-                      context,
-                      copy.dashboardComingSoonPrayerTitle,
-                      DashboardPreviewFeature.prayer,
-                    ),
-                    comingSoon: true,
+                    label: copy.prayerTitle,
+                    selected: section == TodayNavigationSection.prayer,
+                    onTap:
+                        onPrayer ??
+                        () => _openPreview(
+                          context,
+                          copy.dashboardComingSoonPrayerTitle,
+                          DashboardPreviewFeature.prayer,
+                        ),
                   ),
                   _item(
                     context,

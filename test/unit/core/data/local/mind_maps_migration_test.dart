@@ -35,6 +35,9 @@ void main() {
       'ALTER TABLE task_records DROP COLUMN completion_changed_at',
     );
     await db.rawExecute(
+      'ALTER TABLE task_records ADD COLUMN completion_xp INTEGER',
+    );
+    await db.rawExecute(
       'ALTER TABLE habit_day_records DROP COLUMN daily_count',
     );
     return (db.resolvedPath, db);

@@ -8,10 +8,12 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import '../application/today_actions.dart';
 import '../application/today_calendar_port.dart';
 import '../application/today_habits_port.dart';
+import '../application/today_prayer_port.dart';
 import '../application/today_tasks_port.dart';
 import '../application/today_xp_port.dart';
 import '../domain/today_calendar.dart';
 import '../domain/today_models.dart';
+import '../domain/today_prayer_reference.dart';
 import '../domain/today_projection.dart';
 import '../domain/today_scope.dart';
 import '../domain/today_section.dart';
@@ -24,6 +26,7 @@ class TodayCubit extends Cubit<TodayState> {
     required TodayTasksPort tasks,
     required TodayHabitsPort habits,
     required TodayXpPort xp,
+    TodayPrayerPort? prayer,
     TodayActions? actions,
     Duration initialDeadline = const Duration(seconds: 10),
     Duration foregroundInterval = const Duration(seconds: 30),
@@ -32,12 +35,17 @@ class TodayCubit extends Cubit<TodayState> {
        _tasks = tasks,
        _habits = habits,
        _xp = xp,
+       _prayer = prayer,
        _actions = actions ?? TodayActions(tasks: tasks, habits: habits),
        _deadline = initialDeadline,
        _foregroundInterval = foregroundInterval,
        _foregroundScheduler = foregroundScheduler ?? _systemForegroundScheduler,
        super(
-         TodayState.loading(scope, calendar.sample(projectionRevision: 0)),
+         TodayState.loading(
+           scope,
+           calendar.sample(projectionRevision: 0),
+           prayerEnabled: prayer != null,
+         ),
        ) {
     if (initialDeadline <= Duration.zero ||
         initialDeadline > const Duration(seconds: 10) ||
@@ -52,6 +60,7 @@ class TodayCubit extends Cubit<TodayState> {
   final TodayTasksPort _tasks;
   final TodayHabitsPort _habits;
   final TodayXpPort _xp;
+  final TodayPrayerPort? _prayer;
   final TodayActions _actions;
   final Duration _deadline;
   final Duration _foregroundInterval;
@@ -60,9 +69,11 @@ class TodayCubit extends Cubit<TodayState> {
   StreamSubscription<TodayTaskReadSnapshot>? _taskSub;
   StreamSubscription<TodayHabitReadSnapshot>? _habitSub;
   StreamSubscription<List<TodayAwardReference>>? _xpSub;
+  StreamSubscription<TodayPrayerReference>? _prayerSub;
   Timer? _taskTimer;
   Timer? _habitTimer;
   Timer? _xpTimer;
+  Timer? _prayerTimer;
   TodayTaskReadSnapshot? _taskSnapshot;
   TodayHabitReadSnapshot? _habitSnapshot;
   List<TodayAwardReference>? _awards;
@@ -71,6 +82,7 @@ class TodayCubit extends Cubit<TodayState> {
   int _taskAttempt = 0;
   int _habitAttempt = 0;
   int _xpAttempt = 0;
+  int _prayerAttempt = 0;
   TodayCalendar? _taskConfirmedAt;
   TodayCalendar? _habitConfirmedAt;
   TodayCalendar? _xpConfirmedAt;
@@ -97,16 +109,20 @@ class TodayCubit extends Cubit<TodayState> {
     _taskAttempt++;
     _habitAttempt++;
     _xpAttempt++;
+    _prayerAttempt++;
     pauseForeground();
     _taskTimer?.cancel();
     _habitTimer?.cancel();
     _xpTimer?.cancel();
+    _prayerTimer?.cancel();
     unawaited(_taskSub?.cancel());
     unawaited(_habitSub?.cancel());
     unawaited(_xpSub?.cancel());
+    unawaited(_prayerSub?.cancel());
     _taskSub = null;
     _habitSub = null;
     _xpSub = null;
+    _prayerSub = null;
     _taskSnapshot = null;
     _habitSnapshot = null;
     _awards = null;
@@ -114,7 +130,11 @@ class TodayCubit extends Cubit<TodayState> {
     _habitConfirmedAt = null;
     _xpConfirmedAt = null;
     emit(
-      TodayState.loading(state.scope, _calendar.sample(projectionRevision: 0)),
+      TodayState.loading(
+        state.scope,
+        _calendar.sample(projectionRevision: 0),
+        prayerEnabled: _prayer != null,
+      ),
     );
   }
 
@@ -122,6 +142,7 @@ class TodayCubit extends Cubit<TodayState> {
     _subscribeTasks();
     _subscribeHabits();
     _subscribeXp();
+    if (_prayer != null) _subscribePrayer();
   }
 
   AppFailure _failure() => AppFailure.recoverable(
@@ -166,6 +187,15 @@ class TodayCubit extends Cubit<TodayState> {
     unawaited(_xpSub?.cancel());
     _xpSub = null;
     emit(state.copyWith(xp: _failed(state.xp, _xpConfirmedAt)));
+  }
+
+  void _failPrayer(int epoch, int attempt) {
+    if (isClosed || epoch != _epoch || attempt != _prayerAttempt) return;
+    _prayerAttempt++;
+    _prayerTimer?.cancel();
+    unawaited(_prayerSub?.cancel());
+    _prayerSub = null;
+    emit(state.copyWith(prayer: TodaySection.unavailable(_failure())));
   }
 
   void _subscribeTasks() {
@@ -262,6 +292,52 @@ class TodayCubit extends Cubit<TodayState> {
           );
     } catch (_) {
       _failXp(epoch, attempt);
+    }
+  }
+
+  void _subscribePrayer() {
+    final source = _prayer;
+    if (source == null) return;
+    final epoch = _epoch;
+    final attempt = ++_prayerAttempt;
+    var received = false;
+    _prayerTimer?.cancel();
+    unawaited(_prayerSub?.cancel());
+    _prayerTimer = Timer(_deadline, () {
+      if (!received) _failPrayer(epoch, attempt);
+    });
+    try {
+      _prayerSub = source
+          .watchPrayer(state.scope.prayerOwnerId)
+          .listen(
+            (value) {
+              if (isClosed ||
+                  epoch != _epoch ||
+                  attempt != _prayerAttempt ||
+                  value.ownerId != state.scope.prayerOwnerId) {
+                return;
+              }
+              received = true;
+              _prayerTimer?.cancel();
+              if (value.sourceUnavailable) {
+                emit(
+                  state.copyWith(prayer: TodaySection.unavailable(_failure())),
+                );
+                return;
+              }
+              emit(
+                state.copyWith(
+                  prayer: value.needsSetup
+                      ? TodaySection.empty(value)
+                      : TodaySection.available(value),
+                ),
+              );
+            },
+            onError: (_, _) => _failPrayer(epoch, attempt),
+            onDone: () => _failPrayer(epoch, attempt),
+          );
+    } catch (_) {
+      _failPrayer(epoch, attempt);
     }
   }
 
@@ -393,7 +469,13 @@ class TodayCubit extends Cubit<TodayState> {
     }
     final wasForeground = _foregroundTimer?.isActive ?? false;
     suspend();
-    emit(TodayState.loading(scope, _calendar.sample(projectionRevision: 0)));
+    emit(
+      TodayState.loading(
+        scope,
+        _calendar.sample(projectionRevision: 0),
+        prayerEnabled: _prayer != null,
+      ),
+    );
     _subscribeAll();
     if (wasForeground) resumeForeground();
   }
@@ -613,6 +695,13 @@ class TodayCubit extends Cubit<TodayState> {
     }
   }
 
+  void retryPrayer() {
+    if (_prayer != null && !isClosed) {
+      emit(state.copyWith(prayer: TodaySection.loading()));
+      _subscribePrayer();
+    }
+  }
+
   @override
   Future<void> close() async {
     _epoch++;
@@ -620,14 +709,17 @@ class TodayCubit extends Cubit<TodayState> {
     _taskAttempt++;
     _habitAttempt++;
     _xpAttempt++;
+    _prayerAttempt++;
     pauseForeground();
     _taskTimer?.cancel();
     _habitTimer?.cancel();
     _xpTimer?.cancel();
+    _prayerTimer?.cancel();
     await Future.wait([
       _taskSub?.cancel() ?? Future<void>.value(),
       _habitSub?.cancel() ?? Future<void>.value(),
       _xpSub?.cancel() ?? Future<void>.value(),
+      _prayerSub?.cancel() ?? Future<void>.value(),
     ]);
     await super.close();
   }

@@ -102,6 +102,10 @@ class _RecoveringTasks implements TodayTasksPort {
   );
 }
 
+/// The device back button: tabs have no on-screen back arrow.
+Future<void> _deviceBack(WidgetTester tester) =>
+    tester.state<NavigatorState>(find.byType(Navigator).first).maybePop();
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   accessibility.main();
@@ -775,7 +779,7 @@ void main() {
       await tester.tap(incrementFinder);
       await tester.pumpAndSettle();
       expect(find.byType(TodayComingSoonPage), findsOneWidget);
-      await tester.tap(find.byType(BackButton));
+      await _deviceBack(tester);
       await tester.pumpAndSettle();
 
       // Assert table counts in SQLite encrypted database did not mutate at all

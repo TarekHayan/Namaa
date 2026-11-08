@@ -7,7 +7,10 @@ import 'package:namma_project/features/today/presentation/widgets/today_navigati
 import 'package:namma_project/features/today/presentation/widgets/today_navigation_sidebar.dart';
 
 void main() {
-  Widget navigation({required TodayNavigationSection initialSection}) {
+  Widget navigation({
+    required TodayNavigationSection initialSection,
+    VoidCallback? onPrayer,
+  }) {
     var section = initialSection;
     return MaterialApp(
       localizationsDelegates: FoundationLocalizations.localizationsDelegates,
@@ -23,6 +26,7 @@ void main() {
             onTasks: () => show(TodayNavigationSection.tasks),
             onHabits: () => show(TodayNavigationSection.habits),
             onMindMaps: () => show(TodayNavigationSection.mindMaps),
+            onPrayer: onPrayer,
             onPreferences: () {},
             child: Scaffold(
               body: Center(
@@ -90,7 +94,8 @@ void main() {
     await tester.tap(find.byKey(kTodaySidebarTrackKey));
     await tester.pumpAndSettle();
     expect(find.byKey(kTodaySidebarKey), findsOneWidget);
-    expect(find.byType(BackButton), findsOneWidget);
+    // The sidebar is the way out; no back arrow.
+    expect(find.byType(BackButton), findsNothing);
   });
 
   testWidgets('content previews keep the sidebar too', (tester) async {
@@ -123,5 +128,117 @@ void main() {
           .selectedIndex,
       1,
     );
+  });
+
+  for (final width in [390.0, 1280.0]) {
+    testWidgets('track opens prayer and retains navigation at $width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      var prayerOpened = 0;
+      await tester.pumpWidget(
+        navigation(
+          initialSection: TodayNavigationSection.home,
+          onPrayer: () => prayerOpened++,
+        ),
+      );
+      await tester.tap(
+        find.byKey(width < 1100 ? kTodayBottomTrackKey : kTodaySidebarTrackKey),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('prayer_track_0')), findsOneWidget);
+      if (width < 1100) {
+        expect(
+          tester
+              .widget<NavigationBar>(find.byKey(kTodayBottomNavigationKey))
+              .selectedIndex,
+          2,
+        );
+      } else {
+        expect(find.byKey(kTodaySidebarKey), findsOneWidget);
+      }
+      await tester.tap(find.byKey(const Key('prayer_track_0')));
+      await tester.pumpAndSettle();
+      expect(prayerOpened, 1);
+      expect(find.byKey(const Key('prayer_track_0')), findsNothing);
+    });
+  }
+
+  testWidgets('phone tabs highlight Finance and replace instead of stacking', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      navigation(initialSection: TodayNavigationSection.home, onPrayer: () {}),
+    );
+    int selected() => tester
+        .widget<NavigationBar>(find.byKey(kTodayBottomNavigationKey).last)
+        .selectedIndex;
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    int depth() {
+      var count = 0;
+      navigator.popUntil((route) {
+        count++;
+        return true;
+      });
+      return count;
+    }
+
+    await tester.tap(find.byKey(kTodayBottomFinanceKey));
+    await tester.pumpAndSettle();
+    expect(selected(), 3);
+    expect(find.byType(BackButton), findsNothing);
+    // Finance stays one line with the prototype's short label.
+    expect(
+      find.descendant(
+        of: find.byKey(kTodayBottomNavigationKey).last,
+        matching: find.text('Finance'),
+      ),
+      findsOneWidget,
+    );
+    // Re-tapping Finance, then switching to Track, never piles up pages.
+    await tester.tap(find.byKey(kTodayBottomFinanceKey).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(kTodayBottomTrackKey).last);
+    await tester.pumpAndSettle();
+    expect(selected(), 2);
+    expect(find.byKey(const Key('prayer_track_0')), findsOneWidget);
+    expect(depth(), 1);
+    // Tabs carry no back arrow; the device back button returns to Home.
+    expect(find.byType(BackButton), findsNothing);
+    await navigator.maybePop();
+    await tester.pumpAndSettle();
+    // Back returns straight to the page the user started from.
+    expect(find.text('home'), findsOneWidget);
+    expect(selected(), 0);
+  });
+
+  testWidgets('a section opened over a tab hands off to the next tab', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      navigation(initialSection: TodayNavigationSection.home, onPrayer: () {}),
+    );
+    await tester.tap(find.byKey(kTodayBottomFinanceKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(kTodayBottomTasksKey).last);
+    await tester.pumpAndSettle();
+    // Finance closed and Tasks is the only page: nothing to go back to.
+    expect(find.text('tasks'), findsOneWidget);
+    expect(
+      tester.state<NavigatorState>(find.byType(Navigator)).canPop(),
+      isFalse,
+    );
+    expect(find.byType(BackButton), findsNothing);
   });
 }

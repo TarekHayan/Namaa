@@ -19,6 +19,7 @@ import 'package:namma_project/features/tasks/application/task_repository.dart';
 import 'package:namma_project/features/tasks/domain/task.dart';
 import 'package:namma_project/features/xp/application/award_ledger.dart';
 import 'package:namma_project/features/xp/domain/task_completion_award.dart';
+import 'package:namma_project/features/xp/domain/xp_award.dart';
 
 /// Message key reported by every unconfigured adapter.
 const String kFoundationUnconfiguredMessageKey = kMessageKeyUnconfigured;
@@ -201,7 +202,8 @@ class UnconfiguredTaskReconciler implements TaskReconciliationPort {
       AppResult<TaskReconciliationSummary>.failure(_unconfiguredFailure());
 }
 
-class UnconfiguredAwardLedger implements AwardLedgerPort {
+class UnconfiguredAwardLedger
+    implements AwardLedgerPort, SharedAwardLedgerPort {
   @override
   Future<AppResult<AwardInsertOutcome>> insertOnce(
     TaskCompletionAward award,
@@ -221,6 +223,25 @@ class UnconfiguredAwardLedger implements AwardLedgerPort {
   @override
   Stream<List<TaskCompletionAward>> watchAwards(String accountId) =>
       Stream<List<TaskCompletionAward>>.error(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<AwardInsertOutcome>> insertSharedOnce(XpAward award) async =>
+      AppResult.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<void>> applyRemoteSharedAward(XpAward award) async =>
+      AppResult.failure(_unconfiguredFailure());
+
+  @override
+  Future<AppResult<XpAward?>> readSharedAward({
+    required String accountId,
+    required String source,
+    required String sourceId,
+  }) async => AppResult.failure(_unconfiguredFailure());
+
+  @override
+  Stream<List<XpAward>> watchSharedAwards(String accountId) =>
+      Stream.error(_unconfiguredFailure());
 }
 
 class UnconfiguredTaskCompletionUnitOfWork implements TaskCompletionUnitOfWork {

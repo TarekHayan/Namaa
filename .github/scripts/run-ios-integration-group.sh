@@ -29,6 +29,9 @@ case "${IOS_GROUP:-}" in
   today)
     suites=(today-dashboard today-sync)
     ;;
+  prayer)
+    suites=(prayer-schedule prayer-reports prayer-offline-sync prayer-localized-route)
+    ;;
   *)
     echo "Unknown iOS integration group: ${IOS_GROUP:-<unset>}" >&2
     exit 2
@@ -36,19 +39,34 @@ case "${IOS_GROUP:-}" in
 esac
 
 if [[ -n "${IOS_SUITES:-}" ]]; then
-  IFS=',' read -r -a wanted <<< "${IOS_SUITES// /}"
+  selection="${IOS_SUITES// /}"
+  if [[ -z "$selection" || "$selection" == ,* || "$selection" == *, || "$selection" == *,,* ]]; then
+    echo "Invalid iOS suite selection: IOS_SUITES=$IOS_SUITES" >&2
+    exit 2
+  fi
+  IFS=',' read -r -a wanted <<< "$selection"
   selected=()
+  for want in "${wanted[@]}"; do
+    found=false
+    for suite in "${suites[@]}"; do
+      if [[ "$suite" == "$want" ]]; then
+        found=true
+        break
+      fi
+    done
+    if [[ "$found" == false ]]; then
+      echo "Unknown iOS integration suite for group $IOS_GROUP: $want" >&2
+      exit 2
+    fi
+  done
   for suite in "${suites[@]}"; do
     for want in "${wanted[@]}"; do
       if [[ "$suite" == "$want" ]]; then
         selected+=("$suite")
+        break
       fi
     done
   done
-  if [[ "${#selected[@]}" -eq 0 ]]; then
-    echo "No suite of group $IOS_GROUP matches IOS_SUITES=$IOS_SUITES; skipping."
-    exit 0
-  fi
   suites=("${selected[@]}")
 fi
 
@@ -57,7 +75,7 @@ suite_file() {
     migration|offline|platform|sync|staging-supabase)
       echo "integration_test/foundation_${1//-/_}_test.dart"
       ;;
-    tasks-*|habits-*|mind-maps-*|today-*)
+    tasks-*|habits-*|mind-maps-*|today-*|prayer-*)
       echo "integration_test/${1//-/_}_test.dart"
       ;;
     *) echo "Unknown iOS integration suite: $1" >&2; return 2 ;;
@@ -91,11 +109,40 @@ PY
 bundle_id="com.example.nammaProject"
 work="$PWD/build/ios_integration"
 mkdir -p "$work"
+# After a hang, xcodebuild and the simulator can stay wedged and stall every
+# later file. Kill leftovers and restart the simulator before going on.
+recover_simulator() {
+  pkill -9 -x xcodebuild >/dev/null 2>&1 || true
+  xcrun simctl shutdown "$IOS_DEVICE_ID" >/dev/null 2>&1 || true
+  xcrun simctl boot "$IOS_DEVICE_ID" >/dev/null 2>&1 || true
+}
+
+# XCTest reports only the first line of a Flutter failure. Print the
+# app's own Flutter messages from the simulator log into the job log
+# (where GitHub masks secrets) so the full exception is visible. Result
+# bundles are not uploaded: this repository is public.
+print_flutter_log() {
+  echo "::group::Flutter log from the simulator for $1"
+  xcrun simctl spawn "$IOS_DEVICE_ID" log show --style compact --last 15m \
+    --predicate 'process == "Runner" AND eventMessage CONTAINS "flutter:"' \
+    2>/dev/null | tail -n 400 || true
+  echo "::endgroup::"
+}
+
 failed=()
 
 for suite in "${suites[@]}"; do
   test_file="$(suite_file "$suite")"
   echo "::group::iOS $IOS_GROUP / $suite ($test_file)"
+  suite_defines=("${staging_defines[@]}")
+  # XCTest's per-test allowance also covers app launch. The hosted two-device
+  # Prayer sync makes many round trips to staging and takes 3.5-4 minutes on
+  # every desktop target, so 300 s leaves it no margin on a slow simulator.
+  test_allowance=300
+  if [[ "$suite" == prayer-offline-sync ]]; then
+    suite_defines+=(--dart-define=NAMAA_SUPABASE_ENV=non-production)
+    test_allowance=600
+  fi
   # XCTest can activate native accessibility after the first test begins.
   # Establish it before testWidgets records its semantics-handle baseline.
   # The entry point path stays fixed, so Generated.xcconfig does not change
@@ -114,7 +161,7 @@ void main() {
 DART
   status=0
   flutter build ios --simulator --debug --no-codesign --no-pub --config-only \
-    "${staging_defines[@]}" --target=build/ios_integration/entrypoint.dart || status=$?
+    "${suite_defines[@]}" --target=build/ios_integration/entrypoint.dart || status=$?
   if [[ "$status" -eq 0 ]]; then
     python3 .github/scripts/run-ios-integration.py --build-only -- \
       xcodebuild -quiet build-for-testing -workspace ios/Runner.xcworkspace -scheme Runner \
@@ -122,8 +169,14 @@ DART
       -destination "id=$IOS_DEVICE_ID" \
       -derivedDataPath "$work/DerivedData" \
       CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES || status=$?
+    if [[ "$status" -eq 124 ]]; then
+      recover_simulator
+    fi
   fi
-  if [[ "$status" -eq 0 ]]; then
+  # A run that produced no result before its time limit (a wedged simulator)
+  # is retried once on a restarted simulator. Real failures are not retried.
+  for test_attempt in 1 2; do
+    [[ "$status" -eq 0 ]] || break
     # Start each file from a clean app container and Keychain, as a fresh
     # simulator did when every file had a job of its own.
     xcrun simctl uninstall "$IOS_DEVICE_ID" "$bundle_id" >/dev/null 2>&1 || true
@@ -139,13 +192,22 @@ DART
       -derivedDataPath "$work/DerivedData" \
       -destination "id=$IOS_DEVICE_ID" -parallel-testing-enabled NO \
       -only-testing:RunnerTests/RunnerTests/testFlutterIntegration \
-      -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
+      -test-timeouts-enabled YES -default-test-execution-time-allowance "$test_allowance" \
       -maximum-test-execution-time-allowance 600 \
       -resultBundlePath "$result_bundle" CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES \
       || status=$?
-  fi
+    if [[ "$status" -ne 124 ]]; then
+      break
+    fi
+    recover_simulator
+    if [[ "$test_attempt" -eq 1 ]]; then
+      echo "::warning::$test_file produced no result within its time limit; restarted the simulator and retrying once."
+      status=0
+    fi
+  done
   echo "::endgroup::"
   if [[ "$status" -ne 0 ]]; then
+    print_flutter_log "$suite"
     echo "::error title=iOS $suite failed::$test_file exited with status $status"
     failed+=("$suite")
   else

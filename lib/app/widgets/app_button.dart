@@ -21,6 +21,10 @@ class AppButton extends StatelessWidget {
     this.color,
     this.loading = false,
     this.expanded = false,
+    this.wrapLabel = false,
+    this.showDisabledColor = false,
+    this.semanticLabel,
+    this.selected,
   });
 
   final String label;
@@ -31,6 +35,10 @@ class AppButton extends StatelessWidget {
   final Color? color;
   final bool loading;
   final bool expanded;
+  final bool wrapLabel;
+  final bool showDisabledColor;
+  final String? semanticLabel;
+  final bool? selected;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +66,9 @@ class AppButton extends StatelessWidget {
         ),
       ),
       backgroundColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.disabled)) return null;
+        if (states.contains(WidgetState.disabled)) {
+          return showDisabledColor ? effectiveColor : null;
+        }
         final highlighted =
             states.contains(WidgetState.hovered) ||
             states.contains(WidgetState.focused);
@@ -79,7 +89,9 @@ class AppButton extends StatelessWidget {
         };
       }),
       foregroundColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.disabled)) return null;
+        if (states.contains(WidgetState.disabled)) {
+          return showDisabledColor ? foreground : null;
+        }
         return switch (variant) {
           AppButtonVariant.primary || AppButtonVariant.danger => foreground,
           _ => effectiveColor,
@@ -138,8 +150,11 @@ class AppButton extends StatelessWidget {
                 Flexible(
                   child: Text(
                     label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: wrapLabel ? null : 1,
+                    overflow: wrapLabel
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -169,8 +184,9 @@ class AppButton extends StatelessWidget {
       ),
     };
     return Semantics(
-      label: label,
+      label: semanticLabel ?? label,
       button: true,
+      selected: selected,
       child: expanded
           ? SizedBox(width: double.infinity, child: button)
           : button,

@@ -47,6 +47,7 @@ on:
       - 'specs/004-habits/**'
       - 'specs/005-mind-maps/**'
       - 'specs/006-today-dashboard/**'
+      - 'specs/008-prayer-experience/**'
       - 'supabase/**'
       - 'test/**'
       - 'test_driver/**'
@@ -126,7 +127,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: ${{ fromJSON(inputs.mobile_only && inputs.android_suites || '["foundation","tasks","habits-today","mind-maps"]') }}
+        suite: ${{ fromJSON(inputs.mobile_only && inputs.android_suites || '["foundation","tasks","habits-today","mind-maps","prayer"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -207,6 +208,9 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
+          # Local Supabase runs in Docker on the same runner; a larger guest
+          # RAM keeps the emulator's ADB link from dropping under pressure.
+          ram-size: 4096M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: bash .github/scripts/run-android-integration.sh
 
@@ -291,6 +295,10 @@ jobs:
               integration_test/mind_maps_offline_sync_test.dart
               integration_test/mind_maps_localized_route_test.dart
               integration_test/today_dashboard_test.dart
+              integration_test/prayer_schedule_test.dart
+              integration_test/prayer_reports_test.dart
+              integration_test/prayer_offline_sync_test.dart
+              integration_test/prayer_localized_route_test.dart
             )
             for test_file in "${tests[@]}"; do
               flutter test --no-pub \
@@ -386,10 +394,26 @@ jobs:
             'integration_test/mind_maps_viewport_test.dart',
             'integration_test/mind_maps_offline_sync_test.dart',
             'integration_test/mind_maps_localized_route_test.dart',
-            'integration_test/today_dashboard_test.dart'
+            'integration_test/today_dashboard_test.dart',
+            'integration_test/prayer_schedule_test.dart',
+            'integration_test/prayer_reports_test.dart',
+            'integration_test/prayer_offline_sync_test.dart',
+            'integration_test/prayer_localized_route_test.dart'
           )
           foreach ($test in $tests) {
-            flutter test --no-pub -d windows $test --reporter expanded
+            $testDefines = @()
+            if ($test -eq 'integration_test/prayer_offline_sync_test.dart') {
+              $testDefines = @(
+                '--dart-define=NAMAA_SUPABASE_ENV=non-production',
+                "--dart-define=NAMAA_SUPABASE_URL=$env:NAMAA_STAGING_SUPABASE_URL",
+                "--dart-define=NAMAA_SUPABASE_PUBLISHABLE_KEY=$env:NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY",
+                "--dart-define=NAMAA_STAGING_TEST_USER_A_EMAIL=$env:NAMAA_STAGING_TEST_USER_A_EMAIL",
+                "--dart-define=NAMAA_STAGING_TEST_USER_A_PASSWORD=$env:NAMAA_STAGING_TEST_USER_A_PASSWORD",
+                "--dart-define=NAMAA_STAGING_TEST_USER_B_EMAIL=$env:NAMAA_STAGING_TEST_USER_B_EMAIL",
+                "--dart-define=NAMAA_STAGING_TEST_USER_B_PASSWORD=$env:NAMAA_STAGING_TEST_USER_B_PASSWORD"
+              )
+            }
+            flutter test --no-pub @testDefines -d windows $test --reporter expanded
             if ($LASTEXITCODE -ne 0) { throw "Integration test failed: $test" }
           }
           flutter test --no-pub -d windows integration_test/foundation_supabase_test.dart --name 'production configuration|automated tests resolve' --reporter expanded
@@ -490,9 +514,25 @@ jobs:
             integration_test/mind_maps_offline_sync_test.dart
             integration_test/mind_maps_localized_route_test.dart
             integration_test/today_dashboard_test.dart
+            integration_test/prayer_schedule_test.dart
+            integration_test/prayer_reports_test.dart
+            integration_test/prayer_offline_sync_test.dart
+            integration_test/prayer_localized_route_test.dart
           )
           for test_file in "${tests[@]}"; do
-            flutter test --no-pub -d macos "$test_file" --reporter expanded
+            if [[ "$test_file" == integration_test/prayer_offline_sync_test.dart ]]; then
+              flutter test --no-pub \
+                --dart-define=NAMAA_SUPABASE_ENV=non-production \
+                --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
+                --dart-define="NAMAA_SUPABASE_PUBLISHABLE_KEY=$NAMAA_STAGING_SUPABASE_PUBLISHABLE_KEY" \
+                --dart-define="NAMAA_STAGING_TEST_USER_A_EMAIL=$NAMAA_STAGING_TEST_USER_A_EMAIL" \
+                --dart-define="NAMAA_STAGING_TEST_USER_A_PASSWORD=$NAMAA_STAGING_TEST_USER_A_PASSWORD" \
+                --dart-define="NAMAA_STAGING_TEST_USER_B_EMAIL=$NAMAA_STAGING_TEST_USER_B_EMAIL" \
+                --dart-define="NAMAA_STAGING_TEST_USER_B_PASSWORD=$NAMAA_STAGING_TEST_USER_B_PASSWORD" \
+                -d macos "$test_file" --reporter expanded
+            else
+              flutter test --no-pub -d macos "$test_file" --reporter expanded
+            fi
           done
           flutter test --no-pub -d macos integration_test/foundation_supabase_test.dart \
             --name 'production configuration|automated tests resolve' --reporter expanded
@@ -536,7 +576,7 @@ jobs:
       fail-fast: false
       max-parallel: 5
       matrix:
-        group: ${{ fromJSON(inputs.mobile_only && inputs.ios_groups || '["foundation","tasks","habits","mind-maps","today"]') }}
+        group: ${{ fromJSON(inputs.mobile_only && inputs.ios_groups || '["foundation","tasks","habits","mind-maps","today","prayer"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -587,7 +627,7 @@ jobs:
         run: bash .github/scripts/run-ios-integration-group.sh
 
   foundation-gate:
-    name: Foundation and Task five-target gate
+    name: Foundation and feature five-target gate
     if: ${{ always() && !inputs.mobile_only }}
     needs:
       - quality
@@ -599,7 +639,7 @@ jobs:
       - ios
     runs-on: ubuntu-latest
     steps:
-      - name: Require every Foundation and Task job to pass
+      - name: Require every Foundation and feature job to pass
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
           DATABASE_RESULT: ${{ needs.database-security.result }}

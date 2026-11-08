@@ -20,7 +20,7 @@ def load(name, file):
 
 pub_get = load("pub_get_retry", "pub-get-with-retry.py")
 
-ALL_GROUPS = ["foundation", "tasks", "habits", "mind-maps", "today"]
+ALL_GROUPS = ["foundation", "tasks", "habits", "mind-maps", "today", "prayer"]
 
 
 class IosGroupRegistrationTest(unittest.TestCase):
@@ -39,6 +39,19 @@ class IosGroupRegistrationTest(unittest.TestCase):
         self.assertIn("- ios", gate)
         self.assertIn("IOS_RESULT", gate)
         self.assertNotIn("labeled", workflow)
+
+    def test_prayer_files_are_in_every_desktop_gate(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        desktop_jobs = [
+            workflow.split(f"\n  {name}:\n", 1)[1].split(f"\n  {next_name}:\n", 1)[0]
+            for name, next_name in (("linux", "windows"), ("windows", "macos"),
+                                    ("macos", "ios"))
+        ]
+        for suite in ("schedule", "reports", "offline_sync", "localized_route"):
+            for job in desktop_jobs:
+                self.assertIn(f"integration_test/prayer_{suite}_test.dart", job)
+        self.assertIn("'specs/008-prayer-experience/**'", workflow)
+        self.assertNotIn("\npush:", workflow)
 
 
 class PubGetRetryTest(unittest.TestCase):
@@ -150,6 +163,26 @@ exit 0
         result, calls = self.run_group("today", suites="today-dashboard")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual([c for c in calls if c.startswith("test ")], ["test today_dashboard"])
+
+    def test_prayer_group_runs_all_four_entries(self):
+        result, calls = self.run_group("prayer")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(
+            [c for c in calls if c.startswith("test ")],
+            ["test prayer_schedule", "test prayer_reports", "test prayer_offline_sync",
+             "test prayer_localized_route"],
+        )
+
+    def test_prayer_focused_selection_and_unknown_suite(self):
+        result, calls = self.run_group("prayer", suites="prayer-reports")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual([c for c in calls if c.startswith("test ")], ["test prayer_reports"])
+        result, calls = self.run_group("prayer", suites="prayer-reports,prayer-typo")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(calls, [])
+        result, calls = self.run_group("prayer", suites="prayer-reports,")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(calls, [])
 
     def test_unknown_group_fails_before_running(self):
         result, calls = self.run_group("ipad")

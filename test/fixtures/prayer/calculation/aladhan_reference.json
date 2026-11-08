@@ -1,0 +1,4622 @@
+[
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:29.4075800Z",
+    "timings": {
+      "Fajr": "04:32",
+      "Sunrise": "05:59",
+      "Dhuhr": "12:03",
+      "Asr": "15:29",
+      "Sunset": "18:06",
+      "Maghrib": "18:06",
+      "Isha": "19:24",
+      "Imsak": "04:22",
+      "Midnight": "00:03",
+      "Firstthird": "22:04",
+      "Lastthird": "02:02"
+    },
+    "longitude": 31.2357,
+    "date": "20-03-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=30.0444&longitude=31.2357&method=5&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 5,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:29.8410301Z",
+    "timings": {
+      "Fajr": "04:08",
+      "Sunrise": "05:54",
+      "Dhuhr": "12:57",
+      "Asr": "16:32",
+      "Sunset": "19:59",
+      "Maghrib": "19:59",
+      "Isha": "21:33",
+      "Imsak": "03:58",
+      "Midnight": "00:57",
+      "Firstthird": "23:18",
+      "Lastthird": "02:36"
+    },
+    "longitude": 31.2357,
+    "date": "21-06-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=30.0444&longitude=31.2357&method=5&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 5,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:30.1961392Z",
+    "timings": {
+      "Fajr": "05:14",
+      "Sunrise": "06:47",
+      "Dhuhr": "11:53",
+      "Asr": "14:41",
+      "Sunset": "16:59",
+      "Maghrib": "16:59",
+      "Isha": "18:23",
+      "Imsak": "05:04",
+      "Midnight": "23:53",
+      "Firstthird": "21:35",
+      "Lastthird": "02:11"
+    },
+    "longitude": 31.2357,
+    "date": "21-12-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=30.0444&longitude=31.2357&method=5&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 5,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:30.5312493Z",
+    "timings": {
+      "Fajr": "04:47",
+      "Sunrise": "06:13",
+      "Dhuhr": "12:06",
+      "Asr": "15:27",
+      "Sunset": "17:59",
+      "Maghrib": "17:59",
+      "Isha": "19:16",
+      "Imsak": "04:37",
+      "Midnight": "00:06",
+      "Firstthird": "22:04",
+      "Lastthird": "02:09"
+    },
+    "longitude": 31.2357,
+    "date": "08-03-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=30.0444&longitude=31.2357&method=5&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 5,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:30.8471432Z",
+    "timings": {
+      "Fajr": "04:39",
+      "Sunrise": "05:59",
+      "Dhuhr": "12:03",
+      "Asr": "15:29",
+      "Sunset": "18:06",
+      "Maghrib": "18:06",
+      "Isha": "19:21",
+      "Imsak": "04:29",
+      "Midnight": "00:03",
+      "Firstthird": "22:04",
+      "Lastthird": "02:02"
+    },
+    "longitude": 31.2357,
+    "date": "20-03-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=30.0444&longitude=31.2357&method=3&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 3,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:31.1714003Z",
+    "timings": {
+      "Fajr": "04:18",
+      "Sunrise": "05:54",
+      "Dhuhr": "12:57",
+      "Asr": "16:32",
+      "Sunset": "19:59",
+      "Maghrib": "19:59",
+      "Isha": "21:30",
+      "Imsak": "04:08",
+      "Midnight": "00:57",
+      "Firstthird": "23:18",
+      "Lastthird": "02:36"
+    },
+    "longitude": 31.2357,
+    "date": "21-06-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=30.0444&longitude=31.2357&method=3&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 3,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:31.4907778Z",
+    "timings": {
+      "Fajr": "05:21",
+      "Sunrise": "06:47",
+      "Dhuhr": "11:53",
+      "Asr": "14:41",
+      "Sunset": "16:59",
+      "Maghrib": "16:59",
+      "Isha": "18:20",
+      "Imsak": "05:11",
+      "Midnight": "23:53",
+      "Firstthird": "21:35",
+      "Lastthird": "02:11"
+    },
+    "longitude": 31.2357,
+    "date": "21-12-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=30.0444&longitude=31.2357&method=3&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 3,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:31.7986154Z",
+    "timings": {
+      "Fajr": "04:54",
+      "Sunrise": "06:13",
+      "Dhuhr": "12:06",
+      "Asr": "15:27",
+      "Sunset": "17:59",
+      "Maghrib": "17:59",
+      "Isha": "19:14",
+      "Imsak": "04:44",
+      "Midnight": "00:06",
+      "Firstthird": "22:04",
+      "Lastthird": "02:09"
+    },
+    "longitude": 31.2357,
+    "date": "08-03-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=30.0444&longitude=31.2357&method=3&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 3,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:32.2312771Z",
+    "timings": {
+      "Fajr": "04:37",
+      "Sunrise": "05:59",
+      "Dhuhr": "12:03",
+      "Asr": "15:29",
+      "Sunset": "18:06",
+      "Maghrib": "18:06",
+      "Isha": "19:36",
+      "Imsak": "04:27",
+      "Midnight": "00:03",
+      "Firstthird": "22:04",
+      "Lastthird": "02:02"
+    },
+    "longitude": 31.2357,
+    "date": "20-03-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=30.0444&longitude=31.2357&method=4&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 4,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:32.5552996Z",
+    "timings": {
+      "Fajr": "04:15",
+      "Sunrise": "05:54",
+      "Dhuhr": "12:57",
+      "Asr": "16:32",
+      "Sunset": "19:59",
+      "Maghrib": "19:59",
+      "Isha": "21:29",
+      "Imsak": "04:05",
+      "Midnight": "00:57",
+      "Firstthird": "23:18",
+      "Lastthird": "02:36"
+    },
+    "longitude": 31.2357,
+    "date": "21-06-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=30.0444&longitude=31.2357&method=4&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 4,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:33.2352833Z",
+    "timings": {
+      "Fajr": "05:19",
+      "Sunrise": "06:47",
+      "Dhuhr": "11:53",
+      "Asr": "14:41",
+      "Sunset": "16:59",
+      "Maghrib": "16:59",
+      "Isha": "18:29",
+      "Imsak": "05:09",
+      "Midnight": "23:53",
+      "Firstthird": "21:35",
+      "Lastthird": "02:11"
+    },
+    "longitude": 31.2357,
+    "date": "21-12-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=30.0444&longitude=31.2357&method=4&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 4,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 30,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:34.1349792Z",
+    "timings": {
+      "Fajr": "04:52",
+      "Sunrise": "06:13",
+      "Dhuhr": "12:06",
+      "Asr": "15:27",
+      "Sunset": "17:59",
+      "Maghrib": "17:59",
+      "Isha": "19:59",
+      "Imsak": "04:42",
+      "Midnight": "00:06",
+      "Firstthird": "22:04",
+      "Lastthird": "02:09"
+    },
+    "longitude": 31.2357,
+    "date": "08-03-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=30.0444&longitude=31.2357&method=4&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 4,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:35.0340961Z",
+    "timings": {
+      "Fajr": "04:39",
+      "Sunrise": "05:59",
+      "Dhuhr": "12:06",
+      "Asr": "15:29",
+      "Sunset": "18:09",
+      "Maghrib": "18:09",
+      "Isha": "19:27",
+      "Imsak": "04:29",
+      "Midnight": "00:03",
+      "Firstthird": "22:04",
+      "Lastthird": "02:02"
+    },
+    "longitude": 31.2357,
+    "date": "20-03-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=30.0444&longitude=31.2357&method=16&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 16,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:36.0343536Z",
+    "timings": {
+      "Fajr": "04:16",
+      "Sunrise": "05:54",
+      "Dhuhr": "13:00",
+      "Asr": "16:32",
+      "Sunset": "20:02",
+      "Maghrib": "20:02",
+      "Isha": "21:37",
+      "Imsak": "04:06",
+      "Midnight": "00:57",
+      "Firstthird": "23:18",
+      "Lastthird": "02:36"
+    },
+    "longitude": 31.2357,
+    "date": "21-06-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=30.0444&longitude=31.2357&method=16&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 16,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:36.7244270Z",
+    "timings": {
+      "Fajr": "05:20",
+      "Sunrise": "06:47",
+      "Dhuhr": "11:56",
+      "Asr": "14:41",
+      "Sunset": "17:02",
+      "Maghrib": "17:02",
+      "Isha": "18:26",
+      "Imsak": "05:10",
+      "Midnight": "23:53",
+      "Firstthird": "21:35",
+      "Lastthird": "02:11"
+    },
+    "longitude": 31.2357,
+    "date": "21-12-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=30.0444&longitude=31.2357&method=16&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 16,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:37.3984272Z",
+    "timings": {
+      "Fajr": "04:53",
+      "Sunrise": "06:13",
+      "Dhuhr": "12:09",
+      "Asr": "15:27",
+      "Sunset": "18:02",
+      "Maghrib": "18:02",
+      "Isha": "19:19",
+      "Imsak": "04:43",
+      "Midnight": "00:06",
+      "Firstthird": "22:04",
+      "Lastthird": "02:09"
+    },
+    "longitude": 31.2357,
+    "date": "08-03-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=30.0444&longitude=31.2357&method=16&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 16,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:38.0361590Z",
+    "timings": {
+      "Fajr": "04:54",
+      "Sunrise": "05:59",
+      "Dhuhr": "12:03",
+      "Asr": "15:29",
+      "Sunset": "18:06",
+      "Maghrib": "18:06",
+      "Isha": "19:12",
+      "Imsak": "04:44",
+      "Midnight": "00:03",
+      "Firstthird": "22:04",
+      "Lastthird": "02:02"
+    },
+    "longitude": 31.2357,
+    "date": "20-03-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=30.0444&longitude=31.2357&method=2&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 2,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:38.6106762Z",
+    "timings": {
+      "Fajr": "04:36",
+      "Sunrise": "05:54",
+      "Dhuhr": "12:57",
+      "Asr": "16:32",
+      "Sunset": "19:59",
+      "Maghrib": "19:59",
+      "Isha": "21:18",
+      "Imsak": "04:26",
+      "Midnight": "00:57",
+      "Firstthird": "23:18",
+      "Lastthird": "02:36"
+    },
+    "longitude": 31.2357,
+    "date": "21-06-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=30.0444&longitude=31.2357&method=2&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 2,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:39.4709690Z",
+    "timings": {
+      "Fajr": "05:36",
+      "Sunrise": "06:47",
+      "Dhuhr": "11:53",
+      "Asr": "14:41",
+      "Sunset": "16:59",
+      "Maghrib": "16:59",
+      "Isha": "18:10",
+      "Imsak": "05:26",
+      "Midnight": "23:53",
+      "Firstthird": "21:35",
+      "Lastthird": "02:11"
+    },
+    "longitude": 31.2357,
+    "date": "21-12-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=30.0444&longitude=31.2357&method=2&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 2,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:40.1981519Z",
+    "timings": {
+      "Fajr": "05:08",
+      "Sunrise": "06:13",
+      "Dhuhr": "12:06",
+      "Asr": "15:27",
+      "Sunset": "17:59",
+      "Maghrib": "17:59",
+      "Isha": "19:04",
+      "Imsak": "04:58",
+      "Midnight": "00:06",
+      "Firstthird": "22:04",
+      "Lastthird": "02:09"
+    },
+    "longitude": 31.2357,
+    "date": "08-03-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=30.0444&longitude=31.2357&method=2&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 2,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:40.6243561Z",
+    "timings": {
+      "Fajr": "04:39",
+      "Sunrise": "05:59",
+      "Dhuhr": "12:03",
+      "Asr": "15:29",
+      "Sunset": "18:06",
+      "Maghrib": "18:06",
+      "Isha": "19:24",
+      "Imsak": "04:29",
+      "Midnight": "00:03",
+      "Firstthird": "22:04",
+      "Lastthird": "02:02"
+    },
+    "longitude": 31.2357,
+    "date": "20-03-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=30.0444&longitude=31.2357&method=9&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 9,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:41.0305749Z",
+    "timings": {
+      "Fajr": "04:18",
+      "Sunrise": "05:54",
+      "Dhuhr": "12:57",
+      "Asr": "16:32",
+      "Sunset": "19:59",
+      "Maghrib": "19:59",
+      "Isha": "21:33",
+      "Imsak": "04:08",
+      "Midnight": "00:57",
+      "Firstthird": "23:18",
+      "Lastthird": "02:36"
+    },
+    "longitude": 31.2357,
+    "date": "21-06-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=30.0444&longitude=31.2357&method=9&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 9,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:41.4268559Z",
+    "timings": {
+      "Fajr": "05:21",
+      "Sunrise": "06:47",
+      "Dhuhr": "11:53",
+      "Asr": "14:41",
+      "Sunset": "16:59",
+      "Maghrib": "16:59",
+      "Isha": "18:23",
+      "Imsak": "05:11",
+      "Midnight": "23:53",
+      "Firstthird": "21:35",
+      "Lastthird": "02:11"
+    },
+    "longitude": 31.2357,
+    "date": "21-12-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=30.0444&longitude=31.2357&method=9&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 9,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:41.8315403Z",
+    "timings": {
+      "Fajr": "04:54",
+      "Sunrise": "06:13",
+      "Dhuhr": "12:06",
+      "Asr": "15:27",
+      "Sunset": "17:59",
+      "Maghrib": "17:59",
+      "Isha": "19:16",
+      "Imsak": "04:44",
+      "Midnight": "00:06",
+      "Firstthird": "22:04",
+      "Lastthird": "02:09"
+    },
+    "longitude": 31.2357,
+    "date": "08-03-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=30.0444&longitude=31.2357&method=9&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 9,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:42.2445023Z",
+    "timings": {
+      "Fajr": "04:39",
+      "Sunrise": "05:59",
+      "Dhuhr": "12:03",
+      "Asr": "15:29",
+      "Sunset": "18:06",
+      "Maghrib": "18:06",
+      "Isha": "19:36",
+      "Imsak": "04:29",
+      "Midnight": "00:03",
+      "Firstthird": "22:04",
+      "Lastthird": "02:02"
+    },
+    "longitude": 31.2357,
+    "date": "20-03-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=30.0444&longitude=31.2357&method=10&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 10,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:42.7139621Z",
+    "timings": {
+      "Fajr": "04:18",
+      "Sunrise": "05:54",
+      "Dhuhr": "12:57",
+      "Asr": "16:32",
+      "Sunset": "19:59",
+      "Maghrib": "19:59",
+      "Isha": "21:29",
+      "Imsak": "04:08",
+      "Midnight": "00:57",
+      "Firstthird": "23:18",
+      "Lastthird": "02:36"
+    },
+    "longitude": 31.2357,
+    "date": "21-06-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=30.0444&longitude=31.2357&method=10&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 10,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:43.0244066Z",
+    "timings": {
+      "Fajr": "05:21",
+      "Sunrise": "06:47",
+      "Dhuhr": "11:53",
+      "Asr": "14:41",
+      "Sunset": "16:59",
+      "Maghrib": "16:59",
+      "Isha": "18:29",
+      "Imsak": "05:11",
+      "Midnight": "23:53",
+      "Firstthird": "21:35",
+      "Lastthird": "02:11"
+    },
+    "longitude": 31.2357,
+    "date": "21-12-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=30.0444&longitude=31.2357&method=10&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 10,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 30.0444,
+    "metadata": {
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Africa/Cairo",
+    "capturedUtc": "2026-10-29T21:30:43.4647267Z",
+    "timings": {
+      "Fajr": "04:54",
+      "Sunrise": "06:13",
+      "Dhuhr": "12:06",
+      "Asr": "15:27",
+      "Sunset": "17:59",
+      "Maghrib": "17:59",
+      "Isha": "19:29",
+      "Imsak": "04:44",
+      "Midnight": "00:06",
+      "Firstthird": "22:04",
+      "Lastthird": "02:09"
+    },
+    "longitude": 31.2357,
+    "date": "08-03-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=30.0444&longitude=31.2357&method=10&school=0&timezonestring=Africa%2FCairo",
+    "methodId": 10,
+    "city": "Cairo"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:43.7666071Z",
+    "timings": {
+      "Fajr": "05:00",
+      "Sunrise": "06:23",
+      "Dhuhr": "12:26",
+      "Asr": "15:52",
+      "Sunset": "18:30",
+      "Maghrib": "18:30",
+      "Isha": "19:44",
+      "Imsak": "04:50",
+      "Midnight": "00:27",
+      "Firstthird": "22:28",
+      "Lastthird": "02:25"
+    },
+    "longitude": 55.2708,
+    "date": "20-03-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=25.2048&longitude=55.2708&method=5&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 5,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:44.0808996Z",
+    "timings": {
+      "Fajr": "03:51",
+      "Sunrise": "05:29",
+      "Dhuhr": "12:21",
+      "Asr": "15:43",
+      "Sunset": "19:12",
+      "Maghrib": "19:12",
+      "Isha": "20:39",
+      "Imsak": "03:41",
+      "Midnight": "00:21",
+      "Firstthird": "22:38",
+      "Lastthird": "02:04"
+    },
+    "longitude": 55.2708,
+    "date": "21-06-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=25.2048&longitude=55.2708&method=5&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 5,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:44.4350296Z",
+    "timings": {
+      "Fajr": "05:31",
+      "Sunrise": "07:00",
+      "Dhuhr": "12:17",
+      "Asr": "15:14",
+      "Sunset": "17:34",
+      "Maghrib": "17:34",
+      "Isha": "18:53",
+      "Imsak": "05:21",
+      "Midnight": "00:17",
+      "Firstthird": "22:03",
+      "Lastthird": "02:31"
+    },
+    "longitude": 55.2708,
+    "date": "21-12-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=25.2048&longitude=55.2708&method=5&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 5,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:44.9191518Z",
+    "timings": {
+      "Fajr": "05:13",
+      "Sunrise": "06:35",
+      "Dhuhr": "12:30",
+      "Asr": "15:52",
+      "Sunset": "18:24",
+      "Maghrib": "18:24",
+      "Isha": "19:38",
+      "Imsak": "05:03",
+      "Midnight": "00:30",
+      "Firstthird": "22:28",
+      "Lastthird": "02:32"
+    },
+    "longitude": 55.2708,
+    "date": "08-03-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=25.2048&longitude=55.2708&method=5&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 5,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:45.3472790Z",
+    "timings": {
+      "Fajr": "05:07",
+      "Sunrise": "06:23",
+      "Dhuhr": "12:26",
+      "Asr": "15:52",
+      "Sunset": "18:30",
+      "Maghrib": "18:30",
+      "Isha": "19:42",
+      "Imsak": "04:57",
+      "Midnight": "00:27",
+      "Firstthird": "22:28",
+      "Lastthird": "02:25"
+    },
+    "longitude": 55.2708,
+    "date": "20-03-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=25.2048&longitude=55.2708&method=3&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 3,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:45.6677633Z",
+    "timings": {
+      "Fajr": "04:00",
+      "Sunrise": "05:29",
+      "Dhuhr": "12:21",
+      "Asr": "15:43",
+      "Sunset": "19:12",
+      "Maghrib": "19:12",
+      "Isha": "20:36",
+      "Imsak": "03:50",
+      "Midnight": "00:21",
+      "Firstthird": "22:38",
+      "Lastthird": "02:04"
+    },
+    "longitude": 55.2708,
+    "date": "21-06-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=25.2048&longitude=55.2708&method=3&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 3,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:46.0370769Z",
+    "timings": {
+      "Fajr": "05:38",
+      "Sunrise": "07:00",
+      "Dhuhr": "12:17",
+      "Asr": "15:14",
+      "Sunset": "17:34",
+      "Maghrib": "17:34",
+      "Isha": "18:51",
+      "Imsak": "05:28",
+      "Midnight": "00:17",
+      "Firstthird": "22:03",
+      "Lastthird": "02:31"
+    },
+    "longitude": 55.2708,
+    "date": "21-12-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=25.2048&longitude=55.2708&method=3&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 3,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:46.3425260Z",
+    "timings": {
+      "Fajr": "05:19",
+      "Sunrise": "06:35",
+      "Dhuhr": "12:30",
+      "Asr": "15:52",
+      "Sunset": "18:24",
+      "Maghrib": "18:24",
+      "Isha": "19:36",
+      "Imsak": "05:09",
+      "Midnight": "00:30",
+      "Firstthird": "22:28",
+      "Lastthird": "02:32"
+    },
+    "longitude": 55.2708,
+    "date": "08-03-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=25.2048&longitude=55.2708&method=3&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 3,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:46.6583583Z",
+    "timings": {
+      "Fajr": "05:05",
+      "Sunrise": "06:23",
+      "Dhuhr": "12:26",
+      "Asr": "15:52",
+      "Sunset": "18:30",
+      "Maghrib": "18:30",
+      "Isha": "20:00",
+      "Imsak": "04:55",
+      "Midnight": "00:27",
+      "Firstthird": "22:28",
+      "Lastthird": "02:25"
+    },
+    "longitude": 55.2708,
+    "date": "20-03-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=25.2048&longitude=55.2708&method=4&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 4,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:46.9674629Z",
+    "timings": {
+      "Fajr": "03:57",
+      "Sunrise": "05:29",
+      "Dhuhr": "12:21",
+      "Asr": "15:43",
+      "Sunset": "19:12",
+      "Maghrib": "19:12",
+      "Isha": "20:42",
+      "Imsak": "03:47",
+      "Midnight": "00:21",
+      "Firstthird": "22:38",
+      "Lastthird": "02:04"
+    },
+    "longitude": 55.2708,
+    "date": "21-06-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=25.2048&longitude=55.2708&method=4&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 4,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:47.2597556Z",
+    "timings": {
+      "Fajr": "05:36",
+      "Sunrise": "07:00",
+      "Dhuhr": "12:17",
+      "Asr": "15:14",
+      "Sunset": "17:34",
+      "Maghrib": "17:34",
+      "Isha": "19:04",
+      "Imsak": "05:26",
+      "Midnight": "00:17",
+      "Firstthird": "22:03",
+      "Lastthird": "02:31"
+    },
+    "longitude": 55.2708,
+    "date": "21-12-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=25.2048&longitude=55.2708&method=4&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 4,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 30,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:47.6827200Z",
+    "timings": {
+      "Fajr": "05:17",
+      "Sunrise": "06:35",
+      "Dhuhr": "12:30",
+      "Asr": "15:52",
+      "Sunset": "18:24",
+      "Maghrib": "18:24",
+      "Isha": "20:24",
+      "Imsak": "05:07",
+      "Midnight": "00:30",
+      "Firstthird": "22:28",
+      "Lastthird": "02:32"
+    },
+    "longitude": 55.2708,
+    "date": "08-03-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=25.2048&longitude=55.2708&method=4&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 4,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:48.1219305Z",
+    "timings": {
+      "Fajr": "05:06",
+      "Sunrise": "06:23",
+      "Dhuhr": "12:29",
+      "Asr": "15:52",
+      "Sunset": "18:33",
+      "Maghrib": "18:33",
+      "Isha": "19:47",
+      "Imsak": "04:56",
+      "Midnight": "00:27",
+      "Firstthird": "22:28",
+      "Lastthird": "02:25"
+    },
+    "longitude": 55.2708,
+    "date": "20-03-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=25.2048&longitude=55.2708&method=16&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 16,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:48.4624060Z",
+    "timings": {
+      "Fajr": "03:59",
+      "Sunrise": "05:29",
+      "Dhuhr": "12:24",
+      "Asr": "15:43",
+      "Sunset": "19:15",
+      "Maghrib": "19:15",
+      "Isha": "20:43",
+      "Imsak": "03:49",
+      "Midnight": "00:21",
+      "Firstthird": "22:38",
+      "Lastthird": "02:04"
+    },
+    "longitude": 55.2708,
+    "date": "21-06-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=25.2048&longitude=55.2708&method=16&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 16,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:48.7899599Z",
+    "timings": {
+      "Fajr": "05:37",
+      "Sunrise": "07:00",
+      "Dhuhr": "12:20",
+      "Asr": "15:14",
+      "Sunset": "17:37",
+      "Maghrib": "17:37",
+      "Isha": "18:57",
+      "Imsak": "05:27",
+      "Midnight": "00:17",
+      "Firstthird": "22:03",
+      "Lastthird": "02:31"
+    },
+    "longitude": 55.2708,
+    "date": "21-12-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=25.2048&longitude=55.2708&method=16&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 16,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:49.2298003Z",
+    "timings": {
+      "Fajr": "05:19",
+      "Sunrise": "06:35",
+      "Dhuhr": "12:33",
+      "Asr": "15:52",
+      "Sunset": "18:27",
+      "Maghrib": "18:27",
+      "Isha": "19:41",
+      "Imsak": "05:09",
+      "Midnight": "00:30",
+      "Firstthird": "22:28",
+      "Lastthird": "02:32"
+    },
+    "longitude": 55.2708,
+    "date": "08-03-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=25.2048&longitude=55.2708&method=16&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 16,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:49.5456365Z",
+    "timings": {
+      "Fajr": "05:20",
+      "Sunrise": "06:23",
+      "Dhuhr": "12:26",
+      "Asr": "15:52",
+      "Sunset": "18:30",
+      "Maghrib": "18:30",
+      "Isha": "19:33",
+      "Imsak": "05:10",
+      "Midnight": "00:27",
+      "Firstthird": "22:28",
+      "Lastthird": "02:25"
+    },
+    "longitude": 55.2708,
+    "date": "20-03-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=25.2048&longitude=55.2708&method=2&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 2,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:50.0160084Z",
+    "timings": {
+      "Fajr": "04:16",
+      "Sunrise": "05:29",
+      "Dhuhr": "12:21",
+      "Asr": "15:43",
+      "Sunset": "19:12",
+      "Maghrib": "19:12",
+      "Isha": "20:25",
+      "Imsak": "04:06",
+      "Midnight": "00:21",
+      "Firstthird": "22:38",
+      "Lastthird": "02:04"
+    },
+    "longitude": 55.2708,
+    "date": "21-06-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=25.2048&longitude=55.2708&method=2&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 2,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:50.4678306Z",
+    "timings": {
+      "Fajr": "05:52",
+      "Sunrise": "07:00",
+      "Dhuhr": "12:17",
+      "Asr": "15:14",
+      "Sunset": "17:34",
+      "Maghrib": "17:34",
+      "Isha": "18:42",
+      "Imsak": "05:42",
+      "Midnight": "00:17",
+      "Firstthird": "22:03",
+      "Lastthird": "02:31"
+    },
+    "longitude": 55.2708,
+    "date": "21-12-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=25.2048&longitude=55.2708&method=2&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 2,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:50.8689179Z",
+    "timings": {
+      "Fajr": "05:33",
+      "Sunrise": "06:35",
+      "Dhuhr": "12:30",
+      "Asr": "15:52",
+      "Sunset": "18:24",
+      "Maghrib": "18:24",
+      "Isha": "19:27",
+      "Imsak": "05:23",
+      "Midnight": "00:30",
+      "Firstthird": "22:28",
+      "Lastthird": "02:32"
+    },
+    "longitude": 55.2708,
+    "date": "08-03-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=25.2048&longitude=55.2708&method=2&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 2,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:51.1888990Z",
+    "timings": {
+      "Fajr": "05:07",
+      "Sunrise": "06:23",
+      "Dhuhr": "12:26",
+      "Asr": "15:52",
+      "Sunset": "18:30",
+      "Maghrib": "18:30",
+      "Isha": "19:44",
+      "Imsak": "04:57",
+      "Midnight": "00:27",
+      "Firstthird": "22:28",
+      "Lastthird": "02:25"
+    },
+    "longitude": 55.2708,
+    "date": "20-03-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=25.2048&longitude=55.2708&method=9&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 9,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:51.5308633Z",
+    "timings": {
+      "Fajr": "04:00",
+      "Sunrise": "05:29",
+      "Dhuhr": "12:21",
+      "Asr": "15:43",
+      "Sunset": "19:12",
+      "Maghrib": "19:12",
+      "Isha": "20:39",
+      "Imsak": "03:50",
+      "Midnight": "00:21",
+      "Firstthird": "22:38",
+      "Lastthird": "02:04"
+    },
+    "longitude": 55.2708,
+    "date": "21-06-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=25.2048&longitude=55.2708&method=9&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 9,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:51.9370253Z",
+    "timings": {
+      "Fajr": "05:38",
+      "Sunrise": "07:00",
+      "Dhuhr": "12:17",
+      "Asr": "15:14",
+      "Sunset": "17:34",
+      "Maghrib": "17:34",
+      "Isha": "18:53",
+      "Imsak": "05:28",
+      "Midnight": "00:17",
+      "Firstthird": "22:03",
+      "Lastthird": "02:31"
+    },
+    "longitude": 55.2708,
+    "date": "21-12-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=25.2048&longitude=55.2708&method=9&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 9,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:52.3121216Z",
+    "timings": {
+      "Fajr": "05:19",
+      "Sunrise": "06:35",
+      "Dhuhr": "12:30",
+      "Asr": "15:52",
+      "Sunset": "18:24",
+      "Maghrib": "18:24",
+      "Isha": "19:38",
+      "Imsak": "05:09",
+      "Midnight": "00:30",
+      "Firstthird": "22:28",
+      "Lastthird": "02:32"
+    },
+    "longitude": 55.2708,
+    "date": "08-03-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=25.2048&longitude=55.2708&method=9&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 9,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:52.7564832Z",
+    "timings": {
+      "Fajr": "05:07",
+      "Sunrise": "06:23",
+      "Dhuhr": "12:26",
+      "Asr": "15:52",
+      "Sunset": "18:30",
+      "Maghrib": "18:30",
+      "Isha": "20:00",
+      "Imsak": "04:57",
+      "Midnight": "00:27",
+      "Firstthird": "22:28",
+      "Lastthird": "02:25"
+    },
+    "longitude": 55.2708,
+    "date": "20-03-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=25.2048&longitude=55.2708&method=10&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 10,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:53.2193547Z",
+    "timings": {
+      "Fajr": "04:00",
+      "Sunrise": "05:29",
+      "Dhuhr": "12:21",
+      "Asr": "15:43",
+      "Sunset": "19:12",
+      "Maghrib": "19:12",
+      "Isha": "20:42",
+      "Imsak": "03:50",
+      "Midnight": "00:21",
+      "Firstthird": "22:38",
+      "Lastthird": "02:04"
+    },
+    "longitude": 55.2708,
+    "date": "21-06-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=25.2048&longitude=55.2708&method=10&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 10,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:53.6281742Z",
+    "timings": {
+      "Fajr": "05:38",
+      "Sunrise": "07:00",
+      "Dhuhr": "12:17",
+      "Asr": "15:14",
+      "Sunset": "17:34",
+      "Maghrib": "17:34",
+      "Isha": "19:04",
+      "Imsak": "05:28",
+      "Midnight": "00:17",
+      "Firstthird": "22:03",
+      "Lastthird": "02:31"
+    },
+    "longitude": 55.2708,
+    "date": "21-12-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=25.2048&longitude=55.2708&method=10&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 10,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 25.2048,
+    "metadata": {
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "Asia/Dubai",
+    "capturedUtc": "2026-10-29T21:30:54.0403480Z",
+    "timings": {
+      "Fajr": "05:19",
+      "Sunrise": "06:35",
+      "Dhuhr": "12:30",
+      "Asr": "15:52",
+      "Sunset": "18:24",
+      "Maghrib": "18:24",
+      "Isha": "19:54",
+      "Imsak": "05:09",
+      "Midnight": "00:30",
+      "Firstthird": "22:28",
+      "Lastthird": "02:32"
+    },
+    "longitude": 55.2708,
+    "date": "08-03-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=25.2048&longitude=55.2708&method=10&school=0&timezonestring=Asia%2FDubai",
+    "methodId": 10,
+    "city": "Dubai"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:54.4550838Z",
+    "timings": {
+      "Fajr": "05:19",
+      "Sunrise": "06:59",
+      "Dhuhr": "13:03",
+      "Asr": "16:28",
+      "Sunset": "19:08",
+      "Maghrib": "19:08",
+      "Isha": "20:37",
+      "Imsak": "05:09",
+      "Midnight": "01:04",
+      "Firstthird": "23:05",
+      "Lastthird": "03:02"
+    },
+    "longitude": -74.006,
+    "date": "20-03-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=40.7128&longitude=-74.006&method=5&school=0&timezonestring=America%2FNew_York",
+    "methodId": 5,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:54.7614425Z",
+    "timings": {
+      "Fajr": "03:04",
+      "Sunrise": "05:25",
+      "Dhuhr": "12:58",
+      "Asr": "16:58",
+      "Sunset": "20:31",
+      "Maghrib": "20:31",
+      "Isha": "22:33",
+      "Imsak": "02:54",
+      "Midnight": "00:58",
+      "Firstthird": "23:29",
+      "Lastthird": "02:27"
+    },
+    "longitude": -74.006,
+    "date": "21-06-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=40.7128&longitude=-74.006&method=5&school=0&timezonestring=America%2FNew_York",
+    "methodId": 5,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:55.2793267Z",
+    "timings": {
+      "Fajr": "05:29",
+      "Sunrise": "07:17",
+      "Dhuhr": "11:54",
+      "Asr": "14:14",
+      "Sunset": "16:32",
+      "Maghrib": "16:32",
+      "Isha": "18:08",
+      "Imsak": "05:19",
+      "Midnight": "23:54",
+      "Firstthird": "21:27",
+      "Lastthird": "02:22"
+    },
+    "longitude": -74.006,
+    "date": "21-12-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=40.7128&longitude=-74.006&method=5&school=0&timezonestring=America%2FNew_York",
+    "methodId": 5,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 5,
+        "name": "Egyptian General Authority of Survey",
+        "params": {
+          "Fajr": 19.5,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 30.0444196,
+          "longitude": 31.2357116
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:55.9556077Z",
+    "timings": {
+      "Fajr": "05:40",
+      "Sunrise": "07:19",
+      "Dhuhr": "13:07",
+      "Asr": "16:21",
+      "Sunset": "18:55",
+      "Maghrib": "18:55",
+      "Isha": "20:23",
+      "Imsak": "05:30",
+      "Midnight": "01:07",
+      "Firstthird": "23:03",
+      "Lastthird": "03:11"
+    },
+    "longitude": -74.006,
+    "date": "08-03-2026",
+    "method": "egyptian",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=40.7128&longitude=-74.006&method=5&school=0&timezonestring=America%2FNew_York",
+    "methodId": 5,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:56.4939637Z",
+    "timings": {
+      "Fajr": "05:28",
+      "Sunrise": "06:59",
+      "Dhuhr": "13:03",
+      "Asr": "16:28",
+      "Sunset": "19:08",
+      "Maghrib": "19:08",
+      "Isha": "20:35",
+      "Imsak": "05:18",
+      "Midnight": "01:04",
+      "Firstthird": "23:05",
+      "Lastthird": "03:02"
+    },
+    "longitude": -74.006,
+    "date": "20-03-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=40.7128&longitude=-74.006&method=3&school=0&timezonestring=America%2FNew_York",
+    "methodId": 3,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:56.8561453Z",
+    "timings": {
+      "Fajr": "03:19",
+      "Sunrise": "05:25",
+      "Dhuhr": "12:58",
+      "Asr": "16:58",
+      "Sunset": "20:31",
+      "Maghrib": "20:31",
+      "Isha": "22:28",
+      "Imsak": "03:09",
+      "Midnight": "00:58",
+      "Firstthird": "23:29",
+      "Lastthird": "02:27"
+    },
+    "longitude": -74.006,
+    "date": "21-06-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=40.7128&longitude=-74.006&method=3&school=0&timezonestring=America%2FNew_York",
+    "methodId": 3,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:57.1687859Z",
+    "timings": {
+      "Fajr": "05:38",
+      "Sunrise": "07:17",
+      "Dhuhr": "11:54",
+      "Asr": "14:14",
+      "Sunset": "16:32",
+      "Maghrib": "16:32",
+      "Isha": "18:05",
+      "Imsak": "05:28",
+      "Midnight": "23:54",
+      "Firstthird": "21:27",
+      "Lastthird": "02:22"
+    },
+    "longitude": -74.006,
+    "date": "21-12-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=40.7128&longitude=-74.006&method=3&school=0&timezonestring=America%2FNew_York",
+    "methodId": 3,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 3,
+        "name": "Muslim World League",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17
+        },
+        "location": {
+          "latitude": 51.5194682,
+          "longitude": -0.1360365
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:57.6975195Z",
+    "timings": {
+      "Fajr": "05:48",
+      "Sunrise": "07:19",
+      "Dhuhr": "13:07",
+      "Asr": "16:21",
+      "Sunset": "18:55",
+      "Maghrib": "18:55",
+      "Isha": "20:21",
+      "Imsak": "05:38",
+      "Midnight": "01:07",
+      "Firstthird": "23:03",
+      "Lastthird": "03:11"
+    },
+    "longitude": -74.006,
+    "date": "08-03-2026",
+    "method": "muslimWorldLeague",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=40.7128&longitude=-74.006&method=3&school=0&timezonestring=America%2FNew_York",
+    "methodId": 3,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:58.1002766Z",
+    "timings": {
+      "Fajr": "05:25",
+      "Sunrise": "06:59",
+      "Dhuhr": "13:03",
+      "Asr": "16:28",
+      "Sunset": "19:08",
+      "Maghrib": "19:08",
+      "Isha": "20:38",
+      "Imsak": "05:15",
+      "Midnight": "01:04",
+      "Firstthird": "23:05",
+      "Lastthird": "03:02"
+    },
+    "longitude": -74.006,
+    "date": "20-03-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=40.7128&longitude=-74.006&method=4&school=0&timezonestring=America%2FNew_York",
+    "methodId": 4,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:58.5629875Z",
+    "timings": {
+      "Fajr": "03:14",
+      "Sunrise": "05:25",
+      "Dhuhr": "12:58",
+      "Asr": "16:58",
+      "Sunset": "20:31",
+      "Maghrib": "20:31",
+      "Isha": "22:01",
+      "Imsak": "03:04",
+      "Midnight": "00:58",
+      "Firstthird": "23:29",
+      "Lastthird": "02:27"
+    },
+    "longitude": -74.006,
+    "date": "21-06-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=40.7128&longitude=-74.006&method=4&school=0&timezonestring=America%2FNew_York",
+    "methodId": 4,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:59.0869042Z",
+    "timings": {
+      "Fajr": "05:35",
+      "Sunrise": "07:17",
+      "Dhuhr": "11:54",
+      "Asr": "14:14",
+      "Sunset": "16:32",
+      "Maghrib": "16:32",
+      "Isha": "18:02",
+      "Imsak": "05:25",
+      "Midnight": "23:54",
+      "Firstthird": "21:27",
+      "Lastthird": "02:22"
+    },
+    "longitude": -74.006,
+    "date": "21-12-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=40.7128&longitude=-74.006&method=4&school=0&timezonestring=America%2FNew_York",
+    "methodId": 4,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 4,
+        "name": "Umm Al-Qura University, Makkah",
+        "params": {
+          "Fajr": 18.5,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 21.3890824,
+          "longitude": 39.8579118
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 30,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:30:59.8171331Z",
+    "timings": {
+      "Fajr": "05:45",
+      "Sunrise": "07:19",
+      "Dhuhr": "13:07",
+      "Asr": "16:21",
+      "Sunset": "18:55",
+      "Maghrib": "18:55",
+      "Isha": "20:55",
+      "Imsak": "05:35",
+      "Midnight": "01:07",
+      "Firstthird": "23:03",
+      "Lastthird": "03:11"
+    },
+    "longitude": -74.006,
+    "date": "08-03-2026",
+    "method": "ummAlQura",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=40.7128&longitude=-74.006&method=4&school=0&timezonestring=America%2FNew_York",
+    "methodId": 4,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:00.1922311Z",
+    "timings": {
+      "Fajr": "05:26",
+      "Sunrise": "06:59",
+      "Dhuhr": "13:06",
+      "Asr": "16:28",
+      "Sunset": "19:11",
+      "Maghrib": "19:11",
+      "Isha": "20:41",
+      "Imsak": "05:16",
+      "Midnight": "01:04",
+      "Firstthird": "23:05",
+      "Lastthird": "03:02"
+    },
+    "longitude": -74.006,
+    "date": "20-03-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=40.7128&longitude=-74.006&method=16&school=0&timezonestring=America%2FNew_York",
+    "methodId": 16,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:00.7571260Z",
+    "timings": {
+      "Fajr": "03:17",
+      "Sunrise": "05:25",
+      "Dhuhr": "13:01",
+      "Asr": "16:58",
+      "Sunset": "20:34",
+      "Maghrib": "20:34",
+      "Isha": "22:39",
+      "Imsak": "03:07",
+      "Midnight": "00:58",
+      "Firstthird": "23:29",
+      "Lastthird": "02:27"
+    },
+    "longitude": -74.006,
+    "date": "21-06-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=40.7128&longitude=-74.006&method=16&school=0&timezonestring=America%2FNew_York",
+    "methodId": 16,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:01.2819977Z",
+    "timings": {
+      "Fajr": "05:37",
+      "Sunrise": "07:17",
+      "Dhuhr": "11:57",
+      "Asr": "14:14",
+      "Sunset": "16:35",
+      "Maghrib": "16:35",
+      "Isha": "18:12",
+      "Imsak": "05:27",
+      "Midnight": "23:54",
+      "Firstthird": "21:27",
+      "Lastthird": "02:22"
+    },
+    "longitude": -74.006,
+    "date": "21-12-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=40.7128&longitude=-74.006&method=16&school=0&timezonestring=America%2FNew_York",
+    "methodId": 16,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 16,
+        "name": "Dubai (experimental)",
+        "params": {
+          "Fajr": 18.2,
+          "Isha": 18.2
+        },
+        "location": {
+          "latitude": 25.0762677,
+          "longitude": 55.087404
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 3,
+        "Asr": 0,
+        "Maghrib": 3,
+        "Sunset": 3,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:01.7575466Z",
+    "timings": {
+      "Fajr": "05:47",
+      "Sunrise": "07:19",
+      "Dhuhr": "13:10",
+      "Asr": "16:21",
+      "Sunset": "18:58",
+      "Maghrib": "18:58",
+      "Isha": "20:27",
+      "Imsak": "05:37",
+      "Midnight": "01:07",
+      "Firstthird": "23:03",
+      "Lastthird": "03:11"
+    },
+    "longitude": -74.006,
+    "date": "08-03-2026",
+    "method": "dubai",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=40.7128&longitude=-74.006&method=16&school=0&timezonestring=America%2FNew_York",
+    "methodId": 16,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:02.2787834Z",
+    "timings": {
+      "Fajr": "05:44",
+      "Sunrise": "06:59",
+      "Dhuhr": "13:03",
+      "Asr": "16:28",
+      "Sunset": "19:08",
+      "Maghrib": "19:08",
+      "Isha": "20:24",
+      "Imsak": "05:34",
+      "Midnight": "01:04",
+      "Firstthird": "23:05",
+      "Lastthird": "03:02"
+    },
+    "longitude": -74.006,
+    "date": "20-03-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=40.7128&longitude=-74.006&method=2&school=0&timezonestring=America%2FNew_York",
+    "methodId": 2,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:02.5902932Z",
+    "timings": {
+      "Fajr": "03:45",
+      "Sunrise": "05:25",
+      "Dhuhr": "12:58",
+      "Asr": "16:58",
+      "Sunset": "20:31",
+      "Maghrib": "20:31",
+      "Isha": "22:11",
+      "Imsak": "03:35",
+      "Midnight": "00:58",
+      "Firstthird": "23:29",
+      "Lastthird": "02:27"
+    },
+    "longitude": -74.006,
+    "date": "21-06-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=40.7128&longitude=-74.006&method=2&school=0&timezonestring=America%2FNew_York",
+    "methodId": 2,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:03.0202937Z",
+    "timings": {
+      "Fajr": "05:54",
+      "Sunrise": "07:17",
+      "Dhuhr": "11:54",
+      "Asr": "14:14",
+      "Sunset": "16:32",
+      "Maghrib": "16:32",
+      "Isha": "17:54",
+      "Imsak": "05:44",
+      "Midnight": "23:54",
+      "Firstthird": "21:27",
+      "Lastthird": "02:22"
+    },
+    "longitude": -74.006,
+    "date": "21-12-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=40.7128&longitude=-74.006&method=2&school=0&timezonestring=America%2FNew_York",
+    "methodId": 2,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 2,
+        "name": "Islamic Society of North America (ISNA)",
+        "params": {
+          "Fajr": 15,
+          "Isha": 15
+        },
+        "location": {
+          "latitude": 39.70421229999999,
+          "longitude": -86.39943869999999
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:03.4624410Z",
+    "timings": {
+      "Fajr": "06:04",
+      "Sunrise": "07:19",
+      "Dhuhr": "13:07",
+      "Asr": "16:21",
+      "Sunset": "18:55",
+      "Maghrib": "18:55",
+      "Isha": "20:10",
+      "Imsak": "05:54",
+      "Midnight": "01:07",
+      "Firstthird": "23:03",
+      "Lastthird": "03:11"
+    },
+    "longitude": -74.006,
+    "date": "08-03-2026",
+    "method": "northAmerica",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=40.7128&longitude=-74.006&method=2&school=0&timezonestring=America%2FNew_York",
+    "methodId": 2,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:03.9073998Z",
+    "timings": {
+      "Fajr": "05:28",
+      "Sunrise": "06:59",
+      "Dhuhr": "13:03",
+      "Asr": "16:28",
+      "Sunset": "19:08",
+      "Maghrib": "19:08",
+      "Isha": "20:37",
+      "Imsak": "05:18",
+      "Midnight": "01:04",
+      "Firstthird": "23:05",
+      "Lastthird": "03:02"
+    },
+    "longitude": -74.006,
+    "date": "20-03-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=40.7128&longitude=-74.006&method=9&school=0&timezonestring=America%2FNew_York",
+    "methodId": 9,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:04.4371947Z",
+    "timings": {
+      "Fajr": "03:19",
+      "Sunrise": "05:25",
+      "Dhuhr": "12:58",
+      "Asr": "16:58",
+      "Sunset": "20:31",
+      "Maghrib": "20:31",
+      "Isha": "22:33",
+      "Imsak": "03:09",
+      "Midnight": "00:58",
+      "Firstthird": "23:29",
+      "Lastthird": "02:27"
+    },
+    "longitude": -74.006,
+    "date": "21-06-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=40.7128&longitude=-74.006&method=9&school=0&timezonestring=America%2FNew_York",
+    "methodId": 9,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:04.9382138Z",
+    "timings": {
+      "Fajr": "05:38",
+      "Sunrise": "07:17",
+      "Dhuhr": "11:54",
+      "Asr": "14:14",
+      "Sunset": "16:32",
+      "Maghrib": "16:32",
+      "Isha": "18:08",
+      "Imsak": "05:28",
+      "Midnight": "23:54",
+      "Firstthird": "21:27",
+      "Lastthird": "02:22"
+    },
+    "longitude": -74.006,
+    "date": "21-12-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=40.7128&longitude=-74.006&method=9&school=0&timezonestring=America%2FNew_York",
+    "methodId": 9,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 9,
+        "name": "Kuwait",
+        "params": {
+          "Fajr": 18,
+          "Isha": 17.5
+        },
+        "location": {
+          "latitude": 29.375859,
+          "longitude": 47.9774052
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:05.3635129Z",
+    "timings": {
+      "Fajr": "05:48",
+      "Sunrise": "07:19",
+      "Dhuhr": "13:07",
+      "Asr": "16:21",
+      "Sunset": "18:55",
+      "Maghrib": "18:55",
+      "Isha": "20:23",
+      "Imsak": "05:38",
+      "Midnight": "01:07",
+      "Firstthird": "23:03",
+      "Lastthird": "03:11"
+    },
+    "longitude": -74.006,
+    "date": "08-03-2026",
+    "method": "kuwait",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=40.7128&longitude=-74.006&method=9&school=0&timezonestring=America%2FNew_York",
+    "methodId": 9,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:05.8114954Z",
+    "timings": {
+      "Fajr": "05:28",
+      "Sunrise": "06:59",
+      "Dhuhr": "13:03",
+      "Asr": "16:28",
+      "Sunset": "19:08",
+      "Maghrib": "19:08",
+      "Isha": "20:38",
+      "Imsak": "05:18",
+      "Midnight": "01:04",
+      "Firstthird": "23:05",
+      "Lastthird": "03:02"
+    },
+    "longitude": -74.006,
+    "date": "20-03-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/20-03-2026?latitude=40.7128&longitude=-74.006&method=10&school=0&timezonestring=America%2FNew_York",
+    "methodId": 10,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:06.1583295Z",
+    "timings": {
+      "Fajr": "03:19",
+      "Sunrise": "05:25",
+      "Dhuhr": "12:58",
+      "Asr": "16:58",
+      "Sunset": "20:31",
+      "Maghrib": "20:31",
+      "Isha": "22:01",
+      "Imsak": "03:09",
+      "Midnight": "00:58",
+      "Firstthird": "23:29",
+      "Lastthird": "02:27"
+    },
+    "longitude": -74.006,
+    "date": "21-06-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/21-06-2026?latitude=40.7128&longitude=-74.006&method=10&school=0&timezonestring=America%2FNew_York",
+    "methodId": 10,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:06.5307080Z",
+    "timings": {
+      "Fajr": "05:38",
+      "Sunrise": "07:17",
+      "Dhuhr": "11:54",
+      "Asr": "14:14",
+      "Sunset": "16:32",
+      "Maghrib": "16:32",
+      "Isha": "18:02",
+      "Imsak": "05:28",
+      "Midnight": "23:54",
+      "Firstthird": "21:27",
+      "Lastthird": "02:22"
+    },
+    "longitude": -74.006,
+    "date": "21-12-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/21-12-2026?latitude=40.7128&longitude=-74.006&method=10&school=0&timezonestring=America%2FNew_York",
+    "methodId": 10,
+    "city": "New York"
+  },
+  {
+    "latitude": 40.7128,
+    "metadata": {
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "method": {
+        "id": 10,
+        "name": "Qatar",
+        "params": {
+          "Fajr": 18,
+          "Isha": "90 min"
+        },
+        "location": {
+          "latitude": 25.2854473,
+          "longitude": 51.5310398
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "STANDARD",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    },
+    "zone": "America/New_York",
+    "capturedUtc": "2026-10-29T21:31:06.9820491Z",
+    "timings": {
+      "Fajr": "05:48",
+      "Sunrise": "07:19",
+      "Dhuhr": "13:07",
+      "Asr": "16:21",
+      "Sunset": "18:55",
+      "Maghrib": "18:55",
+      "Isha": "20:25",
+      "Imsak": "05:38",
+      "Midnight": "01:07",
+      "Firstthird": "23:03",
+      "Lastthird": "03:11"
+    },
+    "longitude": -74.006,
+    "date": "08-03-2026",
+    "method": "qatar",
+    "source": "https://api.aladhan.com/v1/timings/08-03-2026?latitude=40.7128&longitude=-74.006&method=10&school=0&timezonestring=America%2FNew_York",
+    "methodId": 10,
+    "city": "New York"
+  }
+]

@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 7;
+const int kFoundationSchemaVersion = 9;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -169,7 +169,6 @@ class TaskRecords extends Table {
 
   /// Tasks owns this transition revision; map status projections only read it.
   DateTimeColumn get completionChangedAt => dateTime().nullable()();
-  IntColumn get completionXp => integer()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -354,6 +353,54 @@ class MindMapSideLinks extends Table {
   Set<Column> get primaryKey => {accountId, mapId, firstNodeId, secondNodeId};
 }
 
+/// One encrypted, installation-local city/method choice per owner.
+class PrayerDevicePreferences extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get provider => text()();
+  TextColumn get providerCityId => text()();
+  TextColumn get cityName => text()();
+  TextColumn get countryCode => text()();
+  TextColumn get countryName => text()();
+  TextColumn get adminName => text().nullable()();
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+  TextColumn get timeZoneId => text()();
+  TextColumn get calculationMethod => text()();
+  IntColumn get revision => integer()();
+  TextColumn get updatedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {accountId};
+}
+
+@TableIndex(name: 'prayer_reports_owner_day', columns: {#accountId, #localDate})
+@TableIndex(
+  name: 'prayer_reports_owner_version',
+  columns: {#accountId, #updatedAt, #reportId},
+)
+@TableIndex(
+  name: 'prayer_reports_owner_report',
+  columns: {#accountId, #reportId},
+  unique: true,
+)
+class PrayerReports extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get localDate => text()();
+  TextColumn get prayerName => text()();
+  TextColumn get reportId => text()();
+  TextColumn get status => text()();
+  TextColumn get reportedCompletionAt => text().nullable()();
+  TextColumn get recordedZoneId => text()();
+  IntColumn get recordedOffsetMinutes => integer()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+  TextColumn get canonicalRewardConfirmedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, localDate, prayerName};
+}
+
 @DriftDatabase(
   tables: [
     FoundationPreferences,
@@ -370,6 +417,8 @@ class MindMapSideLinks extends Table {
     MindMapNodeRecords,
     MindMapParentSlots,
     MindMapSideLinks,
+    PrayerDevicePreferences,
+    PrayerReports,
   ],
 )
 class FoundationDatabase extends _$FoundationDatabase {
@@ -475,6 +524,7 @@ class FoundationDatabase extends _$FoundationDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (migrator) async {
       await migrator.createAll();
+      if (schemaVersion >= 9) await _createPrayerAnnualTimetables();
       // A fresh create is recorded as a completed journal entry.
       await _recordJournalStep(schemaVersion);
     },
@@ -572,6 +622,29 @@ class FoundationDatabase extends _$FoundationDatabase {
           );
         }
       }
+      if (to >= 8 && from < 8) {
+        await testMigrationHook?.call(migrator, from, to);
+        await migrator.createTable(prayerDevicePreferences);
+        await migrator.createTable(prayerReports);
+        for (final index in <Index>[
+          prayerReportsOwnerDay,
+          prayerReportsOwnerVersion,
+          prayerReportsOwnerReport,
+        ]) {
+          await _createIndexIfMissing(migrator, index);
+        }
+        final columns = await customSelect(
+          'PRAGMA table_info(task_records)',
+        ).get();
+        if (columns.any((row) => row.read<String>('name') == 'completion_xp')) {
+          await customStatement(
+            'ALTER TABLE task_records DROP COLUMN completion_xp',
+          );
+        }
+      }
+      if (to >= 9 && from < 9) {
+        await _createPrayerAnnualTimetables();
+      }
       await _recordJournalComplete(to);
     },
     beforeOpen: (details) async {
@@ -588,6 +661,17 @@ class FoundationDatabase extends _$FoundationDatabase {
       );
     },
   );
+
+  Future<void> _createPrayerAnnualTimetables() => customStatement('''
+    CREATE TABLE IF NOT EXISTS prayer_annual_timetables (
+      account_id TEXT NOT NULL,
+      context_key TEXT NOT NULL,
+      calendar_year INTEGER NOT NULL,
+      days_json TEXT NOT NULL,
+      fetched_at TEXT NOT NULL,
+      PRIMARY KEY (account_id, context_key, calendar_year)
+    )
+  ''');
 
   Future<void> _createIndexIfMissing(Migrator migrator, Index index) async {
     final existing = await customSelect(
