@@ -545,3 +545,70 @@ Three iOS files failed, each for a different reason:
   - Result bundles are not uploaded as artifacts, because the repository is public.
 
 All 60 CI script tests pass, and `bash -n` is clean.
+
+**Sixth PR run [42318792767](https://github.com/TarekHayan/Namaa/actions/runs/42318792767) on `947a332`.** Everything passed except iOS prayer and iOS mind-maps.
+
+The new simulator log dump showed the cause:
+- **iOS prayer.** `prayer_offline_sync_test` failed with `AuthRetryableFetchException … Failed host lookup: 'qfjwybbmqhpxxikubhuh.supabase.co' (nodename nor servname provided)`. The simulator could not resolve the staging host.
+- **iOS mind-maps.** Its network files (offline-sync, localized-route, staging-sync) hung or failed on the same runner, with no Flutter output.
+
+**Checked at the same time:**
+- The staging project reported `ACTIVE_HEALTHY`.
+- Its host resolved from another network, and `/auth/v1/health` answered in 0.7 s.
+- The macOS desktop job in the same run reached staging and passed.
+
+This was iOS-simulator networking on that macOS runner, not an application or test defect.
+
+Per the T133 policy (same-head infrastructure reruns only after the logs are read), the failed jobs were rerun on `947a332` with no new commit.
+
+**Rerun results for 42318792767.**
+
+Attempt 2:
+- **iOS prayer passed.** Every job 008 touches is now green on all five targets.
+- **iOS mind-maps failed before any test ran.**
+  - On the first file, xcodebuild reported `FBSOpenApplicationServiceErrorDomain Code=5 "Simulator device failed to launch com.example.nammaProject." … The system shell (SpringBoard) probably crashed.`
+  - Each later file built, timed out without the app ever starting (empty Flutter log), was retried on a restarted simulator, and timed out again, until the job hit its 125-minute step limit.
+  - This is the simulator's SpringBoard on that runner, not app code: 008 changes no Mind Maps code, and this group passed earlier on this same PR.
+
+The failed job was rerun as attempt 3 on the same head.
+
+**Attempt 3 of [42318792767](https://github.com/TarekHayan/Namaa/actions/runs/42318792767) passed.** iOS mind-maps passed on a healthy simulator, and the run concluded `success` with every job green.
+
+## Final gate and closure (2026-11-09)
+
+**T133 — exact-head gate.** Run [42318792767](https://github.com/TarekHayan/Namaa/actions/runs/42318792767), attempt 3, on head **`947a33275bf0e7fcb2ce391738ef643cfb5e0008`**, concluded `success`. These all passed on that head:
+- quality and shared tests;
+- Supabase database and RLS;
+- Android foundation, tasks, habits-today, mind-maps and prayer;
+- iOS foundation, tasks, habits, mind-maps, today and prayer;
+- Windows, macOS and Linux;
+- the five-target gate.
+
+Attempts 2 and 3 reran only failed jobs on the same head, after reading their logs: an iOS DNS failure, then a SpringBoard crash. This closeout commit changes only `specs/`, which is outside the workflow's `pull_request` paths. It does not start a new run, and it does not change any code the gate validated.
+
+**T119 / T120 — hosted sync and integrity.**
+- Migration 0015 was applied to the isolated staging project, with the user's approval. Production was not touched.
+- `integration_test/prayer_offline_sync_test.dart` passed in the gate against staging, using two encrypted stores and the two staging test users. Each run uses a past fixture day and run-tagged operation IDs.
+- The suite covers:
+  - different-prayer merges;
+  - independent device cities;
+  - concurrent first insert and reward settlement;
+  - complete→reset;
+  - ten replays;
+  - equal-time evidence;
+  - lost ACK and restart;
+  - owner B isolation.
+- The SQL/RPC and RLS checks passed in the Supabase job.
+- Task, Habit and Map regressions passed in their groups.
+
+**T131 — five targets.** Prayer device integration passed on Android, iOS, Windows, macOS and Linux in the gate above. Android (CPH2481) also passed by hand on a physical phone.
+
+**T132.** verification.md, quickstart.md and the task states now match the shipped location-only scope.
+
+**T134 — audit.** All 28 FRs and 8 SCs have recorded evidence in this file. No 008 blocker remains.
+
+Follow-ups that do not block 008:
+- iOS simulator infrastructure flakiness in the mind-maps group (SpringBoard crashes, DNS);
+- authentication / per-account data, proposed as spec 009.
+
+The merge was authorized by the user on 2026-11-09.

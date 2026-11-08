@@ -603,11 +603,11 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T117
   - **Done**: Verify replay after server commit/lost ACK, local-finalization rollback, stale receipt against a newer descendant, page retry and owner change. No report, award or evidence is lost; client code never uses a service-role key.
 
-- [ ] T119 [US4] Validate real isolated non-production device sync using integration_test/prayer_offline_sync_test.dart and record environment-safe evidence in specs/008-prayer-experience/verification.md.
+- [X] T119 [US4] Validate real isolated non-production device sync using integration_test/prayer_offline_sync_test.dart and record environment-safe evidence in specs/008-prayer-experience/verification.md.
   - **Depends**: T118
   - **Done**: Automated tests default to local Supabase; run only isolated staging test users for device evidence; no production reset, migration or user messages; record actual results, not an assumed pass.
 
-- [ ] T120 [US4] Record US4 SQL/RPC/account/concurrency verification in specs/008-prayer-experience/verification.md.
+- [X] T120 [US4] Record US4 SQL/RPC/account/concurrency verification in specs/008-prayer-experience/verification.md.
   - **Depends**: T119
   - **Done**: All integrity cases pass: typed base version, no ordinary-edit conflict, visible equal-time evidence, one canonical reward, correct Home state and independent device cities. Run Task/Habit/Map regressions only where affected.
 
@@ -659,19 +659,19 @@ Each line is followed by **Depends**, **Done** and, when useful, **Check**. Setu
   - **Depends**: T129, T123, T124
   - **Done**: All required relevant tests pass; inspect failure logs and fix specific cause. Do not repeat successful device suites without a new risk/change; generated artifacts are current.
 
-- [ ] T131 Run Prayer device integration and dependency imports on Android, iOS, Windows, macOS and Linux using existing runner paths in specs/008-prayer-experience/quickstart.md.
+- [X] T131 Run Prayer device integration and dependency imports on Android, iOS, Windows, macOS and Linux using existing runner paths in specs/008-prayer-experience/quickstart.md.
   - **Depends**: T130
   - **Done**: Actual offline persistence/sync/routes and source-coupled calculation imports pass on each target; inspect merged release manifests/entitlements and record truthful target/build coverage.
 
-- [ ] T132 Update specs/008-prayer-experience/verification.md, quickstart.md and task completion states before the final merge-gate run.
+- [X] T132 Update specs/008-prayer-experience/verification.md, quickstart.md and task completion states before the final merge-gate run.
   - **Depends**: T131
   - **Done**: Link all SC evidence and known release-only licensing prerequisites; code/docs self-consistent; keep any failed/unrun acceptance item unchecked; no claim that008 completes007's separate audit.
 
-- [ ] T133 Validate the complete PR-to-develop/manual Foundation gate for the exact final 008 head and record its run URL/SHA in specs/008-prayer-experience/verification.md when the head will remain unchanged.
+- [X] T133 Validate the complete PR-to-develop/manual Foundation gate for the exact final 008 head and record its run URL/SHA in specs/008-prayer-experience/verification.md when the head will remain unchanged.
   - **Depends**: T132
   - **Done**: Quality/database/full Android+iOS groups/Windows/macOS/Linux and final gate all succeed; focused mobile_only is insufficient. Same-head infrastructure reruns only after logs; no documentation-only commit that needlessly invalidates the successful head.
 
-- [ ] T134 Audit specs/008-prayer-experience/tasks.md against all 28 FRs and 8 SCs; report remaining blockers and review readiness.
+- [X] T134 Audit specs/008-prayer-experience/tasks.md against all 28 FRs and 8 SCs; report remaining blockers and review readiness.
   - **Depends**: T133
   - **Done**: All actual feature acceptance completed before recommending closure; no automatic merge/delete/publish merely because this task file says handoff; follow the human's current merge authorization.
 
