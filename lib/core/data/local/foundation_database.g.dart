@@ -9657,6 +9657,1478 @@ class PrayerReportsCompanion extends UpdateCompanion<PrayerReport> {
   }
 }
 
+class $AdhkarItemCountsTable extends AdhkarItemCounts
+    with TableInfo<$AdhkarItemCountsTable, AdhkarItemCount> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AdhkarItemCountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _adhkarDayMeta = const VerificationMeta(
+    'adhkarDay',
+  );
+  @override
+  late final GeneratedColumn<String> adhkarDay = GeneratedColumn<String>(
+    'adhkar_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordIdMeta = const VerificationMeta(
+    'recordId',
+  );
+  @override
+  late final GeneratedColumn<String> recordId = GeneratedColumn<String>(
+    'record_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _catalogVersionMeta = const VerificationMeta(
+    'catalogVersion',
+  );
+  @override
+  late final GeneratedColumn<int> catalogVersion = GeneratedColumn<int>(
+    'catalog_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _listMeta = const VerificationMeta('list');
+  @override
+  late final GeneratedColumn<String> list = GeneratedColumn<String>(
+    'list',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countMeta = const VerificationMeta('count');
+  @override
+  late final GeneratedColumn<int> count = GeneratedColumn<int>(
+    'count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastAcknowledgedUpdatedAtMeta =
+      const VerificationMeta('lastAcknowledgedUpdatedAt');
+  @override
+  late final GeneratedColumn<String> lastAcknowledgedUpdatedAt =
+      GeneratedColumn<String>(
+        'last_acknowledged_updated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    adhkarDay,
+    itemId,
+    recordId,
+    catalogVersion,
+    list,
+    count,
+    createdAt,
+    updatedAt,
+    lastAcknowledgedUpdatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'adhkar_item_counts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AdhkarItemCount> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('adhkar_day')) {
+      context.handle(
+        _adhkarDayMeta,
+        adhkarDay.isAcceptableOrUnknown(data['adhkar_day']!, _adhkarDayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_adhkarDayMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('record_id')) {
+      context.handle(
+        _recordIdMeta,
+        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordIdMeta);
+    }
+    if (data.containsKey('catalog_version')) {
+      context.handle(
+        _catalogVersionMeta,
+        catalogVersion.isAcceptableOrUnknown(
+          data['catalog_version']!,
+          _catalogVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_catalogVersionMeta);
+    }
+    if (data.containsKey('list')) {
+      context.handle(
+        _listMeta,
+        list.isAcceptableOrUnknown(data['list']!, _listMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_listMeta);
+    }
+    if (data.containsKey('count')) {
+      context.handle(
+        _countMeta,
+        count.isAcceptableOrUnknown(data['count']!, _countMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_countMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('last_acknowledged_updated_at')) {
+      context.handle(
+        _lastAcknowledgedUpdatedAtMeta,
+        lastAcknowledgedUpdatedAt.isAcceptableOrUnknown(
+          data['last_acknowledged_updated_at']!,
+          _lastAcknowledgedUpdatedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, adhkarDay, itemId};
+  @override
+  AdhkarItemCount map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AdhkarItemCount(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      adhkarDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}adhkar_day'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      recordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}record_id'],
+      )!,
+      catalogVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}catalog_version'],
+      )!,
+      list: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}list'],
+      )!,
+      count: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}count'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      lastAcknowledgedUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_acknowledged_updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $AdhkarItemCountsTable createAlias(String alias) {
+    return $AdhkarItemCountsTable(attachedDatabase, alias);
+  }
+}
+
+class AdhkarItemCount extends DataClass implements Insertable<AdhkarItemCount> {
+  final String accountId;
+  final String adhkarDay;
+  final String itemId;
+  final String recordId;
+  final int catalogVersion;
+  final String list;
+  final int count;
+  final String createdAt;
+  final String updatedAt;
+  final String? lastAcknowledgedUpdatedAt;
+  const AdhkarItemCount({
+    required this.accountId,
+    required this.adhkarDay,
+    required this.itemId,
+    required this.recordId,
+    required this.catalogVersion,
+    required this.list,
+    required this.count,
+    required this.createdAt,
+    required this.updatedAt,
+    this.lastAcknowledgedUpdatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['adhkar_day'] = Variable<String>(adhkarDay);
+    map['item_id'] = Variable<String>(itemId);
+    map['record_id'] = Variable<String>(recordId);
+    map['catalog_version'] = Variable<int>(catalogVersion);
+    map['list'] = Variable<String>(list);
+    map['count'] = Variable<int>(count);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || lastAcknowledgedUpdatedAt != null) {
+      map['last_acknowledged_updated_at'] = Variable<String>(
+        lastAcknowledgedUpdatedAt,
+      );
+    }
+    return map;
+  }
+
+  AdhkarItemCountsCompanion toCompanion(bool nullToAbsent) {
+    return AdhkarItemCountsCompanion(
+      accountId: Value(accountId),
+      adhkarDay: Value(adhkarDay),
+      itemId: Value(itemId),
+      recordId: Value(recordId),
+      catalogVersion: Value(catalogVersion),
+      list: Value(list),
+      count: Value(count),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      lastAcknowledgedUpdatedAt:
+          lastAcknowledgedUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastAcknowledgedUpdatedAt),
+    );
+  }
+
+  factory AdhkarItemCount.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AdhkarItemCount(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      adhkarDay: serializer.fromJson<String>(json['adhkarDay']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      recordId: serializer.fromJson<String>(json['recordId']),
+      catalogVersion: serializer.fromJson<int>(json['catalogVersion']),
+      list: serializer.fromJson<String>(json['list']),
+      count: serializer.fromJson<int>(json['count']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      lastAcknowledgedUpdatedAt: serializer.fromJson<String?>(
+        json['lastAcknowledgedUpdatedAt'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'adhkarDay': serializer.toJson<String>(adhkarDay),
+      'itemId': serializer.toJson<String>(itemId),
+      'recordId': serializer.toJson<String>(recordId),
+      'catalogVersion': serializer.toJson<int>(catalogVersion),
+      'list': serializer.toJson<String>(list),
+      'count': serializer.toJson<int>(count),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'lastAcknowledgedUpdatedAt': serializer.toJson<String?>(
+        lastAcknowledgedUpdatedAt,
+      ),
+    };
+  }
+
+  AdhkarItemCount copyWith({
+    String? accountId,
+    String? adhkarDay,
+    String? itemId,
+    String? recordId,
+    int? catalogVersion,
+    String? list,
+    int? count,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+  }) => AdhkarItemCount(
+    accountId: accountId ?? this.accountId,
+    adhkarDay: adhkarDay ?? this.adhkarDay,
+    itemId: itemId ?? this.itemId,
+    recordId: recordId ?? this.recordId,
+    catalogVersion: catalogVersion ?? this.catalogVersion,
+    list: list ?? this.list,
+    count: count ?? this.count,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt.present
+        ? lastAcknowledgedUpdatedAt.value
+        : this.lastAcknowledgedUpdatedAt,
+  );
+  AdhkarItemCount copyWithCompanion(AdhkarItemCountsCompanion data) {
+    return AdhkarItemCount(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      adhkarDay: data.adhkarDay.present ? data.adhkarDay.value : this.adhkarDay,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      recordId: data.recordId.present ? data.recordId.value : this.recordId,
+      catalogVersion: data.catalogVersion.present
+          ? data.catalogVersion.value
+          : this.catalogVersion,
+      list: data.list.present ? data.list.value : this.list,
+      count: data.count.present ? data.count.value : this.count,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      lastAcknowledgedUpdatedAt: data.lastAcknowledgedUpdatedAt.present
+          ? data.lastAcknowledgedUpdatedAt.value
+          : this.lastAcknowledgedUpdatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AdhkarItemCount(')
+          ..write('accountId: $accountId, ')
+          ..write('adhkarDay: $adhkarDay, ')
+          ..write('itemId: $itemId, ')
+          ..write('recordId: $recordId, ')
+          ..write('catalogVersion: $catalogVersion, ')
+          ..write('list: $list, ')
+          ..write('count: $count, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    adhkarDay,
+    itemId,
+    recordId,
+    catalogVersion,
+    list,
+    count,
+    createdAt,
+    updatedAt,
+    lastAcknowledgedUpdatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AdhkarItemCount &&
+          other.accountId == this.accountId &&
+          other.adhkarDay == this.adhkarDay &&
+          other.itemId == this.itemId &&
+          other.recordId == this.recordId &&
+          other.catalogVersion == this.catalogVersion &&
+          other.list == this.list &&
+          other.count == this.count &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.lastAcknowledgedUpdatedAt == this.lastAcknowledgedUpdatedAt);
+}
+
+class AdhkarItemCountsCompanion extends UpdateCompanion<AdhkarItemCount> {
+  final Value<String> accountId;
+  final Value<String> adhkarDay;
+  final Value<String> itemId;
+  final Value<String> recordId;
+  final Value<int> catalogVersion;
+  final Value<String> list;
+  final Value<int> count;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> lastAcknowledgedUpdatedAt;
+  final Value<int> rowid;
+  const AdhkarItemCountsCompanion({
+    this.accountId = const Value.absent(),
+    this.adhkarDay = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.recordId = const Value.absent(),
+    this.catalogVersion = const Value.absent(),
+    this.list = const Value.absent(),
+    this.count = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AdhkarItemCountsCompanion.insert({
+    required String accountId,
+    required String adhkarDay,
+    required String itemId,
+    required String recordId,
+    required int catalogVersion,
+    required String list,
+    required int count,
+    required String createdAt,
+    required String updatedAt,
+    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       adhkarDay = Value(adhkarDay),
+       itemId = Value(itemId),
+       recordId = Value(recordId),
+       catalogVersion = Value(catalogVersion),
+       list = Value(list),
+       count = Value(count),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<AdhkarItemCount> custom({
+    Expression<String>? accountId,
+    Expression<String>? adhkarDay,
+    Expression<String>? itemId,
+    Expression<String>? recordId,
+    Expression<int>? catalogVersion,
+    Expression<String>? list,
+    Expression<int>? count,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? lastAcknowledgedUpdatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (adhkarDay != null) 'adhkar_day': adhkarDay,
+      if (itemId != null) 'item_id': itemId,
+      if (recordId != null) 'record_id': recordId,
+      if (catalogVersion != null) 'catalog_version': catalogVersion,
+      if (list != null) 'list': list,
+      if (count != null) 'count': count,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (lastAcknowledgedUpdatedAt != null)
+        'last_acknowledged_updated_at': lastAcknowledgedUpdatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AdhkarItemCountsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? adhkarDay,
+    Value<String>? itemId,
+    Value<String>? recordId,
+    Value<int>? catalogVersion,
+    Value<String>? list,
+    Value<int>? count,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? lastAcknowledgedUpdatedAt,
+    Value<int>? rowid,
+  }) {
+    return AdhkarItemCountsCompanion(
+      accountId: accountId ?? this.accountId,
+      adhkarDay: adhkarDay ?? this.adhkarDay,
+      itemId: itemId ?? this.itemId,
+      recordId: recordId ?? this.recordId,
+      catalogVersion: catalogVersion ?? this.catalogVersion,
+      list: list ?? this.list,
+      count: count ?? this.count,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastAcknowledgedUpdatedAt:
+          lastAcknowledgedUpdatedAt ?? this.lastAcknowledgedUpdatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (adhkarDay.present) {
+      map['adhkar_day'] = Variable<String>(adhkarDay.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (recordId.present) {
+      map['record_id'] = Variable<String>(recordId.value);
+    }
+    if (catalogVersion.present) {
+      map['catalog_version'] = Variable<int>(catalogVersion.value);
+    }
+    if (list.present) {
+      map['list'] = Variable<String>(list.value);
+    }
+    if (count.present) {
+      map['count'] = Variable<int>(count.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (lastAcknowledgedUpdatedAt.present) {
+      map['last_acknowledged_updated_at'] = Variable<String>(
+        lastAcknowledgedUpdatedAt.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AdhkarItemCountsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('adhkarDay: $adhkarDay, ')
+          ..write('itemId: $itemId, ')
+          ..write('recordId: $recordId, ')
+          ..write('catalogVersion: $catalogVersion, ')
+          ..write('list: $list, ')
+          ..write('count: $count, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $QiyamNightsTable extends QiyamNights
+    with TableInfo<$QiyamNightsTable, QiyamNight> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $QiyamNightsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nightDateMeta = const VerificationMeta(
+    'nightDate',
+  );
+  @override
+  late final GeneratedColumn<String> nightDate = GeneratedColumn<String>(
+    'night_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordIdMeta = const VerificationMeta(
+    'recordId',
+  );
+  @override
+  late final GeneratedColumn<String> recordId = GeneratedColumn<String>(
+    'record_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _performedMeta = const VerificationMeta(
+    'performed',
+  );
+  @override
+  late final GeneratedColumn<bool> performed = GeneratedColumn<bool>(
+    'performed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("performed" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _rakahsMeta = const VerificationMeta('rakahs');
+  @override
+  late final GeneratedColumn<int> rakahs = GeneratedColumn<int>(
+    'rakahs',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _witrMeta = const VerificationMeta('witr');
+  @override
+  late final GeneratedColumn<bool> witr = GeneratedColumn<bool>(
+    'witr',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("witr" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _startTimeMeta = const VerificationMeta(
+    'startTime',
+  );
+  @override
+  late final GeneratedColumn<String> startTime = GeneratedColumn<String>(
+    'start_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endTimeMeta = const VerificationMeta(
+    'endTime',
+  );
+  @override
+  late final GeneratedColumn<String> endTime = GeneratedColumn<String>(
+    'end_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recordedZoneIdMeta = const VerificationMeta(
+    'recordedZoneId',
+  );
+  @override
+  late final GeneratedColumn<String> recordedZoneId = GeneratedColumn<String>(
+    'recorded_zone_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedOffsetMinutesMeta =
+      const VerificationMeta('recordedOffsetMinutes');
+  @override
+  late final GeneratedColumn<int> recordedOffsetMinutes = GeneratedColumn<int>(
+    'recorded_offset_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastAcknowledgedUpdatedAtMeta =
+      const VerificationMeta('lastAcknowledgedUpdatedAt');
+  @override
+  late final GeneratedColumn<String> lastAcknowledgedUpdatedAt =
+      GeneratedColumn<String>(
+        'last_acknowledged_updated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    nightDate,
+    recordId,
+    performed,
+    rakahs,
+    witr,
+    startTime,
+    endTime,
+    note,
+    recordedZoneId,
+    recordedOffsetMinutes,
+    createdAt,
+    updatedAt,
+    lastAcknowledgedUpdatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'qiyam_nights';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<QiyamNight> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('night_date')) {
+      context.handle(
+        _nightDateMeta,
+        nightDate.isAcceptableOrUnknown(data['night_date']!, _nightDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nightDateMeta);
+    }
+    if (data.containsKey('record_id')) {
+      context.handle(
+        _recordIdMeta,
+        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordIdMeta);
+    }
+    if (data.containsKey('performed')) {
+      context.handle(
+        _performedMeta,
+        performed.isAcceptableOrUnknown(data['performed']!, _performedMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_performedMeta);
+    }
+    if (data.containsKey('rakahs')) {
+      context.handle(
+        _rakahsMeta,
+        rakahs.isAcceptableOrUnknown(data['rakahs']!, _rakahsMeta),
+      );
+    }
+    if (data.containsKey('witr')) {
+      context.handle(
+        _witrMeta,
+        witr.isAcceptableOrUnknown(data['witr']!, _witrMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_witrMeta);
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(
+        _startTimeMeta,
+        startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta),
+      );
+    }
+    if (data.containsKey('end_time')) {
+      context.handle(
+        _endTimeMeta,
+        endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('recorded_zone_id')) {
+      context.handle(
+        _recordedZoneIdMeta,
+        recordedZoneId.isAcceptableOrUnknown(
+          data['recorded_zone_id']!,
+          _recordedZoneIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedZoneIdMeta);
+    }
+    if (data.containsKey('recorded_offset_minutes')) {
+      context.handle(
+        _recordedOffsetMinutesMeta,
+        recordedOffsetMinutes.isAcceptableOrUnknown(
+          data['recorded_offset_minutes']!,
+          _recordedOffsetMinutesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedOffsetMinutesMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('last_acknowledged_updated_at')) {
+      context.handle(
+        _lastAcknowledgedUpdatedAtMeta,
+        lastAcknowledgedUpdatedAt.isAcceptableOrUnknown(
+          data['last_acknowledged_updated_at']!,
+          _lastAcknowledgedUpdatedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, nightDate};
+  @override
+  QiyamNight map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return QiyamNight(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      nightDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}night_date'],
+      )!,
+      recordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}record_id'],
+      )!,
+      performed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}performed'],
+      )!,
+      rakahs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rakahs'],
+      ),
+      witr: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}witr'],
+      )!,
+      startTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}start_time'],
+      ),
+      endTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_time'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      recordedZoneId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_zone_id'],
+      )!,
+      recordedOffsetMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recorded_offset_minutes'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      lastAcknowledgedUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_acknowledged_updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $QiyamNightsTable createAlias(String alias) {
+    return $QiyamNightsTable(attachedDatabase, alias);
+  }
+}
+
+class QiyamNight extends DataClass implements Insertable<QiyamNight> {
+  final String accountId;
+  final String nightDate;
+  final String recordId;
+  final bool performed;
+  final int? rakahs;
+  final bool witr;
+  final String? startTime;
+  final String? endTime;
+  final String? note;
+  final String recordedZoneId;
+  final int recordedOffsetMinutes;
+  final String createdAt;
+  final String updatedAt;
+  final String? lastAcknowledgedUpdatedAt;
+  const QiyamNight({
+    required this.accountId,
+    required this.nightDate,
+    required this.recordId,
+    required this.performed,
+    this.rakahs,
+    required this.witr,
+    this.startTime,
+    this.endTime,
+    this.note,
+    required this.recordedZoneId,
+    required this.recordedOffsetMinutes,
+    required this.createdAt,
+    required this.updatedAt,
+    this.lastAcknowledgedUpdatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['night_date'] = Variable<String>(nightDate);
+    map['record_id'] = Variable<String>(recordId);
+    map['performed'] = Variable<bool>(performed);
+    if (!nullToAbsent || rakahs != null) {
+      map['rakahs'] = Variable<int>(rakahs);
+    }
+    map['witr'] = Variable<bool>(witr);
+    if (!nullToAbsent || startTime != null) {
+      map['start_time'] = Variable<String>(startTime);
+    }
+    if (!nullToAbsent || endTime != null) {
+      map['end_time'] = Variable<String>(endTime);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['recorded_zone_id'] = Variable<String>(recordedZoneId);
+    map['recorded_offset_minutes'] = Variable<int>(recordedOffsetMinutes);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || lastAcknowledgedUpdatedAt != null) {
+      map['last_acknowledged_updated_at'] = Variable<String>(
+        lastAcknowledgedUpdatedAt,
+      );
+    }
+    return map;
+  }
+
+  QiyamNightsCompanion toCompanion(bool nullToAbsent) {
+    return QiyamNightsCompanion(
+      accountId: Value(accountId),
+      nightDate: Value(nightDate),
+      recordId: Value(recordId),
+      performed: Value(performed),
+      rakahs: rakahs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rakahs),
+      witr: Value(witr),
+      startTime: startTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startTime),
+      endTime: endTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTime),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      recordedZoneId: Value(recordedZoneId),
+      recordedOffsetMinutes: Value(recordedOffsetMinutes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      lastAcknowledgedUpdatedAt:
+          lastAcknowledgedUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastAcknowledgedUpdatedAt),
+    );
+  }
+
+  factory QiyamNight.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return QiyamNight(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      nightDate: serializer.fromJson<String>(json['nightDate']),
+      recordId: serializer.fromJson<String>(json['recordId']),
+      performed: serializer.fromJson<bool>(json['performed']),
+      rakahs: serializer.fromJson<int?>(json['rakahs']),
+      witr: serializer.fromJson<bool>(json['witr']),
+      startTime: serializer.fromJson<String?>(json['startTime']),
+      endTime: serializer.fromJson<String?>(json['endTime']),
+      note: serializer.fromJson<String?>(json['note']),
+      recordedZoneId: serializer.fromJson<String>(json['recordedZoneId']),
+      recordedOffsetMinutes: serializer.fromJson<int>(
+        json['recordedOffsetMinutes'],
+      ),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      lastAcknowledgedUpdatedAt: serializer.fromJson<String?>(
+        json['lastAcknowledgedUpdatedAt'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'nightDate': serializer.toJson<String>(nightDate),
+      'recordId': serializer.toJson<String>(recordId),
+      'performed': serializer.toJson<bool>(performed),
+      'rakahs': serializer.toJson<int?>(rakahs),
+      'witr': serializer.toJson<bool>(witr),
+      'startTime': serializer.toJson<String?>(startTime),
+      'endTime': serializer.toJson<String?>(endTime),
+      'note': serializer.toJson<String?>(note),
+      'recordedZoneId': serializer.toJson<String>(recordedZoneId),
+      'recordedOffsetMinutes': serializer.toJson<int>(recordedOffsetMinutes),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'lastAcknowledgedUpdatedAt': serializer.toJson<String?>(
+        lastAcknowledgedUpdatedAt,
+      ),
+    };
+  }
+
+  QiyamNight copyWith({
+    String? accountId,
+    String? nightDate,
+    String? recordId,
+    bool? performed,
+    Value<int?> rakahs = const Value.absent(),
+    bool? witr,
+    Value<String?> startTime = const Value.absent(),
+    Value<String?> endTime = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    String? recordedZoneId,
+    int? recordedOffsetMinutes,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+  }) => QiyamNight(
+    accountId: accountId ?? this.accountId,
+    nightDate: nightDate ?? this.nightDate,
+    recordId: recordId ?? this.recordId,
+    performed: performed ?? this.performed,
+    rakahs: rakahs.present ? rakahs.value : this.rakahs,
+    witr: witr ?? this.witr,
+    startTime: startTime.present ? startTime.value : this.startTime,
+    endTime: endTime.present ? endTime.value : this.endTime,
+    note: note.present ? note.value : this.note,
+    recordedZoneId: recordedZoneId ?? this.recordedZoneId,
+    recordedOffsetMinutes: recordedOffsetMinutes ?? this.recordedOffsetMinutes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt.present
+        ? lastAcknowledgedUpdatedAt.value
+        : this.lastAcknowledgedUpdatedAt,
+  );
+  QiyamNight copyWithCompanion(QiyamNightsCompanion data) {
+    return QiyamNight(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      nightDate: data.nightDate.present ? data.nightDate.value : this.nightDate,
+      recordId: data.recordId.present ? data.recordId.value : this.recordId,
+      performed: data.performed.present ? data.performed.value : this.performed,
+      rakahs: data.rakahs.present ? data.rakahs.value : this.rakahs,
+      witr: data.witr.present ? data.witr.value : this.witr,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      note: data.note.present ? data.note.value : this.note,
+      recordedZoneId: data.recordedZoneId.present
+          ? data.recordedZoneId.value
+          : this.recordedZoneId,
+      recordedOffsetMinutes: data.recordedOffsetMinutes.present
+          ? data.recordedOffsetMinutes.value
+          : this.recordedOffsetMinutes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      lastAcknowledgedUpdatedAt: data.lastAcknowledgedUpdatedAt.present
+          ? data.lastAcknowledgedUpdatedAt.value
+          : this.lastAcknowledgedUpdatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QiyamNight(')
+          ..write('accountId: $accountId, ')
+          ..write('nightDate: $nightDate, ')
+          ..write('recordId: $recordId, ')
+          ..write('performed: $performed, ')
+          ..write('rakahs: $rakahs, ')
+          ..write('witr: $witr, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('note: $note, ')
+          ..write('recordedZoneId: $recordedZoneId, ')
+          ..write('recordedOffsetMinutes: $recordedOffsetMinutes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    nightDate,
+    recordId,
+    performed,
+    rakahs,
+    witr,
+    startTime,
+    endTime,
+    note,
+    recordedZoneId,
+    recordedOffsetMinutes,
+    createdAt,
+    updatedAt,
+    lastAcknowledgedUpdatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is QiyamNight &&
+          other.accountId == this.accountId &&
+          other.nightDate == this.nightDate &&
+          other.recordId == this.recordId &&
+          other.performed == this.performed &&
+          other.rakahs == this.rakahs &&
+          other.witr == this.witr &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime &&
+          other.note == this.note &&
+          other.recordedZoneId == this.recordedZoneId &&
+          other.recordedOffsetMinutes == this.recordedOffsetMinutes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.lastAcknowledgedUpdatedAt == this.lastAcknowledgedUpdatedAt);
+}
+
+class QiyamNightsCompanion extends UpdateCompanion<QiyamNight> {
+  final Value<String> accountId;
+  final Value<String> nightDate;
+  final Value<String> recordId;
+  final Value<bool> performed;
+  final Value<int?> rakahs;
+  final Value<bool> witr;
+  final Value<String?> startTime;
+  final Value<String?> endTime;
+  final Value<String?> note;
+  final Value<String> recordedZoneId;
+  final Value<int> recordedOffsetMinutes;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> lastAcknowledgedUpdatedAt;
+  final Value<int> rowid;
+  const QiyamNightsCompanion({
+    this.accountId = const Value.absent(),
+    this.nightDate = const Value.absent(),
+    this.recordId = const Value.absent(),
+    this.performed = const Value.absent(),
+    this.rakahs = const Value.absent(),
+    this.witr = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.note = const Value.absent(),
+    this.recordedZoneId = const Value.absent(),
+    this.recordedOffsetMinutes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  QiyamNightsCompanion.insert({
+    required String accountId,
+    required String nightDate,
+    required String recordId,
+    required bool performed,
+    this.rakahs = const Value.absent(),
+    required bool witr,
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.note = const Value.absent(),
+    required String recordedZoneId,
+    required int recordedOffsetMinutes,
+    required String createdAt,
+    required String updatedAt,
+    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       nightDate = Value(nightDate),
+       recordId = Value(recordId),
+       performed = Value(performed),
+       witr = Value(witr),
+       recordedZoneId = Value(recordedZoneId),
+       recordedOffsetMinutes = Value(recordedOffsetMinutes),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<QiyamNight> custom({
+    Expression<String>? accountId,
+    Expression<String>? nightDate,
+    Expression<String>? recordId,
+    Expression<bool>? performed,
+    Expression<int>? rakahs,
+    Expression<bool>? witr,
+    Expression<String>? startTime,
+    Expression<String>? endTime,
+    Expression<String>? note,
+    Expression<String>? recordedZoneId,
+    Expression<int>? recordedOffsetMinutes,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? lastAcknowledgedUpdatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (nightDate != null) 'night_date': nightDate,
+      if (recordId != null) 'record_id': recordId,
+      if (performed != null) 'performed': performed,
+      if (rakahs != null) 'rakahs': rakahs,
+      if (witr != null) 'witr': witr,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (note != null) 'note': note,
+      if (recordedZoneId != null) 'recorded_zone_id': recordedZoneId,
+      if (recordedOffsetMinutes != null)
+        'recorded_offset_minutes': recordedOffsetMinutes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (lastAcknowledgedUpdatedAt != null)
+        'last_acknowledged_updated_at': lastAcknowledgedUpdatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  QiyamNightsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? nightDate,
+    Value<String>? recordId,
+    Value<bool>? performed,
+    Value<int?>? rakahs,
+    Value<bool>? witr,
+    Value<String?>? startTime,
+    Value<String?>? endTime,
+    Value<String?>? note,
+    Value<String>? recordedZoneId,
+    Value<int>? recordedOffsetMinutes,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? lastAcknowledgedUpdatedAt,
+    Value<int>? rowid,
+  }) {
+    return QiyamNightsCompanion(
+      accountId: accountId ?? this.accountId,
+      nightDate: nightDate ?? this.nightDate,
+      recordId: recordId ?? this.recordId,
+      performed: performed ?? this.performed,
+      rakahs: rakahs ?? this.rakahs,
+      witr: witr ?? this.witr,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      note: note ?? this.note,
+      recordedZoneId: recordedZoneId ?? this.recordedZoneId,
+      recordedOffsetMinutes:
+          recordedOffsetMinutes ?? this.recordedOffsetMinutes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastAcknowledgedUpdatedAt:
+          lastAcknowledgedUpdatedAt ?? this.lastAcknowledgedUpdatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (nightDate.present) {
+      map['night_date'] = Variable<String>(nightDate.value);
+    }
+    if (recordId.present) {
+      map['record_id'] = Variable<String>(recordId.value);
+    }
+    if (performed.present) {
+      map['performed'] = Variable<bool>(performed.value);
+    }
+    if (rakahs.present) {
+      map['rakahs'] = Variable<int>(rakahs.value);
+    }
+    if (witr.present) {
+      map['witr'] = Variable<bool>(witr.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<String>(startTime.value);
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<String>(endTime.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (recordedZoneId.present) {
+      map['recorded_zone_id'] = Variable<String>(recordedZoneId.value);
+    }
+    if (recordedOffsetMinutes.present) {
+      map['recorded_offset_minutes'] = Variable<int>(
+        recordedOffsetMinutes.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (lastAcknowledgedUpdatedAt.present) {
+      map['last_acknowledged_updated_at'] = Variable<String>(
+        lastAcknowledgedUpdatedAt.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QiyamNightsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('nightDate: $nightDate, ')
+          ..write('recordId: $recordId, ')
+          ..write('performed: $performed, ')
+          ..write('rakahs: $rakahs, ')
+          ..write('witr: $witr, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('note: $note, ')
+          ..write('recordedZoneId: $recordedZoneId, ')
+          ..write('recordedOffsetMinutes: $recordedOffsetMinutes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$FoundationDatabase extends GeneratedDatabase {
   _$FoundationDatabase(QueryExecutor e) : super(e);
   $FoundationDatabaseManager get managers => $FoundationDatabaseManager(this);
@@ -9689,6 +11161,10 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
   late final $PrayerDevicePreferencesTable prayerDevicePreferences =
       $PrayerDevicePreferencesTable(this);
   late final $PrayerReportsTable prayerReports = $PrayerReportsTable(this);
+  late final $AdhkarItemCountsTable adhkarItemCounts = $AdhkarItemCountsTable(
+    this,
+  );
+  late final $QiyamNightsTable qiyamNights = $QiyamNightsTable(this);
   late final Index taskRecordsAccountDate = Index(
     'task_records_account_date',
     'CREATE INDEX task_records_account_date ON task_records (account_id, scheduled_date)',
@@ -9781,6 +11257,30 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     'prayer_reports_owner_report',
     'CREATE UNIQUE INDEX prayer_reports_owner_report ON prayer_reports (account_id, report_id)',
   );
+  late final Index adhkarItemCountsOwnerDayList = Index(
+    'adhkar_item_counts_owner_day_list',
+    'CREATE INDEX adhkar_item_counts_owner_day_list ON adhkar_item_counts (account_id, adhkar_day, list)',
+  );
+  late final Index adhkarItemCountsOwnerVersion = Index(
+    'adhkar_item_counts_owner_version',
+    'CREATE INDEX adhkar_item_counts_owner_version ON adhkar_item_counts (account_id, updated_at, record_id)',
+  );
+  late final Index adhkarItemCountsOwnerRecord = Index(
+    'adhkar_item_counts_owner_record',
+    'CREATE UNIQUE INDEX adhkar_item_counts_owner_record ON adhkar_item_counts (account_id, record_id)',
+  );
+  late final Index qiyamNightsOwnerNight = Index(
+    'qiyam_nights_owner_night',
+    'CREATE INDEX qiyam_nights_owner_night ON qiyam_nights (account_id, night_date)',
+  );
+  late final Index qiyamNightsOwnerVersion = Index(
+    'qiyam_nights_owner_version',
+    'CREATE INDEX qiyam_nights_owner_version ON qiyam_nights (account_id, updated_at, record_id)',
+  );
+  late final Index qiyamNightsOwnerRecord = Index(
+    'qiyam_nights_owner_record',
+    'CREATE UNIQUE INDEX qiyam_nights_owner_record ON qiyam_nights (account_id, record_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -9802,6 +11302,8 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     mindMapSideLinks,
     prayerDevicePreferences,
     prayerReports,
+    adhkarItemCounts,
+    qiyamNights,
     taskRecordsAccountDate,
     taskRecordsAccountCategory,
     taskRecordsAccountQuadrant,
@@ -9825,6 +11327,12 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     prayerReportsOwnerDay,
     prayerReportsOwnerVersion,
     prayerReportsOwnerReport,
+    adhkarItemCountsOwnerDayList,
+    adhkarItemCountsOwnerVersion,
+    adhkarItemCountsOwnerRecord,
+    qiyamNightsOwnerNight,
+    qiyamNightsOwnerVersion,
+    qiyamNightsOwnerRecord,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -14615,6 +16123,694 @@ typedef $$PrayerReportsTableProcessedTableManager =
       PrayerReport,
       PrefetchHooks Function()
     >;
+typedef $$AdhkarItemCountsTableCreateCompanionBuilder =
+    AdhkarItemCountsCompanion Function({
+      required String accountId,
+      required String adhkarDay,
+      required String itemId,
+      required String recordId,
+      required int catalogVersion,
+      required String list,
+      required int count,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> lastAcknowledgedUpdatedAt,
+      Value<int> rowid,
+    });
+typedef $$AdhkarItemCountsTableUpdateCompanionBuilder =
+    AdhkarItemCountsCompanion Function({
+      Value<String> accountId,
+      Value<String> adhkarDay,
+      Value<String> itemId,
+      Value<String> recordId,
+      Value<int> catalogVersion,
+      Value<String> list,
+      Value<int> count,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> lastAcknowledgedUpdatedAt,
+      Value<int> rowid,
+    });
+
+class $$AdhkarItemCountsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $AdhkarItemCountsTable> {
+  $$AdhkarItemCountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get adhkarDay => $composableBuilder(
+    column: $table.adhkarDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get catalogVersion => $composableBuilder(
+    column: $table.catalogVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get list => $composableBuilder(
+    column: $table.list,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AdhkarItemCountsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $AdhkarItemCountsTable> {
+  $$AdhkarItemCountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get adhkarDay => $composableBuilder(
+    column: $table.adhkarDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get catalogVersion => $composableBuilder(
+    column: $table.catalogVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get list => $composableBuilder(
+    column: $table.list,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AdhkarItemCountsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $AdhkarItemCountsTable> {
+  $$AdhkarItemCountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get adhkarDay =>
+      $composableBuilder(column: $table.adhkarDay, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get recordId =>
+      $composableBuilder(column: $table.recordId, builder: (column) => column);
+
+  GeneratedColumn<int> get catalogVersion => $composableBuilder(
+    column: $table.catalogVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get list =>
+      $composableBuilder(column: $table.list, builder: (column) => column);
+
+  GeneratedColumn<int> get count =>
+      $composableBuilder(column: $table.count, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$AdhkarItemCountsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $AdhkarItemCountsTable,
+          AdhkarItemCount,
+          $$AdhkarItemCountsTableFilterComposer,
+          $$AdhkarItemCountsTableOrderingComposer,
+          $$AdhkarItemCountsTableAnnotationComposer,
+          $$AdhkarItemCountsTableCreateCompanionBuilder,
+          $$AdhkarItemCountsTableUpdateCompanionBuilder,
+          (
+            AdhkarItemCount,
+            BaseReferences<
+              _$FoundationDatabase,
+              $AdhkarItemCountsTable,
+              AdhkarItemCount
+            >,
+          ),
+          AdhkarItemCount,
+          PrefetchHooks Function()
+        > {
+  $$AdhkarItemCountsTableTableManager(
+    _$FoundationDatabase db,
+    $AdhkarItemCountsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AdhkarItemCountsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AdhkarItemCountsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AdhkarItemCountsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> adhkarDay = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> recordId = const Value.absent(),
+                Value<int> catalogVersion = const Value.absent(),
+                Value<String> list = const Value.absent(),
+                Value<int> count = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AdhkarItemCountsCompanion(
+                accountId: accountId,
+                adhkarDay: adhkarDay,
+                itemId: itemId,
+                recordId: recordId,
+                catalogVersion: catalogVersion,
+                list: list,
+                count: count,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String adhkarDay,
+                required String itemId,
+                required String recordId,
+                required int catalogVersion,
+                required String list,
+                required int count,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AdhkarItemCountsCompanion.insert(
+                accountId: accountId,
+                adhkarDay: adhkarDay,
+                itemId: itemId,
+                recordId: recordId,
+                catalogVersion: catalogVersion,
+                list: list,
+                count: count,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AdhkarItemCountsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $AdhkarItemCountsTable,
+      AdhkarItemCount,
+      $$AdhkarItemCountsTableFilterComposer,
+      $$AdhkarItemCountsTableOrderingComposer,
+      $$AdhkarItemCountsTableAnnotationComposer,
+      $$AdhkarItemCountsTableCreateCompanionBuilder,
+      $$AdhkarItemCountsTableUpdateCompanionBuilder,
+      (
+        AdhkarItemCount,
+        BaseReferences<
+          _$FoundationDatabase,
+          $AdhkarItemCountsTable,
+          AdhkarItemCount
+        >,
+      ),
+      AdhkarItemCount,
+      PrefetchHooks Function()
+    >;
+typedef $$QiyamNightsTableCreateCompanionBuilder =
+    QiyamNightsCompanion Function({
+      required String accountId,
+      required String nightDate,
+      required String recordId,
+      required bool performed,
+      Value<int?> rakahs,
+      required bool witr,
+      Value<String?> startTime,
+      Value<String?> endTime,
+      Value<String?> note,
+      required String recordedZoneId,
+      required int recordedOffsetMinutes,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> lastAcknowledgedUpdatedAt,
+      Value<int> rowid,
+    });
+typedef $$QiyamNightsTableUpdateCompanionBuilder =
+    QiyamNightsCompanion Function({
+      Value<String> accountId,
+      Value<String> nightDate,
+      Value<String> recordId,
+      Value<bool> performed,
+      Value<int?> rakahs,
+      Value<bool> witr,
+      Value<String?> startTime,
+      Value<String?> endTime,
+      Value<String?> note,
+      Value<String> recordedZoneId,
+      Value<int> recordedOffsetMinutes,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> lastAcknowledgedUpdatedAt,
+      Value<int> rowid,
+    });
+
+class $$QiyamNightsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $QiyamNightsTable> {
+  $$QiyamNightsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nightDate => $composableBuilder(
+    column: $table.nightDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get performed => $composableBuilder(
+    column: $table.performed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rakahs => $composableBuilder(
+    column: $table.rakahs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get witr => $composableBuilder(
+    column: $table.witr,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get startTime => $composableBuilder(
+    column: $table.startTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedZoneId => $composableBuilder(
+    column: $table.recordedZoneId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get recordedOffsetMinutes => $composableBuilder(
+    column: $table.recordedOffsetMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$QiyamNightsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $QiyamNightsTable> {
+  $$QiyamNightsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nightDate => $composableBuilder(
+    column: $table.nightDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get performed => $composableBuilder(
+    column: $table.performed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rakahs => $composableBuilder(
+    column: $table.rakahs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get witr => $composableBuilder(
+    column: $table.witr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get startTime => $composableBuilder(
+    column: $table.startTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedZoneId => $composableBuilder(
+    column: $table.recordedZoneId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get recordedOffsetMinutes => $composableBuilder(
+    column: $table.recordedOffsetMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$QiyamNightsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $QiyamNightsTable> {
+  $$QiyamNightsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get nightDate =>
+      $composableBuilder(column: $table.nightDate, builder: (column) => column);
+
+  GeneratedColumn<String> get recordId =>
+      $composableBuilder(column: $table.recordId, builder: (column) => column);
+
+  GeneratedColumn<bool> get performed =>
+      $composableBuilder(column: $table.performed, builder: (column) => column);
+
+  GeneratedColumn<int> get rakahs =>
+      $composableBuilder(column: $table.rakahs, builder: (column) => column);
+
+  GeneratedColumn<bool> get witr =>
+      $composableBuilder(column: $table.witr, builder: (column) => column);
+
+  GeneratedColumn<String> get startTime =>
+      $composableBuilder(column: $table.startTime, builder: (column) => column);
+
+  GeneratedColumn<String> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get recordedZoneId => $composableBuilder(
+    column: $table.recordedZoneId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get recordedOffsetMinutes => $composableBuilder(
+    column: $table.recordedOffsetMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$QiyamNightsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $QiyamNightsTable,
+          QiyamNight,
+          $$QiyamNightsTableFilterComposer,
+          $$QiyamNightsTableOrderingComposer,
+          $$QiyamNightsTableAnnotationComposer,
+          $$QiyamNightsTableCreateCompanionBuilder,
+          $$QiyamNightsTableUpdateCompanionBuilder,
+          (
+            QiyamNight,
+            BaseReferences<_$FoundationDatabase, $QiyamNightsTable, QiyamNight>,
+          ),
+          QiyamNight,
+          PrefetchHooks Function()
+        > {
+  $$QiyamNightsTableTableManager(
+    _$FoundationDatabase db,
+    $QiyamNightsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$QiyamNightsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$QiyamNightsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$QiyamNightsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> nightDate = const Value.absent(),
+                Value<String> recordId = const Value.absent(),
+                Value<bool> performed = const Value.absent(),
+                Value<int?> rakahs = const Value.absent(),
+                Value<bool> witr = const Value.absent(),
+                Value<String?> startTime = const Value.absent(),
+                Value<String?> endTime = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String> recordedZoneId = const Value.absent(),
+                Value<int> recordedOffsetMinutes = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => QiyamNightsCompanion(
+                accountId: accountId,
+                nightDate: nightDate,
+                recordId: recordId,
+                performed: performed,
+                rakahs: rakahs,
+                witr: witr,
+                startTime: startTime,
+                endTime: endTime,
+                note: note,
+                recordedZoneId: recordedZoneId,
+                recordedOffsetMinutes: recordedOffsetMinutes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String nightDate,
+                required String recordId,
+                required bool performed,
+                Value<int?> rakahs = const Value.absent(),
+                required bool witr,
+                Value<String?> startTime = const Value.absent(),
+                Value<String?> endTime = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                required String recordedZoneId,
+                required int recordedOffsetMinutes,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => QiyamNightsCompanion.insert(
+                accountId: accountId,
+                nightDate: nightDate,
+                recordId: recordId,
+                performed: performed,
+                rakahs: rakahs,
+                witr: witr,
+                startTime: startTime,
+                endTime: endTime,
+                note: note,
+                recordedZoneId: recordedZoneId,
+                recordedOffsetMinutes: recordedOffsetMinutes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$QiyamNightsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $QiyamNightsTable,
+      QiyamNight,
+      $$QiyamNightsTableFilterComposer,
+      $$QiyamNightsTableOrderingComposer,
+      $$QiyamNightsTableAnnotationComposer,
+      $$QiyamNightsTableCreateCompanionBuilder,
+      $$QiyamNightsTableUpdateCompanionBuilder,
+      (
+        QiyamNight,
+        BaseReferences<_$FoundationDatabase, $QiyamNightsTable, QiyamNight>,
+      ),
+      QiyamNight,
+      PrefetchHooks Function()
+    >;
 
 class $FoundationDatabaseManager {
   final _$FoundationDatabase _db;
@@ -14654,4 +16850,8 @@ class $FoundationDatabaseManager {
       );
   $$PrayerReportsTableTableManager get prayerReports =>
       $$PrayerReportsTableTableManager(_db, _db.prayerReports);
+  $$AdhkarItemCountsTableTableManager get adhkarItemCounts =>
+      $$AdhkarItemCountsTableTableManager(_db, _db.adhkarItemCounts);
+  $$QiyamNightsTableTableManager get qiyamNights =>
+      $$QiyamNightsTableTableManager(_db, _db.qiyamNights);
 }

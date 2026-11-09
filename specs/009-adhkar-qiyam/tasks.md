@@ -37,7 +37,7 @@
 | Qiyam night | Night D starts at Maghrib on D. A record belongs to the most recent night that has started, and only that night is editable. Without a schedule, before 12:00 local time means the previous date's night. |
 | Qiyam fields | `rakahs` must be one of 2/4/8/11, and only when performed (default 4). `witr` defaults to true when performed. `start_time`/`end_time` use `HH:mm` and are optional. `note` is "≤ 500 characters". When not performed, every detail is cleared. |
 | XP | `adhkar_set_done` 15, once per owner, day and list. `qiyam_done` 30, once per owner and night. The server derives the award. The local award is provisional until settled. Awards are never revoked. Task 20 and Prayer 10/5 stay unchanged. |
-| Identity | `UUIDv5(NS009, …)`: `'adhkar-item/'+day+'/'+itemId`, `'qiyam/'+nightDate`, `'adhkar/'+day+'/'+list`. `NS009` is fixed once in T010 and shared with SQL. |
+| Identity | `UUIDv5(NS009, …)`: `'adhkar-item/'+day+'/'+itemId`, `'qiyam/'+nightDate`, `'adhkar/'+day+'/'+list`. `NS009` is fixed once in T010 and shared with SQL: `70ca78e3-a267-4a2f-883f-1e0dea2df0c3`. |
 | Sync | One record per item per day, and one per night. Typed RPCs with receipts. Newest wins; an equal-timestamp tie is broken by the semantic key; the losing version is kept as a visible conflict. The server rejects a day more than 2 days ahead. |
 | Streaks | Derived, never stored. Adhkar: a day counts when both lists are complete. Qiyam: consecutive nights performed. The current day or night does not break the streak before it ends. The walk is capped at 3,650 days. |
 | Content | `assets/religious/adhkar_catalog_v1.json` with IDs m1…m10 and e1…e9. An item ships only when it is marked approved by the product owner in `content-sources.md`. Text is shown in Amiri. |
@@ -84,10 +84,10 @@
 
 ### Catalog and identity
 
-- [ ] T004 [P] Write tests in test/unit/features/adhkar/domain/adhkar_catalog_test.dart.
+- [x] T004 [P] Write tests in test/unit/features/adhkar/domain/adhkar_catalog_test.dart.
   - **Depends**: T002.
   - **Done**: They fail for each of these: duplicate IDs, duplicate positions in a list, target < 1, blank text or reference, an unknown list, and an item not marked approved, which must be excluded.
-- [ ] T005 [P] Implement lib/features/adhkar/domain/adhkar_catalog.dart (`AdhkarCatalog`, `DhikrItem`, `AdhkarList`, `QiyamSupplication`, plus validation).
+- [x] T005 [P] Implement lib/features/adhkar/domain/adhkar_catalog.dart (`AdhkarCatalog`, `DhikrItem`, `AdhkarList`, `QiyamSupplication`, plus validation).
   - **Depends**: T004.
   - **Done**: T004 passes, with no Flutter imports.
 - [ ] T006 Create assets/religious/adhkar_catalog_v1.json from content-sources.md, and register it in pubspec.yaml.
@@ -105,16 +105,16 @@
 - [ ] T008 Implement lib/features/adhkar/application/adhkar_catalog_port.dart and lib/features/adhkar/data/asset_adhkar_catalog.dart.
   - **Depends**: T006, T007.
   - **Done**: T007 passes, and the catalog is cached per version.
-- [ ] T009 [P] Write identity vectors in test/fixtures/adhkar_qiyam/identity_vectors.json, with tests in test/unit/features/adhkar/data/adhkar_identity_test.dart and test/unit/features/qiyam/data/qiyam_identity_test.dart.
+- [x] T009 [P] Write identity vectors in test/fixtures/adhkar_qiyam/identity_vectors.json, with tests in test/unit/features/adhkar/data/adhkar_identity_test.dart and test/unit/features/qiyam/data/qiyam_identity_test.dart.
   - **Depends**: T001.
   - **Done**: The vectors cover the item, night and set source IDs, plus conflict IDs for reversed arrival order.
-- [ ] T010 Implement lib/features/adhkar/data/uuid_adhkar_identity.dart and lib/features/qiyam/data/uuid_qiyam_identity.dart with one fixed `NS009` namespace constant.
+- [x] T010 Implement lib/features/adhkar/data/uuid_adhkar_identity.dart and lib/features/qiyam/data/uuid_qiyam_identity.dart with one fixed `NS009` namespace constant.
   - **Depends**: T009.
   - **Done**: T009 passes, and the namespace is written into research.md R6 and the fixed facts above.
 
 ### Prayer boundaries port
 
-- [ ] T011 [P] Write tests in test/unit/features/prayer/application/prayer_day_boundaries_test.dart.
+- [x] T011 [P] Write tests in test/unit/features/prayer/application/prayer_day_boundaries_test.dart.
   - **Depends**: T001.
   - **Done**: They cover:
     - an available date returns Fajr, Maghrib and the next Fajr from the annual cache;
@@ -123,25 +123,25 @@
     - `unavailable` when any instant is missing (high latitude);
     - `changes` fires when the location or method changes;
     - no network call per request.
-- [ ] T012 Implement lib/features/prayer/application/prayer_day_boundaries.dart and lib/features/prayer/data/prayer_day_boundaries_reader.dart, reusing the existing annual schedule and calculator ports.
+- [x] T012 Implement lib/features/prayer/application/prayer_day_boundaries.dart and lib/features/prayer/data/prayer_day_boundaries_reader.dart, reusing the existing annual schedule and calculator ports.
   - **Depends**: T011.
   - **Done**: T011 passes, and the Prayer screen's behavior is unchanged (the existing Prayer tests stay green).
 
 ### XP sources
 
-- [ ] T013 [P] Extend the tests in test/unit/features/xp/ (create xp_award_sources_test.dart).
+- [x] T013 [P] Extend the tests in test/unit/features/xp/ (create xp_award_sources_test.dart).
   - **Depends**: T001.
   - **Done**:
     - `adhkar_set_done` is accepted only with 15, and `qiyam_done` only with 30.
     - `fromStored` accepts both.
     - `task_done` 20 and `prayer_done` 10/5 stay unchanged.
-- [ ] T014 Update lib/features/xp/domain/xp_award.dart with `kAdhkarSetDoneAwardSource` and `kQiyamDoneAwardSource`.
+- [x] T014 Update lib/features/xp/domain/xp_award.dart with `kAdhkarSetDoneAwardSource` and `kQiyamDoneAwardSource`.
   - **Depends**: T013.
   - **Done**: T013 passes, and lib/features/today/data/xp_today_adapter.dart totals the new sources without double counting.
 
 ### Local schema v10
 
-- [ ] T015 Extend test/unit/core/data/local/ with adhkar_qiyam_migration_test.dart and update test/fixtures/prayer/migrations/schema_versions.json to include v10.
+- [x] T015 Extend test/unit/core/data/local/ with adhkar_qiyam_migration_test.dart and update test/fixtures/prayer/migrations/schema_versions.json to include v10.
   - **Depends**: T001.
   - **Done**:
     - Every historical v1…v9 path upgrades to v10.
@@ -149,7 +149,7 @@
     - A fresh v10 database is created correctly.
     - An injected migration failure leaves v9 readable.
     - A restart after the upgrade works.
-- [ ] T016 Add `AdhkarItemCounts` and `QiyamNights` to lib/core/data/local/foundation_database.dart, set `kFoundationSchemaVersion = 10`, add the migration step, and regenerate foundation_database.g.dart.
+- [x] T016 Add `AdhkarItemCounts` and `QiyamNights` to lib/core/data/local/foundation_database.dart, set `kFoundationSchemaVersion = 10`, add the migration step, and regenerate foundation_database.g.dart.
   - **Depends**: T015.
   - **Done**:
     - The columns, keys and indexes match data-model.md. They include "0 ≤ count ≤ target", "rakahs: null when performed is false; otherwise one of 2, 4, 8, 11" and "note ≤ 500 characters".
@@ -158,13 +158,13 @@
 
 ### Remote migration 0016
 
-- [ ] T017 [P] Write supabase/tests/adhkar_account_isolation_test.sql, adhkar_operation_integrity_test.sql, adhkar_conflict_integrity_test.sql and adhkar_xp_integrity_test.sql.
+- [x] T017 [P] Write supabase/tests/adhkar_account_isolation_test.sql, adhkar_operation_integrity_test.sql, adhkar_conflict_integrity_test.sql and adhkar_xp_integrity_test.sql.
   - **Depends**: T010.
   - **Done**: They cover every Adhkar proof in contracts/adhkar-qiyam-sync.md and fail before 0016 exists.
-- [ ] T018 [P] Write supabase/tests/qiyam_account_isolation_test.sql, qiyam_operation_integrity_test.sql, qiyam_conflict_integrity_test.sql and qiyam_xp_integrity_test.sql.
+- [x] T018 [P] Write supabase/tests/qiyam_account_isolation_test.sql, qiyam_operation_integrity_test.sql, qiyam_conflict_integrity_test.sql and qiyam_xp_integrity_test.sql.
   - **Depends**: T010.
   - **Done**: They cover every Qiyam proof in the sync contract.
-- [ ] T019 Create supabase/migrations/0016_adhkar_qiyam.sql. It contains:
+- [x] T019 Create supabase/migrations/0016_adhkar_qiyam.sql. It contains:
   - the catalog seed for v1 (IDs, lists, positions and targets only);
   - the record, receipt and conflict tables;
   - `apply_adhkar_item_change_v1` and `apply_qiyam_night_change_v1`;

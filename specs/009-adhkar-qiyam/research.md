@@ -74,7 +74,10 @@ Each item below records the decision, the rationale and the alternatives conside
   | `adhkar_set_done` | 15 | `UUIDv5(NS, 'adhkar/' + day + '/' + list)` |
   | `qiyam_done` | 30 | `UUIDv5(NS, 'qiyam/' + nightDate)` |
 
-  `NS` is a new fixed namespace for 009.
+  `NS` is a new fixed namespace for 009. **Chosen at T010 (2026-11-09) and
+  shared verbatim by Dart, SQL and the test vectors:**
+  `70ca78e3-a267-4a2f-883f-1e0dea2df0c3`
+  (`lib/core/data/sync/adhkar_qiyam_identity_namespace.dart`).
 - **Server award.**
   - For Adhkar, the server evaluates set completion after each item upsert, using a seeded catalog of item IDs and targets per catalog version. It inserts the award once (`on conflict do nothing`) when every catalog item of that list and day is at its target in the active versions.
   - For Qiyam, the server awards on the first committed version with `performed = true`.

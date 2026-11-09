@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 9;
+const int kFoundationSchemaVersion = 10;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -401,6 +401,74 @@ class PrayerReports extends Table {
   Set<Column> get primaryKey => {accountId, localDate, prayerName};
 }
 
+/// Added in schema version 10: one count row per (owner, Adhkar day, item).
+/// A missing row means count 0; a reset to 0 is a persisted row. The count
+/// bounds (0 <= count <= the catalog target) are enforced by the increment
+/// command against the catalog version recorded on the row.
+@TableIndex(
+  name: 'adhkar_item_counts_owner_day_list',
+  columns: {#accountId, #adhkarDay, #list},
+)
+@TableIndex(
+  name: 'adhkar_item_counts_owner_version',
+  columns: {#accountId, #updatedAt, #recordId},
+)
+@TableIndex(
+  name: 'adhkar_item_counts_owner_record',
+  columns: {#accountId, #recordId},
+  unique: true,
+)
+class AdhkarItemCounts extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get adhkarDay => text()();
+  TextColumn get itemId => text()();
+  TextColumn get recordId => text()();
+  IntColumn get catalogVersion => integer()();
+  TextColumn get list => text()();
+  IntColumn get count => integer()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, adhkarDay, itemId};
+}
+
+/// Added in schema version 10: one record per (owner, night). "No row" means
+/// not recorded; `performed = false` is the explicit "No". The detail rules
+/// (rakahs in {2, 4, 8, 11} exactly when performed, HH:mm times, note <= 500
+/// characters, details cleared for "No") are enforced by the save command
+/// and mirrored by migration 0016's check constraints.
+@TableIndex(name: 'qiyam_nights_owner_night', columns: {#accountId, #nightDate})
+@TableIndex(
+  name: 'qiyam_nights_owner_version',
+  columns: {#accountId, #updatedAt, #recordId},
+)
+@TableIndex(
+  name: 'qiyam_nights_owner_record',
+  columns: {#accountId, #recordId},
+  unique: true,
+)
+class QiyamNights extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get nightDate => text()();
+  TextColumn get recordId => text()();
+  BoolColumn get performed => boolean()();
+  IntColumn get rakahs => integer().nullable()();
+  BoolColumn get witr => boolean()();
+  TextColumn get startTime => text().nullable()();
+  TextColumn get endTime => text().nullable()();
+  TextColumn get note => text().nullable()();
+  TextColumn get recordedZoneId => text()();
+  IntColumn get recordedOffsetMinutes => integer()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, nightDate};
+}
+
 @DriftDatabase(
   tables: [
     FoundationPreferences,
@@ -419,6 +487,8 @@ class PrayerReports extends Table {
     MindMapSideLinks,
     PrayerDevicePreferences,
     PrayerReports,
+    AdhkarItemCounts,
+    QiyamNights,
   ],
 )
 class FoundationDatabase extends _$FoundationDatabase {
@@ -644,6 +714,21 @@ class FoundationDatabase extends _$FoundationDatabase {
       }
       if (to >= 9 && from < 9) {
         await _createPrayerAnnualTimetables();
+      }
+      if (to >= 10 && from < 10) {
+        await testMigrationHook?.call(migrator, from, to);
+        await migrator.createTable(adhkarItemCounts);
+        await migrator.createTable(qiyamNights);
+        for (final index in <Index>[
+          adhkarItemCountsOwnerDayList,
+          adhkarItemCountsOwnerVersion,
+          adhkarItemCountsOwnerRecord,
+          qiyamNightsOwnerNight,
+          qiyamNightsOwnerVersion,
+          qiyamNightsOwnerRecord,
+        ]) {
+          await _createIndexIfMissing(migrator, index);
+        }
       }
       await _recordJournalComplete(to);
     },

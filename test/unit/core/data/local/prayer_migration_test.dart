@@ -23,6 +23,8 @@ const _tables = <String>[
   'mind_map_side_links',
   'prayer_device_preferences',
   'prayer_reports',
+  'adhkar_item_counts',
+  'qiyam_nights',
 ];
 
 final _fixtures =
@@ -133,17 +135,19 @@ Future<FoundationDatabase> _installed(
 
 void main() {
   final key = List<int>.generate(32, (index) => index + 70);
-  test('installed v8 upgrades to v9 without changing Prayer reports', () async {
-    final temp = TemporaryDatabasePath();
-    FoundationDatabase? db;
-    try {
-      final path = temp.allocate();
-      db = await FoundationDatabase.openEncrypted(
-        path: path,
-        key: key,
-        schemaVersion: 8,
-      );
-      await db.customStatement('''
+  test(
+    'installed v8 upgrades to v10 without changing Prayer reports',
+    () async {
+      final temp = TemporaryDatabasePath();
+      FoundationDatabase? db;
+      try {
+        final path = temp.allocate();
+        db = await FoundationDatabase.openEncrypted(
+          path: path,
+          key: key,
+          schemaVersion: 8,
+        );
+        await db.customStatement('''
         INSERT INTO prayer_reports (account_id, local_date, prayer_name,
           report_id, status, recorded_zone_id, recorded_offset_minutes,
           created_at, updated_at)
@@ -151,35 +155,36 @@ void main() {
           'Africa/Cairo', 120, '2026-10-31T00:00:00Z',
           '2026-10-31T00:00:00Z')
       ''');
-      await db.close();
-      db = await FoundationDatabase.openEncrypted(path: path, key: key);
-      expect(db.schemaVersion, 9);
-      expect(
-        await db.rawScalar(
-          "SELECT report_id FROM prayer_reports WHERE account_id='owner'",
-        ),
-        'old-report',
-      );
-      expect(
-        await db.rawScalar(
-          "SELECT count(*) FROM sqlite_master WHERE type='table' "
-          "AND name='prayer_annual_timetables'",
-        ),
-        1,
-      );
-    } finally {
-      await db?.close();
-      temp.dispose();
-    }
-  });
-  test('fresh v9 has Prayer tables and no Task completion_xp', () async {
+        await db.close();
+        db = await FoundationDatabase.openEncrypted(path: path, key: key);
+        expect(db.schemaVersion, 10);
+        expect(
+          await db.rawScalar(
+            "SELECT report_id FROM prayer_reports WHERE account_id='owner'",
+          ),
+          'old-report',
+        );
+        expect(
+          await db.rawScalar(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' "
+            "AND name='prayer_annual_timetables'",
+          ),
+          1,
+        );
+      } finally {
+        await db?.close();
+        temp.dispose();
+      }
+    },
+  );
+  test('fresh v10 has Prayer tables and no Task completion_xp', () async {
     final temp = TemporaryDatabasePath();
     final db = await FoundationDatabase.openEncrypted(
       path: temp.allocate(),
       key: key,
     );
     try {
-      expect(db.schemaVersion, 9);
+      expect(db.schemaVersion, 10);
       expect(
         await db.rawScalar(
           'SELECT count(*) FROM sqlite_master '
@@ -218,7 +223,7 @@ void main() {
           db = await _installed(path, key, version);
           await db.close();
           db = await FoundationDatabase.openEncrypted(path: path, key: key);
-          expect(await db.journalStatusFor(9), 'completed');
+          expect(await db.journalStatusFor(10), 'completed');
           expect(
             await db.rawScalar('SELECT value FROM foundation_preferences'),
             'ar',
@@ -358,7 +363,7 @@ void main() {
       );
       await db.close();
       db = await FoundationDatabase.openEncrypted(path: path, key: key);
-      expect(await db.journalStatusFor(9), 'completed');
+      expect(await db.journalStatusFor(10), 'completed');
     } finally {
       await db?.close();
       temp.dispose();

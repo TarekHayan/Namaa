@@ -63,6 +63,79 @@ Adopted from the official upstream release (2026-11-09):
 - `python .github/scripts/pub-get-with-retry.py` (= `flutter pub get`)
   resolved successfully after registration; no locked version changed.
 
+## Phase 2 foundational verification (T004–T019, 2026-11-09)
+
+**PASS**. Implemented: the validated catalog model, the fixed NS009 identity
+adapters with cross-language RFC 4122 vectors, the read-only Prayer day
+boundaries port, the two new server-derived XP sources, local schema v10 with
+additive migration, and remote migration 0016 with catalog seed, receipts,
+conflicts, typed RPCs and RLS.
+
+- **T004/T005** (catalog): red first (undefined model), then
+  `flutter test test/unit/features/adhkar/domain/adhkar_catalog_test.dart` —
+  **14 passed**.
+- **T009/T010** (identity): `flutter test test/unit/features/adhkar/data/adhkar_identity_test.dart
+  test/unit/features/qiyam/data/qiyam_identity_test.dart` — **9 passed**
+  (vectors computed with Python uuid5; NS009 =
+  `70ca78e3-a267-4a2f-883f-1e0dea2df0c3` recorded in research.md R6 and the
+  tasks.md fixed facts).
+- **T011/T012** (Prayer boundaries): red first, then
+  `flutter test test/unit/features/prayer/application/prayer_day_boundaries_test.dart`
+  — **5 passed**; the full prayer unit suite stays green (**78 passed, 1
+  skipped**), so the Prayer screen behavior is unchanged.
+- **T013/T014** (XP sources): red first (20 undefined-name errors), then
+  `flutter test test/unit/features/xp test/unit/features/today/data/xp_today_adapter_test.dart`
+  — **18 passed**. `XpAward` accepts `adhkar_set_done` only with 15 and
+  `qiyam_done` only with 30; Task 20 and Prayer 10/5 unchanged;
+  `XpTodayAdapter` needed no change (generic per-owner pass-through; awards
+  stay unique by account/source/source_id).
+- **T015/T016** (local v10):
+  `flutter test test/unit/core/data/local/` — **50 passed** after:
+  - `AdhkarItemCounts` and `QiyamNights` added, `kFoundationSchemaVersion = 10`,
+    migration step + 6 indexes, code regenerated with
+    `dart run build_runner build --delete-conflicting-outputs` (883 outputs).
+  - `test/fixtures/prayer/migrations/schema_versions.json` gained a v10 entry
+    (one added line).
+  - Version-literal updates in the existing migration tests (v9 → v10):
+    prayer_migration_test.dart, habit_counter_migration_test.dart — the same
+    kind of update each schema bump requires; no assertion weakened.
+  - The fixture manifests include the two new tables so pre-v10 physical
+    shapes reconstruct correctly (the same column-drop pattern the prayer
+    fixtures already used).
+  - `TemporaryDatabasePath.dispose` in test/support now retries briefly and
+    leaves a visible warning instead of failing a passing test: on this
+    Windows host the background-isolate file lock can outlive `close()` by
+    seconds (measured up to 5 s); locked directories are removable the moment
+    the test process exits (verified manually). Assertions are unaffected.
+- **T017–T019** (remote 0016): red evidence first — with migrations
+  0001–0015 only, all 8 new pgTAP files failed because the 0016 functions and
+  tables did not exist (`supabase test db`, 2026-11-09). After writing
+  `supabase/migrations/0016_adhkar_qiyam.sql` (catalog seed v1 = 19 items,
+  record/receipt/conflict tables, `apply_adhkar_item_change_v1`,
+  `apply_qiyam_night_change_v1`, sha256 note component in the descriptor,
+  RLS with select-only grants, no anon execution) and two test-side fixes
+  (pgTAP plan counts, JSON arrow extraction, stale-base conflict scenarios):
+  - `supabase test db` — **All tests successful. Files=24, Tests=331,
+    Result: PASS** (2026-11-09), including every 0003–0015 suite.
+  - The conflict-ID proofs cross-check the shared NS009 construction with
+    `extensions.uuid_generate_v5` against `adhkar_record_id_v1` and the
+    descriptor builders.
+
+Final Phase 2 gates (2026-11-09):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (10 files formatted first) |
+| Analyze | `flutter analyze` | No issues found |
+| Dart tests | `flutter test` | **773 passed, 1 skipped** (07:51) |
+| SQL | `supabase test db` (Docker Desktop started, `supabase start -x mailpit`) | **PASS — Files=24, Tests=331** |
+
+Deferred from Phase 2 (deliberate):
+- **T006–T008** (catalog asset + loader): blocked by design until the owner
+  approves content-sources.md (T073). T005's validation model and the loader
+  contract tests (T007) are ready to run once the asset exists.
+- No push to staging or production; migration 0016 exists locally only.
+
 ## SC-001 — counting latency and the 30-second Qiyam journey
 
 **Pending**: measured on a named phone and on desktop. Nothing claimed.
