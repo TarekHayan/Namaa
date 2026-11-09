@@ -38,7 +38,8 @@ ask the product owner. Do not decide it in code.
 | 006 | Today dashboard | merged (T074/T075 closure items left open) |
 | 007 | Dashboard prototype UI | merged (T049 final audit open) |
 | 008 | Prayer experience (location-only, statuses, sync, XP) | merged 2026-11-09, PR #11 |
-| 009 | Authentication / per-account data | proposed next, not started |
+| 009 | Adhkar (Morning/Evening) and Qiyam (Phase 4) | spec in progress on `namaa/009-adhkar-qiyam` |
+| — | Authentication / per-account data | proposed, not started (number assigned when specified) |
 
 Not built yet: Quran, Dhikr, Qiyam, Pomodoro, Finance, Notifications,
 Analytics, Settings. The Finance tab currently opens a "coming soon" page.
@@ -167,10 +168,16 @@ Run format, analyze and the relevant tests locally before every push.
 ## 8. CI (`.github/workflows/foundation-ci.yml`)
 
 - **Triggers.**
-  - It runs on PRs to `develop` that touch `lib/`, `integration_test/`,
-    platform folders, `pubspec.*`, the workflow or `.github/scripts/**`. It can
-    also be started by hand. Changes only to `test/`, `specs/` or docs do not
-    start it.
+  - It runs on PRs to `develop` that touch any of these:
+    - `lib/`, `test/` or `integration_test/`;
+    - `supabase/` or the platform folders;
+    - `pubspec.*`;
+    - the workflow or `.github/scripts/**`;
+    - each feature's `specs/NNN-*/**` folder that is listed in the workflow's
+      `paths`.
+  - Add the new feature's specs path when you register its CI files. Changes
+    only to `AGENTS.md`, `CLAUDE.md` or `docs/` do not start it.
+  - It can also be started by hand.
   - The `paths` filter looks at the whole PR diff, so even a docs-only commit
     on such a PR starts the full run again. Put closing docs in before the
     final gate run.
