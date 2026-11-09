@@ -55,10 +55,10 @@
 
 **Checkpoint**: The baseline is recorded, the content draft is ready for the owner's review, and the font asset is adopted.
 
-- [ ] T001 Create specs/009-adhkar-qiyam/verification.md with the baseline: branch, local schema v9, migrations 0001–0015, and empty SC-001…SC-008 sections.
+- [x] T001 Create specs/009-adhkar-qiyam/verification.md with the baseline: branch, local schema v9, migrations 0001–0015, and empty SC-001…SC-008 sections.
   - **Depends**: None.
   - **Done**: Existing evidence is kept apart from 009 evidence; every SC is marked pending.
-- [ ] T002 [P] Create specs/009-adhkar-qiyam/content-sources.md from prototype/src/data/adhkarData.ts and the two Qiyam supplications in prototype/src/views/QiyamView.tsx.
+- [x] T002 [P] Create specs/009-adhkar-qiyam/content-sources.md from prototype/src/data/adhkarData.ts and the two Qiyam supplications in prototype/src/views/QiyamView.tsx.
   - **Depends**: T001.
   - **Done**: Each item has:
     - its ID, list, target, Arabic text and English translation;
@@ -70,7 +70,7 @@
     - `Status: pending owner review`.
 
     m9's reference mismatch, the grading of "Hasbiyallah ×7" (Abu Dawud 5081), and the open question on Ayat al-Kursi and the Mu'awwidhat are written as explicit decisions for the owner.
-- [ ] T003 [P] Add Amiri Regular and its OFL license under assets/fonts/amiri/ and register the family `Amiri` in pubspec.yaml.
+- [x] T003 [P] Add Amiri Regular and its OFL license under assets/fonts/amiri/ and register the family `Amiri` in pubspec.yaml.
   - **Depends**: T001.
   - **Done**: The archive checksum and license are recorded in verification.md, no other font or package changes, and `flutter pub get` resolves.
 

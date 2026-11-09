@@ -114,3 +114,9 @@ flutter:
           weight: 700
         - asset: assets/fonts/thmanyah_sans/thmanyahsans-Black.otf
           weight: 900
+
+    # Arabic display font for the reviewed adhkar/supplication text (009, R8):
+    # dense tashkeel rendering; SIL OFL 1.1 license ships next to it.
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/amiri/Amiri-Regular.ttf
