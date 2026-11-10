@@ -169,22 +169,58 @@ void main() {
     },
   );
 
-  test('changes fires when the location or method changes, not for equal '
-      'preference revisions', () async {
+  test(
+    'a preferences read failure is unavailable, not setup required',
+    () async {
+      final date = PrayerLocalDate.parse('2026-11-09');
+      preferences.readOutcome = AppResult<PrayerPreferences?>.failure(
+        AppFailure.recoverable(
+          category: AppFailureCategory.persistence,
+          messageKey: 'test.readFailed',
+          occurredAt: DateTime.utc(2026, 11, 9),
+        ),
+      );
+      final result = await reader.boundaries('owner', date);
+      expect(result, isA<PrayerDayBoundariesUnavailable>());
+      expect(
+        (result as PrayerDayBoundariesUnavailable).reason,
+        'prayer.preferencesUnavailable',
+      );
+      expect(annual.calls, 0);
+      expect(calculator.calls, 0);
+    },
+  );
+
+  test('changes emits on null to value, value to null and value to a '
+      'different value, and not for the initial value or repeats', () async {
     final seen = <void>[];
     final sub = reader.changes('owner').listen(seen.add);
     await Future<void>.delayed(Duration.zero);
+    // Initial value: no event.
     preferences.emit(prefs());
     await Future<void>.delayed(Duration.zero);
+    expect(seen, isEmpty);
     // Same city and method: no event even though the revision advanced.
     preferences.emit(prefs().copyWith(revision: 2));
     await Future<void>.delayed(Duration.zero);
     expect(seen, isEmpty);
-    // The method changed.
+    // The method changed: value -> different value emits.
     preferences.emit(prefs(method: 'Karachi'));
     await Future<void>.delayed(Duration.zero);
     expect(seen, hasLength(1));
-    // The location changed.
+    // The location was removed: value -> null emits.
+    preferences.emit(null);
+    await Future<void>.delayed(Duration.zero);
+    expect(seen, hasLength(2));
+    // A second null: null -> null does not emit.
+    preferences.emit(null);
+    await Future<void>.delayed(Duration.zero);
+    expect(seen, hasLength(2));
+    // The location appears: null -> value emits.
+    preferences.emit(prefs());
+    await Future<void>.delayed(Duration.zero);
+    expect(seen, hasLength(3));
+    // A different city: value -> different value emits again.
     preferences.emit(
       prefs(
         city: PrayerCity(
@@ -200,7 +236,7 @@ void main() {
       ),
     );
     await Future<void>.delayed(Duration.zero);
-    expect(seen, hasLength(2));
+    expect(seen, hasLength(4));
     await sub.cancel();
   });
 }
@@ -210,6 +246,7 @@ final class FakePreferences implements PrayerPreferencesPort {
 
   final String owner;
   PrayerPreferences? stored;
+  AppResult<PrayerPreferences?>? readOutcome;
   final _controller = StreamController<PrayerPreferences?>.broadcast();
 
   void emit(PrayerPreferences? value) {
@@ -219,6 +256,10 @@ final class FakePreferences implements PrayerPreferencesPort {
 
   @override
   Future<AppResult<PrayerPreferences?>> read(String accountId) async {
+    final outcome = readOutcome;
+    if (outcome != null) {
+      return outcome;
+    }
     if (accountId != owner) {
       return AppResult.success(null);
     }

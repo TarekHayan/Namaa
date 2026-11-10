@@ -410,6 +410,33 @@ void main() {
   );
 
   test(
+    'the migration hook fires once per upgrade step with the step version',
+    () async {
+      final temp = TemporaryDatabasePath();
+      FoundationDatabase? db;
+      try {
+        final path = temp.allocate();
+        db = await installed(path, key, 7);
+        await db.close();
+        final seen = <String>[];
+        db = await FoundationDatabase.openEncrypted(
+          path: path,
+          key: key,
+          testMigrationHook: (migrator, from, to, step) async {
+            seen.add('$from>$to@$step');
+          },
+        );
+        expect(db.schemaVersion, 10);
+        // A v7 -> v10 upgrade runs steps 8, 9 and 10, each firing once.
+        expect(seen, ['7>10@8', '7>10@9', '7>10@10']);
+      } finally {
+        await db?.close();
+        temp.dispose();
+      }
+    },
+  );
+
+  test(
     'an injected v10 failure leaves the v9 database readable and the '
     'journal records the failed attempt, then a clean reopen recovers',
     () async {
@@ -423,7 +450,7 @@ void main() {
           FoundationDatabase.openEncrypted(
             path: path,
             key: key,
-            testMigrationHook: (migrator, from, to) async {
+            testMigrationHook: (migrator, from, to, step) async {
               if (to >= 10 && from < 10) {
                 throw Exception('injected migration failure');
               }

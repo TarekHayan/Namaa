@@ -162,7 +162,7 @@ void main() {
           path: path,
           key: _testKey,
           schemaVersion: 3,
-          testMigrationHook: (migrator, from, to) async {
+          testMigrationHook: (migrator, from, to, step) async {
             throw Exception('injected v3 migration failure');
           },
         ),

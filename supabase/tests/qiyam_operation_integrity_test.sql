@@ -1,7 +1,7 @@
 -- T018: Qiyam operation integrity: receipts, replay, convergence and
 -- newest-wins, per contracts/adhkar-qiyam-sync.md.
 begin;
-select plan(12);
+select plan(14);
 insert into auth.users(instance_id,id,aud,role,email,encrypted_password,created_at,updated_at)
 values('00000000-0000-0000-0000-000000000000',
   '86666666-6666-4666-8666-666666666666','authenticated','authenticated',
@@ -57,6 +57,21 @@ select is((select performed from public.qiyam_nights),false,
   'the night reads as explicitly not performed');
 select is((select rakahs from public.qiyam_nights),null::integer,
   'the details are cleared for No');
+
+-- The XP-timestamp window: updated_at must sit inside
+-- [night - 1 day, night + 2 days) in UTC (Phase 2 review finding 3).
+select throws_ok(
+  'select public.apply_qiyam_night_change_v1(''2026-11-09''::date,true,4,true,
+   null,null,null,''Africa/Cairo'',120,''2026-11-07 23:30:00+00''::timestamptz,
+   null,''op-early'')',
+  '22023','Qiyam update outside its night window',
+  'an updated_at before the night window is rejected');
+select throws_ok(
+  'select public.apply_qiyam_night_change_v1(''2026-11-09''::date,true,4,true,
+   null,null,null,''Africa/Cairo'',120,''2026-11-11 00:00:00+00''::timestamptz,
+   null,''op-late'')',
+  '22023','Qiyam update outside its night window',
+  'an updated_at at the night+2 boundary is rejected');
 
 reset role;
 select * from finish();

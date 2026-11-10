@@ -27,27 +27,14 @@ create table public.adhkar_catalog_items (
   unique (catalog_version,list,position)
 );
 
-insert into public.adhkar_catalog_items(catalog_version,item_id,list,position,target)
-values
-  (1,'m1','morning',1,1),
-  (1,'m2','morning',2,1),
-  (1,'m3','morning',3,1),
-  (1,'m4','morning',4,3),
-  (1,'m5','morning',5,3),
-  (1,'m6','morning',6,3),
-  (1,'m7','morning',7,7),
-  (1,'m8','morning',8,100),
-  (1,'m9','morning',9,10),
-  (1,'m10','morning',10,100),
-  (1,'e1','evening',1,1),
-  (1,'e2','evening',2,1),
-  (1,'e3','evening',3,1),
-  (1,'e4','evening',4,3),
-  (1,'e5','evening',5,3),
-  (1,'e6','evening',6,3),
-  (1,'e7','evening',7,7),
-  (1,'e8','evening',8,100),
-  (1,'e9','evening',9,10);
+-- The catalog seed is NOT shipped by this migration. It is generated in the
+-- same change that ships the owner-approved asset
+-- assets/religious/adhkar_catalog_v1.json (tasks.md T006, gated by the
+-- owner's content approval T073), so the server can never award set
+-- completion or accept counts for items the client does not ship. Until
+-- then the table stays empty and the pgTAP tests seed their own fixture
+-- rows inside their transactions; a Dart test pins the asset and the seed
+-- together (test/unit/features/adhkar/data/catalog_seed_sync_test.dart).
 
 -- ---------------------------------------------------------------------------
 -- Records
@@ -230,10 +217,13 @@ $$;
 -- bytewise so equal-timestamp arrivals choose alike. The note component is
 -- its sha256 hex digest (pgcrypto), so raw notes never enter the descriptor.
 create function public.adhkar_version_descriptor_v1(
-  p_updated_at timestamptz,p_count integer)
+  p_updated_at timestamptz,p_catalog_version integer,p_count integer)
 returns text language sql immutable security invoker set search_path = '' as $$
+  -- '<micros>:<catalog_version>:<count>' — shared with the Dart side
+  -- (data-model.md); the catalog version participates so two versions that
+  -- differ only by it never tie by arrival order (Phase 2 review finding 6).
   select (extract(epoch from p_updated_at) * 1000000)::bigint::text
-    || ':' || p_count::text;
+    || ':' || p_catalog_version::text || ':' || p_count::text;
 $$;
 
 create function public.qiyam_version_descriptor_v1(
@@ -250,7 +240,7 @@ returns text language sql immutable security invoker set search_path = '' as $$
     || '|' || p_zone || '|' || p_offset::text;
 $$;
 
-create function public.adhkar_conflict_id_v1(
+create function public.adhkar_qiyam_conflict_id_v1(
   p_record_id uuid,p_first text,p_second text)
 returns uuid language sql immutable security invoker set search_path = '' as $$
   select extensions.uuid_generate_v5(
@@ -306,6 +296,15 @@ begin
     raise exception using errcode='22023',
       message='Adhkar day more than two days ahead';
   end if;
+  -- The update instant dates the provisional award, so it stays inside the
+  -- record's window [day - 1 day, day + 2 days) in UTC, like 0015.
+  if p_updated_at < (p_adhkar_day::timestamp at time zone 'UTC')
+      - interval '1 day'
+    or p_updated_at >= (p_adhkar_day::timestamp at time zone 'UTC')
+      + interval '2 days' then
+    raise exception using errcode='22023',
+      message='Adhkar update outside its day window';
+  end if;
   select c.list,c.target into v_list,v_target
     from public.adhkar_catalog_items c
     where c.catalog_version = p_catalog_version and c.item_id = p_item_id;
@@ -317,7 +316,7 @@ begin
   end if;
   v_record_id := public.adhkar_record_id_v1(p_adhkar_day,p_item_id);
   v_incoming_descriptor := public.adhkar_version_descriptor_v1(
-    p_updated_at,p_count);
+    p_updated_at,p_catalog_version,p_count);
   v_request_fingerprint := pg_catalog.md5(v_record_id::text || ':'
     || pg_catalog.to_char(p_adhkar_day,'YYYY-MM-DD') || ':' || p_item_id || ':'
     || p_catalog_version::text || ':' || v_incoming_descriptor);
@@ -340,14 +339,14 @@ begin
     where r.owner=v_owner and r.record_id=v_record_id for update;
   if found then
     v_existing_descriptor := public.adhkar_version_descriptor_v1(
-      v_existing.updated_at,v_existing.count);
+      v_existing.updated_at,v_existing.catalog_version,v_existing.count);
     v_divergent := v_existing.count is distinct from p_count
       or v_existing.catalog_version is distinct from p_catalog_version;
     v_incoming_wins := p_updated_at > v_existing.updated_at
       or (p_updated_at = v_existing.updated_at
         and v_incoming_descriptor collate "C" > v_existing_descriptor collate "C");
     if v_divergent and v_existing.updated_at is distinct from p_base_updated_at then
-      v_conflict_id := public.adhkar_conflict_id_v1(
+      v_conflict_id := public.adhkar_qiyam_conflict_id_v1(
         v_record_id,v_existing_descriptor,v_incoming_descriptor);
       if v_incoming_wins then
         v_retained := pg_catalog.to_jsonb(v_existing) - 'owner';
@@ -484,6 +483,15 @@ begin
     raise exception using errcode='22023',
       message='Qiyam night more than two days ahead';
   end if;
+  -- The update instant dates the provisional award, so it stays inside the
+  -- record's window [night - 1 day, night + 2 days) in UTC, like 0015.
+  if p_updated_at < (p_night_date::timestamp at time zone 'UTC')
+      - interval '1 day'
+    or p_updated_at >= (p_night_date::timestamp at time zone 'UTC')
+      + interval '2 days' then
+    raise exception using errcode='22023',
+      message='Qiyam update outside its night window';
+  end if;
   v_record_id := public.qiyam_record_id_v1(p_night_date);
   v_incoming_descriptor := public.qiyam_version_descriptor_v1(
     p_updated_at,p_performed,p_rakahs,p_witr,p_start_time,p_end_time,p_note,
@@ -525,7 +533,7 @@ begin
       or (p_updated_at = v_existing.updated_at
         and v_incoming_descriptor collate "C" > v_existing_descriptor collate "C");
     if v_divergent and v_existing.updated_at is distinct from p_base_updated_at then
-      v_conflict_id := public.adhkar_conflict_id_v1(
+      v_conflict_id := public.adhkar_qiyam_conflict_id_v1(
         v_record_id,v_existing_descriptor,v_incoming_descriptor);
       if v_incoming_wins then
         v_retained := pg_catalog.to_jsonb(v_existing) - 'owner';
@@ -609,10 +617,10 @@ $$;
 revoke all on function public.adhkar_record_id_v1(date,text) from public,anon;
 revoke all on function public.qiyam_record_id_v1(date) from public,anon;
 revoke all on function public.adhkar_set_source_id_v1(date,text) from public,anon;
-revoke all on function public.adhkar_version_descriptor_v1(timestamptz,integer) from public,anon;
+revoke all on function public.adhkar_version_descriptor_v1(timestamptz,integer,integer) from public,anon;
 revoke all on function public.qiyam_version_descriptor_v1(
   timestamptz,boolean,integer,boolean,text,text,text,text,integer) from public,anon;
-revoke all on function public.adhkar_conflict_id_v1(uuid,text,text) from public,anon;
+revoke all on function public.adhkar_qiyam_conflict_id_v1(uuid,text,text) from public,anon;
 revoke all on function public.apply_adhkar_item_change_v1(
   date,text,integer,integer,timestamptz,timestamptz,text) from public,anon;
 revoke all on function public.apply_qiyam_night_change_v1(
@@ -623,10 +631,10 @@ grant execute on function public.adhkar_record_id_v1(date,text) to authenticated
 grant execute on function public.qiyam_record_id_v1(date) to authenticated;
 grant execute on function public.adhkar_set_source_id_v1(date,text) to authenticated;
 grant execute on function public.adhkar_version_descriptor_v1(
-  timestamptz,integer) to authenticated;
+  timestamptz,integer,integer) to authenticated;
 grant execute on function public.qiyam_version_descriptor_v1(
   timestamptz,boolean,integer,boolean,text,text,text,text,integer) to authenticated;
-grant execute on function public.adhkar_conflict_id_v1(uuid,text,text) to authenticated;
+grant execute on function public.adhkar_qiyam_conflict_id_v1(uuid,text,text) to authenticated;
 grant execute on function public.apply_adhkar_item_change_v1(
   date,text,integer,integer,timestamptz,timestamptz,text) to authenticated;
 grant execute on function public.apply_qiyam_night_change_v1(

@@ -34,11 +34,16 @@ final class PrayerDayBoundariesReader implements PrayerDayBoundariesPort {
     PrayerLocalDate civilDate,
   ) async {
     final read = await _preferences.read(ownerId);
-    final preferences = read.valueOrNull;
-    if (preferences == null) {
-      return const PrayerDayBoundariesSetupRequired();
+    // A storage failure is not the same as "no saved location": reporting it
+    // as setupRequired would silently fall back to calendar days and
+    // attribute counts to the wrong Adhkar day (Phase 2 review, finding 4).
+    if (read.failureOrNull != null) {
+      return const PrayerDayBoundariesUnavailable(
+        reason: 'prayer.preferencesUnavailable',
+      );
     }
-    if (preferences.accountId != ownerId) {
+    final preferences = read.valueOrNull;
+    if (preferences == null || preferences.accountId != ownerId) {
       return const PrayerDayBoundariesSetupRequired();
     }
 
@@ -77,18 +82,26 @@ final class PrayerDayBoundariesReader implements PrayerDayBoundariesPort {
 
   @override
   Stream<void> changes(String ownerId) {
-    String? keyOf;
+    String? lastKey;
+    var first = true;
     return _preferences
         .watch(ownerId)
-        .where((preferences) => preferences != null)
         .map((preferences) {
-          final city = preferences!.city;
-          final key =
-              '${city.provider}/${city.providerCityId}/'
-              '${city.latitude}/${city.longitude}/'
-              '${city.timeZoneId}/${preferences.calculationMethod}';
-          final changed = keyOf != null && keyOf != key;
-          keyOf = key;
+          // A foreign-owner emission is treated like a removed location.
+          final effective =
+              preferences != null && preferences.accountId == ownerId
+              ? preferences
+              : null;
+          final key = effective == null
+              ? null
+              : '${effective.city.provider}/${effective.city.providerCityId}/'
+                    '${effective.city.latitude}/${effective.city.longitude}/'
+                    '${effective.city.timeZoneId}/${effective.calculationMethod}';
+          // The first observation never emits; afterwards every key transition
+          // emits, including null -> value and value -> null (finding 5).
+          final changed = !first && key != lastKey;
+          first = false;
+          lastKey = key;
           return changed;
         })
         .where((changed) => changed)

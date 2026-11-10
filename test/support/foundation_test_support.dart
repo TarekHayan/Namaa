@@ -105,26 +105,16 @@ class TemporaryDatabasePath {
     final dir = _directory;
     _directory = null;
     if (dir == null || !dir.existsSync()) return;
-    final watch = Stopwatch()..start();
     for (var attempt = 0; ; attempt++) {
       try {
         dir.deleteSync(recursive: true);
         return;
       } on FileSystemException {
-        // The encrypted database runs in a background isolate; on Windows
-        // its file handle can outlive close() by a while under load. Every
-        // assertion has already run by the time dispose is called, so a
-        // locked cleanup artifact must not fail the test: retry briefly,
-        // then leave the directory behind (it is removable as soon as the
-        // test process exits) with a visible warning.
-        if (attempt >= 49) {
-          // ignore: avoid_print
-          print(
-            'foundation_test_support: temp dir left behind after '
-            '${watch.elapsedMilliseconds} ms (locked): ${dir.path}',
-          );
-          return;
-        }
+        // The encrypted database runs in a background isolate whose file
+        // handle can briefly outlive close() on Windows, so the delete
+        // retries for up to a second. A handle held longer than that is a
+        // real leak and still fails the test (Phase 2 review finding 7).
+        if (attempt >= 9) rethrow;
         sleep(const Duration(milliseconds: 100));
       }
     }

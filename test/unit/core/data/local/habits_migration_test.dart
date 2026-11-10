@@ -178,7 +178,7 @@ void main() {
           path: path,
           key: _testKey,
           schemaVersion: 4,
-          testMigrationHook: (migrator, from, to) async {
+          testMigrationHook: (migrator, from, to, step) async {
             expect(from, 3);
             expect(to, 4);
             throw StateError('injected v4 migration failure');

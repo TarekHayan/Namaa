@@ -129,6 +129,11 @@ final class AdhkarCatalog {
       if (entry is! Map<String, dynamic>) {
         throw ArgumentError.value(entry, 'qiyam_supplications[]');
       }
+      // The same owner-approval rule as the adhkar items (FR-002): only
+      // approved supplications ship.
+      if (entry['approved'] != true) {
+        continue;
+      }
       final supplication = _parseSupplication(entry);
       if (supplications.containsKey(supplication.id)) {
         throw ArgumentError.value(

@@ -83,6 +83,7 @@ void main() {
         supplications: [
           {
             'id': 's1',
+            'approved': true,
             'text_ar': 'دعاء',
             'source_ar': 'مسلم 486',
             'source_en': 'Muslim 486',
@@ -93,16 +94,40 @@ void main() {
       expect(parsed.qiyamSupplications.single.id, 's1');
       expect(parsed.qiyamSupplications.single.textAr, 'دعاء');
     });
+
+    test('an unapproved supplication is excluded, approved ones stay', () {
+      final json = catalog(
+        supplications: [
+          {
+            'id': 's1',
+            'approved': true,
+            'text_ar': 'دعاء معتمد',
+            'source_ar': 'مسلم 486',
+            'source_en': 'Muslim 486',
+          },
+          {
+            'id': 's2',
+            'text_ar': 'دعاء غير معتمد',
+            'source_ar': 'مرجع',
+            'source_en': 'Reference',
+          },
+          {
+            'id': 's3',
+            'approved': false,
+            'text_ar': 'دعاء مرفوض',
+            'source_ar': 'مرجع',
+            'source_en': 'Reference',
+          },
+        ],
+      );
+      final parsed = AdhkarCatalog.fromJson(json);
+      expect(parsed.qiyamSupplications.map((s) => s.id), ['s1']);
+    });
   });
 
   group('AdhkarCatalog.fromJson rejects', () {
     test('duplicate item IDs', () {
-      final json = catalog(
-        items: [
-          item(),
-          item(),
-        ],
-      );
+      final json = catalog(items: [item(), item()]);
       expect(() => AdhkarCatalog.fromJson(json), throwsArgumentError);
     });
 
@@ -172,12 +197,7 @@ void main() {
 
     test('an unapproved item before uniqueness checks, so a duplicate '
         'between one approved and one unapproved item stays valid', () {
-      final json = catalog(
-        items: [
-          item(),
-          item(approved: false),
-        ],
-      );
+      final json = catalog(items: [item(), item(approved: false)]);
       final parsed = AdhkarCatalog.fromJson(json);
       expect(parsed.items, hasLength(1));
     });

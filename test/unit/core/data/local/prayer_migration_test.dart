@@ -312,7 +312,7 @@ void main() {
           path: path,
           key: key,
           schemaVersion: 8,
-          testMigrationHook: (migrator, from, to) async {
+          testMigrationHook: (migrator, from, to, step) async {
             if (to == 8) throw StateError('injected failure');
           },
         ),

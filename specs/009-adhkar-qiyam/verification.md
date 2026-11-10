@@ -136,6 +136,70 @@ Deferred from Phase 2 (deliberate):
   contract tests (T007) are ready to run once the asset exists.
 - No push to staging or production; migration 0016 exists locally only.
 
+## Phase 2 review fixes (2026-11-10)
+
+All nine findings from the Phase 2 review of commit `5fd732a` are fixed.
+Correctness fixes went failing-test-first; no existing assertion was weakened
+or deleted.
+
+1. **Server catalog seed (0016).** The 19-row seed insert was removed from
+   `0016_adhkar_qiyam.sql`; the table and constraints stay and the table is
+   empty until T006. Guard: `flutter test
+   test/unit/features/adhkar/data/catalog_seed_sync_test.dart` — **1 passed**;
+   it pins the seed to the approved asset when the asset exists and asserts
+   0016 seeds nothing before that. The four Adhkar pgTAP files now seed their
+   own fixture rows inside their transactions. tasks.md T006 carries the
+   seed-generation note.
+2. **Qiyam supplication approval.** Failing test first (unapproved
+   supplication still parsed), then the `approved != true` filter now applies
+   to `qiyam_supplications` like the items. `flutter test
+   test/unit/features/adhkar/domain/adhkar_catalog_test.dart` — **15 passed**.
+3. **XP award timestamp window.** pgTAP cases red first (caught: no
+   exception × 4), then both RPCs reject (22023) a `p_updated_at` outside
+   `[day − 1 day, day + 2 days)` in UTC. `supabase test db` — PASS; the
+   contract now states the rule.
+4. **Preferences read failure.** Failing test first, then
+   `PrayerDayBoundariesReader` returns `Unavailable('prayer.preferencesUnavailable')`
+   on an `AppResult` failure; only a successful null yields `SetupRequired`.
+   Covered by a dedicated test in `prayer_day_boundaries_test.dart`.
+5. **changes() transitions.** Failing test first (all four transitions), then
+   `changes` emits on null→value, value→null and value→different, and never
+   for the initial observation or repeats. The foreign-owner emission is
+   treated as a removed location.
+6. **Adhkar descriptor carries catalog_version.** pgTAP case red first
+   (arrival order decided the winner), then
+   `adhkar_version_descriptor_v1(updated_at, catalog_version, count)` produces
+   `<micros>:<catalog_version>:<count>`; both arrival orders converge to
+   catalog 2 in the new cases. contracts/adhkar-qiyam-sync.md and
+   data-model.md document the shared descriptor format.
+7. **dispose throws again.** `TemporaryDatabasePath.dispose` retries for up
+   to one second then rethrows (Phase 2 review finding 7), so a real leaked
+   handle fails the test. `flutter test test/unit/core/data/local/` —
+   **51 passed** with the throwing dispose: no test leaks a handle; the
+   earlier deletion failures came from the broken v3–v5 fixture manifests
+   (fixed in the Phase 2 work).
+8. **Migration hook per step.** Failing test first (the 4-param closure did
+   not compile against the 3-param type), then `testMigrationHook(migrator,
+   from, to, step)` fires exactly once per executed upgrade step with the
+   step identified; the new test asserts `['7>10@8', '7>10@9', '7>10@10']`
+   for a v7→v10 upgrade. The six existing hook closures (and the
+   integration-test one) gained the `step` parameter; assertions unchanged.
+9. **Shared conflict function renamed.** `adhkar_conflict_id_v1` →
+   `adhkar_qiyam_conflict_id_v1` (definition, both RPC call sites, revoke and
+   grant statements). No test referenced the old name.
+
+Final gates for this fix set (2026-11-10):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean |
+| Analyze | `flutter analyze` | No issues found |
+| Dart tests | `flutter test` | **777 passed, 1 skipped** |
+| SQL | `supabase test db` | **PASS — Files=24, Tests=341** |
+
+No push, no staging, no production; 0016 remains local-only. T006 and Phase 3
+were not started.
+
 ## SC-001 — counting latency and the 30-second Qiyam journey
 
 **Pending**: measured on a named phone and on desktop. Nothing claimed.

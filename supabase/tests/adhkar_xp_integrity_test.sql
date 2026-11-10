@@ -7,6 +7,31 @@ insert into auth.users(instance_id,id,aud,role,email,encrypted_password,created_
 values('00000000-0000-0000-0000-000000000000',
   '86666666-6666-4666-8666-666666666666','authenticated','authenticated',
   'adhkar-xp@example.com','x',now(),now());
+
+-- The migration ships no catalog seed (T006 gates it behind the owner's
+-- content approval); this test seeds its own fixture rows.
+insert into public.adhkar_catalog_items(catalog_version,item_id,list,position,target)
+values
+  (1,'m1','morning',1,1),
+  (1,'m2','morning',2,1),
+  (1,'m3','morning',3,1),
+  (1,'m4','morning',4,3),
+  (1,'m5','morning',5,3),
+  (1,'m6','morning',6,3),
+  (1,'m7','morning',7,7),
+  (1,'m8','morning',8,100),
+  (1,'m9','morning',9,10),
+  (1,'m10','morning',10,100),
+  (1,'e1','evening',1,1),
+  (1,'e2','evening',2,1),
+  (1,'e3','evening',3,1),
+  (1,'e4','evening',4,3),
+  (1,'e5','evening',5,3),
+  (1,'e6','evening',6,3),
+  (1,'e7','evening',7,7),
+  (1,'e8','evening',8,100),
+  (1,'e9','evening',9,10);
+
 insert into public.xp_awards(owner,source,source_id,amount,awarded_at)
 values('86666666-6666-4666-8666-666666666666','task_done',
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',20,'2026-11-09 05:00+00');

@@ -17,7 +17,7 @@ Design date: 2026-11-09. This document lists planned names and fields; no schema
   - Qiyam night record: `UUIDv5(NS009, 'qiyam/' + nightDate)`.
   - Adhkar set award `source_id`: `UUIDv5(NS009, 'adhkar/' + day + '/' + list)`.
   - Qiyam award `source_id`: the Qiyam night record ID.
-  - Conflict ID: `UUIDv5(NS009, 'conflict/' + recordId + '/' + lowDescriptor + '/' + highDescriptor)`, built the same way as in 008.
+  - Conflict ID: `UUIDv5(NS009, 'conflict/' + recordId + '/' + lowDescriptor + '/' + highDescriptor)`, built the same way as in 008. The descriptors are canonical ASCII shared by Dart and SQL: Adhkar `<updated_at micros>:<catalog_version>:<count>`; Qiyam `<updated_at micros>:<performed>|<rakahs>|<witr>|<start>|<end>|<note-sha256>|<zone>|<offset>`. They are ordered byte-wise before hashing, so the ID is stable whatever the arrival order was.
 - **Timestamps**: every version instant is UTC with microsecond precision. The owner is part of every key and is never inferred from an entity ID.
 
 ## Reference content (asset, not user data)

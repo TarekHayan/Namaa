@@ -11,6 +11,31 @@ values('00000000-0000-0000-0000-000000000000',
   '77777777-7777-4777-8777-777777777777','authenticated','authenticated',
   'adhkar-other@example.com','x',now(),now());
 
+-- The migration ships no catalog seed (T006 gates it behind the owner's
+-- content approval); this test seeds its own fixture rows.
+insert into public.adhkar_catalog_items(catalog_version,item_id,list,position,target)
+values
+  (1,'m1','morning',1,1),
+  (1,'m2','morning',2,1),
+  (1,'m3','morning',3,1),
+  (1,'m4','morning',4,3),
+  (1,'m5','morning',5,3),
+  (1,'m6','morning',6,3),
+  (1,'m7','morning',7,7),
+  (1,'m8','morning',8,100),
+  (1,'m9','morning',9,10),
+  (1,'m10','morning',10,100),
+  (1,'e1','evening',1,1),
+  (1,'e2','evening',2,1),
+  (1,'e3','evening',3,1),
+  (1,'e4','evening',4,3),
+  (1,'e5','evening',5,3),
+  (1,'e6','evening',6,3),
+  (1,'e7','evening',7,7),
+  (1,'e8','evening',8,100),
+  (1,'e9','evening',9,10);
+
+
 create function pg_temp.submit(p_day date,p_item text,p_count integer,
   p_version timestamptz,p_base timestamptz,p_op text,p_version_catalog int)
 returns jsonb language plpgsql as $$
@@ -55,8 +80,9 @@ select is(pg_temp.submit('2026-11-09','m1',4,'2026-11-09 07:00:00+00',null,
 select is(pg_temp.submit('2026-11-09','m1',1,'2026-11-09 07:00:00+00',null,
   'unknown-catalog',99)->>'error','Unknown Adhkar catalog item',
   'unknown catalog version is rejected');
-select is(pg_temp.submit('2026-11-12','m1',1,'2026-11-09 07:00:00+00',null,
-  'too-far-ahead',1)->>'error','Adhkar day more than two days ahead',
+select is(pg_temp.submit((current_date + 3),'m1',1,
+  '2026-11-09 07:00:00+00',null,'too-far-ahead',1)->>'error',
+  'Adhkar day more than two days ahead',
   'a day more than two days ahead is rejected');
 
 -- Owner B sees nothing of owner A and owns its own rows only.

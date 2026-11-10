@@ -12,7 +12,7 @@ References: [model](../data-model.md), [research](../research.md). The planned m
 | p_item_id | text; must exist in `adhkar_catalog_items` for `p_catalog_version`. |
 | p_catalog_version | integer; must exist. |
 | p_count | integer; 0 ≤ count ≤ the catalog target. |
-| p_updated_at | UTC; required. |
+| p_updated_at | UTC; required; must sit inside the record's award window `[day − 1 day, day + 2 days)` in UTC, as 0015 does for the completion instant. |
 | p_base_updated_at | UTC or null; the acknowledged base. |
 | p_operation_id | non-blank text; stable across retries. |
 
@@ -41,9 +41,16 @@ The client never sends an owner, an XP amount, a list (it is derived from the ca
 4. **Resolve.**
    - A matching base or identical content is ordinary convergence.
    - A divergent version is resolved newest-wins.
-   - Equal timestamps are broken by a byte-ordered semantic key:
-     - Adhkar: `count`;
-     - Qiyam: `performed|rakahs|witr|start|end|note-sha256|zone|offset`.
+   - Equal timestamps are broken by a byte-ordered semantic version
+     descriptor:
+     - Adhkar: `<updated_at micros>:<catalog_version>:<count>` — the catalog
+       version participates (Phase 2 review finding 6), so two versions that
+       differ only by it never tie by arrival order;
+     - Qiyam:
+       `<updated_at micros>:<performed>|<rakahs>|<witr>|<start>|<end>|<note-sha256>|<zone>|<offset>`.
+
+     The descriptor strings are shared verbatim with the Dart side
+     (data-model.md); the greater descriptor wins.
 
      The greater key wins.
    - The losing version is kept as a conflict under its stable conflict ID.

@@ -502,8 +502,10 @@ class FoundationDatabase extends _$FoundationDatabase {
   final String resolvedPath;
   final int _targetSchemaVersion;
 
-  /// Test-only injection point for a failing migration step.
-  final Future<void> Function(Migrator migrator, int from, int to)?
+  /// Test-only injection point, fired exactly once per executed upgrade
+  /// step; [step] identifies the schema version whose step is running
+  /// (Phase 2 review finding 8).
+  final Future<void> Function(Migrator migrator, int from, int to, int step)?
   testMigrationHook;
 
   int? _migrationAttemptedFor;
@@ -519,7 +521,7 @@ class FoundationDatabase extends _$FoundationDatabase {
     required String path,
     required List<int> key,
     int schemaVersion = kFoundationSchemaVersion,
-    Future<void> Function(Migrator migrator, int from, int to)?
+    Future<void> Function(Migrator migrator, int from, int to, int step)?
     testMigrationHook,
   }) async {
     final keyPragma = _keyPragma(key);
@@ -601,16 +603,12 @@ class FoundationDatabase extends _$FoundationDatabase {
     onUpgrade: (migrator, from, to) async {
       _migrationAttemptedFor = to;
       await _recordJournalStart(to);
-      if ((to >= 2 && from < 2) ||
-          (to >= 3 && from < 3) ||
-          (to >= 4 && from < 4) ||
-          (to >= 5 && from < 5)) {
-        await testMigrationHook?.call(migrator, from, to);
-      }
       if (to >= 2 && from < 2) {
+        await testMigrationHook?.call(migrator, from, to, 2);
         await migrator.createTable(foundationAuditLog);
       }
       if (to >= 3 && from < 3) {
+        await testMigrationHook?.call(migrator, from, to, 3);
         await migrator.createTable(taskRecords);
         await migrator.createTable(xpAwards);
         for (final index in <Index>[
@@ -625,6 +623,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 4 && from < 4) {
+        await testMigrationHook?.call(migrator, from, to, 4);
         await migrator.createTable(habitRecords);
         await migrator.createTable(habitDayRecords);
         for (final index in <Index>[
@@ -637,6 +636,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 5 && from < 5) {
+        await testMigrationHook?.call(migrator, from, to, 5);
         // A v1/v2 upgrade creates TaskRecords from the latest table shape.
         if (from >= 3) {
           await migrator.addColumn(
@@ -669,6 +669,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 6 && from < 6) {
+        await testMigrationHook?.call(migrator, from, to, 6);
         if (from >= 4) {
           await migrator.addColumn(habitDayRecords, habitDayRecords.dailyCount);
           await customUpdate(
@@ -678,6 +679,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 7 && from < 7) {
+        await testMigrationHook?.call(migrator, from, to, 7);
         // Installed v1-v6 databases all have pending_changes. Test fixtures
         // created with the latest declaration may already have this column.
         final columns = await customSelect(
@@ -693,7 +695,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 8 && from < 8) {
-        await testMigrationHook?.call(migrator, from, to);
+        await testMigrationHook?.call(migrator, from, to, 8);
         await migrator.createTable(prayerDevicePreferences);
         await migrator.createTable(prayerReports);
         for (final index in <Index>[
@@ -713,10 +715,11 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 9 && from < 9) {
+        await testMigrationHook?.call(migrator, from, to, 9);
         await _createPrayerAnnualTimetables();
       }
       if (to >= 10 && from < 10) {
-        await testMigrationHook?.call(migrator, from, to);
+        await testMigrationHook?.call(migrator, from, to, 10);
         await migrator.createTable(adhkarItemCounts);
         await migrator.createTable(qiyamNights);
         for (final index in <Index>[

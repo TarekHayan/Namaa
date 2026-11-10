@@ -91,6 +91,7 @@
   - **Depends**: T004.
   - **Done**: T004 passes, with no Flutter imports.
 - [ ] T006 Create assets/religious/adhkar_catalog_v1.json from content-sources.md, and register it in pubspec.yaml.
+  - **Seed note (Phase 2 review):** the same change that ships the approved asset also generates the `adhkar_catalog_items` seed rows in migration 0016 from that asset (IDs, lists, positions and targets only, approved items), so the server can never award or accept counts for items the client does not ship. `test/unit/features/adhkar/data/catalog_seed_sync_test.dart` pins the asset and the seed together.
   - **Depends**: T002, T005.
   - **Done**:
     - `catalog_version` is 1.

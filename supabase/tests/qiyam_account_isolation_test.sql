@@ -52,7 +52,7 @@ select is(pg_temp.submit('2026-11-09',true,4,true,null,null,
 select is(pg_temp.submit('2026-11-09',true,4,true,'25:00',null,null,
   '2026-11-10 02:00:00+00',null,'bad-time')->>'error',
   'Invalid Qiyam night operation','a bad HH:mm time is rejected');
-select is(pg_temp.submit('2026-11-12',true,4,true,null,null,null,
+select is(pg_temp.submit((current_date + 3),true,4,true,null,null,null,
   '2026-11-10 02:00:00+00',null,'too-far')->>'error',
   'Qiyam night more than two days ahead',
   'a night more than two days ahead is rejected');
