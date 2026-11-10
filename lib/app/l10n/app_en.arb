@@ -507,5 +507,52 @@
   "prayerConflictReadOnly": "Past prayer records are read-only",
   "prayerLocationRetry": "Try again",
   "prayerOpenSettings": "Open settings",
-  "prayerSettingsSave": "Save"
+  "prayerSettingsSave": "Save",
+  "adhkarTitle": "Adhkar & Remembrance",
+  "adhkarSubtitle": "Authentic Morning and Evening supplications",
+  "adhkarTabMorning": "Morning Adhkar",
+  "adhkarTabEvening": "Evening Adhkar",
+  "adhkarProgress": "{list} ({count} / {total})",
+  "@adhkarProgress": {
+    "placeholders": {"list": {"type": "String"}, "count": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "adhkarPercent": "{percent}%",
+  "@adhkarPercent": {
+    "placeholders": {"percent": {"type": "int"}}
+  },
+  "adhkarCompletedSummary": "{completed, plural, =0{No completed items yet} =1{One item completed} other{{completed} items completed}}",
+  "@adhkarCompletedSummary": {
+    "placeholders": {"completed": {"type": "int"}}
+  },
+  "adhkarStartsAt": "Its time starts at {time}",
+  "@adhkarStartsAt": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "adhkarSetupPrompt": "Set up the Prayer location so the Adhkar times apply",
+  "adhkarVirtueAndSource": "Virtue & Hadith Reference",
+  "adhkarVirtueLabel": "Virtue:",
+  "adhkarSourceLabel": "Source:",
+  "adhkarResetTooltip": "Reset Counter",
+  "adhkarTarget": "Target {count} / {target}",
+  "@adhkarTarget": {
+    "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
+  },
+  "adhkarTapToCount": "Tap to Count",
+  "adhkarTapToCountN": "Tap to Count ({count})",
+  "@adhkarTapToCountN": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarCompleted": "Completed",
+  "adhkarCountSemantic": "Count, {count} of {target}",
+  "@adhkarCountSemantic": {
+    "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
+  },
+  "adhkarStreak": "Streak: {days} days",
+  "@adhkarStreak": {
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "adhkarSetComplete": "Set complete! +15 XP",
+  "adhkarContentUnavailable": "The Adhkar content could not be loaded.",
+  "adhkarCountingLocked": "The times are unavailable; counting is paused until they return.",
+  "adhkarOpenPrayerSetup": "Set up Prayer location"
 }

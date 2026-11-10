@@ -504,5 +504,52 @@
   "prayerConflictReadOnly": "سجلات الأيام السابقة للعرض فقط",
   "prayerLocationRetry": "حاول مرة أخرى",
   "prayerOpenSettings": "فتح الإعدادات",
-  "prayerSettingsSave": "حفظ"
+  "prayerSettingsSave": "حفظ",
+  "adhkarTitle": "الأذكار اليومية",
+  "adhkarSubtitle": "أذكار الصباح والمساء من الأحاديث النبوية الصحيحة",
+  "adhkarTabMorning": "أذكار الصباح",
+  "adhkarTabEvening": "أذكار المساء",
+  "adhkarProgress": "{list} ({count} / {total})",
+  "@adhkarProgress": {
+    "placeholders": {"list": {"type": "String"}, "count": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "adhkarPercent": "{percent}٪",
+  "@adhkarPercent": {
+    "placeholders": {"percent": {"type": "int"}}
+  },
+  "adhkarCompletedSummary": "{completed, plural, =0{لا عناصر مكتملة بعد} =1{عنصر واحد مكتمل} two{عنصران مكتملان} few{{completed} عناصر مكتملة} many{{completed} عنصرًا مكتملًا} other{{completed} عنصرًا مكتملًا}}",
+  "@adhkarCompletedSummary": {
+    "placeholders": {"completed": {"type": "int"}}
+  },
+  "adhkarStartsAt": "وقتها يبدأ من {time}",
+  "@adhkarStartsAt": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "adhkarSetupPrompt": "فعّل موقع الصلاة لتُطبَّق أوقات الأذكار",
+  "adhkarVirtueAndSource": "فضل الذكر ومصدر الحديث",
+  "adhkarVirtueLabel": "الفضل:",
+  "adhkarSourceLabel": "المصدر:",
+  "adhkarResetTooltip": "إعادة ضبط العداد",
+  "adhkarTarget": "الهدف {count} / {target}",
+  "@adhkarTarget": {
+    "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
+  },
+  "adhkarTapToCount": "انقر للعدّ",
+  "adhkarTapToCountN": "انقر للعدّ ({count})",
+  "@adhkarTapToCountN": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarCompleted": "مكتمل",
+  "adhkarCountSemantic": "عدّ، {count} من {target}",
+  "@adhkarCountSemantic": {
+    "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
+  },
+  "adhkarStreak": "أيام متتالية: {days}",
+  "@adhkarStreak": {
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "adhkarSetComplete": "اكتملت الأذكار! +15 نقطة",
+  "adhkarContentUnavailable": "تعذّر تحميل محتوى الأذكار.",
+  "adhkarCountingLocked": "الأوقات غير متاحة الآن؛ العدّ متوقف حتى تعود الأوقات.",
+  "adhkarOpenPrayerSetup": "إعداد موقع الصلاة"
 }

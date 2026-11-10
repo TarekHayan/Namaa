@@ -1510,4 +1510,101 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get prayerSettingsSave => 'حفظ';
+
+  @override
+  String get adhkarTitle => 'الأذكار اليومية';
+
+  @override
+  String get adhkarSubtitle =>
+      'أذكار الصباح والمساء من الأحاديث النبوية الصحيحة';
+
+  @override
+  String get adhkarTabMorning => 'أذكار الصباح';
+
+  @override
+  String get adhkarTabEvening => 'أذكار المساء';
+
+  @override
+  String adhkarProgress(String list, int count, int total) {
+    return '$list ($count / $total)';
+  }
+
+  @override
+  String adhkarPercent(int percent) {
+    return '$percent٪';
+  }
+
+  @override
+  String adhkarCompletedSummary(int completed) {
+    String _temp0 = intl.Intl.pluralLogic(
+      completed,
+      locale: localeName,
+      other: '$completed عنصرًا مكتملًا',
+      many: '$completed عنصرًا مكتملًا',
+      few: '$completed عناصر مكتملة',
+      two: 'عنصران مكتملان',
+      one: 'عنصر واحد مكتمل',
+      zero: 'لا عناصر مكتملة بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adhkarStartsAt(String time) {
+    return 'وقتها يبدأ من $time';
+  }
+
+  @override
+  String get adhkarSetupPrompt => 'فعّل موقع الصلاة لتُطبَّق أوقات الأذكار';
+
+  @override
+  String get adhkarVirtueAndSource => 'فضل الذكر ومصدر الحديث';
+
+  @override
+  String get adhkarVirtueLabel => 'الفضل:';
+
+  @override
+  String get adhkarSourceLabel => 'المصدر:';
+
+  @override
+  String get adhkarResetTooltip => 'إعادة ضبط العداد';
+
+  @override
+  String adhkarTarget(int count, int target) {
+    return 'الهدف $count / $target';
+  }
+
+  @override
+  String get adhkarTapToCount => 'انقر للعدّ';
+
+  @override
+  String adhkarTapToCountN(int count) {
+    return 'انقر للعدّ ($count)';
+  }
+
+  @override
+  String get adhkarCompleted => 'مكتمل';
+
+  @override
+  String adhkarCountSemantic(int count, int target) {
+    return 'عدّ، $count من $target';
+  }
+
+  @override
+  String adhkarStreak(int days) {
+    return 'أيام متتالية: $days';
+  }
+
+  @override
+  String get adhkarSetComplete => 'اكتملت الأذكار! +15 نقطة';
+
+  @override
+  String get adhkarContentUnavailable => 'تعذّر تحميل محتوى الأذكار.';
+
+  @override
+  String get adhkarCountingLocked =>
+      'الأوقات غير متاحة الآن؛ العدّ متوقف حتى تعود الأوقات.';
+
+  @override
+  String get adhkarOpenPrayerSetup => 'إعداد موقع الصلاة';
 }

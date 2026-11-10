@@ -1,0 +1,148 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
+import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+
+import 'adhkar_cubit.dart';
+import 'adhkar_state.dart';
+import 'widgets/adhkar_header.dart';
+import 'widgets/adhkar_progress_card.dart';
+import 'widgets/dhikr_item_card.dart';
+
+/// The Adhkar screen (contracts/adhkar-qiyam-ui.md): the prototype's order —
+/// heading with the streak chip and the Morning/Evening switch, the progress
+/// card, then the item cards. Content unavailable renders a recoverable
+/// notice; an unavailable schedule keeps the lists visible with counting
+/// locked (owner decision, 2026-11-10).
+final class AdhkarScreen extends StatelessWidget {
+  const AdhkarScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.watch<AdhkarCubit>();
+    final state = cubit.state;
+    final copy = AdhkarStrings(FoundationLocalizations.of(context));
+    final locale = FoundationLocalizations.of(context).localeName;
+
+    if (state.contentUnavailable) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              copy.contentUnavailable,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final clock = state.clock;
+    final morning = state.selectedTab == AdhkarTab.morning;
+    final items =
+        state.catalog?.itemsOf(morning ? 'morning' : 'evening') ?? const [];
+
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AdhkarHeader(
+                copy: copy,
+                streak: state.streak,
+                selectedMorning: morning,
+                scheduleState: clock?.scheduleState,
+                onTabChanged: cubit.selectTab,
+              ),
+              const SizedBox(height: 12),
+              AdhkarProgressCard(
+                copy: copy,
+                locale: locale,
+                listLabel: copy.tabLabel(morning),
+                completed: morning
+                    ? state.completedOf('morning')
+                    : state.completedOf('evening'),
+                total: morning
+                    ? state.totalOf('morning')
+                    : state.totalOf('evening'),
+                countable: morning
+                    ? (clock?.morningCountable ?? false)
+                    : (clock?.eveningCountable ?? false),
+                startsAtUtc: morning ? clock?.fajrUtc : clock?.maghribUtc,
+                zoneId: clock?.zoneId,
+                countingLocked: state.countingLocked,
+              ),
+              const SizedBox(height: 12),
+              if (state.celebration != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _CelebrationBanner(copy: copy),
+                ),
+              for (final item in items)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: DhikrItemCard(
+                    copy: copy,
+                    locale: locale,
+                    key: Key('adhkar_item_card_${item.itemId}'),
+                    itemId: item.itemId,
+                    position: item.position,
+                    target: item.target,
+                    textAr: item.textAr,
+                    translationEn: item.translationEn,
+                    virtueAr: item.virtueAr,
+                    virtueEn: item.virtueEn,
+                    referenceAr: item.referenceAr,
+                    referenceEn: item.referenceEn,
+                    count: state.countOf(item.itemId),
+                    status: state.itemStatus[item.itemId],
+                    countable: morning
+                        ? (clock?.morningCountable ?? false)
+                        : (clock?.eveningCountable ?? false),
+                    onCount: () =>
+                        cubit.increment(item.itemId, clock?.day ?? ''),
+                    onReset: () => cubit.reset(item.itemId, clock?.day ?? ''),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _CelebrationBanner extends StatelessWidget {
+  const _CelebrationBanner({required this.copy});
+
+  final AdhkarStrings copy;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      key: const Key('adhkar_celebration'),
+      color: colors.primaryContainer,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            const Icon(Icons.celebration_outlined),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                copy.setComplete,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

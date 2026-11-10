@@ -2998,6 +2998,144 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get prayerSettingsSave;
+
+  /// No description provided for @adhkarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhkar & Remembrance'**
+  String get adhkarTitle;
+
+  /// No description provided for @adhkarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentic Morning and Evening supplications'**
+  String get adhkarSubtitle;
+
+  /// No description provided for @adhkarTabMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning Adhkar'**
+  String get adhkarTabMorning;
+
+  /// No description provided for @adhkarTabEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening Adhkar'**
+  String get adhkarTabEvening;
+
+  /// No description provided for @adhkarProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{list} ({count} / {total})'**
+  String adhkarProgress(String list, int count, int total);
+
+  /// No description provided for @adhkarPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String adhkarPercent(int percent);
+
+  /// No description provided for @adhkarCompletedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed, plural, =0{No completed items yet} =1{One item completed} other{{completed} items completed}}'**
+  String adhkarCompletedSummary(int completed);
+
+  /// No description provided for @adhkarStartsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Its time starts at {time}'**
+  String adhkarStartsAt(String time);
+
+  /// No description provided for @adhkarSetupPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up the Prayer location so the Adhkar times apply'**
+  String get adhkarSetupPrompt;
+
+  /// No description provided for @adhkarVirtueAndSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtue & Hadith Reference'**
+  String get adhkarVirtueAndSource;
+
+  /// No description provided for @adhkarVirtueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtue:'**
+  String get adhkarVirtueLabel;
+
+  /// No description provided for @adhkarSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source:'**
+  String get adhkarSourceLabel;
+
+  /// No description provided for @adhkarResetTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Counter'**
+  String get adhkarResetTooltip;
+
+  /// No description provided for @adhkarTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target {count} / {target}'**
+  String adhkarTarget(int count, int target);
+
+  /// No description provided for @adhkarTapToCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to Count'**
+  String get adhkarTapToCount;
+
+  /// No description provided for @adhkarTapToCountN.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to Count ({count})'**
+  String adhkarTapToCountN(int count);
+
+  /// No description provided for @adhkarCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get adhkarCompleted;
+
+  /// No description provided for @adhkarCountSemantic.
+  ///
+  /// In en, this message translates to:
+  /// **'Count, {count} of {target}'**
+  String adhkarCountSemantic(int count, int target);
+
+  /// No description provided for @adhkarStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak: {days} days'**
+  String adhkarStreak(int days);
+
+  /// No description provided for @adhkarSetComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Set complete! +15 XP'**
+  String get adhkarSetComplete;
+
+  /// No description provided for @adhkarContentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The Adhkar content could not be loaded.'**
+  String get adhkarContentUnavailable;
+
+  /// No description provided for @adhkarCountingLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The times are unavailable; counting is paused until they return.'**
+  String get adhkarCountingLocked;
+
+  /// No description provided for @adhkarOpenPrayerSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Prayer location'**
+  String get adhkarOpenPrayerSetup;
 }
 
 class _FoundationLocalizationsDelegate

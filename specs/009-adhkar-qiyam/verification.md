@@ -200,6 +200,58 @@ Final gates for this fix set (2026-11-10):
 No push, no staging, no production; 0016 remains local-only. T006 and Phase 3
 were not started.
 
+## Phase 3 (US1) — partial, T020–T033 (2026-11-11)
+
+**Implemented**: the AdhkarClock, the derived Adhkar streak, the transactional
+count repository and unit of work, the IncrementDhikr/ResetDhikr commands, the
+Prayer→Adhkar times adapter, the catalog loader (against the review fixture),
+the AdhkarCubit, the ARB strings and the screen with its three widgets.
+
+Owner decisions recorded in this phase:
+- **Unavailable schedule** (owner, 2026-11-10): the lists stay visible but
+  counting is locked, with a notice; no calendar-day fallback. Only
+  `SetupRequired` is unrestricted on the device calendar day (FR-006a).
+- **Celebration** persists on the state until the next command starts
+  (one-shot per completion); the widget renders it from the state.
+
+Test-first evidence (each pair red before its implementation):
+
+| Task | Proof |
+| --- | --- |
+| T020/T021 clock | red (48 undefined errors) → `adhkar_clock_test.dart` **8 passed** (before-Fajr previous-day Evening, Fajr–Maghrib Morning, Maghrib→midnight→Fajr one Evening, unrestricted, unavailable lock, DST, next boundary) |
+| T022/T023 streak | red → `adhkar_streak_test.dart` **6 passed** (3+partial=3→4, gap, one list, 3650 cap, version change) |
+| T024/T025 repository | red (22 errors) → `drift_adhkar_repository_test.dart` **7 passed** (count+1 + provisional award + outbox in one transaction, at-target no-op, reset keeps the award, rollback leaves nothing, owner isolation, completed-days query) |
+| T026/T027 commands | red (50 errors) → `adhkar_commands_test.dart` **11 passed** (dayChanged, outsidePeriod(startsAt), atTarget, countingLocked, reset outside the period, reset on another day, one `now` sample, monotonic bump, failure propagation) |
+| T028 adapter | red → `prayer_adhkar_times_adapter_test.dart` **6 passed** (mid-day Morning, before-Fajr previous-day request order ['D', 'D-1'], setupRequired unrestricted on the device day, unavailable with no fallback, preferences-read failure, port failure) |
+| T007/T008 loader | red → `asset_adhkar_catalog_test.dart` **5 passed** against `test/fixtures/adhkar_qiyam/catalog_fixture.json` (approved-only, malformed → contentUnavailable, invalid → contentUnavailable, cached per version). The real asset path is NOT registered in pubspec.yaml (T006 pending) |
+| T029/T030 cubit | red (88 errors) → `adhkar_cubit_test.dart` **9 passed** (tab follows the period, exactly one boundary timer that re-resolves, resume refresh, pending→saved counts, failed feedback, one celebration transition, post-close results dropped) |
+| T031 strings | the Adhkar strings appended to both ARB files line by line (no re-serialization); `flutter gen-l10n` passed; `adhkar_strings_adapter.dart` created |
+| T032/T033 screen | red → `adhkar_screen_test.dart` **10 passed** (prototype order, disabled at target + outside the period via the Evening switch, tap + reset commands, keyboard, virtue toggle, EN-translation-only + Amiri on the Arabic text, count semantics, one celebration transition, AR/EN × light/dark × 320 px × 200% with no overflow) |
+
+Notes:
+- `fake_async` was added to `dev_dependencies` (already a transitive
+  `flutter_test` dependency, same resolved version) for the boundary-timer
+  test. Flagged for the owner's awareness; no runtime dependency changed.
+- The commit-transaction receives the approved item set from the catalog the
+  screen shows (set completion and the provisional award are judged against
+  that same set).
+- Command timestamps are the single real `now` sample (inside the server's
+  award window for the current Adhkar day); an unavailable clock state locks
+  counting and never guesses a day.
+
+Final gates for this phase (2026-11-11):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean |
+| Analyze | `flutter analyze` | No issues found |
+| Dart tests | `flutter test` | **838 passed, 1 skipped** — All tests passed |
+| SQL | `supabase test db` | not run: nothing under `supabase/` changed in this phase |
+
+**Blocked (by design):** T034 (composition registration), T035 (routes and
+shell), T036 (integration test) — they need the owner-approved catalog
+(T006/T073). The real asset is not shipped; no catalog seed was added to 0016.
+
 ## SC-001 — counting latency and the 30-second Qiyam journey
 
 **Pending**: measured on a named phone and on desktop. Nothing claimed.

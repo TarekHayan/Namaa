@@ -1525,4 +1525,99 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get prayerSettingsSave => 'Save';
+
+  @override
+  String get adhkarTitle => 'Adhkar & Remembrance';
+
+  @override
+  String get adhkarSubtitle => 'Authentic Morning and Evening supplications';
+
+  @override
+  String get adhkarTabMorning => 'Morning Adhkar';
+
+  @override
+  String get adhkarTabEvening => 'Evening Adhkar';
+
+  @override
+  String adhkarProgress(String list, int count, int total) {
+    return '$list ($count / $total)';
+  }
+
+  @override
+  String adhkarPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String adhkarCompletedSummary(int completed) {
+    String _temp0 = intl.Intl.pluralLogic(
+      completed,
+      locale: localeName,
+      other: '$completed items completed',
+      one: 'One item completed',
+      zero: 'No completed items yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adhkarStartsAt(String time) {
+    return 'Its time starts at $time';
+  }
+
+  @override
+  String get adhkarSetupPrompt =>
+      'Set up the Prayer location so the Adhkar times apply';
+
+  @override
+  String get adhkarVirtueAndSource => 'Virtue & Hadith Reference';
+
+  @override
+  String get adhkarVirtueLabel => 'Virtue:';
+
+  @override
+  String get adhkarSourceLabel => 'Source:';
+
+  @override
+  String get adhkarResetTooltip => 'Reset Counter';
+
+  @override
+  String adhkarTarget(int count, int target) {
+    return 'Target $count / $target';
+  }
+
+  @override
+  String get adhkarTapToCount => 'Tap to Count';
+
+  @override
+  String adhkarTapToCountN(int count) {
+    return 'Tap to Count ($count)';
+  }
+
+  @override
+  String get adhkarCompleted => 'Completed';
+
+  @override
+  String adhkarCountSemantic(int count, int target) {
+    return 'Count, $count of $target';
+  }
+
+  @override
+  String adhkarStreak(int days) {
+    return 'Streak: $days days';
+  }
+
+  @override
+  String get adhkarSetComplete => 'Set complete! +15 XP';
+
+  @override
+  String get adhkarContentUnavailable =>
+      'The Adhkar content could not be loaded.';
+
+  @override
+  String get adhkarCountingLocked =>
+      'The times are unavailable; counting is paused until they return.';
+
+  @override
+  String get adhkarOpenPrayerSetup => 'Set up Prayer location';
 }

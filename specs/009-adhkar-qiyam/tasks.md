@@ -97,13 +97,13 @@
     - `catalog_version` is 1.
     - Only items the owner has marked approved carry `"approved": true`.
     - The texts match content-sources.md byte for byte.
-- [ ] T007 [P] Write tests in test/unit/features/adhkar/data/asset_adhkar_catalog_test.dart.
+- [x] T007 [P] Write tests in test/unit/features/adhkar/data/asset_adhkar_catalog_test.dart.
   - **Depends**: T005.
   - **Done**: They cover:
     - the real asset loads, with only approved items visible;
     - a malformed JSON returns `contentUnavailable` instead of throwing;
     - the version is exposed.
-- [ ] T008 Implement lib/features/adhkar/application/adhkar_catalog_port.dart and lib/features/adhkar/data/asset_adhkar_catalog.dart.
+- [x] T008 Implement lib/features/adhkar/application/adhkar_catalog_port.dart and lib/features/adhkar/data/asset_adhkar_catalog.dart.
   - **Depends**: T006, T007.
   - **Done**: T007 passes, and the catalog is cached per version.
 - [x] T009 [P] Write identity vectors in test/fixtures/adhkar_qiyam/identity_vectors.json, with tests in test/unit/features/adhkar/data/adhkar_identity_test.dart and test/unit/features/qiyam/data/qiyam_identity_test.dart.
@@ -187,7 +187,7 @@
 
 **Independent test**: Offline, complete every Morning item, restart, and confirm the counts, the completion and the single 15 XP award (quickstart scenarios 1–6).
 
-- [ ] T020 [P] [US1] Write tests in test/unit/features/adhkar/domain/adhkar_clock_test.dart.
+- [x] T020 [P] [US1] Write tests in test/unit/features/adhkar/domain/adhkar_clock_test.dart.
   - **Depends**: T005.
   - **Done**: The vectors cover:
     - before Fajr, which belongs to the previous day's Evening;
@@ -196,10 +196,10 @@
     - no schedule, which is `unrestricted` on the calendar day;
     - a DST shift;
     - the next boundary instant.
-- [ ] T021 [US1] Implement lib/features/adhkar/domain/adhkar_clock.dart.
+- [x] T021 [US1] Implement lib/features/adhkar/domain/adhkar_clock.dart.
   - **Depends**: T020.
   - **Done**: T020 passes, and the code is pure Dart.
-- [ ] T022 [P] [US1] Write tests in test/unit/features/adhkar/domain/adhkar_streak_test.dart.
+- [x] T022 [P] [US1] Write tests in test/unit/features/adhkar/domain/adhkar_streak_test.dart.
   - **Depends**: T005.
   - **Done**: They cover:
     - 3 complete days, then today Morning only, which gives 3, and 4 once Evening is done;
@@ -207,10 +207,10 @@
     - one list only does not count;
     - the walk caps at 3,650 days;
     - a catalog version change keeps past days valid.
-- [ ] T023 [US1] Implement lib/features/adhkar/domain/adhkar_streak.dart.
+- [x] T023 [US1] Implement lib/features/adhkar/domain/adhkar_streak.dart.
   - **Depends**: T022.
   - **Done**: T022 passes.
-- [ ] T024 [P] [US1] Write tests in test/unit/features/adhkar/data/drift_adhkar_repository_test.dart.
+- [x] T024 [P] [US1] Write tests in test/unit/features/adhkar/data/drift_adhkar_repository_test.dart.
   - **Depends**: T016, T014.
   - **Done**: In one transaction:
     - an increment writes count + 1, the provisional set award on completion, and the outbox entry;
@@ -219,10 +219,10 @@
     - a rollback on failure leaves nothing behind;
     - reads are isolated per owner;
     - the streak query works.
-- [ ] T025 [US1] Implement lib/features/adhkar/application/adhkar_repository.dart and lib/core/data/local/adhkar_unit_of_work.dart, and lib/features/adhkar/data/drift_adhkar_repository.dart.
+- [x] T025 [US1] Implement lib/features/adhkar/application/adhkar_repository.dart and lib/core/data/local/adhkar_unit_of_work.dart, and lib/features/adhkar/data/drift_adhkar_repository.dart.
   - **Depends**: T024.
   - **Done**: T024 passes, and the outbox entity type is `adhkar_item`.
-- [ ] T026 [P] [US1] Write tests in test/unit/features/adhkar/application/adhkar_commands_test.dart.
+- [x] T026 [P] [US1] Write tests in test/unit/features/adhkar/application/adhkar_commands_test.dart.
   - **Depends**: T021, T025.
   - **Done**: They cover:
     - `dayChanged`;
@@ -231,13 +231,13 @@
     - `incremented(setCompleted)`;
     - a reset allowed outside the period but rejected on another day;
     - `now` sampled once per command.
-- [ ] T027 [US1] Implement lib/features/adhkar/application/adhkar_times_port.dart and lib/features/adhkar/application/adhkar_commands.dart (`IncrementDhikr`, `ResetDhikr`).
+- [x] T027 [US1] Implement lib/features/adhkar/application/adhkar_times_port.dart and lib/features/adhkar/application/adhkar_commands.dart (`IncrementDhikr`, `ResetDhikr`).
   - **Depends**: T026.
   - **Done**: T026 passes.
 - [ ] T028 [US1] Implement lib/app/composition/prayer_adhkar_times_adapter.dart, which maps `PrayerDayBoundaries` to `AdhkarTimesPort`.
   - **Depends**: T012, T027.
   - **Done**: An adapter test in test/unit/app/composition/prayer_adhkar_times_adapter_test.dart passes for the available, setupRequired and unavailable cases.
-- [ ] T029 [P] [US1] Write tests in test/unit/features/adhkar/presentation/adhkar_cubit_test.dart.
+- [x] T029 [P] [US1] Write tests in test/unit/features/adhkar/presentation/adhkar_cubit_test.dart.
   - **Depends**: T027.
   - **Done**: They cover:
     - the initial tab follows the period;
@@ -245,10 +245,10 @@
     - a celebration event on set completion, emitted once;
     - stale-owner results dropped;
     - pending, saved and failed feedback for each item.
-- [ ] T030 [US1] Implement lib/features/adhkar/presentation/adhkar_cubit.dart and adhkar_state.dart.
+- [x] T030 [US1] Implement lib/features/adhkar/presentation/adhkar_cubit.dart and adhkar_state.dart.
   - **Depends**: T029.
   - **Done**: T029 passes.
-- [ ] T031 [US1] Add the Adhkar strings to lib/app/l10n/app_ar.arb and app_en.arb, and create lib/app/l10n/adhkar_strings_adapter.dart.
+- [x] T031 [US1] Add the Adhkar strings to lib/app/l10n/app_ar.arb and app_en.arb, and create lib/app/l10n/adhkar_strings_adapter.dart.
   - **Depends**: T030.
   - **Done**: The strings cover:
     - the title and subtitle, and the Morning and Evening tabs;
@@ -257,7 +257,7 @@
     - "Virtue and source", "Virtue:" and "Source:";
     - reset, target, "Tap to count ({n})", "Completed", and the semantic label "Count, {count} of {target}";
     - the streak, the celebration, and content unavailable.
-- [ ] T032 [P] [US1] Write widget tests in test/widget/features/adhkar/adhkar_screen_test.dart.
+- [x] T032 [P] [US1] Write widget tests in test/widget/features/adhkar/adhkar_screen_test.dart.
   - **Depends**: T031.
   - **Done**: They cover:
     - the prototype order (heading and switch, progress, cards);
@@ -269,7 +269,7 @@
     - the keyboard (Space/Enter);
     - semantics;
     - AR/EN, light/dark, 320 px and 200%, with no overflow.
-- [ ] T033 [US1] Implement lib/features/adhkar/presentation/adhkar_screen.dart, plus widgets/adhkar_header.dart, adhkar_progress_card.dart and dhikr_item_card.dart.
+- [x] T033 [US1] Implement lib/features/adhkar/presentation/adhkar_screen.dart, plus widgets/adhkar_header.dart, adhkar_progress_card.dart and dhikr_item_card.dart.
   - **Depends**: T032.
   - **Done**: T032 passes. It uses the shared components and theme colors, with no new UI kit.
 - [ ] T034 [US1] Register the Adhkar catalog, repository, commands, adapter and Cubit in lib/app/composition/configure_dependencies.dart, and preview owners in lib/app/composition/adhkar_preview_adapters.dart.
