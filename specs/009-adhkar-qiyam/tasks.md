@@ -296,7 +296,7 @@
 
 **Independent test**: With a saved location, mark Yes with 4 rak'ahs and Witr, then restart. The record and the award persist, and the last third equals the Prayer screen's value (quickstart scenarios 7–9).
 
-- [ ] T037 [P] [US2] Write tests in test/unit/features/qiyam/domain/qiyam_night_test.dart.
+- [x] T037 [P] [US2] Write tests in test/unit/features/qiyam/domain/qiyam_night_test.dart.
   - **Depends**: T001.
   - **Done**: The vectors cover:
     - 03:00 and 10:00 Thursday, which give Wednesday's night;
@@ -304,33 +304,33 @@
     - the no-schedule rule at 11:59 and 12:00;
     - the last third equal to `PrayerScheduleProjection.from(today: D, tomorrow: D+1)`;
     - a DST shift.
-- [ ] T038 [US2] Implement lib/features/qiyam/domain/qiyam_night.dart and qiyam_night_record.dart (with validation).
+- [x] T038 [US2] Implement lib/features/qiyam/domain/qiyam_night.dart and qiyam_night_record.dart (with validation).
   - **Depends**: T037.
   - **Done**: T037 passes. The validation enforces "rakahs: null when performed is false; otherwise one of 2, 4, 8, 11", `HH:mm` times, "note ≤ 500 characters", and cleared details for "No".
-- [ ] T039 [P] [US2] Write tests in test/unit/features/qiyam/data/drift_qiyam_repository_test.dart.
+- [x] T039 [P] [US2] Write tests in test/unit/features/qiyam/data/drift_qiyam_repository_test.dart.
   - **Depends**: T016, T014.
   - **Done**: In one transaction:
     - an upsert, plus the provisional award on the first `performed = true`, plus the outbox entry;
     - Yes → No → Yes keeps one award;
     - a rollback on failure;
     - owner isolation.
-- [ ] T040 [US2] Implement lib/features/qiyam/application/qiyam_repository.dart, lib/core/data/local/qiyam_unit_of_work.dart and lib/features/qiyam/data/drift_qiyam_repository.dart.
+- [x] T040 [US2] Implement lib/features/qiyam/application/qiyam_repository.dart, lib/core/data/local/qiyam_unit_of_work.dart and lib/features/qiyam/data/drift_qiyam_repository.dart.
   - **Depends**: T039.
   - **Done**: T039 passes, and the outbox entity type is `qiyam_night`.
-- [ ] T041 [P] [US2] Write tests in test/unit/features/qiyam/application/save_qiyam_night_test.dart.
+- [x] T041 [P] [US2] Write tests in test/unit/features/qiyam/application/save_qiyam_night_test.dart.
   - **Depends**: T038, T040.
   - **Done**: They cover:
     - `nightChanged`;
     - each validation failure;
     - `saved(firstPerformed)`;
     - no command path that writes a previous night.
-- [ ] T042 [US2] Implement lib/features/qiyam/application/qiyam_night_port.dart and lib/features/qiyam/application/save_qiyam_night.dart.
+- [x] T042 [US2] Implement lib/features/qiyam/application/qiyam_night_port.dart and lib/features/qiyam/application/save_qiyam_night.dart.
   - **Depends**: T041.
   - **Done**: T041 passes.
-- [ ] T043 [US2] Implement lib/app/composition/prayer_qiyam_night_adapter.dart, which maps `PrayerDayBoundaries` to `QiyamNightPort`, with the last third computed from the shared projection.
+- [x] T043 [US2] Implement lib/app/composition/prayer_qiyam_night_adapter.dart, which maps `PrayerDayBoundaries` to `QiyamNightPort`, with the last third computed from the shared projection.
   - **Depends**: T012, T042.
   - **Done**: The adapter test in test/unit/app/composition/prayer_qiyam_night_adapter_test.dart shows the same last third as the Prayer screen (SC-005).
-- [ ] T044 [P] [US2] Write tests in test/unit/features/qiyam/presentation/qiyam_cubit_test.dart.
+- [x] T044 [P] [US2] Write tests in test/unit/features/qiyam/presentation/qiyam_cubit_test.dart.
   - **Depends**: T042.
   - **Done**: They cover:
     - the defaults (4 rak'ahs, Witr on) on Yes;
@@ -338,10 +338,10 @@
     - a refresh at Maghrib and on resume;
     - the stale-owner guard;
     - a celebration only on the first Yes.
-- [ ] T045 [US2] Implement lib/features/qiyam/presentation/qiyam_cubit.dart and qiyam_state.dart.
+- [x] T045 [US2] Implement lib/features/qiyam/presentation/qiyam_cubit.dart and qiyam_state.dart.
   - **Depends**: T044.
   - **Done**: T044 passes.
-- [ ] T046 [US2] Add the Qiyam strings to lib/app/l10n/app_ar.arb and app_en.arb, and create lib/app/l10n/qiyam_strings_adapter.dart.
+- [x] T046 [US2] Add the Qiyam strings to lib/app/l10n/app_ar.arb and app_en.arb, and create lib/app/l10n/qiyam_strings_adapter.dart.
   - **Depends**: T045.
   - **Done**: The strings cover:
     - the title and subtitle, the last third, and the unavailable message with its setup link;
@@ -350,7 +350,7 @@
     - the supplications title.
 
     None of them uses the word "missed".
-- [ ] T047 [P] [US2] Write widget tests in test/widget/features/qiyam/qiyam_screen_test.dart.
+- [x] T047 [P] [US2] Write widget tests in test/widget/features/qiyam/qiyam_screen_test.dart.
   - **Depends**: T046.
   - **Done**: They cover:
     - the prototype order (heading, tracker and form, supplications);
@@ -362,7 +362,7 @@
     - the supplications in Amiri with their sources;
     - AR/EN, light/dark, 320 px and 200%;
     - the keyboard and semantics.
-- [ ] T048 [US2] Implement lib/features/qiyam/presentation/qiyam_screen.dart, plus widgets/qiyam_header.dart, qiyam_tracker_card.dart and qiyam_supplications_card.dart.
+- [x] T048 [US2] Implement lib/features/qiyam/presentation/qiyam_screen.dart, plus widgets/qiyam_header.dart, qiyam_tracker_card.dart and qiyam_supplications_card.dart.
   - **Depends**: T047.
   - **Done**: T047 passes.
 - [ ] T049 [US2] Register the Qiyam services and Cubit in lib/app/composition/configure_dependencies.dart and lib/app/composition/qiyam_preview_adapters.dart. Add the `/qiyam` route and the `qiyam` shell section.

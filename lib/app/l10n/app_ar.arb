@@ -551,5 +551,43 @@
   "adhkarSetComplete": "اكتملت الأذكار! +15 نقطة",
   "adhkarContentUnavailable": "تعذّر تحميل محتوى الأذكار.",
   "adhkarCountingLocked": "الأوقات غير متاحة الآن؛ العدّ متوقف حتى تعود الأوقات.",
-  "adhkarOpenPrayerSetup": "إعداد موقع الصلاة"
+  "adhkarOpenPrayerSetup": "إعداد موقع الصلاة",
+  "qiyamTitle": "قيام الليل",
+  "qiyamSubtitle": "صلاة الليل والمناجاة",
+  "qiyamLastThird": "الثلث الأخير من الليل {time}",
+  "@qiyamLastThird": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "qiyamLastThirdUnavailable": "تعذّر حساب الثلث الأخير من الليل الآن",
+  "qiyamOpenPrayerSetup": "إعداد موقع الصلاة",
+  "qiyamDidYouPray": "هل صليت قيام الليل الليلة؟",
+  "qiyamBestTime": "أفضل أوقات القيام هو الثلث الأخير من الليل قبل الفجر.",
+  "qiyamYesXp": "نعم، الحمد لله (+30 نقطة)",
+  "qiyamNo": "لم أقم بعد",
+  "qiyamRakahsLabel": "عدد الركعات",
+  "qiyamRakahsCount": "{count, plural, one{ركعة واحدة} two{ركعتان} few{{count} ركعات} many{{count} ركعة} other{{count} ركعة}}",
+  "@qiyamRakahsCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamStartTime": "وقت البداية",
+  "qiyamEndTime": "وقت النهاية",
+  "qiyamWitr": "أوترت (صلاة الوتر)",
+  "qiyamNotesLabel": "خواطر ودعاء",
+  "qiyamNotesPlaceholder": "خواطر أو أدعية خاصة (اختياري)",
+  "qiyamNoteCounter": "{count} / 500",
+  "@qiyamNoteCounter": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamSupplicationsTitle": "أدعية مأثورة في السجود والقنوت",
+  "qiyamSaving": "جارٍ الحفظ…",
+  "qiyamSaved": "تم الحفظ",
+  "qiyamSaveFailed": "تعذّر الحفظ؛ حاول مرة أخرى.",
+  "qiyamNightInvalidRakahs": "اختر عددًا صحيحًا من الركعات (2 أو 4 أو 8 أو 11).",
+  "qiyamNightInvalidTime": "أدخل وقتًا صحيحًا بتنسيق 24 ساعة مثل 02:41.",
+  "qiyamNightNoteTooLong": "الملاحظة أطول من 500 حرف.",
+  "qiyamNightNotPerformedDetails": "لا تُحفظ التفاصيل مع إجابة «لم أقم بعد».",
+  "qiyamNightChanged": "لقد تبدّلت الليلة؛ سجّل الليلة الحالية.",
+  "qiyamRecordingLocked": "الأوقات غير متاحة الآن؛ التسجيل متوقف حتى تعود الأوقات.",
+  "qiyamReadOnly": "سجل هذه الليلة للعرض فقط.",
+  "qiyamXpEarned": "اكتمل قيام الليل! +30 نقطة"
 }

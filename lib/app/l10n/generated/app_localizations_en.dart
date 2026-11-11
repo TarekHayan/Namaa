@@ -1620,4 +1620,114 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get adhkarOpenPrayerSetup => 'Set up Prayer location';
+
+  @override
+  String get qiyamTitle => 'Qiyam Al-Layl';
+
+  @override
+  String get qiyamSubtitle => 'Night prayer & intimate supplication';
+
+  @override
+  String qiyamLastThird(String time) {
+    return 'Last 1/3 of Night $time';
+  }
+
+  @override
+  String get qiyamLastThirdUnavailable =>
+      'The last third of the night cannot be computed now';
+
+  @override
+  String get qiyamOpenPrayerSetup => 'Set up Prayer location';
+
+  @override
+  String get qiyamDidYouPray => 'Did you pray Qiyam tonight?';
+
+  @override
+  String get qiyamBestTime =>
+      'The best time for Qiyam is the last third of the night before Fajr.';
+
+  @override
+  String get qiyamYesXp => 'Yes, Alhamdulillah (+30 XP)';
+
+  @override
+  String get qiyamNo => 'Not yet';
+
+  @override
+  String get qiyamRakahsLabel => 'Number of Rak\'ahs';
+
+  @override
+  String qiyamRakahsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rak\'ahs',
+      many: '$count rak\'ahs',
+      few: '$count rak\'ahs',
+      two: '2 rak\'ahs',
+      one: '1 rak\'ah',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get qiyamStartTime => 'Start Time';
+
+  @override
+  String get qiyamEndTime => 'End Time';
+
+  @override
+  String get qiyamWitr => 'Include Witr Prayer';
+
+  @override
+  String get qiyamNotesLabel => 'Reflection / Duas made';
+
+  @override
+  String get qiyamNotesPlaceholder =>
+      'Special supplications or reflections (optional)';
+
+  @override
+  String qiyamNoteCounter(int count) {
+    return '$count / 500';
+  }
+
+  @override
+  String get qiyamSupplicationsTitle =>
+      'Recommended Supplication in Sujood & Qunoot';
+
+  @override
+  String get qiyamSaving => 'Saving…';
+
+  @override
+  String get qiyamSaved => 'Saved';
+
+  @override
+  String get qiyamSaveFailed => 'Could not save. Try again.';
+
+  @override
+  String get qiyamNightInvalidRakahs =>
+      'Choose a valid rak\'ah count: 2, 4, 8 or 11.';
+
+  @override
+  String get qiyamNightInvalidTime => 'Enter a valid 24-hour time, like 02:41.';
+
+  @override
+  String get qiyamNightNoteTooLong => 'The note is longer than 500 characters.';
+
+  @override
+  String get qiyamNightNotPerformedDetails =>
+      'Details cannot be saved with a \"Not yet\" answer.';
+
+  @override
+  String get qiyamNightChanged =>
+      'The night has changed; record the current night.';
+
+  @override
+  String get qiyamRecordingLocked =>
+      'The times are unavailable; recording is paused until they return.';
+
+  @override
+  String get qiyamReadOnly => 'This night\'s record is read-only.';
+
+  @override
+  String get qiyamXpEarned => 'Qiyam complete! +30 XP';
 }

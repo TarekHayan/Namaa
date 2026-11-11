@@ -3136,6 +3136,180 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Set up Prayer location'**
   String get adhkarOpenPrayerSetup;
+
+  /// No description provided for @qiyamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Qiyam Al-Layl'**
+  String get qiyamTitle;
+
+  /// No description provided for @qiyamSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Night prayer & intimate supplication'**
+  String get qiyamSubtitle;
+
+  /// No description provided for @qiyamLastThird.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 1/3 of Night {time}'**
+  String qiyamLastThird(String time);
+
+  /// No description provided for @qiyamLastThirdUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The last third of the night cannot be computed now'**
+  String get qiyamLastThirdUnavailable;
+
+  /// No description provided for @qiyamOpenPrayerSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Prayer location'**
+  String get qiyamOpenPrayerSetup;
+
+  /// No description provided for @qiyamDidYouPray.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you pray Qiyam tonight?'**
+  String get qiyamDidYouPray;
+
+  /// No description provided for @qiyamBestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'The best time for Qiyam is the last third of the night before Fajr.'**
+  String get qiyamBestTime;
+
+  /// No description provided for @qiyamYesXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, Alhamdulillah (+30 XP)'**
+  String get qiyamYesXp;
+
+  /// No description provided for @qiyamNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get qiyamNo;
+
+  /// No description provided for @qiyamRakahsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of Rak\'ahs'**
+  String get qiyamRakahsLabel;
+
+  /// No description provided for @qiyamRakahsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 rak\'ah} two{2 rak\'ahs} few{{count} rak\'ahs} many{{count} rak\'ahs} other{{count} rak\'ahs}}'**
+  String qiyamRakahsCount(int count);
+
+  /// No description provided for @qiyamStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get qiyamStartTime;
+
+  /// No description provided for @qiyamEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End Time'**
+  String get qiyamEndTime;
+
+  /// No description provided for @qiyamWitr.
+  ///
+  /// In en, this message translates to:
+  /// **'Include Witr Prayer'**
+  String get qiyamWitr;
+
+  /// No description provided for @qiyamNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflection / Duas made'**
+  String get qiyamNotesLabel;
+
+  /// No description provided for @qiyamNotesPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Special supplications or reflections (optional)'**
+  String get qiyamNotesPlaceholder;
+
+  /// No description provided for @qiyamNoteCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / 500'**
+  String qiyamNoteCounter(int count);
+
+  /// No description provided for @qiyamSupplicationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended Supplication in Sujood & Qunoot'**
+  String get qiyamSupplicationsTitle;
+
+  /// No description provided for @qiyamSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get qiyamSaving;
+
+  /// No description provided for @qiyamSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get qiyamSaved;
+
+  /// No description provided for @qiyamSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Try again.'**
+  String get qiyamSaveFailed;
+
+  /// No description provided for @qiyamNightInvalidRakahs.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a valid rak\'ah count: 2, 4, 8 or 11.'**
+  String get qiyamNightInvalidRakahs;
+
+  /// No description provided for @qiyamNightInvalidTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid 24-hour time, like 02:41.'**
+  String get qiyamNightInvalidTime;
+
+  /// No description provided for @qiyamNightNoteTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The note is longer than 500 characters.'**
+  String get qiyamNightNoteTooLong;
+
+  /// No description provided for @qiyamNightNotPerformedDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details cannot be saved with a \"Not yet\" answer.'**
+  String get qiyamNightNotPerformedDetails;
+
+  /// No description provided for @qiyamNightChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The night has changed; record the current night.'**
+  String get qiyamNightChanged;
+
+  /// No description provided for @qiyamRecordingLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The times are unavailable; recording is paused until they return.'**
+  String get qiyamRecordingLocked;
+
+  /// No description provided for @qiyamReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This night\'s record is read-only.'**
+  String get qiyamReadOnly;
+
+  /// No description provided for @qiyamXpEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Qiyam complete! +30 XP'**
+  String get qiyamXpEarned;
 }
 
 class _FoundationLocalizationsDelegate

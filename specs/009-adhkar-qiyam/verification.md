@@ -331,6 +331,72 @@ Review follow-ups applied before the commit (2026-11-11, reviewer):
   test/unit/app/composition` — **116 passed**. The full suite was not re-run
   after these two small changes; its last full run is the 850-pass row above.
 
+## Phase 4 (US2) — partial, T037–T048 (2026-11-11)
+
+Implemented by GLM (`opencode/glm-5.3-flash-free` through OpenCode) from a
+written brief, then reviewed, completed and verified by the orchestrator.
+The implementer's run stopped at its free usage limit during its final gate
+run, so every result below was observed by the orchestrator.
+
+- **T037/T038** — `QiyamNight` (night D from Maghrib D; the most recent
+  started night; no-schedule 12:00 rule; unavailable locks recording with no
+  fallback, per the owner's 2026-11-10 decision) and `QiyamNightRecord` with
+  validation. Tests: `qiyam_night_test.dart`, `qiyam_night_record_test.dart`.
+- **T039/T040** — `QiyamRepository`, `DriftQiyamRepository` and
+  `DriftQiyamUnitOfWork`: record + first-performed award (30 XP) + outbox
+  (`qiyam_night`) in one transaction; Yes → No → Yes keeps one award.
+  Tests: `drift_qiyam_repository_test.dart`.
+- **T041/T042** — `QiyamNightPort` and `SaveQiyamNight` (nightChanged,
+  locked, each validation failure, read failures returned, no path that
+  writes a previous night). Tests: `save_qiyam_night_test.dart`.
+- **T043** — `PrayerQiyamNightAdapter`: the last third from the shared
+  `PrayerScheduleProjection`; unusable boundaries resolve to the locked
+  state. Tests: `prayer_qiyam_night_adapter_test.dart`.
+- **T044/T045** — `QiyamCubit`/`QiyamState`: defaults on Yes (4 rak'ahs,
+  Witr on), 400 ms debounce, one boundary timer plus resume, stale-night
+  guard, every command outcome handled, celebration only on the first Yes.
+  Tests: `qiyam_cubit_test.dart`.
+- **T046** — Qiyam strings added line by line to both ARB files, plus
+  `qiyam_strings_adapter.dart`; no string uses "missed".
+- **T047/T048** — `QiyamScreen` with the header, tracker and supplications
+  widgets in the prototype order; supplications come from the approved
+  catalog through `AdhkarQiyamSupplicationsAdapter` (placeholder fixture
+  text only; no real content in code or tests). Tests:
+  `qiyam_screen_test.dart`, `adhkar_qiyam_supplications_adapter_test.dart`.
+
+Orchestrator review fixes applied before the commit:
+- The no-schedule rule now steps back one calendar day instead of
+  subtracting 24 hours (a 23-hour day before a daylight-saving change gave
+  the wrong night). Added a month-boundary test; a DST-zone case cannot be
+  forced from a unit test, so none is claimed.
+- Closing the screen with a debounced note still pending now saves it
+  instead of dropping it (the screen never called `flushPendingNote`). New
+  test "closing the screen with a pending note saves it"; the plain-resume
+  test now also asserts the save on close.
+- Three analyzer findings fixed (duplicate import, unused import,
+  unnecessary parentheses).
+
+Gates (2026-11-11, Windows host):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean |
+| Analyze | `flutter analyze` | No issues found |
+| Qiyam tests | `flutter test test/unit/features/qiyam test/widget/features/qiyam test/unit/app/composition` | **113 passed** (after the review fixes) |
+| Full suite | `flutter test` | **933 passed, 1 skipped, 1 failed** |
+| SQL | `supabase test db` | not run: nothing under `supabase/` changed |
+
+The single full-suite failure is
+`test/unit/features/prayer/application/prayer_context_service_test.dart`
+("cached year wins; after coverage ends offline local fallback is labelled":
+expected `2027-01-01`, got `2026-12-31`). Phase 4 does not touch Prayer code.
+The test waits on 10 ms ticks with 30 ms real delays, so it is timing-
+sensitive under a loaded full run; run alone it passes (`+8: All tests
+passed!`). It is recorded here as a flaky pre-existing test, not as a pass.
+
+Blocked: T049 (DI, `/qiyam` route, shell section) and T050 (integration
+test) depend on T035, which waits for the owner's content approval (T073).
+
 ## SC-001 — counting latency and the 30-second Qiyam journey
 
 **Pending**: measured on a named phone and on desktop. Nothing claimed.

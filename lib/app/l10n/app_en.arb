@@ -554,5 +554,43 @@
   "adhkarSetComplete": "Set complete! +15 XP",
   "adhkarContentUnavailable": "The Adhkar content could not be loaded.",
   "adhkarCountingLocked": "The times are unavailable; counting is paused until they return.",
-  "adhkarOpenPrayerSetup": "Set up Prayer location"
+  "adhkarOpenPrayerSetup": "Set up Prayer location",
+  "qiyamTitle": "Qiyam Al-Layl",
+  "qiyamSubtitle": "Night prayer & intimate supplication",
+  "qiyamLastThird": "Last 1/3 of Night {time}",
+  "@qiyamLastThird": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "qiyamLastThirdUnavailable": "The last third of the night cannot be computed now",
+  "qiyamOpenPrayerSetup": "Set up Prayer location",
+  "qiyamDidYouPray": "Did you pray Qiyam tonight?",
+  "qiyamBestTime": "The best time for Qiyam is the last third of the night before Fajr.",
+  "qiyamYesXp": "Yes, Alhamdulillah (+30 XP)",
+  "qiyamNo": "Not yet",
+  "qiyamRakahsLabel": "Number of Rak'ahs",
+  "qiyamRakahsCount": "{count, plural, one{1 rak'ah} two{2 rak'ahs} few{{count} rak'ahs} many{{count} rak'ahs} other{{count} rak'ahs}}",
+  "@qiyamRakahsCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamStartTime": "Start Time",
+  "qiyamEndTime": "End Time",
+  "qiyamWitr": "Include Witr Prayer",
+  "qiyamNotesLabel": "Reflection / Duas made",
+  "qiyamNotesPlaceholder": "Special supplications or reflections (optional)",
+  "qiyamNoteCounter": "{count} / 500",
+  "@qiyamNoteCounter": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamSupplicationsTitle": "Recommended Supplication in Sujood & Qunoot",
+  "qiyamSaving": "Saving…",
+  "qiyamSaved": "Saved",
+  "qiyamSaveFailed": "Could not save. Try again.",
+  "qiyamNightInvalidRakahs": "Choose a valid rak'ah count: 2, 4, 8 or 11.",
+  "qiyamNightInvalidTime": "Enter a valid 24-hour time, like 02:41.",
+  "qiyamNightNoteTooLong": "The note is longer than 500 characters.",
+  "qiyamNightNotPerformedDetails": "Details cannot be saved with a \"Not yet\" answer.",
+  "qiyamNightChanged": "The night has changed; record the current night.",
+  "qiyamRecordingLocked": "The times are unavailable; recording is paused until they return.",
+  "qiyamReadOnly": "This night's record is read-only.",
+  "qiyamXpEarned": "Qiyam complete! +30 XP"
 }

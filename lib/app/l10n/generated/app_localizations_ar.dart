@@ -1607,4 +1607,112 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get adhkarOpenPrayerSetup => 'إعداد موقع الصلاة';
+
+  @override
+  String get qiyamTitle => 'قيام الليل';
+
+  @override
+  String get qiyamSubtitle => 'صلاة الليل والمناجاة';
+
+  @override
+  String qiyamLastThird(String time) {
+    return 'الثلث الأخير من الليل $time';
+  }
+
+  @override
+  String get qiyamLastThirdUnavailable =>
+      'تعذّر حساب الثلث الأخير من الليل الآن';
+
+  @override
+  String get qiyamOpenPrayerSetup => 'إعداد موقع الصلاة';
+
+  @override
+  String get qiyamDidYouPray => 'هل صليت قيام الليل الليلة؟';
+
+  @override
+  String get qiyamBestTime =>
+      'أفضل أوقات القيام هو الثلث الأخير من الليل قبل الفجر.';
+
+  @override
+  String get qiyamYesXp => 'نعم، الحمد لله (+30 نقطة)';
+
+  @override
+  String get qiyamNo => 'لم أقم بعد';
+
+  @override
+  String get qiyamRakahsLabel => 'عدد الركعات';
+
+  @override
+  String qiyamRakahsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ركعة',
+      many: '$count ركعة',
+      few: '$count ركعات',
+      two: 'ركعتان',
+      one: 'ركعة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get qiyamStartTime => 'وقت البداية';
+
+  @override
+  String get qiyamEndTime => 'وقت النهاية';
+
+  @override
+  String get qiyamWitr => 'أوترت (صلاة الوتر)';
+
+  @override
+  String get qiyamNotesLabel => 'خواطر ودعاء';
+
+  @override
+  String get qiyamNotesPlaceholder => 'خواطر أو أدعية خاصة (اختياري)';
+
+  @override
+  String qiyamNoteCounter(int count) {
+    return '$count / 500';
+  }
+
+  @override
+  String get qiyamSupplicationsTitle => 'أدعية مأثورة في السجود والقنوت';
+
+  @override
+  String get qiyamSaving => 'جارٍ الحفظ…';
+
+  @override
+  String get qiyamSaved => 'تم الحفظ';
+
+  @override
+  String get qiyamSaveFailed => 'تعذّر الحفظ؛ حاول مرة أخرى.';
+
+  @override
+  String get qiyamNightInvalidRakahs =>
+      'اختر عددًا صحيحًا من الركعات (2 أو 4 أو 8 أو 11).';
+
+  @override
+  String get qiyamNightInvalidTime =>
+      'أدخل وقتًا صحيحًا بتنسيق 24 ساعة مثل 02:41.';
+
+  @override
+  String get qiyamNightNoteTooLong => 'الملاحظة أطول من 500 حرف.';
+
+  @override
+  String get qiyamNightNotPerformedDetails =>
+      'لا تُحفظ التفاصيل مع إجابة «لم أقم بعد».';
+
+  @override
+  String get qiyamNightChanged => 'لقد تبدّلت الليلة؛ سجّل الليلة الحالية.';
+
+  @override
+  String get qiyamRecordingLocked =>
+      'الأوقات غير متاحة الآن؛ التسجيل متوقف حتى تعود الأوقات.';
+
+  @override
+  String get qiyamReadOnly => 'سجل هذه الليلة للعرض فقط.';
+
+  @override
+  String get qiyamXpEarned => 'اكتمل قيام الليل! +30 نقطة';
 }
