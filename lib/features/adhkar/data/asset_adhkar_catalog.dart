@@ -21,12 +21,12 @@ final class AssetAdhkarCatalog implements AdhkarCatalogPort {
   final Future<String> Function(String assetPath) _load;
   final String _assetPath;
 
-  AdhkarCatalogSnapshot? _cached;
+  AdhkarCatalog? _cached;
 
   static const _contentUnavailableMessageKey = 'adhkar.content.unavailable';
 
   @override
-  Future<AppResult<AdhkarCatalogSnapshot>> snapshot(String ownerId) async {
+  Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async {
     final cached = _cached;
     if (cached != null) {
       return AppResult.success(cached);
@@ -36,26 +36,8 @@ final class AssetAdhkarCatalog implements AdhkarCatalogPort {
       final catalog = AdhkarCatalog.fromJson(
         jsonDecode(document) as Map<String, dynamic>,
       );
-      final snapshot = AdhkarCatalogSnapshot(
-        version: catalog.version,
-        items: [
-          for (final item in catalog.items)
-            AdhkarCatalogItemSnapshot(
-              itemId: item.itemId,
-              list: item.list.name,
-              position: item.position,
-              target: item.target,
-              textAr: item.textAr,
-              translationEn: item.translationEn,
-              virtueAr: item.virtueAr,
-              virtueEn: item.virtueEn,
-              referenceAr: item.referenceAr,
-              referenceEn: item.referenceEn,
-            ),
-        ],
-      );
-      _cached = snapshot;
-      return AppResult.success(snapshot);
+      _cached = catalog;
+      return AppResult.success(catalog);
     } catch (error) {
       return AppResult.failure(
         AppFailure.recoverable(

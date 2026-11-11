@@ -10,6 +10,7 @@ import 'package:namma_project/features/adhkar/application/adhkar_clock_port.dart
 import 'package:namma_project/features/adhkar/application/adhkar_commands.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_times_port.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_state.dart';
@@ -230,6 +231,233 @@ void main() {
     await sub.cancel();
   });
 
+  AdhkarClockState unrestricted(String day) => AdhkarClockState(
+    scheduleState: AdhkarScheduleState.setupRequired,
+    day: day,
+    period: AdhkarPeriod.unrestricted,
+    nextBoundaryUtc: null,
+    morningCountable: true,
+    eveningCountable: true,
+    fajrUtc: null,
+    maghribUtc: null,
+    zoneId: null,
+  );
+
+  test('a DayChanged outcome after midnight refreshes to the new day without '
+      'saved feedback', () async {
+    times.state = unrestricted('2026-11-10');
+    final cubit = buildCubit();
+    final emissions = <AdhkarState>[];
+    final sub = cubit.stream.listen(emissions.add);
+    await cubit.load();
+    await drain();
+    times.state = unrestricted('2026-11-11');
+    commands.outcome = const AdhkarDayChanged();
+    emissions.clear();
+    await cubit.increment('m1', '2026-11-10');
+    await drain();
+    final last = emissions.last;
+    expect(
+      last.clock?.day,
+      '2026-11-11',
+      reason: 'the clock re-resolved to the new day',
+    );
+    expect(last.itemStatus['m1'], isNull, reason: 'no saved flash');
+    await cubit.close();
+    await sub.cancel();
+  });
+
+  test(
+    'an OutsidePeriod outcome shows the starts-at feedback, not saved',
+    () async {
+      final startsAt = DateTime.utc(2026, 11, 10, 16, 50);
+      commands.outcome = AdhkarOutsidePeriod(startsAtUtc: startsAt);
+      final cubit = buildCubit();
+      final emissions = <AdhkarState>[];
+      final sub = cubit.stream.listen(emissions.add);
+      await cubit.load();
+      await drain();
+      emissions.clear();
+      await cubit.increment('m1', '2026-11-10');
+      await drain();
+      final last = emissions.last;
+      expect(last.itemStatus['m1'], AdhkarActionStatus.outsidePeriod);
+      expect(last.outsidePeriodStartsAtUtc, startsAt);
+      await cubit.close();
+      await sub.cancel();
+    },
+  );
+
+  test(
+    'a CountingLocked outcome shows the locked feedback, not saved',
+    () async {
+      commands.outcome = const AdhkarCountingLocked();
+      final cubit = buildCubit();
+      final emissions = <AdhkarState>[];
+      final sub = cubit.stream.listen(emissions.add);
+      await cubit.load();
+      await drain();
+      emissions.clear();
+      await cubit.increment('m1', '2026-11-10');
+      await drain();
+      expect(emissions.last.itemStatus['m1'], AdhkarActionStatus.locked);
+      await cubit.close();
+      await sub.cancel();
+    },
+  );
+
+  test('an AtTarget outcome does not flash saved', () async {
+    commands.outcome = const AdhkarAtTarget();
+    final cubit = buildCubit();
+    final emissions = <AdhkarState>[];
+    final sub = cubit.stream.listen(emissions.add);
+    await cubit.load();
+    await drain();
+    emissions.clear();
+    await cubit.increment('m1', '2026-11-10');
+    await drain();
+    expect(emissions.last.itemStatus['m1'], isNull);
+    await cubit.close();
+    await sub.cancel();
+  });
+
+  test('a plain resume inside the same period keeps the user tab', () async {
+    final cubit = buildCubit();
+    await cubit.load();
+    cubit.selectTab(AdhkarTab.evening);
+    await cubit.resume();
+    await drain();
+    expect(
+      cubit.state.selectedTab,
+      AdhkarTab.evening,
+      reason: 'a resume within the same period keeps the user tab',
+    );
+    // The boundary passes: the period flips and the tab follows it again.
+    times.state = AdhkarClockState(
+      scheduleState: AdhkarScheduleState.available,
+      day: '2026-11-10',
+      period: AdhkarPeriod.evening,
+      nextBoundaryUtc: DateTime.utc(2026, 11, 11, 4, 29),
+      morningCountable: false,
+      eveningCountable: true,
+      fajrUtc: DateTime.utc(2026, 11, 10, 4, 30),
+      maghribUtc: DateTime.utc(2026, 11, 10, 16, 50),
+      zoneId: 'UTC',
+    );
+    await cubit.resume();
+    await drain();
+    expect(cubit.state.selectedTab, AdhkarTab.evening);
+    times.state = AdhkarClockState(
+      scheduleState: AdhkarScheduleState.available,
+      day: '2026-11-11',
+      period: AdhkarPeriod.morning,
+      nextBoundaryUtc: DateTime.utc(2026, 11, 11, 16),
+      morningCountable: true,
+      eveningCountable: false,
+      fajrUtc: DateTime.utc(2026, 11, 11, 4, 29),
+      maghribUtc: DateTime.utc(2026, 11, 11, 16),
+      zoneId: 'UTC',
+    );
+    await cubit.resume();
+    await drain();
+    expect(
+      cubit.state.selectedTab,
+      AdhkarTab.morning,
+      reason: 'a period change moves the tab',
+    );
+    await cubit.close();
+  });
+
+  test('unrestricted mode schedules one timer to the next device midnight', () {
+    times.state = unrestricted('2026-11-10');
+    FakeAsync().run((async) {
+      final cubit = buildCubit();
+      var loaded = false;
+      cubit.load().then((_) => loaded = true);
+      async.flushMicrotasks();
+      async.elapse(const Duration(milliseconds: 1));
+      async.flushMicrotasks();
+      expect(loaded, isTrue);
+      expect(async.pendingTimers, hasLength(1));
+      cubit.close();
+    });
+  });
+
+  test(
+    'ten increments that never complete a set trigger no streak query',
+    () async {
+      final cubit = buildCubit();
+      final emissions = <AdhkarState>[];
+      final sub = cubit.stream.listen(emissions.add);
+      await cubit.load();
+      await drain();
+      final callsAfterLoad = repository.completedDaysCalls;
+      for (var i = 1; i <= 10; i++) {
+        commands.outcome = AdhkarIncremented(newCount: i, setCompleted: false);
+        await cubit.increment('m3', '2026-11-10');
+      }
+      await drain();
+      expect(
+        repository.completedDaysCalls,
+        callsAfterLoad,
+        reason: 'the morning set stays incomplete: no streak walk',
+      );
+      await cubit.close();
+      await sub.cancel();
+    },
+  );
+
+  AdhkarCountRecord row(String itemId, int count) => AdhkarCountRecord(
+    accountId: 'owner',
+    adhkarDay: '2026-11-10',
+    itemId: itemId,
+    recordId: 'rec-$itemId',
+    catalogVersion: 1,
+    list: 'morning',
+    count: count,
+    createdAt: now,
+    updatedAt: now,
+    lastAcknowledgedUpdatedAt: null,
+  );
+
+  test('completing a set refreshes the streak even when the counts stream '
+      'delivers the new row before the command returns', () async {
+    repository.dayCounts = [row('m1', 1), row('m2', 3), row('m3', 9)];
+    final cubit = buildCubit();
+    await cubit.load();
+    await drain();
+    final callsAfterLoad = repository.completedDaysCalls;
+    commands.outcome = const AdhkarIncremented(
+      newCount: 10,
+      setCompleted: true,
+    );
+    commands.beforeResult = () async {
+      repository.emitCounts([row('m1', 1), row('m2', 3), row('m3', 10)]);
+      await drain();
+    };
+    await cubit.increment('m3', '2026-11-10');
+    await drain();
+    expect(
+      repository.completedDaysCalls,
+      callsAfterLoad + 1,
+      reason: 'the completion change is judged against the pre-command state',
+    );
+    await cubit.close();
+  });
+
+  test('a reset that breaks a complete set refreshes the streak', () async {
+    repository.dayCounts = [row('m1', 1), row('m2', 3), row('m3', 10)];
+    final cubit = buildCubit();
+    await cubit.load();
+    await drain();
+    final callsAfterLoad = repository.completedDaysCalls;
+    commands.outcome = const AdhkarReset();
+    await cubit.reset('m3', '2026-11-10');
+    await drain();
+    expect(repository.completedDaysCalls, callsAfterLoad + 1);
+    await cubit.close();
+  });
+
   test('results that arrive after the cubit closed are dropped', () async {
     final cubit = buildCubit();
     final emissions = <AdhkarState>[];
@@ -275,55 +503,73 @@ final class FakeTimesPort implements AdhkarTimesPort {
 
 final class FakeCatalog implements AdhkarCatalogPort {
   @override
-  Future<AppResult<AdhkarCatalogSnapshot>> snapshot(String ownerId) async =>
+  Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async =>
       AppResult.success(
-        const AdhkarCatalogSnapshot(
-          version: 1,
-          items: [
-            AdhkarCatalogItemSnapshot(
-              itemId: 'm1',
-              list: 'morning',
-              position: 1,
-              target: 1,
-              textAr: 'test m1',
-              translationEn: 'test m1',
-              virtueAr: 'test virtue m1',
-              virtueEn: 'test virtue m1',
-              referenceAr: 'test ref m1',
-              referenceEn: 'test ref m1',
-            ),
-            AdhkarCatalogItemSnapshot(
-              itemId: 'm2',
-              list: 'morning',
-              position: 2,
-              target: 3,
-              textAr: 'test m2',
-              translationEn: 'test m2',
-              virtueAr: 'test virtue m2',
-              virtueEn: 'test virtue m2',
-              referenceAr: 'test ref m2',
-              referenceEn: 'test ref m2',
-            ),
-            AdhkarCatalogItemSnapshot(
-              itemId: 'e1',
-              list: 'evening',
-              position: 1,
-              target: 1,
-              textAr: 'test e1',
-              translationEn: 'test e1',
-              virtueAr: 'test virtue e1',
-              virtueEn: 'test virtue e1',
-              referenceAr: 'test ref e1',
-              referenceEn: 'test ref e1',
-            ),
+        AdhkarCatalog.fromJson(const {
+          'catalog_version': 1,
+          'items': [
+            {
+              'item_id': 'm1',
+              'list': 'morning',
+              'position': 1,
+              'target': 1,
+              'text_ar': 'test m1',
+              'translation_en': 'test m1',
+              'virtue_ar': 'test virtue m1',
+              'virtue_en': 'test virtue m1',
+              'reference_ar': 'test ref m1',
+              'reference_en': 'test ref m1',
+              'approved': true,
+            },
+            {
+              'item_id': 'm2',
+              'list': 'morning',
+              'position': 2,
+              'target': 3,
+              'text_ar': 'test m2',
+              'translation_en': 'test m2',
+              'virtue_ar': 'test virtue m2',
+              'virtue_en': 'test virtue m2',
+              'reference_ar': 'test ref m2',
+              'reference_en': 'test ref m2',
+              'approved': true,
+            },
+            {
+              'item_id': 'm3',
+              'list': 'morning',
+              'position': 3,
+              'target': 10,
+              'text_ar': 'test m3',
+              'translation_en': 'test m3',
+              'virtue_ar': 'test virtue m3',
+              'virtue_en': 'test virtue m3',
+              'reference_ar': 'test ref m3',
+              'reference_en': 'test ref m3',
+              'approved': true,
+            },
+            {
+              'item_id': 'e1',
+              'list': 'evening',
+              'position': 1,
+              'target': 1,
+              'text_ar': 'test e1',
+              'translation_en': 'test e1',
+              'virtue_ar': 'test virtue e1',
+              'virtue_en': 'test virtue e1',
+              'reference_ar': 'test ref e1',
+              'reference_en': 'test ref e1',
+              'approved': true,
+            },
           ],
-        ),
+          'qiyam_supplications': <Map<String, Object?>>[],
+        }),
       );
 }
 
 final class FakeRepository implements AdhkarRepository {
   final _controller = StreamController<List<AdhkarCountRecord>>.broadcast();
   List<AdhkarCountRecord> dayCounts = const [];
+  var completedDaysCalls = 0;
 
   @override
   Stream<List<AdhkarCountRecord>> watchDay({
@@ -337,11 +583,19 @@ final class FakeRepository implements AdhkarRepository {
   void emitCounts(List<AdhkarCountRecord> rows) => _controller.add(rows);
 
   @override
-  Future<AppResult<Set<String>>> fullyCompletedDays({
+  Future<AppResult<AdhkarCompletedDays>> fullyCompletedDays({
     required String accountId,
     required String lastDay,
     required int maxLookBackDays,
-  }) async => AppResult.success(const <String>{});
+    required int catalogVersion,
+    required List<AdhkarListItem> morningItems,
+    required List<AdhkarListItem> eveningItems,
+  }) async {
+    completedDaysCalls++;
+    return AppResult.success(
+      const AdhkarCompletedDays(completed: {}, unjudgeable: {}),
+    );
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -351,17 +605,27 @@ final class FakeCommands implements AdhkarCommandRunner {
   AdhkarCommandOutcome? outcome;
   AppFailure? failure;
 
+  /// Runs before the result returns, e.g. to let the day's counts stream
+  /// deliver the committed row first.
+  Future<void> Function()? beforeResult;
+
   @override
   Future<AppResult<AdhkarCommandOutcome>> increment({
     required String capturedDay,
     required String itemId,
-  }) async => _result();
+  }) async {
+    await beforeResult?.call();
+    return _result();
+  }
 
   @override
   Future<AppResult<AdhkarCommandOutcome>> reset({
     required String capturedDay,
     required String itemId,
-  }) async => _result();
+  }) async {
+    await beforeResult?.call();
+    return _result();
+  }
 
   AppResult<AdhkarCommandOutcome> _result() {
     final error = failure;

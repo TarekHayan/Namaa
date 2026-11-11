@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 
 import 'adhkar_cubit.dart';
 import 'adhkar_state.dart';
@@ -42,7 +43,10 @@ final class AdhkarScreen extends StatelessWidget {
     final clock = state.clock;
     final morning = state.selectedTab == AdhkarTab.morning;
     final items =
-        state.catalog?.itemsOf(morning ? 'morning' : 'evening') ?? const [];
+        state.catalog?.itemsOf(
+          morning ? AdhkarList.morning : AdhkarList.evening,
+        ) ??
+        const [];
 
     return Scaffold(
       body: SafeArea(
@@ -64,15 +68,15 @@ final class AdhkarScreen extends StatelessWidget {
                 locale: locale,
                 listLabel: copy.tabLabel(morning),
                 completed: morning
-                    ? state.completedOf('morning')
-                    : state.completedOf('evening'),
+                    ? state.completedOf(AdhkarList.morning)
+                    : state.completedOf(AdhkarList.evening),
                 total: morning
-                    ? state.totalOf('morning')
-                    : state.totalOf('evening'),
+                    ? state.totalOf(AdhkarList.morning)
+                    : state.totalOf(AdhkarList.evening),
                 countable: morning
                     ? (clock?.morningCountable ?? false)
                     : (clock?.eveningCountable ?? false),
-                startsAtUtc: morning ? clock?.fajrUtc : clock?.maghribUtc,
+                startsAtUtc: clock?.nextBoundaryUtc,
                 zoneId: clock?.zoneId,
                 countingLocked: state.countingLocked,
               ),

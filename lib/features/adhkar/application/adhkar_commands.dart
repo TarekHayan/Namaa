@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 
+import '../domain/adhkar_catalog.dart';
 import '../domain/adhkar_clock.dart';
 import 'adhkar_catalog_port.dart';
 import 'adhkar_clock_port.dart';
@@ -99,7 +100,6 @@ final class AdhkarCommands implements AdhkarCommandRunner {
   final AdhkarIdentityPort _identity;
 
   @override
-  @override
   Future<AppResult<AdhkarCommandOutcome>> increment({
     required String capturedDay,
     required String itemId,
@@ -130,11 +130,17 @@ final class AdhkarCommands implements AdhkarCommandRunner {
       throw StateError('Unhandled Adhkar guard: ${guard.runtimeType}');
     }
     final item = guard.item;
-    final prior = (await _repository.readFresh(
+    final priorRead = await _repository.readFresh(
       accountId: _ownerId,
       adhkarDay: guard.day,
       itemId: itemId,
-    )).valueOrNull;
+    );
+    if (priorRead.failureOrNull case final failure?) {
+      // A storage failure is not "no row yet": counting from zero would
+      // overwrite the real count (Phase 3 review finding 6).
+      return AppResult.failure(failure);
+    }
+    final prior = priorRead.valueOrNull;
     final currentCount = prior?.count ?? 0;
     if (currentCount >= item.target) {
       return const AppResult.success(AdhkarAtTarget());
@@ -159,7 +165,6 @@ final class AdhkarCommands implements AdhkarCommandRunner {
     );
   }
 
-  @override
   @override
   Future<AppResult<AdhkarCommandOutcome>> reset({
     required String capturedDay,
@@ -187,11 +192,15 @@ final class AdhkarCommands implements AdhkarCommandRunner {
     if (guard is! _OpenGuard) {
       throw StateError('Unhandled Adhkar guard: ${guard.runtimeType}');
     }
-    final prior = (await _repository.readFresh(
+    final priorRead = await _repository.readFresh(
       accountId: _ownerId,
       adhkarDay: guard.day,
       itemId: itemId,
-    )).valueOrNull;
+    );
+    if (priorRead.failureOrNull case final failure?) {
+      return AppResult.failure(failure);
+    }
+    final prior = priorRead.valueOrNull;
     final committed = await _commit(
       guard: guard,
       itemId: itemId,
@@ -222,11 +231,11 @@ final class AdhkarCommands implements AdhkarCommandRunner {
     if (capturedDay != state.day) {
       return const AppResult.success(_DayChangedGuard());
     }
-    final snapshot = await _catalog.snapshot(_ownerId);
-    if (snapshot.failureOrNull case final failure?) {
+    final catalog = await _catalog.snapshot(_ownerId);
+    if (catalog.failureOrNull case final failure?) {
       return AppResult.failure(failure);
     }
-    final item = snapshot.valueOrNull!.item(itemId);
+    final item = catalog.valueOrNull!.item(itemId);
     if (item == null) {
       return AppResult.failure(
         AppFailure.recoverable(
@@ -236,20 +245,20 @@ final class AdhkarCommands implements AdhkarCommandRunner {
         ),
       );
     }
-    final countable = item.list == 'morning'
+    final countable = item.list == AdhkarList.morning
         ? state.morningCountable
         : state.eveningCountable;
     if (enforcePeriod && !countable) {
-      return AppResult.success(
-        _OutsidePeriodGuard(
-          startsAtUtc: item.list == 'morning'
-              ? state.fajrUtc!
-              : state.maghribUtc!,
-        ),
-      );
+      // The locked list opens at the next boundary: during Evening the
+      // Morning start is the NEXT Fajr; during Morning the Evening start is
+      // today's Maghrib (Phase 3 review finding 2).
+      final startsAt = item.list == AdhkarList.morning
+          ? (state.nextBoundaryUtc ?? state.fajrUtc)
+          : state.maghribUtc;
+      return AppResult.success(_OutsidePeriodGuard(startsAtUtc: startsAt!));
     }
     return AppResult.success(
-      _OpenGuard(day: state.day!, item: item, snapshot: snapshot.valueOrNull!),
+      _OpenGuard(day: state.day!, item: item, catalog: catalog.valueOrNull!),
     );
   }
 
@@ -260,7 +269,7 @@ final class AdhkarCommands implements AdhkarCommandRunner {
     required DateTime now,
     required AdhkarCountRecord? prior,
   }) {
-    final listItems = guard.snapshot
+    final listItems = guard.catalog
         .itemsOf(guard.item.list)
         .map((item) => AdhkarListItem(itemId: item.itemId, target: item.target))
         .toList(growable: false);
@@ -273,8 +282,8 @@ final class AdhkarCommands implements AdhkarCommandRunner {
         adhkarDay: guard.day,
         itemId: itemId,
         recordId: _identity.itemRecordId(guard.day, itemId),
-        catalogVersion: guard.snapshot.version,
-        list: guard.item.list,
+        catalogVersion: guard.catalog.version,
+        list: guard.item.list.name,
         newCount: newCount,
         updatedAt: version,
         operationId: _nextOperationId(),
@@ -284,7 +293,7 @@ final class AdhkarCommands implements AdhkarCommandRunner {
         listItems: listItems,
         setAwardSourceId: _identity.setAwardSourceId(
           guard.day,
-          guard.item.list,
+          guard.item.list.name,
         ),
       ),
     );
@@ -324,9 +333,9 @@ final class _OpenGuard extends _Guard {
   const _OpenGuard({
     required this.day,
     required this.item,
-    required this.snapshot,
+    required this.catalog,
   });
   final String day;
-  final AdhkarCatalogItemSnapshot item;
-  final AdhkarCatalogSnapshot snapshot;
+  final DhikrItem item;
+  final AdhkarCatalog catalog;
 }

@@ -252,6 +252,85 @@ Final gates for this phase (2026-11-11):
 shell), T036 (integration test) — they need the owner-approved catalog
 (T006/T073). The real asset is not shipped; no catalog seed was added to 0016.
 
+## Phase 3 review fixes (2026-11-11)
+
+All nine findings from the Phase 3 review of commit `785bd5c` are fixed.
+Correctness fixes went failing-test-first; no existing assertion was weakened
+or deleted. The owner's 2026-11-10 decision (unavailable schedule: lists
+visible, counting locked, no calendar-day fallback) is confirmed and kept.
+
+1. **Cubit outcome handling.** Failing tests first (pending left dangling on
+   early returns), then `_runCommand` handles every outcome: `DayChanged`
+   refreshes the clock immediately (re-resolve, re-subscribe to the new day,
+   select the period's tab) with no saved flash; `OutsidePeriod` records
+   `outsidePeriodStartsAtUtc` with the new `outsidePeriod` item status;
+   `CountingLocked` shows the `locked` status; `AtTarget` returns with no
+   feedback flash. Unrestricted mode now schedules one timer to the next
+   device midnight so the day rolls over while the screen is open.
+   `adhkar_cubit_test.dart` — **16 passed**.
+2. **The Morning starts-at instant.** Failing command test first (it expected
+   the passed Fajr), then the locked list's next start is the clock's next
+   boundary: during Evening the Morning start is the NEXT Fajr; during
+   Morning the Evening start is Maghrib. The screen passes
+   `clock.nextBoundaryUtc` for either locked list. Command test + the screen
+   notice test (04:29) both pass.
+3. **The streak is judged by counts, not awards.** Failing tests first (the
+   reset day still counted; the synced day did not), then
+   `fullyCompletedDays` reads one indexed range over `adhkar_item_counts`,
+   judges each day against that day's recorded `catalog_version` with the
+   approved item sets passed in, walks backward from today with an early
+   exit at the first incomplete earlier day (today may be incomplete), and
+   keeps the 3,650 cap. A day recorded under a version this device cannot
+   judge is reported in `unjudgeable` and never guessed (v1 is the only
+   shipped version, so the set is empty today; if a future bump makes old
+   days unjudgeable the product owner decides). `drift_adhkar_repository_test.dart`
+   — **9 passed**.
+4. **Streak refresh gating.** Failing test first (10 non-completing
+   increments), then the streak walk runs only on load, on a day change and
+   when a command changes a list's completion state — never per tap.
+   `adhkar_cubit_test.dart` — 16 passed including the new no-refresh case.
+5. **Bad boundaries lock counting.** Failing adapter test first (the
+   ArgumentError escaped), then the adapter wraps the scheduled resolution
+   and reports the unavailable state for unordered instants or a lapsed
+   window. `prayer_adhkar_times_adapter_test.dart` — **7 passed**.
+6. **A read failure is never count 0.** Failing command test first, then both
+   commands propagate a `readFresh` failure directly instead of continuing
+   from zero. `adhkar_commands_test.dart` — **13 passed**.
+7. **Domain types in the application layer.** `AdhkarCatalogPort.snapshot`
+   returns the domain `AdhkarCatalog`; `AdhkarCatalogItemSnapshot` and
+   `AdhkarCatalogSnapshot` are gone; the commands, Cubit and screen use the
+   `AdhkarList` enum (no 'morning'/'evening' strings); the loader keeps its
+   per-version cache. The domain catalog gained `item(itemId)` and
+   `itemsOf(list)` lookups. Test fakes build the catalog through
+   `AdhkarCatalog.fromJson` (validation stays mandatory).
+8. **Resume keeps the user's tab.** Failing test first, then the period's tab
+   is selected only on first load and when the period or the day actually
+   changes. `adhkar_cubit_test.dart` — 16 passed.
+9. **The duplicated `@override` annotations** on the commands are removed.
+
+Final gates for this fix set (2026-11-11):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean |
+| Analyze | `flutter analyze` | No issues found |
+| Dart tests | `flutter test` | **850 passed, 1 skipped** (05:46, run by the reviewer on the uncommitted fix set, Windows host) |
+| SQL | `supabase test db` | not run: nothing under `supabase/` changed in this fix set |
+
+Review follow-ups applied before the commit (2026-11-11, reviewer):
+- The Cubit now judges a list's completion BEFORE the command runs, and a
+  reset writes 0 into the local counts it compares against, so the streak
+  refresh is not lost when the day's counts stream delivers the new row
+  before the command returns. Two new tests in `adhkar_cubit_test.dart`
+  (completion with the stream first; a reset that breaks a complete set).
+  They were written after the fix, so no red run is recorded for them.
+- The duplicated `AdhkarCatalog.itemsFor` was removed in favor of `itemsOf`
+  (the catalog test now uses `itemsOf`).
+- After these follow-ups: `dart format` clean, `flutter analyze` no issues,
+  `flutter test test/unit/features/adhkar test/widget/features/adhkar
+  test/unit/app/composition` — **116 passed**. The full suite was not re-run
+  after these two small changes; its last full run is the 850-pass row above.
+
 ## SC-001 — counting latency and the 30-second Qiyam journey
 
 **Pending**: measured on a named phone and on desktop. Nothing claimed.

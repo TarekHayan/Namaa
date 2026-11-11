@@ -222,14 +222,22 @@ final class AdhkarCatalog {
   final List<DhikrItem> items;
   final List<QiyamSupplication> qiyamSupplications;
 
-  /// The approved items of one list, in catalog order.
-  List<DhikrItem> itemsFor(AdhkarList list) =>
-      items.where((item) => item.list == list).toList();
-
   /// The target for [itemId], or null when the item is not in this catalog.
   int? targetOf(String itemId) {
     for (final item in items) {
       if (item.itemId == itemId) return item.target;
+    }
+    return null;
+  }
+
+  /// The approved items of one list, in catalog order.
+  List<DhikrItem> itemsOf(AdhkarList list) =>
+      items.where((item) => item.list == list).toList();
+
+  /// The item with [itemId], or null when absent.
+  DhikrItem? item(String itemId) {
+    for (final item in items) {
+      if (item.itemId == itemId) return item;
     }
     return null;
   }

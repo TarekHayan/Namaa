@@ -1,11 +1,11 @@
-import 'package:namma_project/features/adhkar/application/adhkar_catalog_port.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 
 /// The two Adhkar tabs of the screen's switch.
 enum AdhkarTab { morning, evening }
 
 /// Per-item command feedback (contracts/adhkar-qiyam-application.md).
-enum AdhkarActionStatus { pending, saved, failed }
+enum AdhkarActionStatus { pending, saved, failed, outsidePeriod, locked }
 
 /// The Adhkar screen state: the catalog, the resolved clock, the current
 /// day's counts, the selected tab and the derived streak.
@@ -19,10 +19,11 @@ final class AdhkarState {
     this.streak = 0,
     this.itemStatus = const {},
     this.celebration,
+    this.outsidePeriodStartsAtUtc,
   });
 
   final bool loading;
-  final AdhkarCatalogSnapshot? catalog;
+  final AdhkarCatalog? catalog;
   final AdhkarClockState? clock;
 
   /// The counts of the resolved Adhkar day, keyed by item id.
@@ -38,6 +39,11 @@ final class AdhkarState {
   /// null again afterwards.
   final AdhkarTab? celebration;
 
+  /// When a command landed outside its list's period: when that period
+  /// opens (the "its time starts at ..." feedback). Cleared on the next
+  /// command.
+  final DateTime? outsidePeriodStartsAtUtc;
+
   /// True while the schedule is unavailable: the lists stay visible but
   /// counting is locked (owner decision, 2026-11-10).
   bool get countingLocked =>
@@ -47,7 +53,7 @@ final class AdhkarState {
 
   AdhkarState copyWith({
     bool? loading,
-    AdhkarCatalogSnapshot? catalog,
+    AdhkarCatalog? catalog,
     AdhkarClockState? clock,
     Map<String, int>? counts,
     AdhkarTab? selectedTab,
@@ -55,6 +61,8 @@ final class AdhkarState {
     Map<String, AdhkarActionStatus>? itemStatus,
     AdhkarTab? celebration,
     bool clearCelebration = false,
+    DateTime? outsidePeriodStartsAtUtc,
+    bool clearOutsidePeriod = false,
   }) => AdhkarState(
     loading: loading ?? this.loading,
     catalog: catalog ?? this.catalog,
@@ -64,16 +72,19 @@ final class AdhkarState {
     streak: streak ?? this.streak,
     itemStatus: itemStatus ?? this.itemStatus,
     celebration: clearCelebration ? null : (celebration ?? this.celebration),
+    outsidePeriodStartsAtUtc: clearOutsidePeriod
+        ? null
+        : (outsidePeriodStartsAtUtc ?? this.outsidePeriodStartsAtUtc),
   );
 
   /// The count of an item for the current day; a missing row is 0.
   int countOf(String itemId) => counts[itemId] ?? 0;
 
   /// Completed items and the total of one list (FR-005).
-  int completedOf(String list) {
+  int completedOf(AdhkarList list) {
     final items = catalog?.itemsOf(list) ?? const [];
     return items.where((item) => countOf(item.itemId) >= item.target).length;
   }
 
-  int totalOf(String list) => catalog?.itemsOf(list).length ?? 0;
+  int totalOf(AdhkarList list) => catalog?.itemsOf(list).length ?? 0;
 }

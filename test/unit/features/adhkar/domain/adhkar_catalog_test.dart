@@ -63,8 +63,8 @@ void main() {
       );
       final parsed = AdhkarCatalog.fromJson(json);
       expect(parsed.items.map((i) => i.itemId), ['m1', 'm2']);
-      expect(parsed.itemsFor(AdhkarList.morning), hasLength(2));
-      expect(parsed.itemsFor(AdhkarList.evening), isEmpty);
+      expect(parsed.itemsOf(AdhkarList.morning), hasLength(2));
+      expect(parsed.itemsOf(AdhkarList.evening), isEmpty);
     });
 
     test('two items sharing a position in different lists', () {

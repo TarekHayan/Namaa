@@ -5,21 +5,17 @@ import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
-import 'package:namma_project/features/xp/domain/xp_award.dart';
 
 import '../application/adhkar_repository.dart';
-import 'uuid_adhkar_identity.dart';
 
 /// Drift-backed Adhkar count store on the encrypted database (schema v10).
 /// Reads and writes are owner-scoped; the sync payload carries the typed
 /// fields the 0016 RPC expects (without owner or record id, which the server
 /// recomputes).
 final class DriftAdhkarRepository implements AdhkarRepository {
-  DriftAdhkarRepository(this._database, {required UuidAdhkarIdentity identity})
-    : _identity = identity;
+  DriftAdhkarRepository(this._database);
 
   final FoundationDatabase _database;
-  final UuidAdhkarIdentity _identity;
 
   @override
   Future<AppResult<AdhkarCountRecord?>> readFresh({
@@ -142,35 +138,70 @@ final class DriftAdhkarRepository implements AdhkarRepository {
   }
 
   @override
-  Future<AppResult<Set<String>>> fullyCompletedDays({
+  Future<AppResult<AdhkarCompletedDays>> fullyCompletedDays({
     required String accountId,
     required String lastDay,
     required int maxLookBackDays,
+    required int catalogVersion,
+    required List<AdhkarListItem> morningItems,
+    required List<AdhkarListItem> eveningItems,
   }) async {
     try {
-      final awards =
-          await (_database.select(_database.xpAwards)..where(
+      final firstDay = _parseDay(
+        lastDay,
+      ).subtract(Duration(days: maxLookBackDays - 1));
+      // One indexed range read over (account_id, adhkar_day, ...).
+      final rows =
+          await (_database.select(_database.adhkarItemCounts)..where(
                 (table) =>
                     table.accountId.equals(accountId) &
-                    table.source.equals(kAdhkarSetDoneAwardSource),
+                    table.adhkarDay.isBetweenValues(_key(firstDay), lastDay),
               ))
               .get();
-      final known = awards.map((row) => row.sourceId).toSet();
+      final byDay = <String, List<AdhkarItemCount>>{};
+      for (final row in rows) {
+        byDay.putIfAbsent(row.adhkarDay, () => []).add(row);
+      }
       final completed = <String>{};
+      final unjudgeable = <String>{};
       var day = _parseDay(lastDay);
       for (var visited = 0; visited < maxLookBackDays; visited++) {
         final key = _key(day);
-        final morning = _identity.setAwardSourceId(key, 'morning');
-        final evening = _identity.setAwardSourceId(key, 'evening');
-        if (known.contains(morning) && known.contains(evening)) {
+        final dayRows = byDay[key] ?? const <AdhkarItemCount>[];
+        final judgeable = dayRows.every(
+          (row) => row.catalogVersion == catalogVersion,
+        );
+        final complete =
+            judgeable &&
+            _listComplete(dayRows, morningItems) &&
+            _listComplete(dayRows, eveningItems);
+        if (complete) {
           completed.add(key);
+        } else if (!judgeable) {
+          unjudgeable.add(key);
+        }
+        // Early exit: today (the first visited day) may be incomplete
+        // without breaking the run; any later incomplete or unjudgeable day
+        // ends the walk.
+        if (visited > 0 && !complete) {
+          break;
         }
         day = day.subtract(const Duration(days: 1));
       }
-      return AppResult.success(completed);
+      return AppResult.success(
+        AdhkarCompletedDays(completed: completed, unjudgeable: unjudgeable),
+      );
     } catch (error) {
       return AppResult.failure(_failure(error));
     }
+  }
+
+  bool _listComplete(
+    List<AdhkarItemCount> dayRows,
+    List<AdhkarListItem> items,
+  ) {
+    final counts = {for (final row in dayRows) row.itemId: row.count};
+    return items.every((item) => (counts[item.itemId] ?? 0) >= item.target);
   }
 
   @override

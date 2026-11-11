@@ -109,6 +109,18 @@ final class AdhkarCommitOutcome {
   final bool awardInserted;
 }
 
+/// The result of the completed-days walk: the judged complete days and the
+/// days this device could not judge (a catalog version it does not carry).
+final class AdhkarCompletedDays {
+  const AdhkarCompletedDays({
+    required this.completed,
+    required this.unjudgeable,
+  });
+
+  final Set<String> completed;
+  final Set<String> unjudgeable;
+}
+
 /// The Adhkar count store boundary (contracts/adhkar-qiyam-application.md).
 abstract interface class AdhkarRepository {
   Future<AppResult<AdhkarCountRecord?>> readFresh({
@@ -139,13 +151,21 @@ abstract interface class AdhkarRepository {
     required bool hadPrior,
   });
 
-  /// The days within the look-back range where BOTH set awards exist (the
-  /// set award is the idempotent completion record). Feeds the derived
-  /// streak walk.
-  Future<AppResult<Set<String>>> fullyCompletedDays({
+  /// The days within the look-back range where BOTH lists are complete,
+  /// judged by the counts stored for each day against that day's recorded
+  /// catalog version (FR-006b, research.md R9) — never by the permanent
+  /// award rows. The walk runs backward from [lastDay] with an early exit at
+  /// the first incomplete earlier day; today is the only day allowed to be
+  /// incomplete without breaking the run. A day recorded under a catalog
+  /// version other than [catalogVersion] cannot be judged locally and is
+  /// reported in [AdhkarCompletedDays.unjudgeable] instead of guessed.
+  Future<AppResult<AdhkarCompletedDays>> fullyCompletedDays({
     required String accountId,
     required String lastDay,
     required int maxLookBackDays,
+    required int catalogVersion,
+    required List<AdhkarListItem> morningItems,
+    required List<AdhkarListItem> eveningItems,
   });
 
   Future<AppResult<T>> runInTransaction<T>(

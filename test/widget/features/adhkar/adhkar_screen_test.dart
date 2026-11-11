@@ -11,6 +11,7 @@ import 'package:namma_project/features/adhkar/application/adhkar_clock_port.dart
 import 'package:namma_project/features/adhkar/application/adhkar_commands.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_times_port.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_screen.dart';
@@ -181,6 +182,34 @@ void main() {
     await arabicCubit.close();
   });
 
+  testWidgets('during Evening the morning notice shows the next Fajr time', (
+    tester,
+  ) async {
+    times.state = AdhkarClockState(
+      scheduleState: AdhkarScheduleState.available,
+      day: '2026-11-10',
+      period: AdhkarPeriod.evening,
+      nextBoundaryUtc: DateTime.utc(2026, 11, 11, 4, 29),
+      morningCountable: false,
+      eveningCountable: true,
+      fajrUtc: DateTime.utc(2026, 11, 10, 4, 30),
+      maghribUtc: DateTime.utc(2026, 11, 10, 16, 50),
+      zoneId: 'UTC',
+    );
+    final cubit = buildCubit();
+    await pump(tester, cubit: cubit, locale: const Locale('en'));
+    // The cubit selects Evening; switch to Morning to see its notice.
+    await tester.tap(find.byKey(const Key('adhkar_switch_morning')));
+    await tester.pump();
+    expect(find.byKey(const Key('adhkar_starts_at_notice')), findsOneWidget);
+    expect(
+      find.textContaining('04:29'),
+      findsOneWidget,
+      reason: 'the notice shows the NEXT Fajr, not the passed one',
+    );
+    await cubit.close();
+  });
+
   testWidgets('the count button exposes the count semantics', (tester) async {
     final cubit = buildCubit();
     await pump(tester, cubit: cubit);
@@ -241,7 +270,7 @@ final class FakeClock implements AdhkarClockPort {
 final class FakeTimesPort implements AdhkarTimesPort {
   FakeTimesPort(this.state);
 
-  final AdhkarClockState state;
+  AdhkarClockState state;
 
   @override
   Future<AppResult<AdhkarClockState>> resolve(
@@ -251,52 +280,54 @@ final class FakeTimesPort implements AdhkarTimesPort {
 }
 
 final class FakeCatalog implements AdhkarCatalogPort {
-  const FakeCatalog();
-
   @override
-  Future<AppResult<AdhkarCatalogSnapshot>> snapshot(String ownerId) async =>
+  Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async =>
       AppResult.success(
-        const AdhkarCatalogSnapshot(
-          version: 1,
-          items: [
-            AdhkarCatalogItemSnapshot(
-              itemId: 'm1',
-              list: 'morning',
-              position: 1,
-              target: 1,
-              textAr: 'test item m1',
-              translationEn: 'test item m1',
-              virtueAr: 'test virtue m1',
-              virtueEn: 'test virtue m1',
-              referenceAr: 'test ref m1',
-              referenceEn: 'test ref m1',
-            ),
-            AdhkarCatalogItemSnapshot(
-              itemId: 'm2',
-              list: 'morning',
-              position: 2,
-              target: 3,
-              textAr: 'test item m2',
-              translationEn: 'test item m2',
-              virtueAr: 'test virtue m2',
-              virtueEn: 'test virtue m2',
-              referenceAr: 'test ref m2',
-              referenceEn: 'test ref m2',
-            ),
-            AdhkarCatalogItemSnapshot(
-              itemId: 'e1',
-              list: 'evening',
-              position: 1,
-              target: 1,
-              textAr: 'test item e1',
-              translationEn: 'test item e1',
-              virtueAr: 'test virtue e1',
-              virtueEn: 'test virtue e1',
-              referenceAr: 'test ref e1',
-              referenceEn: 'test ref e1',
-            ),
+        AdhkarCatalog.fromJson(const {
+          'catalog_version': 1,
+          'items': [
+            {
+              'item_id': 'm1',
+              'list': 'morning',
+              'position': 1,
+              'target': 1,
+              'text_ar': 'test item m1',
+              'translation_en': 'test item m1',
+              'virtue_ar': 'test virtue m1',
+              'virtue_en': 'test virtue m1',
+              'reference_ar': 'test ref m1',
+              'reference_en': 'test ref m1',
+              'approved': true,
+            },
+            {
+              'item_id': 'm2',
+              'list': 'morning',
+              'position': 2,
+              'target': 3,
+              'text_ar': 'test item m2',
+              'translation_en': 'test item m2',
+              'virtue_ar': 'test virtue m2',
+              'virtue_en': 'test virtue m2',
+              'reference_ar': 'test ref m2',
+              'reference_en': 'test ref m2',
+              'approved': true,
+            },
+            {
+              'item_id': 'e1',
+              'list': 'evening',
+              'position': 1,
+              'target': 1,
+              'text_ar': 'test item e1',
+              'translation_en': 'test item e1',
+              'virtue_ar': 'test virtue e1',
+              'virtue_en': 'test virtue e1',
+              'reference_ar': 'test ref e1',
+              'reference_en': 'test ref e1',
+              'approved': true,
+            },
           ],
-        ),
+          'qiyam_supplications': <Map<String, Object?>>[],
+        }),
       );
 }
 
@@ -323,11 +354,16 @@ final class FakeRepository implements AdhkarRepository {
   }
 
   @override
-  Future<AppResult<Set<String>>> fullyCompletedDays({
+  Future<AppResult<AdhkarCompletedDays>> fullyCompletedDays({
     required String accountId,
     required String lastDay,
     required int maxLookBackDays,
-  }) async => AppResult.success(const <String>{});
+    required int catalogVersion,
+    required List<AdhkarListItem> morningItems,
+    required List<AdhkarListItem> eveningItems,
+  }) async => AppResult.success(
+    const AdhkarCompletedDays(completed: {}, unjudgeable: {}),
+  );
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

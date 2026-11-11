@@ -79,7 +79,7 @@ final class PrayerAdhkarTimesAdapter implements AdhkarTimesPort {
     }
     final available = todayBoundaries as PrayerDayBoundariesAvailable;
     if (!nowUtc.isBefore(available.fajrUtc)) {
-      return AppResult.success(_scheduled(nowUtc, available));
+      return AppResult.success(_scheduledOrUnavailable(nowUtc, available));
     }
     // Before the city day's Fajr: the running period belongs to the previous
     // Adhkar day, whose boundaries end at this day's Fajr.
@@ -95,7 +95,27 @@ final class PrayerAdhkarTimesAdapter implements AdhkarTimesPort {
         ),
       );
     }
-    return AppResult.success(_scheduled(nowUtc, previousBoundaries));
+    return AppResult.success(
+      _scheduledOrUnavailable(nowUtc, previousBoundaries),
+    );
+  }
+
+  /// Resolves the scheduled day, or reports unavailable when the instants
+  /// are unusable (unordered or a lapsed window) — a composition/data fault
+  /// locks counting instead of escaping as an exception (Phase 3 review
+  /// finding 5).
+  AdhkarClockState _scheduledOrUnavailable(
+    DateTime nowUtc,
+    PrayerDayBoundariesAvailable available,
+  ) {
+    try {
+      return _scheduled(nowUtc, available);
+    } on ArgumentError {
+      return AdhkarClock.resolve(
+        nowUtc: nowUtc,
+        input: const AdhkarScheduleUnavailable(),
+      );
+    }
   }
 
   AdhkarClockState _scheduled(

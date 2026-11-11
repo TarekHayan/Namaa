@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/data/local/adhkar_unit_of_work.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/data/drift_adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/data/uuid_adhkar_identity.dart';
@@ -31,7 +32,7 @@ void main() {
       path: temp.allocate(),
       key: key,
     );
-    repository = DriftAdhkarRepository(db, identity: identity);
+    repository = DriftAdhkarRepository(db);
     unitOfWork = DriftAdhkarUnitOfWork(
       database: db,
       repository: repository,
@@ -224,14 +225,15 @@ void main() {
     expect(ownerRows.single.accountId, 'owner');
   });
 
-  test('the streak query returns the days with both set awards', () async {
-    const morningComplete = [AdhkarListItem(itemId: 'm1', target: 1)];
+  test('a reset after completion makes the day incomplete', () async {
+    const morningSet = [AdhkarListItem(itemId: 'm1', target: 1)];
+    const eveningSet = [AdhkarListItem(itemId: 'e1', target: 1)];
     // Day 1: morning and evening both complete.
     await unitOfWork.commit(
       request(
         day: '2026-11-09',
         updatedAt: DateTime.utc(2026, 11, 9, 8),
-        listItems: morningComplete,
+        listItems: morningSet,
       ),
     );
     await unitOfWork.commit(
@@ -240,21 +242,124 @@ void main() {
         itemId: 'e1',
         updatedAt: DateTime.utc(2026, 11, 9, 20),
         operationId: 'op-d1-e',
+        listItems: eveningSet,
       ),
     );
-    // Day 2: only morning.
+    // The morning item is then reset and left incomplete.
     await unitOfWork.commit(
       request(
-        updatedAt: DateTime.utc(2026, 11, 10, 8),
-        operationId: 'op-d2-m',
-        listItems: morningComplete,
+        day: '2026-11-09',
+        newCount: 0,
+        updatedAt: DateTime.utc(2026, 11, 9, 21),
+        operationId: 'op-d1-reset',
+        expectedCurrentVersion: DateTime.utc(2026, 11, 9, 8),
+        listItems: morningSet,
       ),
     );
     final days = await repository.fullyCompletedDays(
       accountId: 'owner',
-      lastDay: '2026-11-11',
+      lastDay: '2026-11-09',
       maxLookBackDays: 30,
+      catalogVersion: 1,
+      morningItems: morningSet,
+      eveningItems: eveningSet,
     );
-    expect(days.valueOrNull, {'2026-11-09'});
+    expect(
+      days.valueOrNull!.completed,
+      isEmpty,
+      reason: 'a reset day is judged by its counts, not its award',
+    );
   });
+
+  test('a day completed only through synced counts counts', () async {
+    const morningSet = [AdhkarListItem(itemId: 'm1', target: 1)];
+    const eveningSet = [AdhkarListItem(itemId: 'e1', target: 1)];
+    // Counts arrive from another device: rows with no local award row.
+    await repository.runInTransaction(() async {
+      await repository.writeCount(
+        AdhkarCountRecord(
+          accountId: 'owner',
+          adhkarDay: '2026-11-09',
+          itemId: 'm1',
+          recordId: identity.itemRecordId('2026-11-09', 'm1'),
+          catalogVersion: 1,
+          list: 'morning',
+          count: 1,
+          createdAt: DateTime.utc(2026, 11, 9, 8),
+          updatedAt: DateTime.utc(2026, 11, 9, 8),
+          lastAcknowledgedUpdatedAt: null,
+        ),
+        operationId: 'sync-m1',
+        queueForSync: false,
+        hadPrior: false,
+      );
+      await repository.writeCount(
+        AdhkarCountRecord(
+          accountId: 'owner',
+          adhkarDay: '2026-11-09',
+          itemId: 'e1',
+          recordId: identity.itemRecordId('2026-11-09', 'e1'),
+          catalogVersion: 1,
+          list: 'evening',
+          count: 1,
+          createdAt: DateTime.utc(2026, 11, 9, 20),
+          updatedAt: DateTime.utc(2026, 11, 9, 20),
+          lastAcknowledgedUpdatedAt: null,
+        ),
+        operationId: 'sync-e1',
+        queueForSync: false,
+        hadPrior: false,
+      );
+      return const AppResult.success(null);
+    });
+    final days = await repository.fullyCompletedDays(
+      accountId: 'owner',
+      lastDay: '2026-11-09',
+      maxLookBackDays: 30,
+      catalogVersion: 1,
+      morningItems: morningSet,
+      eveningItems: eveningSet,
+    );
+    expect(days.valueOrNull!.completed, {'2026-11-09'});
+  });
+
+  test(
+    'a day recorded under an unavailable catalog version is unjudgeable',
+    () async {
+      await repository.runInTransaction(() async {
+        await repository.writeCount(
+          AdhkarCountRecord(
+            accountId: 'owner',
+            adhkarDay: '2026-11-09',
+            itemId: 'm1',
+            recordId: identity.itemRecordId('2026-11-09', 'm1'),
+            catalogVersion: 7,
+            list: 'morning',
+            count: 1,
+            createdAt: DateTime.utc(2026, 11, 9, 8),
+            updatedAt: DateTime.utc(2026, 11, 9, 8),
+            lastAcknowledgedUpdatedAt: null,
+          ),
+          operationId: 'sync-v7',
+          queueForSync: false,
+          hadPrior: false,
+        );
+        return const AppResult.success(null);
+      });
+      final days = await repository.fullyCompletedDays(
+        accountId: 'owner',
+        lastDay: '2026-11-09',
+        maxLookBackDays: 30,
+        catalogVersion: 1,
+        morningItems: const [AdhkarListItem(itemId: 'm1', target: 1)],
+        eveningItems: const [AdhkarListItem(itemId: 'e1', target: 1)],
+      );
+      expect(days.valueOrNull!.completed, isEmpty);
+      expect(
+        days.valueOrNull!.unjudgeable,
+        {'2026-11-09'},
+        reason: 'the day is reported, never guessed',
+      );
+    },
+  );
 }

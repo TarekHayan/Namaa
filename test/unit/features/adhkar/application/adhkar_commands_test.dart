@@ -7,6 +7,7 @@ import 'package:namma_project/features/adhkar/application/adhkar_commands.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_identity_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_times_port.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 
 /// T026: the IncrementDhikr and ResetDhikr commands (contracts/
@@ -168,6 +169,20 @@ void main() {
     expect(repository.requests, isEmpty);
   });
 
+  test('a read failure propagates instead of counting from zero', () async {
+    repository.readFailure = AppFailure.recoverable(
+      category: AppFailureCategory.persistence,
+      messageKey: 'test.readFailed',
+      occurredAt: now,
+    );
+    final outcome = await commands.increment(
+      capturedDay: '2026-11-10',
+      itemId: 'm1',
+    );
+    expect(outcome.failureOrNull!.messageKey, 'test.readFailed');
+    expect(repository.requests, isEmpty);
+  });
+
   test('now is sampled exactly once per command', () async {
     await commands.increment(capturedDay: '2026-11-10', itemId: 'm1');
     expect(clock.samples, 1);
@@ -225,49 +240,53 @@ final class FakeTimesPort implements AdhkarTimesPort {
 
 final class FakeCatalog implements AdhkarCatalogPort {
   @override
-  Future<AppResult<AdhkarCatalogSnapshot>> snapshot(String ownerId) async =>
+  Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async =>
       AppResult.success(
-        const AdhkarCatalogSnapshot(
-          version: 1,
-          items: [
-            AdhkarCatalogItemSnapshot(
-              itemId: 'm1',
-              list: 'morning',
-              position: 1,
-              target: 1,
-              textAr: 'test m1',
-              translationEn: 'test m1',
-              virtueAr: 'test virtue m1',
-              virtueEn: 'test virtue m1',
-              referenceAr: 'test ref m1',
-              referenceEn: 'test ref m1',
-            ),
-            AdhkarCatalogItemSnapshot(
-              itemId: 'm2',
-              list: 'morning',
-              position: 2,
-              target: 3,
-              textAr: 'test m2',
-              translationEn: 'test m2',
-              virtueAr: 'test virtue m2',
-              virtueEn: 'test virtue m2',
-              referenceAr: 'test ref m2',
-              referenceEn: 'test ref m2',
-            ),
-            AdhkarCatalogItemSnapshot(
-              itemId: 'e1',
-              list: 'evening',
-              position: 1,
-              target: 1,
-              textAr: 'test e1',
-              translationEn: 'test e1',
-              virtueAr: 'test virtue e1',
-              virtueEn: 'test virtue e1',
-              referenceAr: 'test ref e1',
-              referenceEn: 'test ref e1',
-            ),
+        AdhkarCatalog.fromJson(const {
+          'catalog_version': 1,
+          'items': [
+            {
+              'item_id': 'm1',
+              'list': 'morning',
+              'position': 1,
+              'target': 1,
+              'text_ar': 'test m1',
+              'translation_en': 'test m1',
+              'virtue_ar': 'test virtue m1',
+              'virtue_en': 'test virtue m1',
+              'reference_ar': 'test ref m1',
+              'reference_en': 'test ref m1',
+              'approved': true,
+            },
+            {
+              'item_id': 'm2',
+              'list': 'morning',
+              'position': 2,
+              'target': 3,
+              'text_ar': 'test m2',
+              'translation_en': 'test m2',
+              'virtue_ar': 'test virtue m2',
+              'virtue_en': 'test virtue m2',
+              'reference_ar': 'test ref m2',
+              'reference_en': 'test ref m2',
+              'approved': true,
+            },
+            {
+              'item_id': 'e1',
+              'list': 'evening',
+              'position': 1,
+              'target': 1,
+              'text_ar': 'test e1',
+              'translation_en': 'test e1',
+              'virtue_ar': 'test virtue e1',
+              'virtue_en': 'test virtue e1',
+              'reference_ar': 'test ref e1',
+              'reference_en': 'test ref e1',
+              'approved': true,
+            },
           ],
-        ),
+          'qiyam_supplications': <Map<String, Object?>>[],
+        }),
       );
 }
 
@@ -281,12 +300,18 @@ final class FakeRepository implements AdhkarRepository, AdhkarCountCommitPort {
     _counts['$accountId|$day|$itemId'] = count;
   }
 
+  AppFailure? readFailure;
+
   @override
   Future<AppResult<AdhkarCountRecord?>> readFresh({
     required String accountId,
     required String adhkarDay,
     required String itemId,
   }) async {
+    final error = readFailure;
+    if (error != null) {
+      return AppResult.failure(error);
+    }
     final count = _counts['$accountId|$adhkarDay|$itemId'];
     return AppResult.success(
       count == null

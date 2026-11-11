@@ -124,6 +124,26 @@ void main() {
     );
   });
 
+  test(
+    'unordered boundary instants resolve to unavailable, not a throw',
+    () async {
+      // Maghrib lands AFTER the next Fajr: the day boundaries are unusable.
+      boundaries.results[PrayerLocalDate.parse(
+        '2026-11-10',
+      )] = PrayerDayBoundariesAvailable(
+        date: PrayerLocalDate.parse('2026-11-10'),
+        fajrUtc: DateTime.utc(2026, 11, 10, 4, 30),
+        maghribUtc: DateTime.utc(2026, 11, 11, 5),
+        nextFajrUtc: DateTime.utc(2026, 11, 11, 4, 29),
+        zoneId: 'UTC',
+      );
+      final state = (await adapter.resolve('owner', now)).valueOrNull!;
+      expect(state.scheduleState, AdhkarScheduleState.unavailable);
+      expect(state.day, isNull);
+      expect(state.morningCountable, isFalse);
+    },
+  );
+
   test('a boundaries port failure surface stays unavailable', () async {
     boundaries.failure = AppFailure.recoverable(
       category: AppFailureCategory.persistence,
