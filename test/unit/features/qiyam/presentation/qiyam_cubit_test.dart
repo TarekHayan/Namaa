@@ -386,6 +386,176 @@ void main() {
     expect(cubit.state.form?.performed, isFalse);
     await cubit.close();
   });
+
+  test('load fetches the streak and the first history page for the current '
+      'night', () async {
+    repository.streakToReturn = 5;
+    repository.seededNights['2026-11-10'] = record('2026-11-10');
+    final cubit = buildCubit();
+    await cubit.load();
+    await drain();
+    expect(cubit.state.streak, 5);
+    expect(repository.streakQueries, 1);
+    expect(repository.historyQueries, 1);
+    expect(repository.historyBounds.single, '2026-11-11');
+    expect(cubit.state.history, hasLength(30));
+    expect(cubit.state.history.first.nightDate, '2026-11-10');
+    expect(cubit.state.history.first.record?.performed, isTrue);
+    expect(cubit.state.historyComplete, isFalse);
+    await cubit.close();
+  });
+
+  test('note, time and rak\'ah edits never refresh the streak or the '
+      'history', () async {
+    repository.emit(record('2026-11-11'));
+    final cubit = buildCubit();
+    await cubit.load();
+    await drain();
+    commands.outcome = const QiyamNightSaved(firstPerformed: false);
+    for (var i = 0; i < 10; i++) {
+      cubit.updateNote('note $i');
+      await drain();
+    }
+    await cubit.flushPendingNote();
+    await drain();
+    await cubit.selectRakahs(8);
+    await drain();
+    await cubit.toggleWitr();
+    await drain();
+    cubit.updateTimes('01:30', '02:30');
+    await drain();
+    await cubit.flushPendingNote();
+    await drain();
+    expect(commands.drafts.length, greaterThanOrEqualTo(3));
+    expect(
+      repository.streakQueries,
+      1,
+      reason: 'performed never changed, so the streak is not re-read',
+    );
+    expect(repository.historyQueries, 1);
+    await cubit.close();
+  });
+
+  test(
+    'a save that changes the performed state refreshes the streak',
+    () async {
+      final cubit = buildCubit();
+      await cubit.load();
+      await drain();
+      expect(repository.streakQueries, 1);
+      commands.outcome = const QiyamNightSaved(firstPerformed: false);
+      await cubit.answerNo();
+      await drain();
+      expect(repository.streakQueries, 2, reason: 'unanswered -> No');
+      commands.outcome = const QiyamNightSaved(firstPerformed: true);
+      await cubit.answerYes();
+      await drain();
+      expect(repository.streakQueries, 3, reason: 'No -> Yes');
+      await cubit.selectRakahs(11);
+      await drain();
+      expect(
+        repository.streakQueries,
+        3,
+        reason: 'a rak\'ah edit keeps performed true',
+      );
+      await cubit.close();
+    },
+  );
+
+  test('the night change refreshes the streak and reloads the history; a '
+      'plain resume does neither', () async {
+    final cubit = buildCubit();
+    await cubit.load();
+    await drain();
+    expect(repository.historyBounds.single, '2026-11-11');
+    await cubit.resume();
+    await drain();
+    expect(repository.streakQueries, 1, reason: 'same night: no refresh');
+    expect(repository.historyQueries, 1);
+    nightPort.state = availableState('2026-11-12');
+    await cubit.resume();
+    await drain();
+    expect(repository.streakQueries, 2);
+    expect(repository.historyQueries, 2);
+    expect(repository.historyBounds.last, '2026-11-12');
+    expect(
+      cubit.state.history.first.nightDate,
+      '2026-11-11',
+      reason: 'the night that just ended opens the new first page',
+    );
+    await cubit.close();
+  });
+
+  test('load more fetches only the next page and stops at the end', () async {
+    final cubit = buildCubit();
+    await cubit.load();
+    await drain();
+    await cubit.loadMoreHistory();
+    await drain();
+    expect(repository.historyQueries, 2);
+    expect(repository.historyBounds, ['2026-11-11', '2026-10-12']);
+    expect(cubit.state.history, hasLength(60));
+    repository.historyHasMore = false;
+    await cubit.loadMoreHistory();
+    await drain();
+    expect(repository.historyQueries, 3);
+    expect(cubit.state.history, hasLength(90));
+    expect(cubit.state.historyComplete, isTrue);
+    await cubit.loadMoreHistory();
+    await drain();
+    expect(
+      repository.historyQueries,
+      3,
+      reason: 'no page is fetched beyond the end',
+    );
+    await cubit.close();
+  });
+
+  test('a streak or history read failure is shown as a failure, never as 0 '
+      'or an empty history', () async {
+    repository.failStreak = true;
+    repository.failHistory = true;
+    final cubit = buildCubit();
+    await cubit.load();
+    await drain();
+    expect(cubit.state.streakFailed, isTrue);
+    expect(cubit.state.streak, isNull);
+    expect(cubit.state.historyFailed, isTrue);
+    expect(cubit.state.history, isEmpty);
+    expect(cubit.state.historyComplete, isFalse);
+    // "Load more" with no pages yet retries the first page.
+    repository.failHistory = false;
+    repository.failStreak = false;
+    await cubit.loadMoreHistory();
+    await drain();
+    expect(cubit.state.history, hasLength(30));
+    expect(cubit.state.historyFailed, isFalse);
+    await cubit.close();
+  });
+
+  test('a stale streak result for a superseded refresh never lands', () async {
+    final gate = Completer<void>();
+    repository.streakGate = gate;
+    final cubit = buildCubit();
+    final loading = cubit.load();
+    await drain();
+    // A newer refresh (the night rolled over) supersedes the gated read.
+    repository.streakGate = null;
+    repository.streakToReturn = 7;
+    nightPort.state = availableState('2026-11-12');
+    await cubit.resume();
+    await drain();
+    expect(cubit.state.streak, 7);
+    gate.complete();
+    await loading;
+    await drain();
+    expect(
+      cubit.state.streak,
+      7,
+      reason: 'the stale epoch never overwrites the newer value',
+    );
+    await cubit.close();
+  });
 }
 
 final class FakeClock implements QiyamClockPort {
@@ -425,6 +595,17 @@ final class FakeRepository implements QiyamRepository {
   final watchedNights = <String>[];
   QiyamNightRecord? current;
 
+  /// The stored rows behind the fake history page, keyed by night date.
+  final seededNights = <String, QiyamNightRecord>{};
+  int streakQueries = 0;
+  int historyQueries = 0;
+  final historyBounds = <String>[];
+  int streakToReturn = 0;
+  bool historyHasMore = true;
+  bool failStreak = false;
+  bool failHistory = false;
+  Completer<void>? streakGate;
+
   void emit(QiyamNightRecord? value) {
     current = value;
     _controller.add(value);
@@ -450,6 +631,39 @@ final class FakeRepository implements QiyamRepository {
       AppResult.success(current?.nightDate == nightDate ? current : null);
 
   @override
+  Future<AppResult<int>> streak({
+    required String accountId,
+    required String currentNight,
+  }) async {
+    streakQueries++;
+    final gate = streakGate;
+    if (gate != null) await gate.future;
+    if (failStreak) return AppResult.failure(_storageFailure());
+    return AppResult.success(streakToReturn);
+  }
+
+  @override
+  Future<AppResult<QiyamHistoryPage>> history({
+    required String accountId,
+    required String before,
+    int limit = 30,
+  }) async {
+    historyQueries++;
+    historyBounds.add(before);
+    if (failHistory) return AppResult.failure(_storageFailure());
+    final entries = <QiyamHistoryEntry>[
+      for (var i = 1; i <= limit; i++)
+        QiyamHistoryEntry(
+          nightDate: _offsetDay(before, i),
+          record: seededNights[_offsetDay(before, i)],
+        ),
+    ];
+    return AppResult.success(
+      QiyamHistoryPage(entries: entries, hasMore: historyHasMore),
+    );
+  }
+
+  @override
   Future<AppResult<void>> writeNight(
     QiyamNightRecord record, {
     required String operationId,
@@ -465,6 +679,23 @@ final class FakeRepository implements QiyamRepository {
   ) {
     throw UnimplementedError();
   }
+}
+
+AppFailure _storageFailure() => AppFailure.recoverable(
+  category: AppFailureCategory.persistence,
+  messageKey: 'qiyam.night.store_failed',
+  occurredAt: DateTime.utc(2026, 11, 11, 3),
+);
+
+String _offsetDay(String before, int backDays) {
+  final date = DateTime.utc(
+    int.parse(before.substring(0, 4)),
+    int.parse(before.substring(5, 7)),
+    int.parse(before.substring(8, 10)),
+  ).subtract(Duration(days: backDays));
+  return '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 }
 
 final class FakeCommands implements QiyamCommandRunner {

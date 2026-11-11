@@ -3310,6 +3310,60 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Qiyam complete! +30 XP'**
   String get qiyamXpEarned;
+
+  /// No description provided for @qiyamStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Qiyam streak: {nights}'**
+  String qiyamStreak(int nights);
+
+  /// No description provided for @qiyamStreakFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the streak.'**
+  String get qiyamStreakFailed;
+
+  /// No description provided for @qiyamHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous nights'**
+  String get qiyamHistoryTitle;
+
+  /// No description provided for @qiyamHistoryPrayedWithWitr.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayed · {count} rak\'ahs · Witr'**
+  String qiyamHistoryPrayedWithWitr(int count);
+
+  /// No description provided for @qiyamHistoryPrayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayed · {count} rak\'ahs'**
+  String qiyamHistoryPrayed(int count);
+
+  /// No description provided for @qiyamHistoryNotPerformed.
+  ///
+  /// In en, this message translates to:
+  /// **'Did not pray'**
+  String get qiyamHistoryNotPerformed;
+
+  /// No description provided for @qiyamHistoryNotRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get qiyamHistoryNotRecorded;
+
+  /// No description provided for @qiyamHistoryLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get qiyamHistoryLoadMore;
+
+  /// No description provided for @qiyamHistoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the previous nights.'**
+  String get qiyamHistoryFailed;
 }
 
 class _FoundationLocalizationsDelegate

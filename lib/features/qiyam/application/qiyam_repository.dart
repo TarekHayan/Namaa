@@ -2,6 +2,28 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 
 import '../domain/qiyam_night_record.dart';
 
+/// One history entry (data-model.md): the night date and its recorded
+/// details. Null [record] is a night with no row — the UI's "Not recorded";
+/// a row with `performed == false` is the explicit "No" — "Did not pray".
+final class QiyamHistoryEntry {
+  const QiyamHistoryEntry({required this.nightDate, this.record});
+
+  final String nightDate;
+  final QiyamNightRecord? record;
+}
+
+/// One history page: [QiyamRepository.history]'s window of nights, newest
+/// first, every night of the window present (its record or null).
+final class QiyamHistoryPage {
+  const QiyamHistoryPage({required this.entries, required this.hasMore});
+
+  final List<QiyamHistoryEntry> entries;
+
+  /// True while the page's window still holds at least one recorded night;
+  /// an entirely unrecorded window ends the walk back.
+  final bool hasMore;
+}
+
 /// The Qiyam night store boundary (contracts/adhkar-qiyam-application.md).
 ///
 /// A missing row means the night is not recorded; `performed == false` is the
@@ -19,6 +41,27 @@ abstract interface class QiyamRepository {
   Stream<QiyamNightRecord?> watchNight({
     required String accountId,
     required String nightDate,
+  });
+
+  /// The derived streak (research.md R9): consecutive performed nights
+  /// walked back from [currentNight], one indexed lookup per night, stopping
+  /// at the first night that breaks the run and capped at 3,650 visited
+  /// nights. A storage failure is a failure, never a streak of 0.
+  Future<AppResult<int>> streak({
+    required String accountId,
+    required String currentNight,
+  });
+
+  /// One history page: the [limit] nights ending just before [before]
+  /// (`before` excluded), newest first, each with its row or null — pages
+  /// hold nights, not just rows, so an unrecorded night shows as "Not
+  /// recorded". One indexed range read per page; "load more" passes the
+  /// oldest night of the previous page as [before]. Read-only. A storage
+  /// failure is a failure, never an empty page.
+  Future<AppResult<QiyamHistoryPage>> history({
+    required String accountId,
+    required String before,
+    int limit = 30,
   });
 
   /// Writes the record row and appends the outbox entry; called inside a

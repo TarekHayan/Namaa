@@ -5,9 +5,10 @@ import 'package:namma_project/features/qiyam/domain/qiyam_night.dart';
 import 'package:timezone/data/latest_all.dart' as timezone_data;
 import 'package:timezone/timezone.dart' as tz;
 
-/// The heading (the prototype's first group): the title and subtitle, and
-/// the chip with the last third of the night — or the unavailable reason
-/// with the Prayer-setup link.
+/// The heading (the prototype's first group): the title and subtitle, the
+/// chip with the last third of the night — or the unavailable reason with
+/// the Prayer-setup link — and the Qiyam streak chip. A failed streak read
+/// shows the failure notice instead of the chip, never a streak of 0.
 final class QiyamHeader extends StatelessWidget {
   const QiyamHeader({
     super.key,
@@ -15,12 +16,19 @@ final class QiyamHeader extends StatelessWidget {
     required this.night,
     required this.locale,
     required this.locked,
+    this.streak,
+    this.streakFailed = false,
   });
 
   final QiyamStrings copy;
   final QiyamNightState? night;
   final String locale;
   final bool locked;
+
+  /// The derived streak; the chip is hidden until the first successful
+  /// read (and when the schedule is unavailable, where there is no night).
+  final int? streak;
+  final bool streakFailed;
 
   @override
   Widget build(BuildContext context) {
@@ -51,14 +59,58 @@ final class QiyamHeader extends StatelessWidget {
           ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
         ),
         const SizedBox(height: 10),
-        _LastThirdChip(
-          copy: copy,
-          lastThirdUtc: lastThird,
-          zoneId: zoneId,
-          locale: locale,
-          locked: locked,
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            _LastThirdChip(
+              copy: copy,
+              lastThirdUtc: lastThird,
+              zoneId: zoneId,
+              locale: locale,
+              locked: locked,
+            ),
+            if (streak != null) _StreakChip(copy: copy, nights: streak!),
+          ],
         ),
+        if (streakFailed) ...[
+          const SizedBox(height: 8),
+          Text(
+            copy.streakFailed,
+            key: const Key('qiyam_streak_failed'),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.error),
+          ),
+        ],
       ],
+    );
+  }
+}
+
+final class _StreakChip extends StatelessWidget {
+  const _StreakChip({required this.copy, required this.nights});
+
+  final QiyamStrings copy;
+  final int nights;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('qiyam_streak_chip'),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        copy.streak(nights),
+        style: Theme.of(
+          context,
+        ).textTheme.labelMedium?.copyWith(color: colors.primary),
+      ),
     );
   }
 }

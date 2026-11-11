@@ -1715,4 +1715,49 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get qiyamXpEarned => 'اكتمل قيام الليل! +30 نقطة';
+
+  @override
+  String qiyamStreak(int nights) {
+    return 'سلسلة القيام: $nights';
+  }
+
+  @override
+  String get qiyamStreakFailed => 'تعذّر تحميل سلسلة القيام.';
+
+  @override
+  String get qiyamHistoryTitle => 'الليالي السابقة';
+
+  @override
+  String qiyamHistoryPrayedWithWitr(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ركعات',
+      two: 'ركعتان',
+    );
+    return 'صلى · $_temp0 · بالوتر';
+  }
+
+  @override
+  String qiyamHistoryPrayed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ركعات',
+      two: 'ركعتان',
+    );
+    return 'صلى · $_temp0';
+  }
+
+  @override
+  String get qiyamHistoryNotPerformed => 'لم يصلِّ';
+
+  @override
+  String get qiyamHistoryNotRecorded => 'غير مسجَّل';
+
+  @override
+  String get qiyamHistoryLoadMore => 'تحميل المزيد';
+
+  @override
+  String get qiyamHistoryFailed => 'تعذّر تحميل الليالي السابقة.';
 }

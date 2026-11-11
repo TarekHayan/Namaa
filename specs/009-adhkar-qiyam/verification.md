@@ -423,9 +423,73 @@ yet run.
 **Pending**: AR/EN, light/dark, 320 px, 100–200% text scale on phone and desktop
 not yet checked.
 
+## Phase 5 (US3) — T051–T054 (2026-11-12)
+
+Qiyam streak and paged history, on top of Phase 4's tracker (commit
+418361f). Test-first per task: T051's domain tests were written and run
+against a missing module first, then the implementation.
+
+- **T051/T052** — `lib/features/qiyam/domain/qiyam_streak.dart` (pure, zero
+  imports) and the repository queries. The walk asks for one night's verdict
+  at a time with an early exit at the first night that breaks the run — it
+  never reads all 3,650 nights and counts afterwards — and a failed read
+  propagates as a failure, never a streak of 0. An unanswered current night
+  does not break the run; an explicit "No" is definitive and breaks it even
+  tonight; an earlier night with no record breaks it. History: one indexed
+  range read per page of 30 nights, newest first, unrecorded nights included
+  as entries with no row; `hasMore` ends at the first fully unrecorded
+  window. Tests: `qiyam_streak_test.dart` (9), `drift_qiyam_repository_test.dart`
+  extended (14 in the file, incl. the 3,650 cap seeded with 3,652 real rows,
+  paging through a cursor, per-owner isolation, and a closed-store failure).
+- **T053** — `QiyamCubit`: the streak and the first history page load with
+  the night; both refresh only on load, a night change, or a save that
+  changes the night's performed state — never on note, time or rak'ah edits
+  (proven by 10 note edits plus rak'ah/Witr/time edits leaving the query
+  counters at 1). `loadMoreHistory()` fetches the next page only (cursor =
+  the oldest loaded night; the full history is never held). Stale results
+  are discarded by epoch. A streak or history read failure shows as a
+  failure and keeps the last good value — never 0 or an empty history.
+  Tests: `qiyam_cubit_test.dart` (24).
+- **T054** — strings added line by line to both ARB files (Qiyam streak,
+  Prayed · {count} rak'ahs · Witr and its Witr-less variant, Did not pray,
+  Not recorded, Load more, plus the two failure notices the failure rules
+  need) and exposed through `qiyam_strings_adapter.dart`. New
+  `qiyam_history_section.dart` (read-only; newest first; Load more hidden
+  when the walk ends) and the streak chip in the header; the screen puts the
+  history in a side column at ≥ 1024 px and below the supplications on the
+  phone. The word "missed" appears nowhere in the Qiyam feature (the only
+  repo hits are Prayer's 008 `prayerStatusMissed`). The Qiyam streak stays
+  separate from the Adhkar, Habit and Prayer streaks by construction:
+  `qiyam_streak.dart` imports nothing and the Qiyam store reads only
+  `qiyam_nights`. Tests: `qiyam_history_test.dart` (8), including the
+  desktop/phone layout split and the AR streak text.
+
+Owner review points applied: early-exit walk (1); unanswered current night
+vs explicit No (2); streak refresh only on load/night change/performed-
+changing save (3); 30-per-page indexed paged history, read-only, next page
+only (4); read failures shown as failures (5); no "missed" (6); separate
+streak (7). T049/T050 stay untouched and no catalog asset was created (8).
+
+Gates (2026-11-12, Windows host):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean |
+| Analyze | `flutter analyze` | No issues found |
+| Full suite | `flutter test` | **966 passed, 1 skipped, 0 failed** |
+| SQL | `supabase test db` | not run: nothing under `supabase/` changed |
+
 ## SC-007 — streak values for seeded patterns
 
-**Pending**: not yet verified.
+**Qiyam portion verified 2026-11-12** (US3 checkpoint): seeded patterns
+covered by `qiyam_streak_test.dart` and `drift_qiyam_repository_test.dart` —
+consecutive nights count (3 stored → 3), a gap or an explicit "No" resets
+the walk, an unanswered current night does not break the run behind it, the
+3,650-night cap holds with 3,652 seeded rows, and a zone change that skips a
+night date breaks at the absent night. The Adhkar portion of SC-007 is
+covered by `adhkar_streak_test.dart` and the
+`drift_adhkar_repository_test.dart` completion-walk tests (Phase 3); the
+full matrix across both streaks is not yet recorded as one scenario run.
 
 ## SC-008 — countable exactly inside the time windows
 

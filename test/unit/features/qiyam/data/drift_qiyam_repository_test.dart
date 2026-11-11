@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/local/qiyam_unit_of_work.dart';
@@ -79,6 +80,25 @@ void main() {
       queueForSync: queueForSync,
     );
   }
+
+  /// Seeds one stored row directly (no command, no outbox) for the
+  /// streak-walk and history-page tests.
+  Future<void> seed(
+    String nightDate, {
+    String owner = 'owner',
+    bool performed = true,
+    int? rakahs = 4,
+  }) => db
+      .into(db.qiyamNights)
+      .insertOnConflictUpdate(
+        _seedCompanion(
+          nightDate,
+          recordId: identity.nightRecordId(nightDate),
+          owner: owner,
+          performed: performed,
+          rakahs: rakahs,
+        ),
+      );
 
   test('a performed save writes the record, the provisional award and the '
       'outbox entry, in one transaction', () async {
@@ -236,4 +256,210 @@ void main() {
         .then((r) => r.valueOrNull!);
     expect(otherRecord.accountId, 'other');
   });
+
+  group('streak (T052)', () {
+    test(
+      'counts consecutive performed nights and stops at the first break',
+      () async {
+        await seed('2026-11-11');
+        await seed('2026-11-10');
+        await seed('2026-11-09');
+        await seed('2026-11-08', performed: false);
+        await seed('2026-11-07');
+
+        final result = await repository.streak(
+          accountId: 'owner',
+          currentNight: '2026-11-11',
+        );
+        expect(result.valueOrNull, 3, reason: 'the explicit No ends the walk');
+      },
+    );
+
+    test('an explicit No tonight breaks the run; an unanswered current '
+        'night does not', () async {
+      await seed('2026-11-10');
+      await seed('2026-11-09');
+
+      final noTonight = await repository.streak(
+        accountId: 'owner',
+        currentNight: '2026-11-11',
+      );
+      expect(noTonight.valueOrNull, 2);
+
+      await seed('2026-11-11', performed: false);
+      final explicitNo = await repository.streak(
+        accountId: 'owner',
+        currentNight: '2026-11-11',
+      );
+      expect(explicitNo.valueOrNull, 0);
+    });
+
+    test('is isolated per owner', () async {
+      await seed('2026-11-11');
+      await seed('2026-11-11', owner: 'other');
+      final result = await repository.streak(
+        accountId: 'owner',
+        currentNight: '2026-11-11',
+      );
+      expect(result.valueOrNull, 1);
+    });
+
+    test('is capped at 3,650 visited nights', () async {
+      // 3,652 performed nights: without the cap the walk would count them
+      // all; with it, the streak stops at 3,650.
+      const total = 3652;
+      final companions = <QiyamNightsCompanion>[
+        for (var i = 0; i < total; i++)
+          _seedCompanion(
+            _offsetDay(2026, 11, 11, i),
+            recordId: identity.nightRecordId(_offsetDay(2026, 11, 11, i)),
+          ),
+      ];
+      await db.batch((batch) => batch.insertAll(db.qiyamNights, companions));
+
+      final result = await repository.streak(
+        accountId: 'owner',
+        currentNight: '2026-11-11',
+      );
+      expect(result.valueOrNull, 3650);
+    });
+  });
+
+  group('history (T052)', () {
+    test(
+      'one page of 30 nights, newest first, unrecorded nights included',
+      () async {
+        await seed('2026-11-10');
+        await seed('2026-11-09', performed: false);
+        await seed('2026-10-15', rakahs: 8);
+
+        final result = await repository.history(
+          accountId: 'owner',
+          before: '2026-11-11',
+        );
+        final page = result.valueOrNull!;
+        expect(page.entries, hasLength(30));
+        expect(page.entries.first.nightDate, '2026-11-10');
+        expect(page.entries.first.record?.performed, isTrue);
+        expect(page.entries[1].nightDate, '2026-11-09');
+        expect(page.entries[1].record?.performed, isFalse);
+        expect(page.entries[2].record, isNull, reason: 'a gap is a night too');
+        expect(page.entries.last.nightDate, '2026-10-12');
+        expect(
+          page.entries[26].record?.rakahs,
+          8,
+          reason: '2026-10-15 sits 26 nights back',
+        );
+        expect(page.hasMore, isTrue);
+      },
+    );
+
+    test(
+      'load more pages through the cursor and stops at an empty window',
+      () async {
+        await seed('2026-11-10');
+        await seed('2026-09-15');
+
+        final page1 = (await repository.history(
+          accountId: 'owner',
+          before: '2026-11-11',
+        )).valueOrNull!;
+        expect(page1.hasMore, isTrue);
+
+        // "Load more" passes the oldest night of the previous page.
+        final page2 = (await repository.history(
+          accountId: 'owner',
+          before: page1.entries.last.nightDate,
+        )).valueOrNull!;
+        expect(page2.entries.last.nightDate, '2026-09-12');
+        expect(page2.hasMore, isTrue);
+
+        final page3 = (await repository.history(
+          accountId: 'owner',
+          before: page2.entries.last.nightDate,
+        )).valueOrNull!;
+        expect(
+          page3.entries.any((entry) => entry.record != null),
+          isFalse,
+          reason: 'the window holds no recorded night',
+        );
+        expect(page3.hasMore, isFalse, reason: 'the walk back ends here');
+      },
+    );
+
+    test('is isolated per owner', () async {
+      await seed('2026-11-10', owner: 'other');
+      final result = await repository.history(
+        accountId: 'owner',
+        before: '2026-11-11',
+      );
+      expect(
+        result.valueOrNull!.entries.any(
+          (entry) => entry.nightDate == '2026-11-10',
+        ),
+        isTrue,
+      );
+      expect(result.valueOrNull!.entries.first.record, isNull);
+
+      final other = await repository.history(
+        accountId: 'other',
+        before: '2026-11-11',
+      );
+      expect(other.valueOrNull!.entries.first.record?.accountId, 'other');
+    });
+
+    test('a storage failure is a failure, never an empty page or a streak '
+        'of 0', () async {
+      // A closed store is the failure case: the reads must report a
+      // failure, not "no record", an empty page or a streak of 0.
+      await db.close();
+
+      final streak = await repository.streak(
+        accountId: 'owner',
+        currentNight: '2026-11-11',
+      );
+      expect(streak.failureOrNull, isNotNull);
+      expect(streak.valueOrNull, isNull);
+
+      final history = await repository.history(
+        accountId: 'owner',
+        before: '2026-11-11',
+      );
+      expect(history.failureOrNull, isNotNull);
+      expect(history.valueOrNull, isNull);
+    });
+  });
 }
+
+String _offsetDay(int year, int month, int day, int backDays) {
+  final date = DateTime.utc(
+    year,
+    month,
+    day,
+  ).subtract(Duration(days: backDays));
+  return '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
+}
+
+QiyamNightsCompanion _seedCompanion(
+  String nightDate, {
+  required String recordId,
+  String owner = 'owner',
+  bool performed = true,
+  int? rakahs = 4,
+}) => QiyamNightsCompanion.insert(
+  accountId: owner,
+  nightDate: nightDate,
+  recordId: recordId,
+  performed: performed,
+  rakahs: Value(performed ? rakahs : null),
+  witr: performed,
+  startTime: Value(performed ? '01:00' : null),
+  endTime: Value(performed ? '02:00' : null),
+  note: const Value(null),
+  recordedZoneId: 'UTC',
+  recordedOffsetMinutes: 0,
+  createdAt: DateTime.utc(2026, 11, 11, 20).toIso8601String(),
+  updatedAt: DateTime.utc(2026, 11, 11, 20).toIso8601String(),
+);

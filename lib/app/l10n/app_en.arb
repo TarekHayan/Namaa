@@ -592,5 +592,23 @@
   "qiyamNightChanged": "The night has changed; record the current night.",
   "qiyamRecordingLocked": "The times are unavailable; recording is paused until they return.",
   "qiyamReadOnly": "This night's record is read-only.",
-  "qiyamXpEarned": "Qiyam complete! +30 XP"
+  "qiyamXpEarned": "Qiyam complete! +30 XP",
+  "qiyamStreak": "Qiyam streak: {nights}",
+  "@qiyamStreak": {
+    "placeholders": {"nights": {"type": "int"}}
+  },
+  "qiyamStreakFailed": "Could not load the streak.",
+  "qiyamHistoryTitle": "Previous nights",
+  "qiyamHistoryPrayedWithWitr": "Prayed · {count} rak'ahs · Witr",
+  "@qiyamHistoryPrayedWithWitr": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamHistoryPrayed": "Prayed · {count} rak'ahs",
+  "@qiyamHistoryPrayed": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamHistoryNotPerformed": "Did not pray",
+  "qiyamHistoryNotRecorded": "Not recorded",
+  "qiyamHistoryLoadMore": "Load more",
+  "qiyamHistoryFailed": "Could not load the previous nights."
 }

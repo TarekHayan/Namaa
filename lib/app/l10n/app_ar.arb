@@ -589,5 +589,23 @@
   "qiyamNightChanged": "لقد تبدّلت الليلة؛ سجّل الليلة الحالية.",
   "qiyamRecordingLocked": "الأوقات غير متاحة الآن؛ التسجيل متوقف حتى تعود الأوقات.",
   "qiyamReadOnly": "سجل هذه الليلة للعرض فقط.",
-  "qiyamXpEarned": "اكتمل قيام الليل! +30 نقطة"
+  "qiyamXpEarned": "اكتمل قيام الليل! +30 نقطة",
+  "qiyamStreak": "سلسلة القيام: {nights}",
+  "@qiyamStreak": {
+    "placeholders": {"nights": {"type": "int"}}
+  },
+  "qiyamStreakFailed": "تعذّر تحميل سلسلة القيام.",
+  "qiyamHistoryTitle": "الليالي السابقة",
+  "qiyamHistoryPrayedWithWitr": "صلى · {count, plural, two{ركعتان} other{{count} ركعات}} · بالوتر",
+  "@qiyamHistoryPrayedWithWitr": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamHistoryPrayed": "صلى · {count, plural, two{ركعتان} other{{count} ركعات}}",
+  "@qiyamHistoryPrayed": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamHistoryNotPerformed": "لم يصلِّ",
+  "qiyamHistoryNotRecorded": "غير مسجَّل",
+  "qiyamHistoryLoadMore": "تحميل المزيد",
+  "qiyamHistoryFailed": "تعذّر تحميل الليالي السابقة."
 }

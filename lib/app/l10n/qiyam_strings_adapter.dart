@@ -33,6 +33,16 @@ final class QiyamStrings {
   String get recordingLocked => copy.qiyamRecordingLocked;
   String get readOnly => copy.qiyamReadOnly;
   String get xpEarned => copy.qiyamXpEarned;
+  String streak(int nights) => copy.qiyamStreak(nights);
+  String get streakFailed => copy.qiyamStreakFailed;
+  String get historyTitle => copy.qiyamHistoryTitle;
+  String historyPrayedWithWitr(int count) =>
+      copy.qiyamHistoryPrayedWithWitr(count);
+  String historyPrayed(int count) => copy.qiyamHistoryPrayed(count);
+  String get historyNotPerformed => copy.qiyamHistoryNotPerformed;
+  String get historyNotRecorded => copy.qiyamHistoryNotRecorded;
+  String get historyLoadMore => copy.qiyamHistoryLoadMore;
+  String get historyFailed => copy.qiyamHistoryFailed;
 
   /// The localized copy for a command failure's message key; unknown keys
   /// fall back to the generic save-failed copy.

@@ -1,3 +1,4 @@
+import 'package:namma_project/features/qiyam/application/qiyam_repository.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_night.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_night_record.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_supplication.dart';
@@ -47,7 +48,8 @@ final class QiyamForm {
 }
 
 /// The Qiyam screen state: the resolved night, the current night's record,
-/// the editable form, and the per-command feedback.
+/// the editable form, the derived streak, the paged history, and the
+/// per-command feedback.
 final class QiyamState {
   const QiyamState({
     this.loading = false,
@@ -58,6 +60,12 @@ final class QiyamState {
     this.actionStatus,
     this.celebration = false,
     this.failureMessageKey,
+    this.streak,
+    this.streakFailed = false,
+    this.history = const [],
+    this.historyLoading = false,
+    this.historyFailed = false,
+    this.historyComplete = false,
   });
 
   final bool loading;
@@ -84,6 +92,26 @@ final class QiyamState {
   /// The message key of the latest validation or persistence failure.
   final String? failureMessageKey;
 
+  /// The derived Qiyam streak; null until the first successful read. A
+  /// failed read is reported by [streakFailed] — never as a streak of 0.
+  final int? streak;
+
+  /// True when the latest streak read failed; the last good value stays.
+  final bool streakFailed;
+
+  /// The loaded history pages, newest first (30 nights per page). A failed
+  /// page fetch is reported by [historyFailed] — never as an empty history.
+  final List<QiyamHistoryEntry> history;
+
+  /// True while a history page (the first one or a "load more") is loading.
+  final bool historyLoading;
+
+  /// True when the latest history page fetch failed.
+  final bool historyFailed;
+
+  /// True when the walk back has reached an entirely unrecorded window.
+  final bool historyComplete;
+
   /// True while the schedule is unavailable: the screen stays visible but
   /// recording is locked (owner decision, 2026-11-10).
   bool get recordingLocked =>
@@ -100,6 +128,12 @@ final class QiyamState {
     QiyamActionStatus? actionStatus,
     bool celebration = false,
     String? failureMessageKey,
+    int? streak,
+    bool? streakFailed,
+    List<QiyamHistoryEntry>? history,
+    bool? historyLoading,
+    bool? historyFailed,
+    bool? historyComplete,
     bool clearRecord = false,
     bool clearForm = false,
     bool clearActionStatus = false,
@@ -118,5 +152,11 @@ final class QiyamState {
     failureMessageKey: clearFailureMessageKey
         ? null
         : (failureMessageKey ?? this.failureMessageKey),
+    streak: streak ?? this.streak,
+    streakFailed: streakFailed ?? this.streakFailed,
+    history: history ?? this.history,
+    historyLoading: historyLoading ?? this.historyLoading,
+    historyFailed: historyFailed ?? this.historyFailed,
+    historyComplete: historyComplete ?? this.historyComplete,
   );
 }

@@ -385,7 +385,7 @@
 
 **Independent test**: Seed three consecutive performed nights to get a streak of 3 and three history entries. Remove the middle night and the streak resets.
 
-- [ ] T051 [P] [US3] Write tests in test/unit/features/qiyam/domain/qiyam_streak_test.dart.
+- [x] T051 [P] [US3] Write tests in test/unit/features/qiyam/domain/qiyam_streak_test.dart.
   - **Depends**: T038.
   - **Done**: They cover:
     - consecutive nights;
@@ -394,13 +394,13 @@
     - an unanswered current night not breaking it;
     - the 3,650 cap;
     - a time-zone change.
-- [ ] T052 [US3] Implement lib/features/qiyam/domain/qiyam_streak.dart, and the streak and paged-history queries (30 per page) in drift_qiyam_repository.dart.
+- [x] T052 [US3] Implement lib/features/qiyam/domain/qiyam_streak.dart, and the streak and paged-history queries (30 per page) in drift_qiyam_repository.dart.
   - **Depends**: T051, T040.
   - **Done**: T051 passes, and the repository tests are extended for paging.
-- [ ] T053 [US3] Extend QiyamCubit with the streak and paged history.
+- [x] T053 [US3] Extend QiyamCubit with the streak and paged history.
   - **Depends**: T052, T045.
   - **Done**: The Cubit tests are extended and pass.
-- [ ] T054 [US3] Add the strings for "Qiyam streak", "Prayed · {n} rak'ahs · Witr", "Did not pray", "Not recorded" and "Load more" to both ARB files, and add lib/features/qiyam/presentation/widgets/qiyam_history_section.dart and the streak chip.
+- [x] T054 [US3] Add the strings for "Qiyam streak", "Prayed · {n} rak'ahs · Witr", "Did not pray", "Not recorded" and "Load more" to both ARB files, and add lib/features/qiyam/presentation/widgets/qiyam_history_section.dart and the streak chip.
   - **Depends**: T053.
   - **Done**:
     - The widget tests in test/widget/features/qiyam/qiyam_history_test.dart pass: newest first, read-only, "missed" never shown, and a side column at ≥ 1024 px.

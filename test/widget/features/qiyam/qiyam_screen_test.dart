@@ -357,6 +357,9 @@ final class FakeNightPort implements QiyamNightPort {
 
 final class FakeRepository implements QiyamRepository {
   QiyamNightRecord? current;
+  int streakToReturn = 0;
+  List<QiyamHistoryEntry> historyPage = const [];
+  bool historyHasMore = false;
 
   @override
   Future<AppResult<QiyamNightRecord?>> readFresh({
@@ -369,6 +372,21 @@ final class FakeRepository implements QiyamRepository {
     required String accountId,
     required String nightDate,
   }) => const Stream.empty();
+
+  @override
+  Future<AppResult<int>> streak({
+    required String accountId,
+    required String currentNight,
+  }) async => AppResult.success(streakToReturn);
+
+  @override
+  Future<AppResult<QiyamHistoryPage>> history({
+    required String accountId,
+    required String before,
+    int limit = 30,
+  }) async => AppResult.success(
+    QiyamHistoryPage(entries: historyPage, hasMore: historyHasMore),
+  );
 
   @override
   Future<AppResult<void>> writeNight(

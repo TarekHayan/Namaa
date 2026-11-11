@@ -393,6 +393,23 @@ final class FakeRepository implements QiyamRepository, QiyamNightCommitPort {
   }
 
   @override
+  Future<AppResult<int>> streak({
+    required String accountId,
+    required String currentNight,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<AppResult<QiyamHistoryPage>> history({
+    required String accountId,
+    required String before,
+    int limit = 30,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<AppResult<void>> writeNight(
     QiyamNightRecord record, {
     required String operationId,

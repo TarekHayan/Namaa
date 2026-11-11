@@ -48,6 +48,11 @@ final class QiyamCubit extends Cubit<QiyamState> {
   StreamSubscription<QiyamNightRecord?>? _recordSubscription;
   String? _watchedNight;
 
+  /// Superseding tokens: a streak or history result from an earlier
+  /// refresh never lands after a newer one started.
+  int _streakEpoch = 0;
+  int _historyEpoch = 0;
+
   /// The night the current form belongs to; the form resets when the
   /// resolved night changes, not on a plain resume.
   String? _formNight;
@@ -120,6 +125,37 @@ final class QiyamCubit extends Cubit<QiyamState> {
     await _saveForm(state.form);
   }
 
+  /// "Load more": fetches only the next history page, with the oldest
+  /// loaded night as the exclusive bound (the current night starts the
+  /// first page when nothing is loaded yet — also the retry after a failed
+  /// first page).
+  Future<void> loadMoreHistory() async {
+    if (state.historyLoading || state.historyComplete) return;
+    final cursor = state.history.isEmpty
+        ? state.night?.nightDate
+        : state.history.last.nightDate;
+    if (cursor == null) return;
+    final epoch = ++_historyEpoch;
+    emit(state.copyWith(historyLoading: true, historyFailed: false));
+    final result = await _repository.history(
+      accountId: _ownerId,
+      before: cursor,
+    );
+    if (_disposed || epoch != _historyEpoch) return;
+    if (result.valueOrNull case final page?) {
+      emit(
+        state.copyWith(
+          history: [...state.history, ...page.entries],
+          historyLoading: false,
+          historyFailed: false,
+          historyComplete: !page.hasMore,
+        ),
+      );
+    } else {
+      emit(state.copyWith(historyLoading: false, historyFailed: true));
+    }
+  }
+
   QiyamForm _with(
     QiyamForm form, {
     int? rakahs,
@@ -160,6 +196,10 @@ final class QiyamCubit extends Cubit<QiyamState> {
   Future<void> _runSave(QiyamForm form) async {
     final capturedNight = state.night?.nightDate;
     if (capturedNight == null) return;
+    // Whether this save moves the night into or out of "performed": only
+    // then does the derived streak need a refresh (never on note, time or
+    // rak'ah edits).
+    final wasPerformed = state.form?.performed;
     // An explicit save supersedes a pending debounced one (the form already
     // carries the latest text).
     _noteTimer?.cancel();
@@ -219,6 +259,9 @@ final class QiyamCubit extends Cubit<QiyamState> {
         clearFailureMessageKey: true,
       ),
     );
+    if (wasPerformed != form.performed) {
+      await _refreshStreak();
+    }
   }
 
   QiyamNightDraft _draftOf(QiyamForm form) {
@@ -285,6 +328,10 @@ final class QiyamCubit extends Cubit<QiyamState> {
       // The night rolled over: the form and the row belong to the old night.
       _formNight = null;
       emit(state.copyWith(clearForm: true, clearRecord: true));
+      // The streak and the first history page are derived for the current
+      // night; refresh them when it changes — never on plain edits.
+      await _refreshStreak();
+      await _reloadHistory();
     }
     final read = await _repository.readFresh(
       accountId: _ownerId,
@@ -293,6 +340,50 @@ final class QiyamCubit extends Cubit<QiyamState> {
     if (_disposed || generation != _generation) return;
     if (read.valueOrNull case final record?) {
       _applyRecord(record);
+    }
+  }
+
+  /// Reads the derived streak for the current night (research.md R9). A
+  /// failed read shows the failure and keeps the last good value — it is
+  /// never presented as a streak of 0.
+  Future<void> _refreshStreak() async {
+    final nightDate = state.night?.nightDate;
+    if (nightDate == null) return;
+    final epoch = ++_streakEpoch;
+    final result = await _repository.streak(
+      accountId: _ownerId,
+      currentNight: nightDate,
+    );
+    if (_disposed || epoch != _streakEpoch) return;
+    if (result.valueOrNull case final streak?) {
+      emit(state.copyWith(streak: streak, streakFailed: false));
+    } else {
+      emit(state.copyWith(streakFailed: true));
+    }
+  }
+
+  /// Loads the first history page: the 30 nights before the current night.
+  Future<void> _reloadHistory() async {
+    final nightDate = state.night?.nightDate;
+    if (nightDate == null) return;
+    final epoch = ++_historyEpoch;
+    emit(state.copyWith(historyLoading: true, historyFailed: false));
+    final result = await _repository.history(
+      accountId: _ownerId,
+      before: nightDate,
+    );
+    if (_disposed || epoch != _historyEpoch) return;
+    if (result.valueOrNull case final page?) {
+      emit(
+        state.copyWith(
+          history: page.entries,
+          historyLoading: false,
+          historyFailed: false,
+          historyComplete: !page.hasMore,
+        ),
+      );
+    } else {
+      emit(state.copyWith(historyLoading: false, historyFailed: true));
     }
   }
 

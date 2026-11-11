@@ -1730,4 +1730,37 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get qiyamXpEarned => 'Qiyam complete! +30 XP';
+
+  @override
+  String qiyamStreak(int nights) {
+    return 'Qiyam streak: $nights';
+  }
+
+  @override
+  String get qiyamStreakFailed => 'Could not load the streak.';
+
+  @override
+  String get qiyamHistoryTitle => 'Previous nights';
+
+  @override
+  String qiyamHistoryPrayedWithWitr(int count) {
+    return 'Prayed · $count rak\'ahs · Witr';
+  }
+
+  @override
+  String qiyamHistoryPrayed(int count) {
+    return 'Prayed · $count rak\'ahs';
+  }
+
+  @override
+  String get qiyamHistoryNotPerformed => 'Did not pray';
+
+  @override
+  String get qiyamHistoryNotRecorded => 'Not recorded';
+
+  @override
+  String get qiyamHistoryLoadMore => 'Load more';
+
+  @override
+  String get qiyamHistoryFailed => 'Could not load the previous nights.';
 }
