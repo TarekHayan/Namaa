@@ -470,7 +470,7 @@
 - [x] T065 [US4] Add the read-only "Sync differences" list: lib/features/adhkar/presentation/adhkar_conflicts_view.dart and lib/features/qiyam/presentation/qiyam_conflicts_view.dart, with their strings.
   - **Depends**: T064.
   - **Done**: The widget tests in test/widget/features/adhkar/adhkar_conflicts_test.dart and test/widget/features/qiyam/qiyam_conflicts_test.dart show both versions, with no resolve action and no foreign-owner data.
-- [ ] T066 [US4] Write integration_test/adhkar_qiyam_offline_sync_test.dart: two encrypted stores against the local Supabase stack (staging when hosted), run-tagged operation IDs and random past days. It covers:
+- [x] T066 [US4] Write integration_test/adhkar_qiyam_offline_sync_test.dart: two encrypted stores against the local Supabase stack (staging when hosted), run-tagged operation IDs and random past days. It covers:
   - different items completing the set, with one award;
   - the same item on both stores, giving one visible conflict;
   - Yes → No → Yes, with one award;

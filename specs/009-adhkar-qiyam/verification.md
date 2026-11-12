@@ -676,6 +676,36 @@ Gates (2026-11-12, Windows host):
 | SQL | `supabase test db` | not run: Docker Desktop unavailable |
 | Integration | `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows` | not run: Docker Desktop unavailable (T066 stays unticked) |
 
+## T066 — local-stack run (2026-11-13, Windows host)
+
+The first run of the integration file failed on four test-side mistakes,
+fixed in the test only (no production code changed):
+
+1. The duplicate inbound pass asserted `importedConflicts == 0`, but the
+   summary counts every conflict the pass applied, as Prayer's does. The
+   stable-ID upsert is proven by the local `conflict_records` count staying
+   at 1.
+2. The final m3 commit passed a null acknowledged base. It now takes both
+   preconditions from device A's local row (`expectedCurrentVersion` and
+   `acknowledgedBase`), as the Cubit does.
+3. The Qiyam Yes → No → Yes commits passed a null acknowledged base after
+   acknowledged dispatches. They now pass the acknowledged version.
+4. Device B's lost-ACK write claimed a current version it had never pulled.
+   It now writes from an empty local row, and the later pull asserts that
+   device B's night equals the server's active version, instead of a
+   minimum import count.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Reset | `supabase db reset --local` | 0001–0016 applied, `seed.sql` loaded (catalog version 900) |
+| SQL | `supabase test db` | **Files=24, Tests=337, PASS** |
+| Integration | `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows --dart-define=NAMAA_SUPABASE_ENV=local --dart-define=NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=<local stack key>` | **+1, all passed** |
+| Rerun without reset | same command | **+1, all passed** (run tags and random past days make it rerunnable) |
+| Format / analyze | `dart format … integration_test`, `flutter analyze integration_test` | clean, no issues |
+
+Not covered: the hosted (staging) variant, which waits for 0016 on staging
+(T076, owner approval).
+
 ## SC-007 — streak values for seeded patterns
 
 **Qiyam portion verified 2026-11-12** (US3 checkpoint): seeded patterns

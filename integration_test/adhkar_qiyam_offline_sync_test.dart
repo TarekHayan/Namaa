@@ -305,6 +305,7 @@ void main() {
       required DateTime at,
       required String operationId,
       DateTime? expectedCurrentVersion,
+      DateTime? acknowledgedBase,
     }) => AdhkarCommitRequest(
       accountId: owner,
       adhkarDay: day,
@@ -316,7 +317,7 @@ void main() {
       updatedAt: at,
       operationId: operationId,
       expectedCurrentVersion: expectedCurrentVersion,
-      acknowledgedBase: null,
+      acknowledgedBase: acknowledgedBase,
       queueForSync: true,
       listItems: const [
         AdhkarListItem(itemId: 'm1', target: 1),
@@ -331,6 +332,7 @@ void main() {
       required DateTime at,
       required String operationId,
       DateTime? expectedCurrentVersion,
+      DateTime? acknowledgedBase,
     }) => QiyamSaveRequest(
       accountId: owner,
       nightDate: night,
@@ -346,7 +348,7 @@ void main() {
       updatedAt: at,
       operationId: operationId,
       expectedCurrentVersion: expectedCurrentVersion,
-      acknowledgedBase: null,
+      acknowledgedBase: acknowledgedBase,
       queueForSync: true,
     );
 
@@ -405,7 +407,9 @@ void main() {
       accountId: owner,
       isCurrentScope: () => true,
     );
-    expect(duplicatePass.valueOrNull!.importedConflicts, 0);
+    // The summary counts every conflict the pass applied (as Prayer does);
+    // the upsert by stable id is proven by the row count staying at one.
+    expect(duplicatePass.failureOrNull, isNull);
     expect(await dbs[0].rawScalar('SELECT count(*) FROM conflict_records'), 1);
 
     // --------------------------------------------------------------------
@@ -448,6 +452,15 @@ void main() {
       recordId: identity.itemRecordId(day, 'm3'),
     );
     expect(m3Base, isNotNull);
+    // The inbound pass already imported that version on device A, so the
+    // command's preconditions are the local row's current and acknowledged
+    // versions (the same values the Cubit passes).
+    final m3Local = (await adhkarStores[0].readFresh(
+      accountId: owner,
+      adhkarDay: day,
+      itemId: 'm3',
+    )).valueOrNull;
+    expect(m3Local?.updatedAt, m3Base!.updatedAt);
     expect(
       (await adhkarWork[0].commit(
         adhkarCommit(
@@ -455,7 +468,8 @@ void main() {
           count: 10,
           at: at(150),
           operationId: op('adhkar-m3-final'),
-          expectedCurrentVersion: m3Base!.updatedAt,
+          expectedCurrentVersion: m3Local!.updatedAt,
+          acknowledgedBase: m3Local.lastAcknowledgedUpdatedAt,
         ),
       )).failureOrNull,
       isNull,
@@ -502,7 +516,10 @@ void main() {
           performed: false,
           at: at(210),
           operationId: op('qiyam-no'),
+          // Each dispatch acknowledged the previous version, so it is both
+          // the current and the acknowledged base.
           expectedCurrentVersion: at(200),
+          acknowledgedBase: at(200),
         ),
       )).failureOrNull,
       isNull,
@@ -515,6 +532,7 @@ void main() {
           at: at(220),
           operationId: op('qiyam-yes-2'),
           expectedCurrentVersion: at(210),
+          acknowledgedBase: at(210),
         ),
       )).failureOrNull,
       isNull,
@@ -558,7 +576,9 @@ void main() {
           recordedOffsetMinutes: 0,
           updatedAt: at(230),
           operationId: op('qiyam-lost-ack'),
-          expectedCurrentVersion: serverNight!.updatedAt,
+          // Device B has never pulled this night: it writes offline from an
+          // empty local row, and the server resolves its stale base.
+          expectedCurrentVersion: null,
           acknowledgedBase: null,
           queueForSync: true,
         ),
@@ -584,8 +604,9 @@ void main() {
       reason: 'the ACK is durable after the retry',
     );
 
-    // Device 1 pulls the nights it has never seen; a duplicate inbound pass
-    // imports nothing new.
+    // Device 1 pulls the owner's nights: its local night converges on the
+    // server's active version, and a duplicate inbound pass imports nothing
+    // new.
     final qiyamPull = QiyamInboundSynchronizer(
       reader: SupabaseQiyamReader(clients[1], pageSize: 1),
       reconciler: QiyamReconciler(
@@ -598,7 +619,17 @@ void main() {
       accountId: owner,
       isCurrentScope: () => true,
     );
-    expect(pullResult.valueOrNull!.importedNights, greaterThanOrEqualTo(1));
+    expect(pullResult.failureOrNull, isNull);
+    final activeNight = await SupabaseQiyamGatewayImpl(clients[1]).fetchNight(
+      expectedAccountId: owner,
+      recordId: qiyamIdentity.nightRecordId(night),
+    );
+    final localNight = (await qiyamStores[1].readFresh(
+      accountId: owner,
+      nightDate: night,
+    )).valueOrNull;
+    expect(localNight?.performed, activeNight!.performed);
+    expect(localNight?.updatedAt, activeNight.updatedAt);
     final duplicateNightPass = await qiyamPull.receive(
       accountId: owner,
       isCurrentScope: () => true,
