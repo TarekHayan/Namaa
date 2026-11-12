@@ -5,16 +5,21 @@ import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/core/domain/values/version_source.dart';
 
+import '../application/qiyam_conflict_reader.dart';
 import '../application/qiyam_repository.dart';
+import '../domain/qiyam_conflict_evidence.dart';
 import '../domain/qiyam_night_record.dart';
 import '../domain/qiyam_streak.dart';
+import 'qiyam_remote_models.dart';
 
 /// Drift-backed Qiyam night store on the encrypted database (schema v10).
 /// Reads and writes are owner-scoped; the sync payload carries the typed
 /// fields the 0016 RPC expects (without owner or record id, which the server
 /// recomputes).
-final class DriftQiyamRepository implements QiyamRepository {
+final class DriftQiyamRepository
+    implements QiyamRepository, QiyamConflictReader {
   DriftQiyamRepository(this._database);
 
   /// The number of recorded rows one streak read fetches per indexed range
@@ -276,6 +281,178 @@ final class DriftQiyamRepository implements QiyamRepository {
     occurredAt: DateTime.now().toUtc(),
     technicalCause: error.runtimeType.toString(),
   );
+
+  @override
+  Stream<List<QiyamConflictEvidence>> watchConflicts(String accountId) =>
+      (_database.select(_database.conflictRecords)
+            ..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.entityType.equals('qiyam_night'),
+            )
+            ..orderBy([(table) => OrderingTerm.desc(table.detectedAt)]))
+          .watch()
+          .map(
+            (rows) => List.unmodifiable(
+              rows.map((row) {
+                final active =
+                    jsonDecode(row.activePayload) as Map<String, dynamic>;
+                final retained =
+                    jsonDecode(row.retainedPayload) as Map<String, dynamic>;
+                return QiyamConflictEvidence(
+                  id: row.conflictId,
+                  nightDate: active['night_date'] as String,
+                  activePerformed: active['performed'] as bool,
+                  retainedPerformed: retained['performed'] as bool,
+                  activeRakahs: active['rakahs'] as int?,
+                  retainedRakahs: retained['rakahs'] as int?,
+                  activeAt: row.activeTimestamp.toUtc(),
+                  retainedAt: row.retainedTimestamp.toUtc(),
+                );
+              }),
+            ),
+          );
+
+  /// Local dispatch finalization (contracts/adhkar-qiyam-sync.md), in ONE
+  /// transaction before the coordinator acknowledges: settle the canonical
+  /// `qiyam_done` award (source id = the night record id) once, upsert the
+  /// conflict evidence by its stable id, and apply the server's active
+  /// record only when no newer local work is pending or acknowledged. Any
+  /// failure rolls everything back and the operation stays pending.
+  Future<AppResult<void>> finalizeReceipt({
+    required String accountId,
+    required String nightDate,
+    required DateTime outboundVersion,
+    required QiyamDispatchReceipt receipt,
+  }) async {
+    try {
+      if (receipt.active.accountId != accountId ||
+          receipt.active.nightDate != nightDate) {
+        throw const FormatException('Foreign Qiyam receipt');
+      }
+      await _database.transaction(() async {
+        final read = await readFresh(
+          accountId: accountId,
+          nightDate: nightDate,
+        );
+        if (read.failureOrNull != null) {
+          throw StateError('Qiyam local read failed');
+        }
+        final current = read.valueOrNull;
+        if (current == null || current.recordId != receipt.active.recordId) {
+          throw StateError('Qiyam receipt has no local record');
+        }
+        if (receipt.award case final award?) {
+          if (award.accountId != accountId) {
+            throw const FormatException('Foreign Qiyam award');
+          }
+          await _database
+              .into(_database.xpAwards)
+              .insertOnConflictUpdate(
+                XpAwardsCompanion.insert(
+                  accountId: award.accountId,
+                  source: award.source,
+                  sourceId: award.sourceId,
+                  amount: award.amount,
+                  awardedAt: award.awardedAt,
+                ),
+              );
+        }
+        if (receipt.conflict case final conflict?) {
+          await _insertConflict(conflict, accountId);
+        }
+        final canReplace = current.updatedAt == outboundVersion;
+        final newerAck =
+            current.lastAcknowledgedUpdatedAt != null &&
+            current.lastAcknowledgedUpdatedAt!.isAfter(
+              receipt.active.updatedAt,
+            );
+        if (canReplace && !newerAck) {
+          await _database
+              .into(_database.qiyamNights)
+              .insertOnConflictUpdate(
+                QiyamNightsCompanion.insert(
+                  accountId: receipt.active.accountId,
+                  nightDate: receipt.active.nightDate,
+                  recordId: receipt.active.recordId,
+                  performed: receipt.active.performed,
+                  rakahs: Value(receipt.active.rakahs),
+                  witr: receipt.active.witr,
+                  startTime: Value(receipt.active.startTime),
+                  endTime: Value(receipt.active.endTime),
+                  note: Value(receipt.active.note),
+                  recordedZoneId: receipt.active.recordedZoneId,
+                  recordedOffsetMinutes: receipt.active.recordedOffsetMinutes,
+                  createdAt: receipt.active.createdAt.toIso8601String(),
+                  updatedAt: receipt.active.updatedAt.toIso8601String(),
+                  lastAcknowledgedUpdatedAt: Value(
+                    receipt.active.updatedAt.toIso8601String(),
+                  ),
+                ),
+              );
+        } else if (!newerAck) {
+          await (_database.update(_database.qiyamNights)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.recordId.equals(receipt.active.recordId),
+              ))
+              .write(
+                QiyamNightsCompanion(
+                  lastAcknowledgedUpdatedAt: Value(
+                    receipt.active.updatedAt.toIso8601String(),
+                  ),
+                ),
+              );
+        }
+      });
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  /// Upserts one remote conflict's evidence by its stable id; repeated
+  /// detection reuses the row (read-only evidence, never a resolution).
+  Future<AppResult<void>> applyRemoteConflict(
+    QiyamRemoteConflict conflict, {
+    required String accountId,
+  }) async {
+    try {
+      await _insertConflict(conflict, accountId);
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  Future<void> _insertConflict(
+    QiyamRemoteConflict conflict,
+    String owner,
+  ) async {
+    if (conflict.active.accountId != owner ||
+        conflict.retained.accountId != owner ||
+        conflict.active.recordId != conflict.retained.recordId) {
+      throw const FormatException('Foreign Qiyam conflict');
+    }
+    await _database
+        .into(_database.conflictRecords)
+        .insert(
+          ConflictRecordsCompanion.insert(
+            conflictId: conflict.id,
+            accountId: owner,
+            entityType: 'qiyam_night',
+            entityId: conflict.active.recordId,
+            activeSource: VersionSource.remote,
+            activeTimestamp: conflict.active.updatedAt,
+            activePayload: QiyamRemoteModels.payload(conflict.active),
+            retainedSource: VersionSource.remote,
+            retainedTimestamp: conflict.retained.updatedAt,
+            retainedPayload: QiyamRemoteModels.payload(conflict.retained),
+            detectedAt: conflict.detectedAt,
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+  }
 }
 
 final class _TransactionFailure implements Exception {

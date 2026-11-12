@@ -610,5 +610,17 @@
   "qiyamHistoryNotPerformed": "Did not pray",
   "qiyamHistoryNotRecorded": "Not recorded",
   "qiyamHistoryLoadMore": "Load more",
-  "qiyamHistoryFailed": "Could not load the previous nights."
+  "qiyamHistoryFailed": "Could not load the previous nights.",
+  "adhkarConflicts": "Sync differences",
+  "adhkarConflictActive": "Active",
+  "adhkarConflictRetained": "Retained",
+  "adhkarConflictReadOnly": "Read-only; nothing to resolve.",
+  "adhkarConflictCount": "Count: {count}",
+  "@adhkarConflictCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamConflicts": "Sync differences",
+  "qiyamConflictActive": "Active",
+  "qiyamConflictRetained": "Retained",
+  "qiyamConflictReadOnly": "Read-only; nothing to resolve."
 }

@@ -607,5 +607,17 @@
   "qiyamHistoryNotPerformed": "لم يصلِّ",
   "qiyamHistoryNotRecorded": "غير مسجَّل",
   "qiyamHistoryLoadMore": "تحميل المزيد",
-  "qiyamHistoryFailed": "تعذّر تحميل الليالي السابقة."
+  "qiyamHistoryFailed": "تعذّر تحميل الليالي السابقة.",
+  "adhkarConflicts": "اختلافات المزامنة",
+  "adhkarConflictActive": "النسخة النشطة",
+  "adhkarConflictRetained": "النسخة المحفوظة",
+  "adhkarConflictReadOnly": "للعرض فقط؛ لا يوجد إجراء.",
+  "adhkarConflictCount": "العد: {count}",
+  "@adhkarConflictCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamConflicts": "اختلافات المزامنة",
+  "qiyamConflictActive": "النسخة النشطة",
+  "qiyamConflictRetained": "النسخة المحفوظة",
+  "qiyamConflictReadOnly": "للعرض فقط؛ لا يوجد إجراء."
 }

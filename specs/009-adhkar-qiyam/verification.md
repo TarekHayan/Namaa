@@ -534,6 +534,95 @@ Gates (2026-11-12, Windows host):
 | Full suite | `flutter test` | **973 passed, 1 skipped, 0 failed** |
 | SQL | `supabase test db` | not run: nothing under `supabase/` changed |
 
+## Phase 6 (US4) — T055–T056, T059–T065 (2026-11-12)
+
+Home/Track port and cross-device sync. Test-first per task; T057, T058 and
+T067 stay open (they depend on T049, blocked by the owner's content
+approval), and T066 stays open (Docker unavailable — see below).
+
+- **T055/T056** — `TodayAdhkarQiyamPort` + `TodayAdhkarQiyamReference`
+  (Morning x/N, Evening x/N, the period, tonight's state unanswered/yes/no/
+  locked, both streaks) and `AdhkarQiyamTodayAdapter` talking to Adhkar/Qiyam
+  through their application APIs only (no Drift tables). The Adhkar streak
+  composition moved behind `AdhkarStreakService` (application) so Today
+  reuses the existing walk instead of re-implementing it. An unavailable
+  schedule is exposed honestly: counts 0/0, period null, streaks null (never
+  0), tonight locked, and no day or night invented (owner decision,
+  2026-11-10). Tests: `adhkar_qiyam_today_adapter_test.dart` (5).
+- **T059/T060** — `SupabaseAdhkarSyncAdapter` + `SupabaseAdhkarGatewayImpl`
+  over `apply_adhkar_item_change_v1`: the typed arguments map from the
+  outbox payload (no owner, record id, list or XP amount); the receipt maps
+  receipt/active/retained/conflictId/canonicalAward; `finalizeReceipt` on
+  `DriftAdhkarRepository` settles the canonical set award by (source,
+  sourceId) — never by item — upserts the conflict evidence by stable id and
+  applies the server's active record only when no newer local work is
+  pending or acknowledged, in ONE transaction before the coordinator's ACK;
+  a failure rolls the whole finalization back and leaves the operation
+  pending; an old response rebases the acknowledged base without
+  overwriting the newer local version. Tests:
+  `supabase_adhkar_sync_adapter_test.dart` (6).
+- **T061/T062** — the Qiyam mirror over `apply_qiyam_night_change_v1`
+  (`qiyam_remote_models.dart`, `supabase_qiyam_gateway.dart`,
+  `supabase_qiyam_sync_adapter.dart`, `finalizeReceipt` on
+  `DriftQiyamRepository`; the `qiyam_done` award settles with the night
+  record id as its source id). Tests: `supabase_qiyam_sync_adapter_test.dart`
+  (5). Both entity types register in `EntityDispatchRouter` through optional
+  constructor parameters wired in composition only; the existing router
+  tests stay unchanged.
+- **T063/T064** — owner-scoped inbound readers with keyset pages ordered by
+  `record_id` / `source_id` / `conflict_id` (Adhkar: counts, set awards,
+  conflicts; Qiyam: nights, night awards, conflicts), each pass restarting
+  from the start of the range and a failed page failing the pass without
+  advancing anything; the server catalog is read once per version and cached
+  (`AdhkarCatalogCache`); every row's owner is validated. The reconcilers
+  apply snapshots atomically in one repository transaction: awards through
+  the shared ledger (settling the provisional replica once), conflicts by
+  stable id, counts/nights skipping pending descendants and never moving a
+  newer acknowledged marker backwards. `AdhkarSyncService` and
+  `QiyamSyncService` mirror `PrayerSyncService` (outbound engine first, then
+  inbound, stale-owner guards), are domain-scoped, and a failure in them
+  never fails or delays another domain — proven by
+  `adhkar_sync_service_test.dart`, which runs the real `PrayerSyncService`
+  alongside a failing Adhkar reader and shows Prayer still syncing (2
+  tests). Tests: `adhkar_inbound_synchronizer_test.dart` (6),
+  `qiyam_inbound_synchronizer_test.dart` (3). Wired through composition
+  (repositories, gateways, adapters, readers, reconcilers, services) and
+  started in `app.dart` next to Prayer's service.
+- **T065** — read-only "Sync differences" views for both domains
+  (`adhkar_conflicts_view.dart`, `qiyam_conflicts_view.dart`), fed by
+  owner-scoped `watchConflicts` streams over `conflict_records` (entity-type
+  filtered, newest detection first): both versions shown, no resolve action
+  of any kind, no foreign-owner rows ever leave the store, and the Qiyam
+  states reuse the history copy so "missed" never appears. Strings added
+  line by line to both ARB files. Tests: `adhkar_conflicts_test.dart` (3),
+  `qiyam_conflicts_test.dart` (2) — the store runs through `tester.runAsync`
+  because the encrypted database lives in a background isolate.
+- **T066** — `integration_test/adhkar_qiyam_offline_sync_test.dart` written
+  (two encrypted stores, run-tagged operation IDs, a past day inside the
+  server window, and the six cases). The local catalog fixture lives in
+  `supabase/seed.sql` (catalog version 900 — IDs and targets only, never in
+  a migration; the pgTAP tests own version 1 and seed inside their own
+  transactions). **Not executed**: Docker Desktop was not running on this
+  machine, so `supabase start`, `supabase db reset`, `supabase test db` and
+  the Windows integration run could not start. The task stays unticked per
+  the owner's instruction; nothing was pointed at staging.
+
+Owner decisions honored: no calendar-day fallback anywhere in the Today port
+or sync; tonight's "No" never zeros the streak (the services reuse the
+existing walks); no real adhkar, supplication or Quran text anywhere — the
+catalog fixture carries IDs and targets only.
+
+Gates (2026-11-12, Windows host):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean |
+| Analyze | `flutter analyze` | No issues found |
+| Focused suites | `flutter test test/unit/features/today/data test/unit/features/adhkar test/unit/features/qiyam test/widget/features/adhkar test/widget/features/qiyam test/unit/core/data/sync` | **264 passed** |
+| Full suite | `flutter test` | **1005 passed, 1 skipped, 0 failed** |
+| SQL | `supabase test db` | not run: Docker Desktop unavailable |
+| Integration | `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows` | not run: Docker Desktop unavailable |
+
 ## SC-007 — streak values for seeded patterns
 
 **Qiyam portion verified 2026-11-12** (US3 checkpoint): seeded patterns

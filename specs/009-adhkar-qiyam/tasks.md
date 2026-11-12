@@ -421,10 +421,10 @@
 
 ### Home and Track
 
-- [ ] T055 [P] [US4] Write tests in test/unit/features/today/data/adhkar_qiyam_today_adapter_test.dart.
+- [x] T055 [P] [US4] Write tests in test/unit/features/today/data/adhkar_qiyam_today_adapter_test.dart.
   - **Depends**: T030, T045.
   - **Done**: They cover Morning x/N, Evening x/N, the period, tonight's Qiyam state and both streaks, through application APIs only.
-- [ ] T056 [US4] Implement lib/features/today/application/today_adhkar_qiyam_port.dart, lib/features/today/domain/today_adhkar_qiyam_reference.dart and lib/features/today/data/adhkar_qiyam_today_adapter.dart.
+- [x] T056 [US4] Implement lib/features/today/application/today_adhkar_qiyam_port.dart, lib/features/today/domain/today_adhkar_qiyam_reference.dart and lib/features/today/data/adhkar_qiyam_today_adapter.dart.
   - **Depends**: T055.
   - **Done**: T055 passes.
 - [ ] T057 [US4] Replace the sample Adhkar/Qiyam values in lib/features/today/presentation/widgets/today_focus_reflection_card.dart and today_progress_hero.dart with the port's values. Activate the Adhkar and Qiyam tiles in prayer_track_hub.dart and today_quick_hubs.dart.
@@ -439,7 +439,7 @@
 
 ### Sync
 
-- [ ] T059 [P] [US4] Write tests in test/unit/features/adhkar/data/supabase_adhkar_sync_adapter_test.dart.
+- [x] T059 [P] [US4] Write tests in test/unit/features/adhkar/data/supabase_adhkar_sync_adapter_test.dart.
   - **Depends**: T019, T025.
   - **Done**: They cover:
     - the typed RPC argument mapping;
@@ -447,16 +447,16 @@
     - local finalization in one transaction before ACK;
     - a failure leaving the operation pending;
     - an old response not overwriting a newer local version.
-- [ ] T060 [US4] Implement lib/features/adhkar/data/supabase_adhkar_sync_adapter.dart and register `adhkar_item` in lib/core/data/sync/entity_dispatch_router.dart through composition.
+- [x] T060 [US4] Implement lib/features/adhkar/data/supabase_adhkar_sync_adapter.dart and register `adhkar_item` in lib/core/data/sync/entity_dispatch_router.dart through composition.
   - **Depends**: T059.
   - **Done**: T059 passes.
-- [ ] T061 [P] [US4] Write tests in test/unit/features/qiyam/data/supabase_qiyam_sync_adapter_test.dart, the same cases for `qiyam_night`.
+- [x] T061 [P] [US4] Write tests in test/unit/features/qiyam/data/supabase_qiyam_sync_adapter_test.dart, the same cases for `qiyam_night`.
   - **Depends**: T019, T040.
   - **Done**: The tests fail before T062.
-- [ ] T062 [US4] Implement lib/features/qiyam/data/supabase_qiyam_sync_adapter.dart and register `qiyam_night`.
+- [x] T062 [US4] Implement lib/features/qiyam/data/supabase_qiyam_sync_adapter.dart and register `qiyam_night`.
   - **Depends**: T061.
   - **Done**: T061 passes.
-- [ ] T063 [P] [US4] Write tests in test/unit/features/adhkar/data/adhkar_inbound_synchronizer_test.dart and test/unit/features/qiyam/data/qiyam_inbound_synchronizer_test.dart.
+- [x] T063 [P] [US4] Write tests in test/unit/features/adhkar/data/adhkar_inbound_synchronizer_test.dart and test/unit/features/qiyam/data/qiyam_inbound_synchronizer_test.dart.
   - **Depends**: T060, T062.
   - **Done**: They cover:
     - keyset pages;
@@ -464,10 +464,10 @@
     - award settlement by (source, sourceId), replacing the provisional award once;
     - conflicts upserted by stable ID;
     - the owner validated.
-- [ ] T064 [US4] Implement lib/features/adhkar/data/adhkar_inbound_synchronizer.dart, lib/features/adhkar/data/supabase_adhkar_reader.dart, lib/features/qiyam/data/qiyam_inbound_synchronizer.dart and lib/features/qiyam/data/supabase_qiyam_reader.dart, wired into the existing synchronization runner.
+- [x] T064 [US4] Implement lib/features/adhkar/data/adhkar_inbound_synchronizer.dart, lib/features/adhkar/data/supabase_adhkar_reader.dart, lib/features/qiyam/data/qiyam_inbound_synchronizer.dart and lib/features/qiyam/data/supabase_qiyam_reader.dart, wired into the existing synchronization runner.
   - **Depends**: T063.
   - **Done**: T063 passes, and the catalog table is read once per version.
-- [ ] T065 [US4] Add the read-only "Sync differences" list: lib/features/adhkar/presentation/adhkar_conflicts_view.dart and lib/features/qiyam/presentation/qiyam_conflicts_view.dart, with their strings.
+- [x] T065 [US4] Add the read-only "Sync differences" list: lib/features/adhkar/presentation/adhkar_conflicts_view.dart and lib/features/qiyam/presentation/qiyam_conflicts_view.dart, with their strings.
   - **Depends**: T064.
   - **Done**: The widget tests in test/widget/features/adhkar/adhkar_conflicts_test.dart and test/widget/features/qiyam/qiyam_conflicts_test.dart show both versions, with no resolve action and no foreign-owner data.
 - [ ] T066 [US4] Write integration_test/adhkar_qiyam_offline_sync_test.dart: two encrypted stores against the local Supabase stack (staging when hosted), run-tagged operation IDs and random past days. It covers:

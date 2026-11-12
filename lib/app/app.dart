@@ -25,6 +25,7 @@ import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
 import 'package:namma_project/app/widgets/app_status_view.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_sync_service.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
@@ -41,6 +42,7 @@ import 'package:namma_project/features/prayer/application/prayer_sync_service.da
 import 'package:namma_project/features/prayer/domain/prayer_conflict_evidence.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_screen.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_sync_service.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
@@ -815,6 +817,14 @@ class _PrayerRouteScopeState extends State<_PrayerRouteScope> {
     super.initState();
     if (GetIt.instance.isRegistered<PrayerSyncService>()) {
       unawaited(GetIt.instance<PrayerSyncService>().synchronize());
+    }
+    // Domain-scoped Adhkar/Qiyam sync starts separately: a failure there
+    // never blocks Prayer or the global status.
+    if (GetIt.instance.isRegistered<AdhkarSyncService>()) {
+      unawaited(GetIt.instance<AdhkarSyncService>().synchronize());
+    }
+    if (GetIt.instance.isRegistered<QiyamSyncService>()) {
+      unawaited(GetIt.instance<QiyamSyncService>().synchronize());
     }
   }
 

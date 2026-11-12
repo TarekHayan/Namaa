@@ -5,14 +5,19 @@ import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/core/domain/values/version_source.dart';
 
+import '../application/adhkar_conflict_reader.dart';
 import '../application/adhkar_repository.dart';
+import '../domain/adhkar_conflict_evidence.dart';
+import 'adhkar_remote_models.dart';
 
 /// Drift-backed Adhkar count store on the encrypted database (schema v10).
 /// Reads and writes are owner-scoped; the sync payload carries the typed
 /// fields the 0016 RPC expects (without owner or record id, which the server
 /// recomputes).
-final class DriftAdhkarRepository implements AdhkarRepository {
+final class DriftAdhkarRepository
+    implements AdhkarRepository, AdhkarConflictReader {
   DriftAdhkarRepository(this._database);
 
   final FoundationDatabase _database;
@@ -253,6 +258,177 @@ final class DriftAdhkarRepository implements AdhkarRepository {
     occurredAt: DateTime.now().toUtc(),
     technicalCause: error.runtimeType.toString(),
   );
+
+  @override
+  Stream<List<AdhkarConflictEvidence>> watchConflicts(String accountId) =>
+      (_database.select(_database.conflictRecords)
+            ..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.entityType.equals('adhkar_item'),
+            )
+            ..orderBy([(table) => OrderingTerm.desc(table.detectedAt)]))
+          .watch()
+          .map(
+            (rows) => List.unmodifiable(
+              rows.map((row) {
+                final active =
+                    jsonDecode(row.activePayload) as Map<String, dynamic>;
+                final retained =
+                    jsonDecode(row.retainedPayload) as Map<String, dynamic>;
+                return AdhkarConflictEvidence(
+                  id: row.conflictId,
+                  adhkarDay: active['adhkar_day'] as String,
+                  itemId: active['item_id'] as String,
+                  activeCount: active['count'] as int,
+                  retainedCount: retained['count'] as int,
+                  activeAt: row.activeTimestamp.toUtc(),
+                  retainedAt: row.retainedTimestamp.toUtc(),
+                );
+              }),
+            ),
+          );
+
+  /// Local dispatch finalization (contracts/adhkar-qiyam-sync.md), in ONE
+  /// transaction before the coordinator acknowledges: settle the canonical
+  /// set award — replacing the provisional replica once, by (source,
+  /// sourceId) — upsert the conflict evidence by its stable id, and apply
+  /// the server's active record only when no newer local work is pending or
+  /// acknowledged. Any failure rolls everything back and the operation
+  /// stays pending.
+  Future<AppResult<void>> finalizeReceipt({
+    required String accountId,
+    required String adhkarDay,
+    required String itemId,
+    required DateTime outboundVersion,
+    required AdhkarDispatchReceipt receipt,
+  }) async {
+    try {
+      if (receipt.active.accountId != accountId ||
+          receipt.active.adhkarDay != adhkarDay ||
+          receipt.active.itemId != itemId) {
+        throw const FormatException('Foreign Adhkar receipt');
+      }
+      await _database.transaction(() async {
+        final read = await readFresh(
+          accountId: accountId,
+          adhkarDay: adhkarDay,
+          itemId: itemId,
+        );
+        if (read.failureOrNull != null) {
+          throw StateError('Adhkar local read failed');
+        }
+        final current = read.valueOrNull;
+        if (current == null || current.recordId != receipt.active.recordId) {
+          throw StateError('Adhkar receipt has no local record');
+        }
+        if (receipt.award case final award?) {
+          if (award.accountId != accountId) {
+            throw const FormatException('Foreign Adhkar award');
+          }
+          await _database
+              .into(_database.xpAwards)
+              .insertOnConflictUpdate(
+                XpAwardsCompanion.insert(
+                  accountId: award.accountId,
+                  source: award.source,
+                  sourceId: award.sourceId,
+                  amount: award.amount,
+                  awardedAt: award.awardedAt,
+                ),
+              );
+        }
+        if (receipt.conflict case final conflict?) {
+          await _insertConflict(conflict, accountId);
+        }
+        final canReplace = current.updatedAt == outboundVersion;
+        final newerAck =
+            current.lastAcknowledgedUpdatedAt != null &&
+            current.lastAcknowledgedUpdatedAt!.isAfter(
+              receipt.active.updatedAt,
+            );
+        if (canReplace && !newerAck) {
+          await _database
+              .into(_database.adhkarItemCounts)
+              .insertOnConflictUpdate(
+                AdhkarItemCountsCompanion.insert(
+                  accountId: receipt.active.accountId,
+                  adhkarDay: receipt.active.adhkarDay,
+                  itemId: receipt.active.itemId,
+                  recordId: receipt.active.recordId,
+                  catalogVersion: receipt.active.catalogVersion,
+                  list: receipt.active.list,
+                  count: receipt.active.count,
+                  createdAt: receipt.active.createdAt.toIso8601String(),
+                  updatedAt: receipt.active.updatedAt.toIso8601String(),
+                  lastAcknowledgedUpdatedAt: Value(
+                    receipt.active.updatedAt.toIso8601String(),
+                  ),
+                ),
+              );
+        } else if (!newerAck) {
+          await (_database.update(_database.adhkarItemCounts)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.recordId.equals(receipt.active.recordId),
+              ))
+              .write(
+                AdhkarItemCountsCompanion(
+                  lastAcknowledgedUpdatedAt: Value(
+                    receipt.active.updatedAt.toIso8601String(),
+                  ),
+                ),
+              );
+        }
+      });
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  /// Upserts one remote conflict's evidence by its stable id; repeated
+  /// detection reuses the row (read-only evidence, never a resolution).
+  Future<AppResult<void>> applyRemoteConflict(
+    AdhkarRemoteConflict conflict, {
+    required String accountId,
+  }) async {
+    try {
+      await _insertConflict(conflict, accountId);
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error));
+    }
+  }
+
+  Future<void> _insertConflict(
+    AdhkarRemoteConflict conflict,
+    String owner,
+  ) async {
+    if (conflict.active.accountId != owner ||
+        conflict.retained.accountId != owner ||
+        conflict.active.recordId != conflict.retained.recordId) {
+      throw const FormatException('Foreign Adhkar conflict');
+    }
+    await _database
+        .into(_database.conflictRecords)
+        .insert(
+          ConflictRecordsCompanion.insert(
+            conflictId: conflict.id,
+            accountId: owner,
+            entityType: 'adhkar_item',
+            entityId: conflict.active.recordId,
+            activeSource: VersionSource.remote,
+            activeTimestamp: conflict.active.updatedAt,
+            activePayload: AdhkarRemoteModels.payload(conflict.active),
+            retainedSource: VersionSource.remote,
+            retainedTimestamp: conflict.retained.updatedAt,
+            retainedPayload: AdhkarRemoteModels.payload(conflict.retained),
+            detectedAt: conflict.detectedAt,
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+  }
 }
 
 final class _TransactionFailure implements Exception {
