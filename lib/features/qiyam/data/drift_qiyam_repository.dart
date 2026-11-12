@@ -17,6 +17,10 @@ import '../domain/qiyam_streak.dart';
 final class DriftQiyamRepository implements QiyamRepository {
   DriftQiyamRepository(this._database);
 
+  /// The number of recorded rows one streak read fetches per indexed range
+  /// read before serving the walk from memory.
+  static const int _streakBatchSize = 60;
+
   final FoundationDatabase _database;
 
   @override
@@ -57,22 +61,47 @@ final class DriftQiyamRepository implements QiyamRepository {
     required String currentNight,
   }) async {
     try {
+      // Descending batches of recorded rows served to the walk from memory:
+      // the walk keeps its early exit at the first breaking night and the
+      // 3,650-night cap, and a long streak costs a handful of indexed range
+      // reads instead of one query per night (Phase 5 review finding 3).
+      final buffer = <String, QiyamNightVerdict>{};
+      String? oldestFetched;
+      var exhausted = false;
       final streak = await qiyamStreak(
         currentNight: currentNight,
-        // One indexed lookup per night; the walk stops asking at the first
-        // night that breaks the run, so no further reads happen.
         verdictOf: (nightDate) async {
-          final row =
-              await (_database.select(_database.qiyamNights)..where(
-                    (table) =>
-                        table.accountId.equals(accountId) &
-                        table.nightDate.equals(nightDate),
-                  ))
-                  .getSingleOrNull();
-          if (row == null) return null;
-          return row.performed
-              ? QiyamNightVerdict.performed
-              : QiyamNightVerdict.notPerformed;
+          if (!buffer.containsKey(nightDate) && !exhausted) {
+            // A local copy: Dart does not promote a closure-captured
+            // variable, so `oldestFetched != null` alone would not hold.
+            final oldest = oldestFetched;
+            final insideCoveredRange =
+                oldest != null && nightDate.compareTo(oldest) >= 0;
+            if (!insideCoveredRange) {
+              final rows =
+                  await (_database.select(_database.qiyamNights)
+                        ..where(
+                          (table) =>
+                              table.accountId.equals(accountId) &
+                              table.nightDate.isSmallerOrEqualValue(nightDate),
+                        )
+                        ..orderBy([
+                          (table) => OrderingTerm.desc(table.nightDate),
+                        ])
+                        ..limit(_streakBatchSize))
+                      .get();
+              if (rows.length < _streakBatchSize) {
+                exhausted = true;
+              }
+              for (final row in rows) {
+                buffer[row.nightDate] = row.performed
+                    ? QiyamNightVerdict.performed
+                    : QiyamNightVerdict.notPerformed;
+              }
+              oldestFetched = rows.isEmpty ? nightDate : rows.last.nightDate;
+            }
+          }
+          return buffer[nightDate];
         },
       );
       return AppResult.success(streak);
@@ -91,38 +120,29 @@ final class DriftQiyamRepository implements QiyamRepository {
       if (limit < 1) {
         throw ArgumentError.value(limit, 'limit');
       }
-      // The page's window of nights: (before - limit, before), one indexed
-      // range read; ISO night dates compare byte-wise as they compare in
-      // time.
-      final windowStart = _dayKey(
-        _parseDay(before).subtract(Duration(days: limit)),
-      );
+      // Validates the bound format; a malformed one is a failure.
+      _parseDay(before);
+      // Keyset paging over RECORDED rows (Phase 5 review finding 1): 30
+      // rows per page, newest first, one indexed range read; the extra row
+      // tells whether an older row exists. A stretch of unrecorded nights
+      // never hides the rows behind it.
       final rows =
           await (_database.select(_database.qiyamNights)
                 ..where(
                   (table) =>
                       table.accountId.equals(accountId) &
-                      table.nightDate.isSmallerThanValue(before) &
-                      table.nightDate.isBiggerThanValue(windowStart),
+                      table.nightDate.isSmallerThanValue(before),
                 )
-                ..orderBy([(table) => OrderingTerm.desc(table.nightDate)]))
+                ..orderBy([(table) => OrderingTerm.desc(table.nightDate)])
+                ..limit(limit + 1))
               .get();
-      final byNight = {for (final row in rows) row.nightDate: row};
-      final entries = <QiyamHistoryEntry>[];
-      for (var i = 1; i <= limit; i++) {
-        final nightDate = _dayKey(
-          _parseDay(before).subtract(Duration(days: i)),
-        );
-        final row = byNight[nightDate];
-        entries.add(
-          QiyamHistoryEntry(
-            nightDate: nightDate,
-            record: row == null ? null : _decode(row),
-          ),
-        );
-      }
+      final hasMore = rows.length > limit;
+      final page = hasMore ? rows.sublist(0, limit) : rows;
       return AppResult.success(
-        QiyamHistoryPage(entries: entries, hasMore: rows.isNotEmpty),
+        QiyamHistoryPage(
+          records: [for (final row in page) _decode(row)],
+          hasMore: hasMore,
+        ),
       );
     } catch (error) {
       return AppResult.failure(_failure(error));
@@ -249,11 +269,6 @@ final class DriftQiyamRepository implements QiyamRepository {
     int.parse(value.substring(5, 7)),
     int.parse(value.substring(8, 10)),
   );
-
-  static String _dayKey(DateTime day) =>
-      '${day.year.toString().padLeft(4, '0')}-'
-      '${day.month.toString().padLeft(2, '0')}-'
-      '${day.day.toString().padLeft(2, '0')}';
 
   static AppFailure _failure(Object error) => AppFailure.recoverable(
     category: AppFailureCategory.persistence,

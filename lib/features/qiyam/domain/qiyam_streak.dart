@@ -1,14 +1,16 @@
-/// The derived Qiyam streak (research.md R9): consecutive nights recorded as
-/// performed, walked back from the current night. Like the Adhkar streak it
-/// is derived on demand and never stored, and it stays specific to Qiyam.
+/// The derived Qiyam streak (research.md R9, owner decision 2026-11-12):
+/// consecutive nights recorded as performed, walked back from the current
+/// night. Like the Adhkar streak it is derived on demand and never stored,
+/// and it stays specific to Qiyam.
 ///
 /// The walk asks the caller for one night's verdict at a time and stops at
 /// the first night that breaks the run — it never reads every night up to
 /// the cap and counts afterwards. The current night counts when it is
-/// performed; an unanswered current night is skipped (the night is still
-/// ahead), but an explicit "No" is definitive and breaks the run, and so
-/// does any earlier night without a performed record. A storage failure
-/// thrown by the lookup propagates: a failed read is never a streak of 0.
+/// performed; whether it is unanswered OR an explicit "No" the walk starts
+/// from the previous night, because tonight is still editable until the
+/// next Maghrib. Any earlier night that is "No" or has no record ends the
+/// run. A storage failure thrown by the lookup propagates: a failed read is
+/// never a streak of 0.
 library;
 
 /// One night's stored state as the walk sees it: performed, the explicit
@@ -40,12 +42,13 @@ Future<int> qiyamStreak({
         await verdictOf(_key(night)) ?? QiyamNightVerdict.notRecorded;
     if (verdict == QiyamNightVerdict.performed) {
       streak++;
-    } else if (verdict == QiyamNightVerdict.notPerformed || !isCurrentNight) {
-      // An explicit "No" is definitive even tonight; an earlier night with
-      // no record also ends the run.
+    } else if (!isCurrentNight) {
+      // An earlier night that is "No" or has no record ends the run.
       return streak;
     }
-    // The unanswered current night is skipped: the night is still ahead.
+    // The current night is skipped whatever its non-performed state is
+    // (unanswered or an explicit "No"): it stays editable until the next
+    // Maghrib, so it does not break the run behind it.
     isCurrentNight = false;
     night = night.subtract(const Duration(days: 1));
     visited++;

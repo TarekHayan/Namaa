@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:namma_project/app/l10n/qiyam_strings_adapter.dart';
-import 'package:namma_project/features/qiyam/application/qiyam_repository.dart';
+
+import '../qiyam_state.dart';
 
 /// The history section (the prototype's style): past nights, newest first,
 /// 30 nights per page with "Load more" for the next one — pages are fetched

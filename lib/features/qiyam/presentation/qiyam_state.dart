@@ -1,7 +1,18 @@
-import 'package:namma_project/features/qiyam/application/qiyam_repository.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_night.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_night_record.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_supplication.dart';
+
+/// One history display entry (data-model.md, QiyamHistoryEntry): a loaded
+/// recorded night, or an unrecorded night strictly BETWEEN two loaded
+/// records — the UI's "Not recorded". Never filler outside the loaded
+/// records: nothing before the newest or after the oldest loaded row
+/// (Phase 5 review finding 1).
+final class QiyamHistoryEntry {
+  const QiyamHistoryEntry({required this.nightDate, this.record});
+
+  final String nightDate;
+  final QiyamNightRecord? record;
+}
 
 /// Per-command feedback for the Qiyam tracker (contracts/
 /// adhkar-qiyam-application.md). `nightChanged` means the captured night is

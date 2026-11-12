@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' show QueryExecutor, QueryInterceptor, Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/local/qiyam_unit_of_work.dart';
@@ -275,8 +275,8 @@ void main() {
       },
     );
 
-    test('an explicit No tonight breaks the run; an unanswered current '
-        'night does not', () async {
+    test('an explicit No tonight does not break the run, like an unanswered '
+        'current night (owner decision, 2026-11-12)', () async {
       await seed('2026-11-10');
       await seed('2026-11-09');
 
@@ -291,7 +291,7 @@ void main() {
         accountId: 'owner',
         currentNight: '2026-11-11',
       );
-      expect(explicitNo.valueOrNull, 0);
+      expect(explicitNo.valueOrNull, 2, reason: 'tonight stays editable');
     });
 
     test('is isolated per owner', () async {
@@ -323,69 +323,164 @@ void main() {
       );
       expect(result.valueOrNull, 3650);
     });
+
+    test('a 300-night streak reads in batches — a handful of queries, not '
+        'one per night', () async {
+      await db.close();
+      final batchTemp = TemporaryDatabasePath();
+      final counter = _SelectCounter();
+      final counted = await FoundationDatabase.openEncrypted(
+        path: batchTemp.allocate(),
+        key: key,
+        interceptor: counter,
+      );
+      final countedRepo = DriftQiyamRepository(counted);
+      const total = 300;
+      await counted.batch(
+        (batch) => batch.insertAll(counted.qiyamNights, [
+          for (var i = 1; i <= total; i++)
+            _seedCompanion(
+              _offsetDay(2026, 11, 11, i),
+              recordId: identity.nightRecordId(_offsetDay(2026, 11, 11, i)),
+            ),
+        ]),
+      );
+
+      final before = counter.selects;
+      final result = await countedRepo.streak(
+        accountId: 'owner',
+        currentNight: '2026-11-11',
+      );
+      final used = counter.selects - before;
+      expect(result.valueOrNull, 300);
+      expect(
+        used,
+        lessThanOrEqualTo(8),
+        reason:
+            'the walk reads descending batches of rows; one query per '
+            'night would need 300+',
+      );
+      await counted.close();
+      batchTemp.dispose();
+    });
   });
 
-  group('history (T052)', () {
-    test(
-      'one page of 30 nights, newest first, unrecorded nights included',
-      () async {
-        await seed('2026-11-10');
-        await seed('2026-11-09', performed: false);
-        await seed('2026-10-15', rakahs: 8);
+  group('history (T052, review finding 1)', () {
+    test('one page of 30 recorded rows, newest first; hasMore only when an '
+        'older row exists', () async {
+      // With fewer rows than the page holds, nothing older exists. The
+      // two rows sit outside the 35-night cluster seeded below.
+      await seed(_offsetDay(2026, 11, 11, 40));
+      await seed(_offsetDay(2026, 11, 11, 41), performed: false);
+      final short = await repository.history(
+        accountId: 'owner',
+        before: '2026-11-11',
+      );
+      expect(short.valueOrNull!.records, hasLength(2));
+      expect(short.valueOrNull!.records[0].performed, isTrue);
+      expect(short.valueOrNull!.records[1].performed, isFalse);
+      expect(short.valueOrNull!.hasMore, isFalse);
 
-        final result = await repository.history(
-          accountId: 'owner',
-          before: '2026-11-11',
-        );
-        final page = result.valueOrNull!;
-        expect(page.entries, hasLength(30));
-        expect(page.entries.first.nightDate, '2026-11-10');
-        expect(page.entries.first.record?.performed, isTrue);
-        expect(page.entries[1].nightDate, '2026-11-09');
-        expect(page.entries[1].record?.performed, isFalse);
-        expect(page.entries[2].record, isNull, reason: 'a gap is a night too');
-        expect(page.entries.last.nightDate, '2026-10-12');
-        expect(
-          page.entries[26].record?.rakahs,
-          8,
-          reason: '2026-10-15 sits 26 nights back',
-        );
-        expect(page.hasMore, isTrue);
-      },
-    );
+      // 35 consecutive recorded nights: the first page holds 30 rows and
+      // an older row exists.
+      const newest = 35;
+      await db.batch(
+        (batch) => batch.insertAll(db.qiyamNights, [
+          for (var i = 1; i <= newest; i++)
+            _seedCompanion(
+              _offsetDay(2026, 11, 11, i),
+              recordId: identity.nightRecordId(_offsetDay(2026, 11, 11, i)),
+            ),
+        ]),
+      );
 
-    test(
-      'load more pages through the cursor and stops at an empty window',
-      () async {
-        await seed('2026-11-10');
-        await seed('2026-09-15');
+      final full = await repository.history(
+        accountId: 'owner',
+        before: '2026-11-11',
+      );
+      expect(full.valueOrNull!.records, hasLength(30));
+      expect(full.valueOrNull!.records.first.nightDate, '2026-11-10');
+      expect(full.valueOrNull!.records.first.performed, isTrue);
+      expect(full.valueOrNull!.records.last.nightDate, '2026-10-12');
+      expect(full.valueOrNull!.hasMore, isTrue);
+    });
 
-        final page1 = (await repository.history(
-          accountId: 'owner',
-          before: '2026-11-11',
-        )).valueOrNull!;
-        expect(page1.hasMore, isTrue);
+    test('a 40-night gap still reaches the older records', () async {
+      // Ten recorded nights, then 40 nights with nothing, then ten more:
+      // one page reaches both clusters because pages count recorded rows,
+      // not calendar windows (2026-09-21 .. 2026-10-31 holds no row).
+      final companions = <QiyamNightsCompanion>[
+        for (var i = 1; i <= 10; i++)
+          _seedCompanion(
+            _offsetDay(2026, 11, 11, i),
+            recordId: identity.nightRecordId(_offsetDay(2026, 11, 11, i)),
+          ),
+        for (var i = 51; i <= 60; i++)
+          _seedCompanion(
+            _offsetDay(2026, 11, 11, i),
+            recordId: identity.nightRecordId(_offsetDay(2026, 11, 11, i)),
+          ),
+      ];
+      await db.batch((batch) => batch.insertAll(db.qiyamNights, companions));
 
-        // "Load more" passes the oldest night of the previous page.
-        final page2 = (await repository.history(
-          accountId: 'owner',
-          before: page1.entries.last.nightDate,
-        )).valueOrNull!;
-        expect(page2.entries.last.nightDate, '2026-09-12');
-        expect(page2.hasMore, isTrue);
+      final page = await repository.history(
+        accountId: 'owner',
+        before: '2026-11-11',
+      );
+      expect(page.valueOrNull!.records, hasLength(20));
+      expect(page.valueOrNull!.records.first.nightDate, '2026-11-10');
+      expect(page.valueOrNull!.records.last.nightDate, '2026-09-12');
+      expect(page.valueOrNull!.hasMore, isFalse);
 
-        final page3 = (await repository.history(
-          accountId: 'owner',
-          before: page2.entries.last.nightDate,
-        )).valueOrNull!;
-        expect(
-          page3.entries.any((entry) => entry.record != null),
-          isFalse,
-          reason: 'the window holds no recorded night',
-        );
-        expect(page3.hasMore, isFalse, reason: 'the walk back ends here');
-      },
-    );
+      // The review's Ramadan shape: a full 30-row newest cluster leaves the
+      // rows behind the gap exactly one "Load more" away — the gap never
+      // hides them.
+      await db.close();
+      final gapTemp = TemporaryDatabasePath();
+      final fullCluster = await FoundationDatabase.openEncrypted(
+        path: gapTemp.allocate(),
+        key: key,
+      );
+      await fullCluster.batch(
+        (batch) => batch.insertAll(fullCluster.qiyamNights, [
+          for (var i = 1; i <= 30; i++)
+            _seedCompanion(
+              _offsetDay(2026, 11, 11, i),
+              recordId: identity.nightRecordId(_offsetDay(2026, 11, 11, i)),
+            ),
+          _seedCompanion(
+            _offsetDay(2026, 11, 11, 71),
+            recordId: identity.nightRecordId(_offsetDay(2026, 11, 11, 71)),
+          ),
+        ]),
+      );
+      final fullRepo = DriftQiyamRepository(fullCluster);
+      final page1 = await fullRepo.history(
+        accountId: 'owner',
+        before: '2026-11-11',
+      );
+      expect(page1.valueOrNull!.records, hasLength(30));
+      expect(page1.valueOrNull!.records.last.nightDate, '2026-10-12');
+      expect(page1.valueOrNull!.hasMore, isTrue);
+      final page2 = await fullRepo.history(
+        accountId: 'owner',
+        before: page1.valueOrNull!.records.last.nightDate,
+      );
+      expect(page2.valueOrNull!.records, hasLength(1));
+      expect(page2.valueOrNull!.records.single.nightDate, '2026-09-01');
+      expect(page2.valueOrNull!.hasMore, isFalse);
+      await fullCluster.close();
+      gapTemp.dispose();
+    });
+
+    test('a new user sees an empty page', () async {
+      final page = await repository.history(
+        accountId: 'owner',
+        before: '2026-11-11',
+      );
+      expect(page.valueOrNull!.records, isEmpty);
+      expect(page.valueOrNull!.hasMore, isFalse);
+    });
 
     test('is isolated per owner', () async {
       await seed('2026-11-10', owner: 'other');
@@ -393,19 +488,13 @@ void main() {
         accountId: 'owner',
         before: '2026-11-11',
       );
-      expect(
-        result.valueOrNull!.entries.any(
-          (entry) => entry.nightDate == '2026-11-10',
-        ),
-        isTrue,
-      );
-      expect(result.valueOrNull!.entries.first.record, isNull);
+      expect(result.valueOrNull!.records, isEmpty);
 
       final other = await repository.history(
         accountId: 'other',
         before: '2026-11-11',
       );
-      expect(other.valueOrNull!.entries.first.record?.accountId, 'other');
+      expect(other.valueOrNull!.records.single.accountId, 'other');
     });
 
     test('a storage failure is a failure, never an empty page or a streak '
@@ -463,3 +552,19 @@ QiyamNightsCompanion _seedCompanion(
   createdAt: DateTime.utc(2026, 11, 11, 20).toIso8601String(),
   updatedAt: DateTime.utc(2026, 11, 11, 20).toIso8601String(),
 );
+
+/// Counts executed SELECT statements through the test-only interceptor hook
+/// of `FoundationDatabase.openEncrypted` (Phase 5 review finding 3).
+final class _SelectCounter extends QueryInterceptor {
+  int selects = 0;
+
+  @override
+  Future<List<Map<String, Object?>>> runSelect(
+    QueryExecutor executor,
+    String statement,
+    List<Object?> args,
+  ) async {
+    selects++;
+    return super.runSelect(executor, statement, args);
+  }
+}

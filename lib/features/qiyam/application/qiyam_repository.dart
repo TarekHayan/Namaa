@@ -2,25 +2,15 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 
 import '../domain/qiyam_night_record.dart';
 
-/// One history entry (data-model.md): the night date and its recorded
-/// details. Null [record] is a night with no row — the UI's "Not recorded";
-/// a row with `performed == false` is the explicit "No" — "Did not pray".
-final class QiyamHistoryEntry {
-  const QiyamHistoryEntry({required this.nightDate, this.record});
-
-  final String nightDate;
-  final QiyamNightRecord? record;
-}
-
-/// One history page: [QiyamRepository.history]'s window of nights, newest
-/// first, every night of the window present (its record or null).
+/// One history page: the recorded rows of [QiyamRepository.history], newest
+/// first. Unrecorded nights are not filler here — the screen shows "Not
+/// recorded" only for the nights between two recorded rows it has loaded.
 final class QiyamHistoryPage {
-  const QiyamHistoryPage({required this.entries, required this.hasMore});
+  const QiyamHistoryPage({required this.records, required this.hasMore});
 
-  final List<QiyamHistoryEntry> entries;
+  final List<QiyamNightRecord> records;
 
-  /// True while the page's window still holds at least one recorded night;
-  /// an entirely unrecorded window ends the walk back.
+  /// True only when an older recorded row exists beyond this page.
   final bool hasMore;
 }
 
@@ -52,12 +42,12 @@ abstract interface class QiyamRepository {
     required String currentNight,
   });
 
-  /// One history page: the [limit] nights ending just before [before]
-  /// (`before` excluded), newest first, each with its row or null — pages
-  /// hold nights, not just rows, so an unrecorded night shows as "Not
-  /// recorded". One indexed range read per page; "load more" passes the
-  /// oldest night of the previous page as [before]. Read-only. A storage
-  /// failure is a failure, never an empty page.
+  /// One history page: up to [limit] recorded rows strictly before
+  /// [before], newest first — keyset paging on the night date over recorded
+  /// rows (Phase 5 review finding 1), one indexed range read per page, so a
+  /// stretch of unrecorded nights never hides the rows behind it. "Load
+  /// more" passes the oldest row already shown as [before]. Read-only. A
+  /// storage failure is a failure, never an empty page.
   Future<AppResult<QiyamHistoryPage>> history({
     required String accountId,
     required String before,

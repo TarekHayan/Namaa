@@ -398,12 +398,49 @@ void main() {
     expect(repository.streakQueries, 1);
     expect(repository.historyQueries, 1);
     expect(repository.historyBounds.single, '2026-11-11');
-    expect(cubit.state.history, hasLength(30));
+    expect(cubit.state.history, hasLength(1));
     expect(cubit.state.history.first.nightDate, '2026-11-10');
     expect(cubit.state.history.first.record?.performed, isTrue);
-    expect(cubit.state.historyComplete, isFalse);
+    expect(cubit.state.historyComplete, isTrue);
     await cubit.close();
   });
+
+  test(
+    'history entries show "Not recorded" only between loaded records',
+    () async {
+      repository.seededNights['2026-11-10'] = record('2026-11-10');
+      repository.seededNights['2026-11-09'] = record('2026-11-09');
+      repository.seededNights['2026-11-06'] = record('2026-11-06');
+      final cubit = buildCubit();
+      await cubit.load();
+      await drain();
+      final dates = [for (final entry in cubit.state.history) entry.nightDate];
+      expect(dates, [
+        '2026-11-10',
+        '2026-11-09',
+        '2026-11-08',
+        '2026-11-07',
+        '2026-11-06',
+      ]);
+      expect(cubit.state.history[2].record, isNull);
+      expect(cubit.state.history[3].record, isNull);
+      expect(cubit.state.history[4].record, isNotNull);
+      await cubit.close();
+    },
+  );
+
+  test(
+    'a new user sees an empty history with no "Not recorded" rows',
+    () async {
+      final cubit = buildCubit();
+      await cubit.load();
+      await drain();
+      expect(cubit.state.history, isEmpty);
+      expect(cubit.state.historyComplete, isTrue);
+      expect(repository.historyQueries, 1);
+      await cubit.close();
+    },
+  );
 
   test('note, time and rak\'ah edits never refresh the streak or the '
       'history', () async {
@@ -437,26 +474,68 @@ void main() {
   });
 
   test(
-    'a save that changes the performed state refreshes the streak',
+    'a save that changes the stored performed state refreshes the streak',
     () async {
       final cubit = buildCubit();
       await cubit.load();
       await drain();
       expect(repository.streakQueries, 1);
+      // Answering No on an unrecorded night stores the explicit "No" but
+      // changes no streak input (tonight is skipped either way). The save
+      // lands in the store, so the watch delivers the row like production.
       commands.outcome = const QiyamNightSaved(firstPerformed: false);
       await cubit.answerNo();
       await drain();
-      expect(repository.streakQueries, 2, reason: 'unanswered -> No');
+      repository.emit(record('2026-11-11', performed: false));
+      await drain();
+      expect(repository.streakQueries, 1, reason: 'unanswered -> No');
       commands.outcome = const QiyamNightSaved(firstPerformed: true);
       await cubit.answerYes();
       await drain();
-      expect(repository.streakQueries, 3, reason: 'No -> Yes');
+      repository.emit(record('2026-11-11'));
+      await drain();
+      expect(repository.streakQueries, 2, reason: 'No -> Yes');
       await cubit.selectRakahs(11);
       await drain();
       expect(
         repository.streakQueries,
-        3,
+        2,
         reason: 'a rak\'ah edit keeps performed true',
+      );
+      await cubit.close();
+    },
+  );
+
+  test(
+    'a save that succeeds after a failed one still refreshes the streak',
+    () async {
+      final cubit = buildCubit();
+      await cubit.load();
+      await drain();
+      expect(repository.streakQueries, 1);
+      commands.outcome = const QiyamNightSaved(firstPerformed: true);
+      commands.failure = AppFailure.recoverable(
+        category: AppFailureCategory.persistence,
+        messageKey: 'qiyam.night.store_failed',
+        occurredAt: now,
+      );
+      await cubit.answerYes();
+      await drain();
+      expect(cubit.state.actionStatus, QiyamActionStatus.failed);
+      expect(
+        repository.streakQueries,
+        1,
+        reason: 'the failed save stored nothing',
+      );
+      commands.failure = null;
+      await cubit.answerYes();
+      await drain();
+      expect(
+        repository.streakQueries,
+        2,
+        reason:
+            'the stored record went from none to performed, though the '
+            'form already said Yes',
       );
       await cubit.close();
     },
@@ -464,6 +543,7 @@ void main() {
 
   test('the night change refreshes the streak and reloads the history; a '
       'plain resume does neither', () async {
+    repository.seededNights['2026-11-11'] = record('2026-11-11');
     final cubit = buildCubit();
     await cubit.load();
     await drain();
@@ -486,28 +566,59 @@ void main() {
     await cubit.close();
   });
 
-  test('load more fetches only the next page and stops at the end', () async {
+  test(
+    'load more fetches only the next recorded page and stops at the end',
+    () async {
+      for (var i = 1; i <= 35; i++) {
+        final night = _offsetDay('2026-11-11', i);
+        repository.seededNights[night] = record(night);
+      }
+      final cubit = buildCubit();
+      await cubit.load();
+      await drain();
+      expect(repository.historyBounds.single, '2026-11-11');
+      expect(cubit.state.history, hasLength(30));
+      expect(cubit.state.historyComplete, isFalse);
+      await cubit.loadMoreHistory();
+      await drain();
+      expect(repository.historyQueries, 2);
+      expect(repository.historyBounds, ['2026-11-11', '2026-10-12']);
+      expect(cubit.state.history, hasLength(35));
+      expect(cubit.state.historyComplete, isTrue);
+      await cubit.loadMoreHistory();
+      await drain();
+      expect(
+        repository.historyQueries,
+        2,
+        reason: 'no page is fetched beyond the end',
+      );
+      await cubit.close();
+    },
+  );
+
+  test('load more across a gap fills only the nights between loaded '
+      'records', () async {
+    // Thirty consecutive recorded nights, then a gap, then one older row.
+    for (var i = 1; i <= 30; i++) {
+      final night = _offsetDay('2026-11-11', i);
+      repository.seededNights[night] = record(night);
+    }
+    final oldest = _offsetDay('2026-11-11', 71);
+    repository.seededNights[oldest] = record(oldest);
     final cubit = buildCubit();
     await cubit.load();
     await drain();
+    expect(cubit.state.history, hasLength(30));
+    expect(cubit.state.historyComplete, isFalse);
     await cubit.loadMoreHistory();
     await drain();
-    expect(repository.historyQueries, 2);
-    expect(repository.historyBounds, ['2026-11-11', '2026-10-12']);
-    expect(cubit.state.history, hasLength(60));
-    repository.historyHasMore = false;
-    await cubit.loadMoreHistory();
-    await drain();
-    expect(repository.historyQueries, 3);
-    expect(cubit.state.history, hasLength(90));
+    expect(cubit.state.history, hasLength(71));
+    expect(cubit.state.history[30].nightDate, '2026-10-11');
+    expect(cubit.state.history[30].record, isNull);
+    expect(cubit.state.history[69].nightDate, '2026-09-02');
+    expect(cubit.state.history.last.nightDate, '2026-09-01');
+    expect(cubit.state.history.last.record, isNotNull);
     expect(cubit.state.historyComplete, isTrue);
-    await cubit.loadMoreHistory();
-    await drain();
-    expect(
-      repository.historyQueries,
-      3,
-      reason: 'no page is fetched beyond the end',
-    );
     await cubit.close();
   });
 
@@ -524,11 +635,12 @@ void main() {
     expect(cubit.state.history, isEmpty);
     expect(cubit.state.historyComplete, isFalse);
     // "Load more" with no pages yet retries the first page.
+    repository.seededNights['2026-11-10'] = record('2026-11-10');
     repository.failHistory = false;
     repository.failStreak = false;
     await cubit.loadMoreHistory();
     await drain();
-    expect(cubit.state.history, hasLength(30));
+    expect(cubit.state.history, hasLength(1));
     expect(cubit.state.historyFailed, isFalse);
     await cubit.close();
   });
@@ -601,7 +713,6 @@ final class FakeRepository implements QiyamRepository {
   int historyQueries = 0;
   final historyBounds = <String>[];
   int streakToReturn = 0;
-  bool historyHasMore = true;
   bool failStreak = false;
   bool failHistory = false;
   Completer<void>? streakGate;
@@ -651,15 +762,19 @@ final class FakeRepository implements QiyamRepository {
     historyQueries++;
     historyBounds.add(before);
     if (failHistory) return AppResult.failure(_storageFailure());
-    final entries = <QiyamHistoryEntry>[
-      for (var i = 1; i <= limit; i++)
-        QiyamHistoryEntry(
-          nightDate: _offsetDay(before, i),
-          record: seededNights[_offsetDay(before, i)],
-        ),
-    ];
+    // The real keyset over recorded rows: up to the limit rows strictly
+    // before the bound, newest first, one row more telling hasMore.
+    final matching =
+        seededNights.values
+            .where((row) => row.nightDate.compareTo(before) < 0)
+            .toList()
+          ..sort((a, b) => b.nightDate.compareTo(a.nightDate));
+    final hasMore = matching.length > limit;
     return AppResult.success(
-      QiyamHistoryPage(entries: entries, hasMore: historyHasMore),
+      QiyamHistoryPage(
+        records: hasMore ? matching.sublist(0, limit) : matching,
+        hasMore: hasMore,
+      ),
     );
   }
 

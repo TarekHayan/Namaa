@@ -358,7 +358,7 @@ final class FakeNightPort implements QiyamNightPort {
 final class FakeRepository implements QiyamRepository {
   QiyamNightRecord? current;
   int streakToReturn = 0;
-  List<QiyamHistoryEntry> historyPage = const [];
+  List<QiyamNightRecord> historyPage = const [];
   bool historyHasMore = false;
 
   @override
@@ -385,7 +385,7 @@ final class FakeRepository implements QiyamRepository {
     required String before,
     int limit = 30,
   }) async => AppResult.success(
-    QiyamHistoryPage(entries: historyPage, hasMore: historyHasMore),
+    QiyamHistoryPage(records: historyPage, hasMore: historyHasMore),
   );
 
   @override

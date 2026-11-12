@@ -53,6 +53,11 @@ final class QiyamCubit extends Cubit<QiyamState> {
   int _streakEpoch = 0;
   int _historyEpoch = 0;
 
+  /// The loaded recorded rows behind [QiyamState.history], newest first —
+  /// the display entries are rebuilt from them on every page so "Not
+  /// recorded" can fill the nights between two loaded records.
+  final List<QiyamNightRecord> _historyRecords = <QiyamNightRecord>[];
+
   /// The night the current form belongs to; the form resets when the
   /// resolved night changes, not on a plain resume.
   String? _formNight;
@@ -125,15 +130,15 @@ final class QiyamCubit extends Cubit<QiyamState> {
     await _saveForm(state.form);
   }
 
-  /// "Load more": fetches only the next history page, with the oldest
-  /// loaded night as the exclusive bound (the current night starts the
-  /// first page when nothing is loaded yet — also the retry after a failed
-  /// first page).
+  /// "Load more": fetches only the next history page of RECORDED rows,
+  /// with the oldest loaded row as the exclusive bound (the current night
+  /// starts the first page when nothing is loaded yet — also the retry
+  /// after a failed first page).
   Future<void> loadMoreHistory() async {
     if (state.historyLoading || state.historyComplete) return;
-    final cursor = state.history.isEmpty
+    final cursor = _historyRecords.isEmpty
         ? state.night?.nightDate
-        : state.history.last.nightDate;
+        : _historyRecords.last.nightDate;
     if (cursor == null) return;
     final epoch = ++_historyEpoch;
     emit(state.copyWith(historyLoading: true, historyFailed: false));
@@ -143,9 +148,10 @@ final class QiyamCubit extends Cubit<QiyamState> {
     );
     if (_disposed || epoch != _historyEpoch) return;
     if (result.valueOrNull case final page?) {
+      _historyRecords.addAll(page.records);
       emit(
         state.copyWith(
-          history: [...state.history, ...page.entries],
+          history: _historyEntries(_historyRecords),
           historyLoading: false,
           historyFailed: false,
           historyComplete: !page.hasMore,
@@ -196,10 +202,12 @@ final class QiyamCubit extends Cubit<QiyamState> {
   Future<void> _runSave(QiyamForm form) async {
     final capturedNight = state.night?.nightDate;
     if (capturedNight == null) return;
-    // Whether this save moves the night into or out of "performed": only
-    // then does the derived streak need a refresh (never on note, time or
-    // rak'ah edits).
-    final wasPerformed = state.form?.performed;
+    // Whether this save moves the STORED record into or out of "performed"
+    // (Phase 5 review finding 4): only then does the derived streak need a
+    // refresh (never on note, time or rak'ah edits). Comparing against the
+    // stored record — not the form — keeps the refresh correct when a save
+    // succeeds after a failed one left the form already in the new state.
+    final wasPerformed = state.record?.performed ?? false;
     // An explicit save supersedes a pending debounced one (the form already
     // carries the latest text).
     _noteTimer?.cancel();
@@ -263,6 +271,43 @@ final class QiyamCubit extends Cubit<QiyamState> {
       await _refreshStreak();
     }
   }
+
+  /// The display entries over the loaded records: "Not recorded" fills only
+  /// the nights strictly BETWEEN two loaded records (Phase 5 review finding
+  /// 1) — never before the newest or after the oldest loaded row.
+  static List<QiyamHistoryEntry> _historyEntries(
+    List<QiyamNightRecord> records,
+  ) {
+    final entries = <QiyamHistoryEntry>[];
+    for (var i = 0; i < records.length; i++) {
+      if (i > 0) {
+        final newer = _parseNight(records[i - 1].nightDate);
+        final older = _parseNight(records[i].nightDate);
+        for (
+          var night = newer.subtract(const Duration(days: 1));
+          night.isAfter(older);
+          night = night.subtract(const Duration(days: 1))
+        ) {
+          entries.add(QiyamHistoryEntry(nightDate: _nightKey(night)));
+        }
+      }
+      entries.add(
+        QiyamHistoryEntry(nightDate: records[i].nightDate, record: records[i]),
+      );
+    }
+    return entries;
+  }
+
+  static DateTime _parseNight(String nightDate) => DateTime.utc(
+    int.parse(nightDate.substring(0, 4)),
+    int.parse(nightDate.substring(5, 7)),
+    int.parse(nightDate.substring(8, 10)),
+  );
+
+  static String _nightKey(DateTime day) =>
+      '${day.year.toString().padLeft(4, '0')}-'
+      '${day.month.toString().padLeft(2, '0')}-'
+      '${day.day.toString().padLeft(2, '0')}';
 
   QiyamNightDraft _draftOf(QiyamForm form) {
     if (!form.performed) return QiyamNightDraft.notPerformed;
@@ -362,7 +407,8 @@ final class QiyamCubit extends Cubit<QiyamState> {
     }
   }
 
-  /// Loads the first history page: the 30 nights before the current night.
+  /// Loads the first history page: the 30 recorded rows before the current
+  /// night.
   Future<void> _reloadHistory() async {
     final nightDate = state.night?.nightDate;
     if (nightDate == null) return;
@@ -374,9 +420,12 @@ final class QiyamCubit extends Cubit<QiyamState> {
     );
     if (_disposed || epoch != _historyEpoch) return;
     if (result.valueOrNull case final page?) {
+      _historyRecords
+        ..clear()
+        ..addAll(page.records);
       emit(
         state.copyWith(
-          history: page.entries,
+          history: _historyEntries(_historyRecords),
           historyLoading: false,
           historyFailed: false,
           historyComplete: !page.hasMore,

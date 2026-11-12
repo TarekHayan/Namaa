@@ -17,6 +17,7 @@ import 'package:namma_project/features/qiyam/domain/qiyam_night_record.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_supplication.dart';
 import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
 import 'package:namma_project/features/qiyam/presentation/qiyam_screen.dart';
+import 'package:namma_project/features/qiyam/presentation/qiyam_state.dart';
 import 'package:namma_project/features/qiyam/presentation/widgets/qiyam_history_section.dart';
 
 /// T054: the Qiyam history section and the streak chip (contracts/
@@ -57,6 +58,14 @@ void main() {
       record: record('2026-11-09', performed: false),
     ),
     const QiyamHistoryEntry(nightDate: '2026-11-08'),
+  ];
+
+  /// Recorded rows for the screen fake: two nights with a two-night gap the
+  /// cubit fills with "Not recorded" between them.
+  List<QiyamNightRecord> records() => [
+    record('2026-11-10'),
+    record('2026-11-09', performed: false),
+    record('2026-11-06'),
   ];
 
   Future<void> pumpSection(
@@ -210,7 +219,7 @@ void main() {
       'supplications on the phone', (tester) async {
     final repository = FakeRepository()
       ..streakToReturn = 3
-      ..historyPage = page();
+      ..historyPage = records();
     final cubit = buildCubit(repository);
     await pumpScreen(tester, cubit: cubit, size: const Size(1200, 900));
     final historyTop = tester
@@ -225,11 +234,16 @@ void main() {
       reason: 'on desktop the history is a side column beside the main one',
     );
     expect(find.byKey(const Key('qiyam_streak_chip')), findsOneWidget);
+    // The cubit fills the 2026-11-07/11-08 nights between the loaded
+    // records; nothing before 2026-11-10 or after 2026-11-06. The screen
+    // opens in Arabic by default here.
+    expect(find.text('غير مسجَّل'), findsNWidgets(2));
+    expect(find.text('لم يصلِّ'), findsOneWidget);
     await cubit.close();
 
     final phoneRepository = FakeRepository()
       ..streakToReturn = 3
-      ..historyPage = page();
+      ..historyPage = records();
     final phoneCubit = buildCubit(phoneRepository);
     await pumpScreen(tester, cubit: phoneCubit, size: const Size(800, 1200));
     final phoneHistory = tester
@@ -244,6 +258,17 @@ void main() {
       reason: 'on the phone the history follows the supplications',
     );
     await phoneCubit.close();
+  });
+
+  testWidgets('a new user sees an empty history with no "Not recorded" rows', (
+    tester,
+  ) async {
+    final cubit = buildCubit(FakeRepository()..streakToReturn = 0);
+    await pumpScreen(tester, cubit: cubit, size: const Size(800, 1200));
+    expect(find.byKey(const Key('qiyam_history_section')), findsOneWidget);
+    expect(find.text('غير مسجَّل'), findsNothing);
+    expect(find.byKey(const Key('qiyam_load_more')), findsNothing);
+    await cubit.close();
   });
 
   testWidgets('the streak chip shows the derived streak; a failed read shows '
@@ -309,7 +334,7 @@ final class FakeNightPort implements QiyamNightPort {
 final class FakeRepository implements QiyamRepository {
   int streakToReturn = 0;
   bool failStreak = false;
-  List<QiyamHistoryEntry> historyPage = const [];
+  List<QiyamNightRecord> historyPage = const [];
   bool historyHasMore = false;
 
   @override
@@ -347,7 +372,7 @@ final class FakeRepository implements QiyamRepository {
     required String before,
     int limit = 30,
   }) async => AppResult.success(
-    QiyamHistoryPage(entries: historyPage, hasMore: historyHasMore),
+    QiyamHistoryPage(records: historyPage, hasMore: historyHasMore),
   );
 
   @override

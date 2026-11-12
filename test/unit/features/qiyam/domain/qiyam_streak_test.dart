@@ -1,13 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_streak.dart';
 
-/// T051: the derived Qiyam streak (research.md R9): consecutive performed
-/// nights walked back from the current night with an early exit at the
-/// first night that breaks the run, capped at 3,650 visited nights. An
-/// unanswered current night does not break the run (the night is still
-/// ahead); an explicit "No" is definitive and breaks it, and so does an
-/// earlier night with no record. A failed lookup propagates — a failed read
-/// is never a streak of 0.
+/// T051: the derived Qiyam streak (research.md R9, owner decision
+/// 2026-11-12): consecutive performed nights walked back from the current
+/// night with an early exit at the first night that breaks the run, capped
+/// at 3,650 visited nights. The current night counts when it is performed;
+/// whether it is unanswered OR an explicit "No" the walk starts from the
+/// previous night — tonight is still editable until the next Maghrib. Any
+/// EARLIER night that is "No" or has no record ends the run. A failed
+/// lookup propagates — a failed read is never a streak of 0.
 void main() {
   final counts = <String, int>{};
 
@@ -66,16 +67,25 @@ void main() {
     expect(streak, 2);
   });
 
-  test('an explicit "No" tonight is definitive and breaks the run', () async {
-    final streak = await qiyamStreak(
+  test('an explicit "No" tonight does not break the run behind it (owner '
+      'decision, 2026-11-12): ten performed nights then a No tonight are '
+      'ten, and switching tonight to Yes makes eleven', () async {
+    final performed = [
+      for (var i = 1; i <= 10; i++) _day(DateTime.utc(2026, 11, 11 - i)),
+    ];
+    final noTonight = await qiyamStreak(
+      currentNight: '2026-11-11',
+      verdictOf: lookup(performed: performed, no: ['2026-11-11']),
+    );
+    expect(noTonight, 10);
+    final yesTonight = await qiyamStreak(
       currentNight: '2026-11-11',
       verdictOf: lookup(
-        performed: ['2026-11-10', '2026-11-09'],
+        performed: [...performed, '2026-11-11'],
         no: ['2026-11-11'],
       ),
     );
-    expect(streak, 0);
-    expect(counts['2026-11-10'], isNull, reason: 'the walk stopped early');
+    expect(yesTonight, 11);
   });
 
   test(

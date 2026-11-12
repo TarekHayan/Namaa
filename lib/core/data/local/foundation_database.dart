@@ -523,12 +523,18 @@ class FoundationDatabase extends _$FoundationDatabase {
     int schemaVersion = kFoundationSchemaVersion,
     Future<void> Function(Migrator migrator, int from, int to, int step)?
     testMigrationHook,
+    QueryInterceptor? interceptor,
   }) async {
     final keyPragma = _keyPragma(key);
-    final executor = NativeDatabase.createInBackground(
+    var executor = NativeDatabase.createInBackground(
       File(path),
       setup: (raw) => raw.execute(keyPragma),
     );
+    // Test-only injection point (Phase 5 review finding 3): counts or
+    // traces executed statements without touching the encryption setup.
+    if (interceptor != null) {
+      executor = executor.interceptWith(interceptor);
+    }
     final db = FoundationDatabase._(
       executor,
       resolvedPath: path,

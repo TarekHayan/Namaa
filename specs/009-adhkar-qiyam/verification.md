@@ -479,6 +479,61 @@ Gates (2026-11-12, Windows host):
 | Full suite | `flutter test` | **966 passed, 1 skipped, 0 failed** |
 | SQL | `supabase test db` | not run: nothing under `supabase/` changed |
 
+## Phase 5 review fixes (2026-11-12)
+
+Four findings on commit e062461, each fixed failing-test-first; no existing
+assertion was weakened (the two expectations that changed follow the review's
+new rules and say so in their reasons).
+
+1. **A 30-night gap hid all older history** — history now pages by RECORDED
+   rows with a keyset on `night_date` (30 rows per page, newest first, one
+   indexed range read per page, `before` = the oldest row already shown, and
+   the fetch takes one extra row so `hasMore` is true only when an older row
+   exists). The fixed 30-night window and its `rows.isNotEmpty` ending are
+   gone. "Not recorded" is filled by the Cubit, only for the nights strictly
+   BETWEEN two loaded records — never before the newest or after the oldest
+   loaded row, and never for a new user. Tests: the 40-night-gap test
+   reaches both clusters in one page and the Ramadan shape (full 30-row
+   cluster) in exactly one "Load more" (`drift_qiyam_repository_test.dart`);
+   the Cubit fills a two-night gap and an across-page gap
+   (`qiyam_cubit_test.dart`); a new user sees an empty history with no "Not
+   recorded" rows (Cubit + `qiyam_history_test.dart`).
+2. **Tonight's "No" must not zero the streak (owner decision, 2026-11-12,
+   matching research.md R9)** — the walk starts from the previous night
+   whether the current night is unanswered OR an explicit "No" (it stays
+   editable until the next Maghrib); any EARLIER "No" or missing record
+   still ends the run. Ten performed nights then a No tonight are ten, and
+   switching tonight to Yes makes eleven. Tests:
+   `qiyam_streak_test.dart` (the old "tonight's No breaks" expectation was
+   replaced by this rule) and the mirrored repository test.
+3. **The streak walk issued one query per night** — the repository now
+   reads descending batches of 60 recorded rows per indexed range read on
+   `(account_id, night_date)` and serves the walk from memory; the early
+   exit at the first breaking night and the 3,650-night cap are unchanged.
+   Test: a 300-night streak measured through a query-counting
+   `QueryInterceptor` (`FoundationDatabase.openEncrypted` gained a
+   test-only `interceptor` injection point, like `testMigrationHook`):
+   before the fix 302 queries, after it at most 8 while the streak value
+   stays 300.
+4. **The streak refresh compared against the form, not the stored record**
+   — `_runSave` now captures `state.record?.performed ?? false` before the
+   save, so a Yes that succeeds after a failed Yes (form already saying
+   Yes, store still without the row) still refreshes the streak. Answering
+   No on an unrecorded night no longer refreshes (the stored "No" changes
+   no streak input tonight). Tests: `qiyam_cubit_test.dart` ("a save that
+   succeeds after a failed one still refreshes the streak"; the
+   performed-state test was rewritten for the stored-record comparison and
+   now emits the saved row through the watch like production does).
+
+Gates (2026-11-12, Windows host):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean |
+| Analyze | `flutter analyze` | No issues found |
+| Full suite | `flutter test` | **973 passed, 1 skipped, 0 failed** |
+| SQL | `supabase test db` | not run: nothing under `supabase/` changed |
+
 ## SC-007 — streak values for seeded patterns
 
 **Qiyam portion verified 2026-11-12** (US3 checkpoint): seeded patterns
