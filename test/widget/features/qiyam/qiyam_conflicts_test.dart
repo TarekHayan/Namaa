@@ -78,6 +78,7 @@ void main() {
         home: Scaffold(
           body: QiyamConflictsView(
             conflicts: repository.watchConflicts('owner'),
+            locale: 'en',
           ),
         ),
       ),
@@ -109,7 +110,16 @@ void main() {
     );
     await pumpView(tester);
     expect(find.text('Sync differences'), findsOneWidget);
-    expect(find.textContaining('2026-11-11'), findsOneWidget);
+    expect(
+      find.textContaining('Nov 11'),
+      findsOneWidget,
+      reason: 'the night is formatted with the app locale',
+    );
+    expect(
+      find.text('2026-11-11'),
+      findsNothing,
+      reason: 'raw ISO dates never reach the UI',
+    );
     expect(find.text("Prayed · 4 rak'ahs"), findsOneWidget);
     expect(find.text('Did not pray'), findsOneWidget);
     expect(find.text('Active'), findsOneWidget);
@@ -151,8 +161,8 @@ void main() {
       retainedPerformed: true,
     );
     await pumpView(tester);
-    expect(find.textContaining('2026-11-10'), findsNothing);
-    expect(find.textContaining('2026-11-11'), findsOneWidget);
+    expect(find.textContaining('Nov 10'), findsNothing);
+    expect(find.textContaining('Nov 11'), findsOneWidget);
     await closeStore(tester);
   });
 }

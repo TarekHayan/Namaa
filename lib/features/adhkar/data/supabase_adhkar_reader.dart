@@ -41,7 +41,9 @@ abstract interface class AdhkarRemoteReader {
 }
 
 /// The catalog table is read once per catalog version and cached for the
-/// process lifetime (contracts/adhkar-qiyam-sync.md).
+/// process lifetime (contracts/adhkar-qiyam-sync.md). An empty result is NOT
+/// cached: a catalog seeded later must still be picked up (Phase 6 review
+/// follow-up).
 final class AdhkarCatalogCache {
   final _cache = <int, List<AdhkarCatalogRow>>{};
 
@@ -52,7 +54,9 @@ final class AdhkarCatalogCache {
     final cached = _cache[version];
     if (cached != null) return cached;
     final rows = await fetch(version);
-    _cache[version] = rows;
+    if (rows.isNotEmpty) {
+      _cache[version] = rows;
+    }
     return rows;
   }
 }

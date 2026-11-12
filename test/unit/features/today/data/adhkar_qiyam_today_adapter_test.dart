@@ -10,6 +10,7 @@ import 'package:namma_project/features/adhkar/application/adhkar_streak_service.
 import 'package:namma_project/features/adhkar/application/adhkar_times_port.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_state.dart';
 import 'package:namma_project/features/qiyam/application/qiyam_clock_port.dart';
 import 'package:namma_project/features/qiyam/application/qiyam_night_port.dart';
 import 'package:namma_project/features/qiyam/application/qiyam_repository.dart';
@@ -54,6 +55,7 @@ void main() {
   late FakeQiyamRepository qiyamRepository;
   late FakeAdhkarTimesPort times;
   late FakeQiyamNightPort nightPort;
+  late FakeCatalog catalog;
   late TodayAdhkarQiyamPort port;
 
   AdhkarCountRecord count(String itemId, String list, int count) =>
@@ -92,14 +94,15 @@ void main() {
     qiyamRepository = FakeQiyamRepository();
     times = FakeAdhkarTimesPort(AppResult.success(clockState));
     nightPort = FakeQiyamNightPort(nightState);
+    catalog = FakeCatalog();
     final service = AdhkarStreakService(
       repository: adhkarRepository,
-      catalog: FakeCatalog(),
+      catalog: catalog,
     );
     port = AdhkarQiyamTodayAdapter(
       times: times,
       clock: FakeAdhkarClock(now),
-      catalog: FakeCatalog(),
+      catalog: catalog,
       adhkarRepository: adhkarRepository,
       adhkarStreaks: service,
       nightPort: nightPort,
@@ -125,16 +128,55 @@ void main() {
 
       final reference = await firstReference();
       expect(reference.scheduleUnavailable, isFalse);
-      expect(reference.morningCompleted, 2, reason: 'm1 at target, m2 one');
-      expect(reference.morningTotal, 14);
-      expect(reference.eveningCompleted, 10);
-      expect(reference.eveningTotal, 14);
+      // FR-005 item semantics, the same as AdhkarState: completed
+      // counts items at their target; total counts the list's items.
+      expect(reference.morningCompleted, 1, reason: 'm1 at target');
+      expect(reference.morningTotal, 3);
+      expect(reference.eveningCompleted, 1, reason: 'e3 at target');
+      expect(reference.eveningTotal, 3);
+      expect(reference.adhkarLoadFailed, isFalse);
+      expect(reference.qiyamLoadFailed, isFalse);
       expect(reference.period, TodayAdhkarPeriod.morning);
       expect(reference.tonight, TodayQiyamTonight.yes);
       expect(reference.adhkarStreak, 2);
       expect(reference.qiyamStreak, 3);
     },
   );
+
+  test('the x/N values equal the Adhkar screen for the same catalog '
+      'and counts (SC-006)', () async {
+    adhkarRepository
+      ..seed(count('m1', 'morning', 1))
+      ..seed(count('m2', 'morning', 3))
+      ..seed(count('m3', 'morning', 2))
+      ..seed(count('e1', 'evening', 0))
+      ..seed(count('e2', 'evening', 3))
+      ..completeDays = const {};
+    final reference = await firstReference();
+
+    final catalog = (await FakeCatalog().snapshot('owner')).valueOrNull!;
+    final screenState = AdhkarState(
+      catalog: catalog,
+      counts: {
+        for (final row in adhkarRepository.seeded) row.itemId: row.count,
+      },
+    );
+    expect(
+      reference.morningCompleted,
+      screenState.completedOf(AdhkarList.morning),
+    );
+    expect(reference.morningTotal, screenState.totalOf(AdhkarList.morning));
+    expect(
+      reference.eveningCompleted,
+      screenState.completedOf(AdhkarList.evening),
+    );
+    expect(reference.eveningTotal, screenState.totalOf(AdhkarList.evening));
+    // The concrete values, so a silent change of either side is visible.
+    expect(reference.morningCompleted, 2);
+    expect(reference.morningTotal, 3);
+    expect(reference.eveningCompleted, 1);
+    expect(reference.eveningTotal, 3);
+  });
 
   test(
     'an unanswered night is unanswered and an explicit "No" is no',
@@ -168,8 +210,12 @@ void main() {
     print('T: after second pump, emissions=${emissions.length}');
     await pump();
     expect(emissions, hasLength(greaterThanOrEqualTo(3)));
-    expect(emissions.first.morningCompleted, 1);
-    expect(emissions.last.morningCompleted, 4);
+    expect(emissions.first.morningCompleted, 1, reason: 'm1 at target');
+    expect(
+      emissions.last.morningCompleted,
+      2,
+      reason: 'm1 and m2 at their targets are two completed items',
+    );
     expect(emissions.last.tonight, TodayQiyamTonight.yes);
     await subscription.cancel();
   });
@@ -194,6 +240,12 @@ void main() {
     );
     final reference = await firstReference();
     expect(reference.scheduleUnavailable, isTrue);
+    expect(
+      reference.adhkarLoadFailed,
+      isFalse,
+      reason: 'an unavailable schedule is not a failed read',
+    );
+    expect(reference.qiyamLoadFailed, isFalse);
     expect(reference.period, isNull);
     expect(reference.morningCompleted, 0);
     expect(reference.morningTotal, 0);
@@ -205,6 +257,45 @@ void main() {
     expect(adhkarRepository.watchDayRequests, isEmpty);
     expect(qiyamRepository.watchedNights, isEmpty);
   });
+
+  test('a failed catalog read is a failure, never zero progress', () async {
+    catalog.fails = true;
+    final reference = await firstReference();
+    expect(reference.adhkarLoadFailed, isTrue);
+    expect(reference.adhkarStreak, isNull, reason: 'never a fabricated 0');
+    expect(reference.qiyamLoadFailed, isFalse);
+  });
+
+  test('a failed counts read is a failure, never zero progress', () async {
+    adhkarRepository.countsFail = true;
+    final reference = await firstReference();
+    expect(reference.adhkarLoadFailed, isTrue);
+    expect(reference.qiyamLoadFailed, isFalse);
+  });
+
+  test('a failed streak read is a failure, never a streak of 0', () async {
+    adhkarRepository.streakFails = true;
+    final reference = await firstReference();
+    expect(reference.adhkarLoadFailed, isTrue);
+    expect(reference.adhkarStreak, isNull);
+  });
+
+  test('a failed night record read is a failure, never unanswered', () async {
+    qiyamRepository.recordFails = true;
+    final reference = await firstReference();
+    expect(reference.qiyamLoadFailed, isTrue);
+    expect(reference.adhkarLoadFailed, isFalse);
+  });
+
+  test(
+    'a failed night streak read is a failure, never a streak of 0',
+    () async {
+      qiyamRepository.streakFails = true;
+      final reference = await firstReference();
+      expect(reference.qiyamLoadFailed, isTrue);
+      expect(reference.qiyamStreak, isNull);
+    },
+  );
 
   test('without a saved schedule the device day and night still show, '
       'countable and editable', () async {
@@ -286,9 +377,21 @@ final class FakeQiyamNightPort implements QiyamNightPort {
 }
 
 final class FakeCatalog implements AdhkarCatalogPort {
+  bool fails = false;
+
   @override
-  Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async =>
-      AppResult.success(_buildCatalog());
+  Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async {
+    if (fails) {
+      return AppResult.failure(
+        AppFailure.recoverable(
+          category: AppFailureCategory.persistence,
+          messageKey: 'adhkar.catalog.failed',
+          occurredAt: DateTime.utc(2026, 11, 12, 9),
+        ),
+      );
+    }
+    return AppResult.success(_buildCatalog());
+  }
 
   AdhkarCatalog _buildCatalog() => AdhkarCatalog.fromJson(const {
     'catalog_version': 1,
@@ -396,6 +499,8 @@ final class FakeAdhkarRepository implements AdhkarRepository {
   final seeded = <AdhkarCountRecord>[];
   final watchDayRequests = <String>[];
   Set<String> completeDays = const {};
+  bool countsFail = false;
+  bool streakFails = false;
 
   void seed(AdhkarCountRecord record) {
     seeded
@@ -423,11 +528,14 @@ final class FakeAdhkarRepository implements AdhkarRepository {
     required String accountId,
     required String adhkarDay,
     required String list,
-  }) async => AppResult.success(
-    seeded
-        .where((row) => row.adhkarDay == adhkarDay && row.list == list)
-        .toList(),
-  );
+  }) async {
+    if (countsFail) return AppResult.failure(_storeFailure());
+    return AppResult.success(
+      seeded
+          .where((row) => row.adhkarDay == adhkarDay && row.list == list)
+          .toList(),
+    );
+  }
 
   @override
   Future<AppResult<AdhkarCompletedDays>> fullyCompletedDays({
@@ -437,8 +545,17 @@ final class FakeAdhkarRepository implements AdhkarRepository {
     required int catalogVersion,
     required List<AdhkarListItem> morningItems,
     required List<AdhkarListItem> eveningItems,
-  }) async => AppResult.success(
-    AdhkarCompletedDays(completed: completeDays, unjudgeable: const {}),
+  }) async {
+    if (streakFails) return AppResult.failure(_storeFailure());
+    return AppResult.success(
+      AdhkarCompletedDays(completed: completeDays, unjudgeable: const {}),
+    );
+  }
+
+  AppFailure _storeFailure() => AppFailure.recoverable(
+    category: AppFailureCategory.persistence,
+    messageKey: 'adhkar.count.store_failed',
+    occurredAt: DateTime.utc(2026, 11, 12, 9),
   );
 
   @override
@@ -473,6 +590,8 @@ final class FakeQiyamRepository implements QiyamRepository {
   final watchedNights = <String>[];
   QiyamNightRecord? seedNight;
   int streakToReturn = 0;
+  bool recordFails = false;
+  bool streakFails = false;
 
   @override
   Stream<QiyamNightRecord?> watchNight({
@@ -492,14 +611,27 @@ final class FakeQiyamRepository implements QiyamRepository {
   Future<AppResult<QiyamNightRecord?>> readFresh({
     required String accountId,
     required String nightDate,
-  }) async =>
-      AppResult.success(seedNight?.nightDate == nightDate ? seedNight : null);
+  }) async {
+    if (recordFails) return AppResult.failure(_storeFailure());
+    return AppResult.success(
+      seedNight?.nightDate == nightDate ? seedNight : null,
+    );
+  }
+
+  AppFailure _storeFailure() => AppFailure.recoverable(
+    category: AppFailureCategory.persistence,
+    messageKey: 'qiyam.night.store_failed',
+    occurredAt: DateTime.utc(2026, 11, 12, 9),
+  );
 
   @override
   Future<AppResult<int>> streak({
     required String accountId,
     required String currentNight,
-  }) async => AppResult.success(streakToReturn);
+  }) async {
+    if (streakFails) return AppResult.failure(_storeFailure());
+    return AppResult.success(streakToReturn);
+  }
 
   @override
   Future<AppResult<QiyamHistoryPage>> history({

@@ -133,7 +133,10 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
     AdhkarClockState? clockState,
     AppResult<QiyamNightState> nightState,
   ) async {
-    // Adhkar side.
+    // Adhkar side. FR-005 item semantics, the same as AdhkarState:
+    // completed counts the items at their target; total counts the list's
+    // items. A failed read raises its flag instead of masquerading as zero
+    // progress (Phase 6 review finding 2).
     final adhkarAvailable =
         clockState != null &&
         clockState.scheduleState != AdhkarScheduleState.unavailable;
@@ -142,26 +145,44 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
     var eveningCompleted = 0;
     var morningTotal = 0;
     var eveningTotal = 0;
+    var adhkarLoadFailed = false;
     int? adhkarStreak;
     TodayAdhkarPeriod? period;
     if (adhkarAvailable && day != null) {
-      final catalog = (await _catalog.snapshot(ownerId)).valueOrNull;
-      if (catalog != null) {
-        final morningCounts = await _readCounts(ownerId, day, 'morning');
-        final eveningCounts = await _readCounts(ownerId, day, 'evening');
-        for (final item in catalog.itemsOf(AdhkarList.morning)) {
-          morningTotal += item.target;
-          morningCompleted += _countOf(morningCounts, item.itemId);
-        }
-        for (final item in catalog.itemsOf(AdhkarList.evening)) {
-          eveningTotal += item.target;
-          eveningCompleted += _countOf(eveningCounts, item.itemId);
+      final catalogResult = await _catalog.snapshot(ownerId);
+      final catalog = catalogResult.valueOrNull;
+      if (catalog == null) {
+        adhkarLoadFailed = true;
+      } else {
+        final morningCountsResult = await _readCounts(ownerId, day, 'morning');
+        final eveningCountsResult = await _readCounts(ownerId, day, 'evening');
+        final morningCounts = morningCountsResult.valueOrNull;
+        final eveningCounts = eveningCountsResult.valueOrNull;
+        if (morningCounts == null || eveningCounts == null) {
+          adhkarLoadFailed = true;
+        } else {
+          for (final item in catalog.itemsOf(AdhkarList.morning)) {
+            if (_countOf(morningCounts, item.itemId) >= item.target) {
+              morningCompleted++;
+            }
+          }
+          morningTotal = catalog.itemsOf(AdhkarList.morning).length;
+          for (final item in catalog.itemsOf(AdhkarList.evening)) {
+            if (_countOf(eveningCounts, item.itemId) >= item.target) {
+              eveningCompleted++;
+            }
+          }
+          eveningTotal = catalog.itemsOf(AdhkarList.evening).length;
         }
       }
-      adhkarStreak = (await _adhkarStreaks.streak(
+      final streakResult = await _adhkarStreaks.streak(
         ownerId: ownerId,
         today: day,
-      )).valueOrNull;
+      );
+      adhkarStreak = streakResult.valueOrNull;
+      if (streakResult.failureOrNull != null) {
+        adhkarLoadFailed = true;
+      }
       period = switch (clockState.period) {
         AdhkarPeriod.morning => TodayAdhkarPeriod.morning,
         AdhkarPeriod.evening => TodayAdhkarPeriod.evening,
@@ -175,47 +196,52 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
     final qiyamAvailable =
         night != null && night.scheduleState != QiyamScheduleState.unavailable;
     var tonight = TodayQiyamTonight.locked;
+    var qiyamLoadFailed = false;
     int? qiyamStreak;
     if (qiyamAvailable && night.nightDate != null) {
-      final record = (await _qiyam.readFresh(
+      final recordResult = await _qiyam.readFresh(
         accountId: ownerId,
         nightDate: night.nightDate!,
-      )).valueOrNull;
-      tonight = record == null
-          ? TodayQiyamTonight.unanswered
-          : (record.performed ? TodayQiyamTonight.yes : TodayQiyamTonight.no);
-      qiyamStreak = (await _qiyam.streak(
+      );
+      final record = recordResult.valueOrNull;
+      if (recordResult.failureOrNull != null) {
+        qiyamLoadFailed = true;
+      } else {
+        tonight = record == null
+            ? TodayQiyamTonight.unanswered
+            : (record.performed ? TodayQiyamTonight.yes : TodayQiyamTonight.no);
+      }
+      final streakResult = await _qiyam.streak(
         accountId: ownerId,
         currentNight: night.nightDate!,
-      )).valueOrNull;
+      );
+      qiyamStreak = streakResult.valueOrNull;
+      if (streakResult.failureOrNull != null) {
+        qiyamLoadFailed = true;
+      }
     }
 
     return TodayAdhkarQiyamReference(
       ownerId: ownerId,
       scheduleUnavailable: !adhkarAvailable,
+      adhkarLoadFailed: adhkarLoadFailed,
       morningCompleted: morningCompleted,
       morningTotal: morningTotal,
       eveningCompleted: eveningCompleted,
       eveningTotal: eveningTotal,
       period: period,
+      qiyamLoadFailed: qiyamLoadFailed,
       tonight: tonight,
       adhkarStreak: adhkarStreak,
       qiyamStreak: qiyamStreak,
     );
   }
 
-  Future<List<AdhkarCountRecord>> _readCounts(
+  Future<AppResult<List<AdhkarCountRecord>>> _readCounts(
     String ownerId,
     String day,
     String list,
-  ) async {
-    final result = await _adhkar.readListCounts(
-      accountId: ownerId,
-      adhkarDay: day,
-      list: list,
-    );
-    return result.valueOrNull ?? const [];
-  }
+  ) => _adhkar.readListCounts(accountId: ownerId, adhkarDay: day, list: list);
 
   int _countOf(List<AdhkarCountRecord> counts, String itemId) {
     for (final row in counts) {

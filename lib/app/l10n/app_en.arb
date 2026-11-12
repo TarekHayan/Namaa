@@ -622,5 +622,11 @@
   "qiyamConflicts": "Sync differences",
   "qiyamConflictActive": "Active",
   "qiyamConflictRetained": "Retained",
-  "qiyamConflictReadOnly": "Read-only; nothing to resolve."
+  "qiyamConflictReadOnly": "Read-only; nothing to resolve.",
+  "adhkarConflictListMorning": "Morning adhkar",
+  "adhkarConflictListEvening": "Evening adhkar",
+  "adhkarConflictItem": "item {position}",
+  "@adhkarConflictItem": {
+    "placeholders": {"position": {"type": "int"}}
+  }
 }

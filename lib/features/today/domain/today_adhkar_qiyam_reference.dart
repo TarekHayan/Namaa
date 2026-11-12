@@ -16,11 +16,13 @@ final class TodayAdhkarQiyamReference {
   const TodayAdhkarQiyamReference({
     required this.ownerId,
     required this.scheduleUnavailable,
+    required this.adhkarLoadFailed,
     required this.morningCompleted,
     required this.morningTotal,
     required this.eveningCompleted,
     required this.eveningTotal,
     required this.period,
+    required this.qiyamLoadFailed,
     required this.tonight,
     required this.adhkarStreak,
     required this.qiyamStreak,
@@ -33,6 +35,17 @@ final class TodayAdhkarQiyamReference {
   /// Exposed honestly — never a calendar-day fallback.
   final bool scheduleUnavailable;
 
+  /// True when an Adhkar read failed (the catalog snapshot, the day's
+  /// counts or the streak walk). A failed read is never presented as
+  /// progress or as a streak of 0 — the screen shows a failure instead
+  /// (Phase 6 review finding 2). Separate from [scheduleUnavailable].
+  final bool adhkarLoadFailed;
+
+  /// True when a Qiyam read failed (the night record or the streak walk);
+  /// tonight's state is then not a real answer. Separate from
+  /// [scheduleUnavailable].
+  final bool qiyamLoadFailed;
+
   final int morningCompleted;
   final int morningTotal;
   final int eveningCompleted;
@@ -44,7 +57,8 @@ final class TodayAdhkarQiyamReference {
   final TodayQiyamTonight tonight;
 
   /// The derived streaks; null when there is no day or night to walk from
-  /// (an unavailable schedule) — never a fabricated 0.
+  /// (an unavailable schedule) or when the read failed — never a
+  /// fabricated 0.
   final int? adhkarStreak;
   final int? qiyamStreak;
 }

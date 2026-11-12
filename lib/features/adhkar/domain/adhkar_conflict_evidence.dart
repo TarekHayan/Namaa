@@ -10,11 +10,16 @@ final class AdhkarConflictEvidence {
     required this.retainedCount,
     required this.activeAt,
     required this.retainedAt,
+    this.list,
   });
 
   final String id;
   final String adhkarDay;
   final String itemId;
+
+  /// The list the item belongs to, from the stored conflict payload; null
+  /// only for evidence written before the list was stored.
+  final String? list;
   final int activeCount;
   final int retainedCount;
   final DateTime activeAt;

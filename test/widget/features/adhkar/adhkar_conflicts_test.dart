@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/core/domain/values/version_source.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_catalog_port.dart';
 import 'package:namma_project/features/adhkar/data/drift_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_conflicts_view.dart';
 
 import '../../../support/foundation_test_support.dart';
@@ -45,6 +48,7 @@ void main() {
     await tester.runAsync(() async {
       String payload(int count) =>
           '{"adhkar_day":"$day","item_id":"$itemId","catalog_version":1,'
+          '"list":"${itemId.startsWith('m') ? 'morning' : 'evening'}",'
           '"count":$count,"updated_at":"2026-11-10T08:00:00.000Z"}';
       await db
           .into(db.conflictRecords)
@@ -75,6 +79,9 @@ void main() {
         home: Scaffold(
           body: AdhkarConflictsView(
             conflicts: repository.watchConflicts('owner'),
+            catalog: _FixtureCatalog(),
+            ownerId: 'owner',
+            locale: 'en',
           ),
         ),
       ),
@@ -107,7 +114,22 @@ void main() {
     );
     await pumpView(tester);
     expect(find.text('Sync differences'), findsOneWidget);
-    expect(find.textContaining('m1'), findsOneWidget);
+    expect(find.text('Morning adhkar \u00b7 item 1'), findsOneWidget);
+    expect(
+      find.text('m1'),
+      findsNothing,
+      reason: 'internal item ids never reach the UI',
+    );
+    expect(
+      find.text('2026-11-10'),
+      findsNothing,
+      reason: 'raw ISO dates never reach the UI',
+    );
+    expect(
+      find.textContaining('Nov'),
+      findsOneWidget,
+      reason: 'the day is formatted with the app locale',
+    );
     expect(find.text('Count: 2'), findsOneWidget, reason: 'active version');
     expect(find.text('Count: 1'), findsOneWidget, reason: 'retained version');
     expect(find.text('Active'), findsOneWidget);
@@ -152,7 +174,30 @@ void main() {
     await pumpView(tester);
     expect(find.textContaining('m2'), findsNothing);
     expect(find.text('Count: 5'), findsNothing);
-    expect(find.textContaining('m1'), findsOneWidget);
+    expect(find.text('Morning adhkar \u00b7 item 1'), findsOneWidget);
+    await closeStore(tester);
+  });
+
+  testWidgets('an unknown item falls back to the list name alone', (
+    tester,
+  ) async {
+    await openStore(tester);
+    await seed(
+      tester,
+      owner: 'owner',
+      conflictId: 'c-unknown',
+      day: '2026-11-10',
+      itemId: 'm9',
+      activeCount: 2,
+      retainedCount: 1,
+    );
+    await pumpView(tester);
+    expect(
+      find.text('Morning adhkar'),
+      findsOneWidget,
+      reason: 'no position for an item the catalog does not know',
+    );
+    expect(find.textContaining('m9'), findsNothing);
     await closeStore(tester);
   });
 
@@ -162,4 +207,33 @@ void main() {
     expect(find.text('Sync differences'), findsNothing);
     await closeStore(tester);
   });
+}
+
+/// The catalog port the view uses for positions: the reviewed fixture item
+/// only (IDs and targets, never text).
+final class _FixtureCatalog implements AdhkarCatalogPort {
+  @override
+  Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async {
+    return AppResult.success(
+      AdhkarCatalog.fromJson(const {
+        'catalog_version': 1,
+        'items': [
+          {
+            'item_id': 'm1',
+            'list': 'morning',
+            'position': 1,
+            'target': 1,
+            'text_ar': 'fixture',
+            'translation_en': 'fixture',
+            'virtue_ar': 'fixture',
+            'virtue_en': 'fixture',
+            'reference_ar': 'fixture',
+            'reference_en': 'fixture',
+            'approved': true,
+          },
+        ],
+        'qiyam_supplications': <Map<String, Object>>[],
+      }),
+    );
+  }
 }

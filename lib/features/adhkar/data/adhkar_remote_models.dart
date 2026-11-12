@@ -95,4 +95,16 @@ abstract final class AdhkarRemoteModels {
     'count': record.count,
     'updated_at': record.updatedAt.toIso8601String(),
   });
+
+  /// The payload stored with a retained conflict: the wire payload plus the
+  /// list, so the read-only view can name the list without a catalog lookup
+  /// when the item is unknown (Phase 6 review finding 3).
+  static String conflictPayload(AdhkarCountRecord record) => jsonEncode({
+    'adhkar_day': record.adhkarDay,
+    'item_id': record.itemId,
+    'catalog_version': record.catalogVersion,
+    'list': record.list,
+    'count': record.count,
+    'updated_at': record.updatedAt.toIso8601String(),
+  });
 }

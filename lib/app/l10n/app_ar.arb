@@ -619,5 +619,11 @@
   "qiyamConflicts": "اختلافات المزامنة",
   "qiyamConflictActive": "النسخة النشطة",
   "qiyamConflictRetained": "النسخة المحفوظة",
-  "qiyamConflictReadOnly": "للعرض فقط؛ لا يوجد إجراء."
+  "qiyamConflictReadOnly": "للعرض فقط؛ لا يوجد إجراء.",
+  "adhkarConflictListMorning": "أذكار الصباح",
+  "adhkarConflictListEvening": "أذكار المساء",
+  "adhkarConflictItem": "الذكر {position}",
+  "@adhkarConflictItem": {
+    "placeholders": {"position": {"type": "int"}}
+  }
 }

@@ -212,23 +212,20 @@ void main() {
       );
     }
 
-    // Hosted runs share one staging account across runs, so each picks a
-    // random past day (the server rejects a day more than two days ahead);
-    // the local stack starts clean, so a fixed day is deterministic there.
-    final fixtureDay = local
-        ? DateTime.utc(2026, 11, 4)
-        : DateTime.utc(
-            1000,
-          ).add(Duration(days: Random.secure().nextInt(365000)));
+    // The test is rerunnable on every stack: a random past day (the server
+    // rejects a day more than two days ahead) and a run-tagged operation ID,
+    // so repeated runs and shared accounts never collide (Phase 6 review
+    // finding 4).
+    final fixtureDay = DateTime.utc(
+      1000,
+    ).add(Duration(days: Random.secure().nextInt(365000)));
     String isoDay(DateTime value) =>
         '${value.year.toString().padLeft(4, '0')}-'
         '${value.month.toString().padLeft(2, '0')}-'
         '${value.day.toString().padLeft(2, '0')}';
     final day = isoDay(fixtureDay);
     final night = isoDay(fixtureDay);
-    final runTag = local
-        ? ''
-        : '-${Random.secure().nextInt(1 << 32).toRadixString(16)}';
+    final runTag = '-${Random.secure().nextInt(1 << 32).toRadixString(16)}';
     String op(String name) => '$name$runTag';
     // Every version sits inside its record's server window [day - 1, day + 2)
     // in UTC.

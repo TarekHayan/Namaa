@@ -623,6 +623,59 @@ Gates (2026-11-12, Windows host):
 | SQL | `supabase test db` | not run: Docker Desktop unavailable |
 | Integration | `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows` | not run: Docker Desktop unavailable |
 
+## Phase 6 review fixes (2026-11-12)
+
+Four findings on commit e400c66, each fixed failing-test-first; no existing
+assertion was weakened.
+
+1. **Today x/N must equal the Adhkar screen (SC-006)** — the Today adapter
+   now counts ITEMS exactly like `AdhkarState.completedOf/totalOf` (FR-005):
+   completed = items at their target, total = the list's item count — no
+   more summed repetitions/targets. A new parity test builds the same
+   catalog and counts for the adapter and for `AdhkarState` and asserts
+   identical Morning and Evening values (with the concrete numbers pinned:
+   2/3 Morning, 1/3 Evening for its fixture). Tests:
+   `adhkar_qiyam_today_adapter_test.dart`.
+2. **A failed read is never zero progress** — `TodayAdhkarQiyamReference`
+   gains `adhkarLoadFailed` / `qiyamLoadFailed`, separate from
+   `scheduleUnavailable` (which keeps them false). A failed catalog
+   snapshot, counts read or streak read raises `adhkarLoadFailed` (streaks
+   stay null); a failed night record or night streak read raises
+   `qiyamLoadFailed`. Five new tests, one per failed read.
+3. **The "Sync differences" lists show no internal IDs or raw ISO dates** —
+   the Adhkar entry title is now the list name plus the item's position
+   from the catalog port passed to the view ("Morning adhkar · item 1" /
+   "أذكار الصباح · الذكر 1"), falling back to the list name alone for an
+   item the catalog does not know; the stored conflict payload now carries
+   the list (`AdhkarRemoteModels.conflictPayload`, consumed by
+   `_insertConflict` and exposed on `AdhkarConflictEvidence.list`). The
+   formatted day/night renders as a secondary line with the app locale
+   (`DateFormat.MMMEd`), in both `adhkar_conflicts_view.dart` and
+   `qiyam_conflicts_view.dart`. New strings added line by line to both ARB
+   files (`adhkarConflictListMorning/Evening`, `adhkarConflictItem`).
+   Tests assert the new labels and that "m1" and the raw ISO date never
+   appear, plus the unknown-item fallback (4 adhkar + 2 qiyam).
+4. **The integration test is rerunnable** —
+   `integration_test/adhkar_qiyam_offline_sync_test.dart` always uses a
+   run-tagged operation ID and a random past day, on the local stack too
+   (the fixed local day and the empty tag are gone); every `updated_at`
+   still sits inside its day's server window [day − 1 day, day + 2 days).
+
+Follow-up: `AdhkarCatalogCache` no longer caches an empty catalog read, so
+a catalog seeded later is still picked up
+(`adhkar_catalog_cache_test.dart`, 2 tests).
+
+Gates (2026-11-12, Windows host):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean |
+| Analyze | `flutter analyze` | No issues found |
+| Focused suites | `flutter test test/unit/features/today/data test/unit/features/adhkar test/unit/features/qiyam test/widget/features/adhkar test/widget/features/qiyam` | **259 passed** |
+| Full suite | `flutter test` | **1014 passed, 1 skipped, 0 failed** |
+| SQL | `supabase test db` | not run: Docker Desktop unavailable |
+| Integration | `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows` | not run: Docker Desktop unavailable (T066 stays unticked) |
+
 ## SC-007 — streak values for seeded patterns
 
 **Qiyam portion verified 2026-11-12** (US3 checkpoint): seeded patterns

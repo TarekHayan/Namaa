@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/qiyam_strings_adapter.dart';
 
 import '../domain/qiyam_conflict_evidence.dart';
 
 /// Read-only evidence from the encrypted owner-scoped conflict store: both
-/// versions of each retained night conflict, with no resolve action, and
-/// the word "missed" never appears.
+/// versions of each retained night conflict, with no resolve action, the
+/// night formatted with the app locale (Phase 6 review finding 3), and the
+/// word "missed" never appearing.
 class QiyamConflictsView extends StatelessWidget {
-  const QiyamConflictsView({super.key, required this.conflicts});
+  const QiyamConflictsView({
+    super.key,
+    required this.conflicts,
+    required this.locale,
+  });
 
   final Stream<List<QiyamConflictEvidence>> conflicts;
+  final String locale;
 
   @override
   Widget build(BuildContext context) =>
@@ -34,7 +41,11 @@ class QiyamConflictsView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(row.nightDate, style: theme.textTheme.titleMedium),
+                        Text(
+                          _night(row.nightDate),
+                          key: ValueKey('qiyam-conflict-${row.id}'),
+                          style: theme.textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 10),
                         _VersionLine(
                           label: copy.qiyamConflictActive,
@@ -70,6 +81,16 @@ class QiyamConflictsView extends StatelessWidget {
   String _state(QiyamStrings strings, bool performed, int? rakahs) => performed
       ? strings.historyPrayed(rakahs ?? 0)
       : strings.historyNotPerformed;
+
+  /// The night formatted with the app locale; a raw ISO date never reaches
+  /// the UI.
+  String _night(String nightDate) => DateFormat.MMMEd(locale).format(
+    DateTime.utc(
+      int.parse(nightDate.substring(0, 4)),
+      int.parse(nightDate.substring(5, 7)),
+      int.parse(nightDate.substring(8, 10)),
+    ),
+  );
 }
 
 class _VersionLine extends StatelessWidget {
