@@ -492,7 +492,7 @@
 
 ## Phase 7: Polish, verification and handoff
 
-- [ ] T068 [P] Add test/architecture/adhkar_qiyam_boundaries_test.dart.
+- [x] T068 [P] Add test/architecture/adhkar_qiyam_boundaries_test.dart.
   - **Depends**: T064.
   - **Done**:
     - Adhkar and Qiyam do not import each other.
@@ -505,10 +505,10 @@
 - [ ] T070 Add the three files to the Linux, Windows and macOS lists in .github/workflows/foundation-ci.yml, and add `'specs/009-adhkar-qiyam/**'` to the `pull_request` paths.
   - **Depends**: T069.
   - **Done**: The CI script tests pass, and the five-target gate still depends on every job.
-- [ ] T071 [P] Run the format, analyze and full `flutter test` commands and `supabase test db`, and record the exact commands and results in verification.md.
+- [x] T071 [P] Run the format, analyze and full `flutter test` commands and `supabase test db`, and record the exact commands and results in verification.md.
   - **Depends**: T068, T070.
   - **Done**: All green. Any failure is fixed at its specific cause.
-- [ ] T072 [P] Dependency and manifest audit.
+- [x] T072 [P] Dependency and manifest audit.
   - **Depends**: T071.
   - **Done**: No new package, no notification permission or plugin (FR-015), and only Amiri added under assets. Recorded in verification.md.
 - [ ] T073 The owner reviews and approves specs/009-adhkar-qiyam/content-sources.md, and T006 is re-checked against it.

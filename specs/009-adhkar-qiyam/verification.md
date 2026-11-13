@@ -721,3 +721,68 @@ full matrix across both streaks is not yet recorded as one scenario run.
 ## SC-008 — countable exactly inside the time windows
 
 **Pending**: not yet verified, including across midnight.
+
+## Phase 7 (partial) — T068, T071, T072 (2026-11-13)
+
+T068 adds `test/architecture/adhkar_qiyam_boundaries_test.dart` (mirroring
+`prayer_boundaries_test.dart` and `today_boundaries_test.dart`, 5 tests).
+It enforces, with a negative control per rule and a scan over the current
+production code:
+
+1. Adhkar and Qiyam never import each other (either direction, package or
+   relative).
+2. Neither imports `lib/features/prayer/**` at all — the Prayer day
+   boundaries arrive only through ports wired in `lib/app/composition/`.
+3. Today reaches Adhkar/Qiyam only through their `application/` and
+   `domain/` folders, never `data/` or `presentation/`.
+4. The AGENTS.md section 5 layer table for both features: domain imports
+   domain only (no Flutter, Drift, Supabase, uuid, timezone, data,
+   presentation or application); application never data/presentation and no
+   infrastructure packages; data never presentation; presentation never
+   data. Project-layer bans match only `lib/` targets, so third-party
+   package paths (for example `package:timezone/data/…`) are not
+   misread as project layers.
+5. Storage stays in `data/`: `FoundationDatabase`, `SupabaseClient` and the
+   local Drift getters (`adhkarItemCounts`, `qiyamNights`,
+   `conflictRecords`, `xpAwards`) never appear outside `data/`, and the
+   remote tables are never written with `.from(...).insert/upsert/update/
+   delete` — remote writes go only through the versioned RPC gateways
+   (reads stay legal).
+
+The client secret scan still passes (part of the full suite below).
+No rule failed on the current code — no import needed moving.
+
+Gates (2026-11-13, Windows host, run once at the end):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (548 files, 0 changed) |
+| Analyze | `flutter analyze` | No issues found |
+| Full suite | `flutter test` | **1019 passed, 1 skipped, 0 failed** (1014 + the 5 new boundary tests) |
+| Reset | `supabase db reset --local` | 0001–0016 applied, `seed.sql` loaded |
+| SQL | `supabase test db` | **Files=24, Tests=337, PASS** |
+
+The known-flaky `prayer_context_service_test.dart` "cached year wins…"
+did not fail in this run.
+
+## T072 — dependency and manifest audit (2026-11-13)
+
+Compared against `develop` with
+`git diff develop -- pubspec.yaml pubspec.lock android ios macos windows
+linux`:
+
+1. **New packages: exactly one — `fake_async: ^1.3.1`.** It is a
+   **dev-only test dependency** (`pubspec.yaml` `dev_dependencies`;
+   `pubspec.lock` moves `fake_async` from `transitive` to
+   `direct dev`, same hosted version and hash), added for the Cubit
+   timer/stream tests. Kept; nothing runtime-facing was added.
+2. **No notification permission and no notification plugin (FR-015)** —
+   `android/`, `ios/`, `macos/`, `windows/` and `linux/` are unchanged
+   against `develop` (zero new plugins, zero manifest or entitlement
+   edits). The registrant files only emit line-ending warnings.
+3. **Assets: only the Amiri font and its license** —
+   `assets/fonts/amiri/Amiri-Regular.ttf` plus `OFL.txt` (SIL OFL 1.1),
+   declared as the `Amiri` font family in `pubspec.yaml` for the reviewed
+   adhkar/supplication text (009, R8). No other asset added.
+
+Nothing else appeared in the audited paths; no stop condition triggered.
