@@ -506,7 +506,7 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [ ] T081 Bundle the KFGQPC Uthmanic Hafs font at assets/fonts/kfgqpc_hafs/, taken unmodified from a Quran Foundation documented font URL, register the family in pubspec.yaml, add the Quran Foundation credit to the app's credits, and record the source URL, the SHA-256 and the credit wording in verification.md. If the only documented file is a web format Flutter cannot load (for example WOFF2), stop and report it instead of converting the file: converting is a modification the owner must approve.
   - **Depends**: none (owner decision 2026-11-16).
   - **Done**: A widget test renders a placeholder Quran item with the family, and the attribution shows in the app's credits.
-- [ ] T082 The agent adds review entries to content-sources.md for every item the owner approves on the second review page: the Hisn al-Muslim additions, the Quran items (the KFGQPC QPC Hafs text verbatim, attribution, counts, placement, preface and basmala decisions) and the full s2 text. The owner confirms the final list.
+- [x] T082 The agent adds review entries to content-sources.md for every item the owner approves on the second review page: the Hisn al-Muslim additions, the Quran items (the KFGQPC QPC Hafs text verbatim, attribution, counts, placement, preface and basmala decisions) and the full s2 text. The owner confirms the final list.
   - **Depends**: the owner's second review.
   - **Done**: Every shipped item has an entry marked approved by the owner, with its final ID, list, position and target.
 - **T006 note (2026-11-15):** T006 now also depends on T080 and T082, and builds the asset in the revised shape.
