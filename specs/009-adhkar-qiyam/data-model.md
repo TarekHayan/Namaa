@@ -22,13 +22,17 @@ Design date: 2026-11-09. This document lists planned names and fields; no schema
 
 ## Reference content (asset, not user data)
 
-`assets/religious/adhkar_catalog_v1.json`:
+`assets/religious/adhkar_catalog_v1.json` (revised 2026-11-15: Arabic only, owner decision D3; Quran items, D4):
 
 | Field | Rule |
 |---|---|
 | catalog_version | 1 |
-| items[] | `item_id`, `list`, `position` (1-based, unique per list), `target` (≥1), `text_ar`, `translation_en`, `virtue_ar`, `virtue_en`, `reference_ar`, `reference_en` |
-| qiyam_supplications[] | `id`, `text_ar`, `source_ar`, `source_en` |
+| items[] | `item_id`, `list`, `position` (1-based, unique per list), `target` (≥1), `kind` (`dhikr` or `quran`), `text_ar`, `virtue_ar` (nullable), `reference_ar`; for `kind = quran` also `surah`, `ayah_from`, `ayah_to` and `preface_ar` (nullable, for example the isti'adha, shown apart from the verse text) |
+| qiyam_supplications[] | `id`, `text_ar`, `source_ar` |
+| attribution | The attribution line for the Quran text (KFGQPC Madinah Mushaf, Hafs, through the Quran Foundation), crediting the Quran Foundation. |
+
+- Item IDs added after the prototype's `m1…m10` and `e1…e9` continue those series (`m11…`, `e10…`); a Quran item uses the same series. The approved list and order are fixed in `content-sources.md`.
+- The UI labels follow the app language; the content fields are Arabic only.
 
 - The catalog is validated on load: unique IDs and positions, targets ≥ 1, and non-blank text and references.
 - An invalid catalog leaves the feature in a recoverable "content unavailable" state, and the app does not crash.
@@ -100,6 +104,55 @@ Design date: 2026-11-09. This document lists planned names and fields; no schema
 
 RLS limits every exposed row to `auth.uid()`. There is no direct client INSERT, UPDATE or DELETE. Anonymous and public users get no execute rights.
 
+## My Adhkar (Story 5, added 2026-11-15)
+
+### Identity
+
+- **My dhikr item ID**: a random UUIDv4 created on the device that adds the item. It never changes and is never reused.
+- **My dhikr count record ID**: `UUIDv5(NS009, 'my-adhkar/' + itemId + '/' + day)`, where `day` is the AdhkarDay.
+- **Conflict ID**: built as above, with these descriptors:
+  - item: `<updated_at micros>:<deleted>|<target>|<text-sha256>|<note-sha256>`;
+  - count: `<updated_at micros>:<count>`.
+
+### Encrypted local schema v11 (additive on v10)
+
+#### my_adhkar_items
+
+| Field | Constraint / purpose |
+|---|---|
+| account_id, item_id | Composite primary key. |
+| text | 1–1000 characters after trimming; never blank. |
+| target | 1–1000. |
+| note | Nullable, ≤ 300 characters. |
+| created_at | UTC; the display order (oldest first). |
+| updated_at, last_acknowledged_updated_at | As for the other records. |
+| deleted_at | Nullable. Set once on delete and never cleared: the tombstone keeps the item from coming back on sync. |
+
+- **Index:** `(account_id, deleted_at, created_at)` for the tab, and `(account_id, updated_at, item_id)` for sync.
+- **Add command.** One transaction: re-validate the owner, check fewer than 100 live items, insert the row, append the outbox operation.
+- **Edit command.** Updates text, target or note; lowering the target below today's count also writes today's count as the new target, in the same transaction.
+- **Delete command.** Sets `deleted_at` and appends the outbox operation. Counts of a deleted item are no longer shown or synced.
+
+#### my_adhkar_counts
+
+| Field | Constraint / purpose |
+|---|---|
+| account_id, item_id, adhkar_day | Composite primary key. |
+| record_id | Deterministic UUID (above). |
+| count | 0 ≤ count ≤ 1000. The screen shows `min(count, target)`, so a target lowered on another device never shows an overflow. |
+| created_at, updated_at, last_acknowledged_updated_at | As above. |
+
+- **Increment and reset** follow the catalog rules (Adhkar day, no period window, locked when the schedule is unavailable), with no set award.
+- Entity types in `pending_changes`: `my_adhkar_item` and `my_adhkar_count`.
+
+### Remote schema, migration 0017
+
+- **`my_adhkar_items`**: the owner, `item_id` (uuid), the text, target and note with the same checks, `created_at`, `updated_at` and `deleted_at`. Primary key `(owner, item_id)`.
+- **`my_adhkar_counts`**: the owner, the item ID (foreign key to the owner's item), the day, the record UUID (identity checked), the count (0–1000) and the version fields. Primary key `(owner, item_id, adhkar_day)`.
+- **Receipts and conflicts**: `my_adhkar_operation_receipts` and `my_adhkar_conflicts`, as in 0016.
+- **RPCs**: `apply_my_adhkar_item_change_v1` and `apply_my_adhkar_count_change_v1` (contracts/adhkar-qiyam-sync.md).
+- Same RLS and grants as 0016. There is no XP write anywhere in 0017.
+
 ## Derived and memory-only values
 
 - **AdhkarClockState**: the Adhkar day, the period, the next boundary instant, and whether a schedule is available.
@@ -115,9 +168,11 @@ RLS limits every exposed row to `auth.uid()`. There is no direct client INSERT, 
 - **Adhkar item:** count k → k+1 when k < target and the period is countable; any k → 0 on reset. There is no transition driven by a timer, and the day change never writes rows.
 - **Adhkar set:** complete whenever every item in the list for that day and catalog version is at its target. The award is inserted on the first completion and is permanent.
 - **Qiyam night:** not recorded → performed or not performed. Either can switch to the other, and details can change while the night is current. Earlier nights are frozen in the UI. The award is inserted on the first `performed = true` and is permanent.
+- **My dhikr item:** absent → live → deleted. Live items can be edited any number of times. Deleted is final.
+- **My dhikr count:** the same transitions as an Adhkar item, with no award.
 
 ## Migration integrity
 
-- Upgrade every real historical local schema (v1…v9) to v10. Existing Task, Habit, Map and Prayer rows, the XP ledger, the outbox and conflicts are preserved.
+- Upgrade every real historical local schema (v1…v9) to v10, and v10 to v11 (My Adhkar). Existing Task, Habit, Map, Prayer, Adhkar and Qiyam rows, the XP ledger, the outbox and conflicts are preserved.
 - A deliberately failed migration leaves the v9 database readable through the journal and recovery path.
 - Test a fresh v10 database, each historical path, a restart after the upgrade, and the failure/recovery case.

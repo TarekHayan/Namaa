@@ -18,21 +18,34 @@ References: [spec](../spec.md) FR-018…021, prototype `AdhkarView.tsx` and `Qiy
 
 ## Adhkar screen (prototype order)
 
-1. **Heading.** The title and subtitle, the **Adhkar streak** chip (FR-006b), and the Morning/Evening segmented switch (sun and moon icons).
-   - The switch opens on the current period.
+1. **Heading.** The title and subtitle, the **Adhkar streak** chip (FR-006b), and the Morning / Evening / My Adhkar segmented switch (sun, moon and bookmark icons).
+   - The switch opens on the current period. It never opens on My Adhkar by itself.
    - If there is no schedule, an inline notice links to the Prayer location setup.
 2. **Progress card.** "Morning (x / N)", a progress bar and the percentage.
    - When the list is outside its time, a notice reads: "Its time starts at {time}".
 3. **Item cards,** one per catalog item, in order:
    - the number badge;
-   - the "Virtue and source" toggle, which expands the virtue and reference in the app language;
+   - the "Virtue and source" toggle, which expands the Arabic virtue and reference (labels in the app language);
    - the reset button, with a tooltip;
-   - the Arabic text in Amiri, with the English translation below it only when the app language is English;
+   - the Arabic text in Amiri, in both app languages (no translation in v1). A Quran item shows its preface line (the isti'adha) apart from the verses, the verses in a font that renders the Uthmani script, and its surah and verse numbers;
    - the count/target ("Target 2 / 3");
    - the large count button: "Tap to count (n)", then "Completed".
      - Its semantic label is "Count, 2 of 3".
      - It is disabled when the item is complete or the list is not countable.
 4. **Completed set.** A celebration toast and the XP feedback. A second award is never shown.
+
+## My Adhkar tab (Story 5)
+
+1. **Header line.** "Your own adhkar" with a short note that they are not part of the reviewed lists and earn no XP. An **Add** button, disabled at 100 items with the reason.
+2. **Empty state.** One sentence on what the tab is for, and the Add button.
+3. **Item cards**, oldest first, in the same card style as the catalog items:
+   - the user's text in Amiri, with `TextDirection` taken from the text itself so mixed Arabic and Latin text stays readable;
+   - the note, when present, in the secondary style;
+   - count/target, the count button and reset, with the same semantics labels;
+   - an overflow menu with **Edit** and **Delete**. Delete asks for confirmation in the page itself.
+   - No number badge, no "Virtue and source" toggle and no completion celebration.
+4. **Add / edit sheet.** A bottom sheet on phone and a dialog on desktop, with the text field (counter to 1000), the target field (1–1000, default 1) and the note field (counter to 300). Save is disabled until the text is valid. Errors are inline and localized.
+5. **Locked state.** When the schedule is unavailable, the cards stay visible, counting is disabled, and the same notice as the other tabs shows.
 
 ## Qiyam screen (prototype order)
 

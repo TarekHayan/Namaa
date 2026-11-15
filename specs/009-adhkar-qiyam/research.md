@@ -149,6 +149,30 @@ Each item below records the decision, the rationale and the alternatives conside
   - **Home:** replace the sample Adhkar/Qiyam values in `today_focus_reflection_card` and `today_progress_hero` with a `TodayAdhkarQiyamPort` projection: Morning x/N, Evening x/N, and tonight's Qiyam state. Keep the provenance labels for any remaining sample values, and make the quick hubs open the real screens.
 - **Alternatives.** Opening the screens as sheets over Home. Rejected: the owner wants a tab model.
 
+## R13. Catalog expansion and Quran text (2026-11-15)
+
+- **Decision.** The owner approved the prototype's 21 entries and asked for the remaining Morning and Evening adhkar of Hisn al-Muslim, plus Ayat al-Kursi and the Mu'awwidhat.
+  - Hadith adhkar come from Hisn al-Muslim, through the open-licensed Seen-Arabic dataset, with each grading checked on dorar.net (`content-sources.md`).
+  - Quran text: first proposed from Tanzil's Uthmani text. The owner rejected Ayat al-Kursi as rendered: Tanzil marks open tanween with small-meem code points (U+06ED, U+06E2) that only a font built for them shows correctly. On 2026-11-16 the owner chose the KFGQPC Madinah Mushaf text (Hafs, QPC Hafs encoding) with the matching KFGQPC Uthmanic Hafs font, obtained through the Quran Foundation.
+  - Licensing: the KFGQPC font forbids reproduction without the Complex's written approval, and the Quran Foundation terms do not by default cover a build-time bundle of its content. On 2026-11-16 the owner registered a Quran Foundation developer app and decided to ship with the Quran Foundation credited, without waiting for a written answer (content-sources.md, "Quran source").
+  - The catalog is Arabic only (D3): no translation fields.
+- **Alternatives.**
+  - Copy the Quran text from the Hisn al-Muslim dataset. Rejected: it mixes imla'i and Uthmani spellings.
+  - Ship the expansion as a later catalog version. Rejected by the owner on 2026-11-15.
+
+## R14. My Adhkar (2026-11-15)
+
+- **Decision.** The user's own adhkar live in the Adhkar feature, not a new feature folder, because they share the Adhkar day, clock, counter widgets and sync service.
+  - Two record types: the item (text, target, note, tombstone) and the per-day count. Item IDs are random UUIDv4 values, since two devices can add items offline; count IDs are UUIDv5 like the catalog counts.
+  - A delete is final, so a tombstone always wins. Newest-wins applies only between live versions.
+  - No XP and no streak (owner, 2026-11-15), so the RPCs never touch `xp_awards`, and nothing on the server needs to trust user text.
+  - Additive local schema v11 and migration 0017, so the reviewed v10 and 0016 stay unchanged.
+  - Defaults the owner can change: 100 items, text ≤ 1000, target 1–1000, note ≤ 300, add-order only.
+- **Alternatives.**
+  - Mixing user items into the Morning and Evening lists. Rejected by the owner (third tab chosen).
+  - Folding the text into the count record. Rejected: it would copy the text into every day's row and make edits rewrite history.
+  - Amending v10 and 0016. Rejected: both are reviewed and tested; an additive step is safer.
+
 ## R12. CI placement
 
 - **Decision.** Add the new integration files to the existing `prayer` Android suite and iOS group (renamed "prayer / religious" only in labels if needed), and to the desktop file lists. Hosted tests use run-tagged operation IDs and random past days, as 008 does.

@@ -1,12 +1,47 @@
 # Content sources review — Adhkar catalog v1 and Qiyam supplications (009)
 
-**Status: pending owner review.** Every entry below carries `Status: pending owner
-review`. The product owner reviews and approves each entry before it ships
-(T073, FR-002). Items that fail review are removed, never rewritten. This file
-is the input for `assets/religious/adhkar_catalog_v1.json` (T006).
+**Status: reviewed by the product owner on 2026-11-15.** All 21 entries below
+(m1–m10, e1–e9, s1, s2) are approved, each in the form its decision selects. The
+decisions D1–D10 are recorded in the next section. The Quran additions from D4 and
+the owner's scope note are still open (see "Open after the owner review"). This
+file is the input for `assets/religious/adhkar_catalog_v1.json` (T006).
 
 Prepared by the implementing agent on 2026-11-09. The agent prepares the
-comparison and the source checks; it does not approve anything.
+comparison and the source checks; it does not approve anything. The owner's
+choices were collected on a private review page on 2026-11-15 and are copied
+here as given.
+
+## Owner decisions (2026-11-15)
+
+| Decision | Owner's choice | What ships |
+|---|---|---|
+| D1 (m9) | Option 1 | The ×10 text stays. Virtue: «كان كمن أعتق أربعة أنفس من ولد إسماعيل». Reference: البخاري (6404) ومسلم (2693). |
+| D2 (m7, e7) | Option 2 | The ×7 text stays in both lists. The reference describes it as a mawqūf of Abu al-Darda (أبو داود 5081 موقوفاً؛ صحّح إسناده الأرناؤوط). The marfūʿ virtue «من قالها سبع مرات كفاه الله…» is dropped. |
+| D3 (English) | Option 4 | No English translation of the adhkar or supplications in v1: the text is Arabic only. The English UI strings stay. |
+| D4 (Quran) | Option 2 | Add Ayat al-Kursi and the Mu'awwidhat. **Not in the catalog yet:** their exact text, source and list placement need their own review entry and the owner's approval of that text (Constitution V) before T006 includes them. |
+| D5 (e9) | Option 2 | e9 stays; its reference line is Hisn al-Muslim's takhreej wording instead of «صحيح الترغيب (656)». |
+| D6 (s2) | Option 1 | The Qunut is shown in full, in the canonical Hisn al-Muslim wording; it gets its own text check before T006. |
+| D7 (m5, e6) | Option 1 | Reference: سنن الترمذي (3389). |
+| D8 (m3, e3) | Option 1 | Hisn wording kept (e3 ends «الْمَصِيرُ»). e3 reference: شرح السنة للبغوي (3/120)، والأرناؤوط: إسناده قوي. m3 reference: أبو داود (5068) والترمذي (3391). |
+| D9 (m10) | Option 1 | Reference: ابن ماجه (3815) والبخاري (6307) ومسلم (2702). |
+| D10 (e4) | Option 1 | Reference: صحيح مسلم (2709) وسنن الترمذي (3604). |
+
+## Open after the owner review
+
+1. **D4 Quran text.** Ayat al-Kursi and the Mu'awwidhat need a review entry with
+   the exact Uthmani text, its source and license, the target counts, and their
+   position in each list. The owner approves that text before it enters the
+   catalog.
+2. **D6 full Qunut text.** The full canonical wording must be written into s2
+   and checked against Hisn al-Muslim before T006.
+3. **Owner's scope note (2026-11-15), verbatim:** «دي مش كل اذكار الصباح و
+   المساء و عاوزين نضيف قسم المستخدم يقدر يضيف اديعه و اذكار خاصه بيه». It asks
+   for (a) more of the morning and evening adhkar than the prototype's 19, and
+   (b) a section where the user adds their own supplications and adhkar. On
+   2026-11-15 the owner placed both inside 009 (spec.md, Clarifications,
+   Session 2026-11-15). The added Hisn al-Muslim items get review entries in
+   this file and the owner's approval before T006 includes them. The user's own
+   adhkar are user data, not catalog content, so they need no review here.
 
 ## Method and sources
 
@@ -193,7 +228,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   "settles in a place" version is 2708a. Hisn al-Muslim's own takhreej is
   أحمد 7898 والنسائي في عمل اليوم والليلة 590 (انظر صحيح الترمذي 3/187 وصحيح ابن
   ماجه 2/266 وتحفة الأخيار ص45). Text matches Hisn al-Muslim exactly.
-- Status: pending owner review (reference wording: recommend "صحيح مسلم
+- Status: approved by the product owner on 2026-11-15 (reference wording: recommend "صحيح مسلم
   (2709، وانظر صحيح الترمذي 3/187)" or the Hisn takhreej line).
 
 ### e9 — اللهم صل وسلم على نبيينا محمد ×10
@@ -231,7 +266,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   upon evening and the whole Kingdom of Allah also entered upon evening…'"
 - Discrepancies: none beyond the punctuation comma. The prototype's virtue is
   an editorial description (not a hadith quote) — acceptable as UI copy.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### m2 — سيد الاستغفار
 - ID: m2 | List: morning | Position: 2 | Target: 1
@@ -250,7 +285,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   of asking for forgiveness from Allah is: O Allah, You are my Lord, there is
   none worthy of worship except You…" (شداد بن أوس).
 - Discrepancies: none.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### m3 — اللهم بك أصبحنا
 - ID: m3 | List: morning | Position: 3 | Target: 1
@@ -271,7 +306,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   (Grade: Sahih — Al-Albani).
 - Discrepancies: the prototype's claimed أبو داود (5071) is a different dhikr
   (the m1 narration). See D8 for the reference decision.
-- Status: pending owner review (D8).
+- Status: approved by the product owner on 2026-11-15 (D8).
 
 ### m4 — بسم الله الذي لا يضر
 - ID: m4 | List: morning | Position: 4 | Target: 3
@@ -292,7 +327,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   name is mentioned nothing on Earth or in Heaven can cause harm…'".
   https://sunnah.com/tirmidhi:3388 — Tirmidhi: "هذا حديث حسن صحيح غريب".
 - Discrepancies: none.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### m5 — رضيت بالله ربا
 - ID: m5 | List: morning | Position: 5 | Target: 3
@@ -314,7 +349,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   wording ("رَضِينَا بِاللَّهِ… رَسُولاً"), Grade: Da'if (Al-Albani).
 - Discrepancies: the prototype's أبو داود (5072) points to the weak variant
   with different wording. See D7 for the recommended correction.
-- Status: pending owner review (D7).
+- Status: approved by the product owner on 2026-11-15 (D7).
 
 ### m6 — سبحان الله وبحمده عدد خلقه
 - ID: m6 | List: morning | Position: 6 | Target: 3
@@ -333,7 +368,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   morning…", includes وَزِنَةَ عَرْشِهِ exactly.
 - Discrepancies: none. Note the prototype's virtue is an editorial description
   (the hadith's own fadl is longer); acceptable as UI copy.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### m7 — حسبي الله ×7
 - ID: m7 | List: morning | Position: 7 | Target: 7
@@ -356,7 +391,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   anyone says seven times morning and evening; 'Allah sufficeth me…'".
 - Discrepancies: critical — the ×7 claim rests on weakly graded additions (see
   D2). The mawqūf itself, per Hisn's citation, has a corrected isnad (الأرناؤوط).
-- Status: pending owner review (D2).
+- Status: approved by the product owner on 2026-11-15 (D2).
 
 ### m8 — سبحان الله وبحمده ×100
 - ID: m8 | List: morning | Position: 8 | Target: 100
@@ -380,7 +415,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   Muslim 2691 contains both the ×100 tahlil and the ×100 tasbih endings; Hisn's
   "مسلم 2692" points to the second part of the same narration. The prototype's
   reference (2691) is correct.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### m9 — لا إله إلا الله وحده لا شريك له ×10
 - ID: m9 | List: morning | Position: 9 | Target: 10
@@ -413,7 +448,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   virtue/references; no single source carries that exact pairing. Hisn
   al-Muslim's own ×10 entry cites البخاري 6404، مسلم 2693، النسائي (عمل اليوم
   والليلة 24).
-- Status: pending owner review (D1).
+- Status: approved by the product owner on 2026-11-15 (D1).
 
 ### m10 — أستغفر الله وأتوب إليه ×100
 - ID: m10 | List: morning | Position: 10 | Target: 100
@@ -442,7 +477,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   formula at ×100 verbatim is ابن ماجه (3815) (صحيح). Recommended reference:
   "ابن ماجه (3815) والبخاري (6307) ومسلم (2702)" with a wording note. Recorded
   as D9.
-- Status: pending owner review (D9).
+- Status: approved by the product owner on 2026-11-15 (D9).
 
 ## Evening list
 
@@ -459,7 +494,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
 - Grading check: as m1.
 - sunnah.com identity: as m1 (https://sunnah.com/muslim:2723).
 - Discrepancies: none beyond punctuation.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### e2 — سيد الاستغفار (evening)
 - ID: e2 | List: evening | Position: 2 | Target: 1
@@ -474,7 +509,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
 - Grading check: as m2.
 - sunnah.com identity: as m2.
 - Discrepancies: none.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### e3 — اللهم بك أمسينا (evening)
 - ID: e3 | List: evening | Position: 3 | Target: 1
@@ -498,7 +533,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   20 («حسن صحيح») و صحيح ابن ماجه 3133 («صحيح»).
 - Discrepancies: D8 — the prototype's reference points at a wording variant
   the app does not use for the evening form; the owner picks an option in D8.
-- Status: pending owner review (D8).
+- Status: approved by the product owner on 2026-11-15 (D8).
 
 ### e4 — أعوذ بكلمات الله التامات ×3
 - ID: e4 | List: evening | Position: 4 | Target: 3
@@ -521,7 +556,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
 - sunnah.com identity: quoted above; see D10 for the reference decision.
 - Discrepancies: D10 — the prototype's "مسلم (2709)" alone does not carry the
   ×3 count the app's target uses.
-- Status: pending owner review (D10).
+- Status: approved by the product owner on 2026-11-15 (D10).
 
 ### e5 — بسم الله الذي لا يضر (evening)
 - ID: e5 | List: evening | Position: 5 | Target: 3
@@ -535,7 +570,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
 - Grading check: as m4 (إسناده صحيح).
 - sunnah.com identity: as m4.
 - Discrepancies: none.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### e6 — رضيت بالله ربا (evening)
 - ID: e6 | List: evening | Position: 6 | Target: 3
@@ -548,7 +583,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
 - Grading check: as m5.
 - sunnah.com identity: as m5.
 - Discrepancies: D7 applies (same correction as m5).
-- Status: pending owner review (D7).
+- Status: approved by the product owner on 2026-11-15 (D7).
 
 ### e7 — حسبي الله ×7 (evening)
 - ID: e7 | List: evening | Position: 7 | Target: 7
@@ -561,7 +596,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
 - Grading check: as m7 (موضوع عند الألباني؛ زيادة منكرة عند ابن كثير والأرناؤوط).
 - sunnah.com identity: as m7.
 - Discrepancies: D2 applies.
-- Status: pending owner review (D2).
+- Status: approved by the product owner on 2026-11-15 (D2).
 
 ### e8 — سبحان الله وبحمده ×100 (evening)
 - ID: e8 | List: evening | Position: 8 | Target: 100
@@ -575,7 +610,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
 - Grading check: as m8 (صحيح — الألباني).
 - sunnah.com identity: as m8.
 - Discrepancies: none (resolved with m8: مسلم 2691 contains the ×100 tasbih).
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### e9 — اللهم صل وسلم على نبيينا محمد ×10
 - ID: e9 | List: evening | Position: 9 | Target: 10
@@ -596,7 +631,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   Tirmidhi number cited elsewhere varies by edition; sunnah.com's tirmidhi:3601
   is a different hadith).
 - Discrepancies: D5.
-- Status: pending owner review (D5).
+- Status: approved by the product owner on 2026-11-15 (D5).
 
 ## Qiyam supplications (from prototype/src/views/QiyamView.tsx)
 
@@ -614,7 +649,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
   raised and he was saying…".
 - Discrepancies: none. Context is the Prophet's night prayer (the 11-rak'ah
   tahajjud hadith) — appropriate for the Qiyam screen.
-- Status: pending owner review.
+- Status: approved by the product owner on 2026-11-15.
 
 ### s2 — دعاء القنوت (الحسن بن علي)
 - ID: s2 | Usage: shown on the Qiyam screen's supplications card.
@@ -640,7 +675,7 @@ only, or cite the Hisn al-Muslim takhreej (أحمد 7898 والنسائي، عم
 - Discrepancies: the prototype truncates the end (D6). Wording variant note:
   Abu Dawud's Arabic text includes «وَلاَ يَعِزُّ مَنْ عَادَيْتَ» in the fuller
   version.
-- Status: pending owner review (D6).
+- Status: approved by the product owner on 2026-11-15 (D6).
 
 ## Translation license summary
 
@@ -648,3 +683,135 @@ See D3. The prototype's English wording belongs to the circulating Hisn
 al-Muslim English translation family with no documented license attached to the
 prototype; the MIT-licensed Seen-Arabic set is available as an alternative
 needing corrections. No translation is shipped until the owner picks an option.
+
+## Second review: additions (owner review, 2026-11-15)
+
+Collected on a second private review page on 2026-11-15, prepared on 2026-11-16.
+Hadith wording: Hisn al-Muslim through the open-licensed Seen-Arabic dataset
+(`ar.json`, entries by its `order` number). Gradings: dorar.net search results,
+fetched on 2026-11-16 (the grader, the book and its number are quoted).
+
+### Placement decisions
+
+| Question | Owner's choice |
+|---|---|
+| P1: where the Quran items go | At the top of each list, in Hisn al-Muslim's order. |
+| P2: the isti'adha before Ayat al-Kursi and the end of al-Baqara | Shown as a small separate line above the verses (`preface_ar`), apart from the Quran text. |
+| P3: the basmala before the Mu'awwidhat | No basmala, as in Hisn al-Muslim. |
+
+### Quran items: blocked on the Quran source (owner note, 2026-11-15)
+
+- **q1 Ayat al-Kursi: rejected as shown.** Owner's note, verbatim: «التشكيل مش
+  مظبوط ف م تحت الحروف مش صحيحه محتاج يتظبط عشان يدخل». The Tanzil Uthmani text
+  carries small-meem tanween marks (U+06ED, U+06E2) that only render correctly in
+  a font built for them; the review page showed them as stray meems.
+- **q2–q4 (al-Ikhlas, al-Falaq, an-Nas, ×3, Morning and Evening) and q5 (al-Baqara
+  285–286, Evening only, ×1): approved in substance**, with the owner's
+  condition, verbatim: «عاوزين المصحف كلو من مصدر موثوق» and «اهم حاجه مصدر القرأن».
+- **Consequence.** No Quran text enters the catalog until the owner approves a
+  Quran source and sees the exact text rendered in the app's font. The Tanzil
+  text recorded on the review page is not the shipped text.
+
+### Hadith additions: approved
+
+Each entry is `Status: approved by the product owner on 2026-11-15` unless noted.
+IDs continue the prototype series; m11–m13 and e10–e13 are reserved for the
+Quran items, and Ayat al-Kursi takes the next free ID in each list once approved. Positions are set when the owner confirms the
+final order (see "Order" below).
+
+| ID | List | Target | Dataset order | Item | Reference | Grading (dorar) |
+|---|---|---|---|---|---|---|
+| m14 / e14 | M / E | 4 | 12 / 13 | «اللهم إني أصبحت/أمسيت أُشهدك…» | أبو داود (5069)، البخاري في الأدب المفرد (1201) | Disputed: الألباني «ضعيف» (ضعيف أبي داود 5078، ضعيف الترغيب 383)؛ ابن باز «حسن ولا بأس به». Owner approved knowing this. |
+| m15 / e15 | M / E | 1 | 14 / 15 | «اللهم ما أصبح/أمسى بي من نعمة…» | أبو داود (5073)، ابن حبان (861) | Disputed: الذهبي والأرناؤوط: in its chain «عبد الله بن عنبسة» is unknown; ابن حجر «حسن» (نتائج الأفكار 2/380)؛ ابن حبان included it in his Sahih. |
+| m16 / e16 | M / E | 3 | 16 | «اللهم عافني في بدني…» | أبو داود (5090)، أحمد (20430)، الأدب المفرد (701) | الألباني «إسناده حسن» (صحيح أبي داود 5090)؛ ابن حجر «حسن»؛ ابن باز «إسناده حسن». |
+| m17 / e17 | M / E | 1 | 18 | «اللهم إني أسألك العفو والعافية…» | أبو داود (5074)، ابن ماجه (3871) | الألباني «صحيح» (صحيح ابن ماجه 3135)؛ الأرناؤوط «إسناده صحيح». |
+| m18 / e18 | M / E | 1 | 19 | «اللهم عالم الغيب والشهادة…» | الترمذي (3392)، أبو داود (5067) | الترمذي «حسن صحيح»؛ الألباني «صحيح»؛ الأرناؤوط «إسناده صحيح». |
+| m19 / e19 | M / E | 1 | 22 | «يا حي يا قيوم برحمتك أستغيث…» | الحاكم (1/545) | الألباني «حسن» (صحيح الترغيب 661)؛ الحاكم «صحيح على شرط الشيخين». |
+| m20 / e20 | M / E | 1 | 23 / 24 | «أصبحنا/أمسينا وأصبح/وأمسى الملك لله رب العالمين… فتحه ونصره» | أبو داود (5084) | Disputed: الألباني «ضعيف»؛ الأرناؤوط (تخريج أبي داود) «إسناده ضعيف»؛ ابن القيم «حسن». Owner approved knowing this. |
+| m21 / e21 | M / E | 1 | 25 / 26 | «أصبحنا/أمسينا على فطرة الإسلام…» | أحمد (15360)، ابن السني (34) | Morning: الأرناؤوط «إسناده صحيح على شرط الشيخين»، ابن باز «إسناده صحيح». Evening: الألباني calls «وإذا أمسى» شاذة. Owner chose both lists. |
+| m22 | M | 1 | 27 | «اللهم إني أسألك علمًا نافعًا…» | ابن ماجه (925)، ابن السني (54) | الألباني «صحيح» (صحيح ابن ماجه 762)؛ ابن حجر «حسن»؛ الشوكاني وابن عثيمين: an unknown narrator (مولى أم سلمة). |
+| m23 | M | 10 | 29 | «اللهم صل وسلم على نبينا محمد» (the e9 text, Morning too) | As e9 (D5: Hisn al-Muslim's takhreej) | Disputed as in D5. |
+| m24 | M | 100 | 32 | «لا إله إلا الله وحده لا شريك له…» ×100 | البخاري (3293)، مسلم (2691) | Sahih (both). Virtue: the 100-times virtue. |
+| e22 | E | 10 | 28 | «لا إله إلا الله وحده لا شريك له…» ×10 (the m9 text, Evening too) | As m9 (D1: البخاري 6404، مسلم 2693) | Sahih (Muslim 2693). |
+
+**Texts.** The Arabic text of each entry is the dataset's `content` field for the
+order number above, exactly as shown on the review page:
+
+- m14 (12): «اللَّهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلاَئِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لَا إِلَهَ إِلاَّ أَنْتَ وَحْدَكَ لاَ شَرِيكَ لَكَ، وَأَنَّ مُحَمَّداً عَبْدُكَ وَرَسُولُكَ»
+- m15 (14): «اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لاَ شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ»
+- m16 / e16 (16): «اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَهَ إِلاَّ أَنْتَ. اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ، وَالفَقْرِ، وَأَعُوذُ بِكَ مِنْ عَذَابِ القَبْرِ، لاَ إِلَهَ إِلاَّ أَنْتَ»
+- m17 / e17 (18): «اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ: فِي دِينِي وَدُنْيَايَ وَأَهْلِي، وَمَالِي، اللَّهُمَّ اسْتُرْ عَوْرَاتِي، وَآمِنْ رَوْعَاتِي، اللَّهُمَّ احْفَظْنِي مِنْ بَينِ يَدَيَّ، وَمِنْ خَلْفِي، وَعَنْ يَمِينِي، وَعَنْ شِمَالِي، وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي»
+- m18 / e18 (19): «اللَّهُمَّ عَالِمَ الغَيْبِ وَالشَّهَادَةِ فَاطِرَ السَّمَوَاتِ وَالْأَرْضِ، رَبَّ كُلِّ شَيْءٍ وَمَلِيكَهُ، أَشْهَدُ أَنْ لاَ إِلَهَ إِلاَّ أَنْتَ، أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَمِنْ شَرِّ الشَّيْطانِ وَشَرَكِهِ، وَأَنْ أَقْتَرِفَ عَلَى نَفْسِي سُوءاً، أَوْ أَجُرَّهُ إِلَى مُسْلِمٍ»
+- m19 / e19 (22): «يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغيثُ أَصْلِحْ لِي شَأْنِيَ كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ»
+- m20 (23): «أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ، اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذَا الْيَوْمِ: فَتْحَهُ، وَنَصْرَهُ، وَنورَهُ، وَبَرَكَتَهُ، وَهُدَاهُ، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِيهِ وَشَرِّ مَا بَعْدَهُ»
+- m21 (25): «أَصْبَحْنا عَلَى فِطْرَةِ الْإِسْلاَمِ، وَعَلَى كَلِمَةِ الْإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ، حَنِيفاً مُسْلِماً وَمَا كَانَ مِنَ الْمُشرِكِينَ»
+- m22 (27): «اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْماً نَافِعاً، وَرِزْقاً طَيِّباً، وَعَمَلاً مُتَقَبَّلاً»
+- m23: the e9 text. m24 (32): the m9 text, target 100. e22: the m9 text, target 10.
+
+**Evening wording still to finalize.** The dataset vocalizes the Evening forms of
+e14 (13), e15 (15), e20 (24) and e21 (26) only partly, and e20 carries
+spelling slips («الْعَالَمَيْنِ»، «إِنَّي»، «هَذَه»، «فيهِا»، «وَشَرَّ»). Before T006,
+the agent prepares fully vocalized Evening texts that differ from the approved
+Morning texts only in the words the Evening form changes, and the owner approves
+those exact strings. Until then these four entries are `approved in substance,
+text pending`.
+
+### s2: full Qunut, approved
+
+«اللَّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ، وَعَافِنِي فِيمَنْ عَافَيْتَ، وَتَوَلَّنِي فِيمَنْ تَوَلَّيْتَ، وَبَارِكْ لِي فِيمَا أَعْطَيْتَ، وَقِنِي شَرَّ مَا قَضَيْتَ، إِنَّكَ تَقْضِي وَلاَ يُقْضَى عَلَيْكَ، وَإِنَّهُ لاَ يَذِلُّ مَنْ وَالَيْتَ، وَلاَ يَعِزُّ مَنْ عَادَيْتَ، تَبَارَكْتَ رَبَّنَا وَتَعَالَيْتَ»
+
+Source: https://sunnah.com/abudawud:1425 (opened 2026-11-16; grade on page:
+Sahih, Al-Albani). The commas are added for reading; the words are the page's.
+This replaces the truncated prototype text (D6).
+
+### Skipped from Hisn al-Muslim
+
+- Dataset order 1, «الْحَمْدُ لِلَّهِ وَحْدَهُ، وَالصَّلاَةُ وَالسَّلاَمُ عَلَى مَنْ لاَ نَبِيَّ بَعْدَهُ»:
+  the book's opening line, not a narrated dhikr with a count.
+
+### Order (owner, 2026-11-16)
+
+The Quran items come first (P1). Every other item, old and new, follows Hisn
+al-Muslim's order, which is the dataset's `order` field. The prototype's order is
+not kept.
+
+### Quran source (owner, 2026-11-16)
+
+- **Decision.** The Quran text comes from the King Fahd Glorious Quran Printing
+  Complex (KFGQPC): the Madinah Mushaf, Hafs, in the "QPC Hafs" encoding, shown
+  in the matching KFGQPC Uthmanic Hafs font. Tanzil is no longer the source.
+- **Text check.** The QPC Hafs text was read on 2026-11-16 through the Quran.com
+  API (`text_qpc_hafs` for 2:255, 2:285–286 and surahs 112–114). It encodes the
+  open tanween and the sukun with the code points the KFGQPC font is built for,
+  so it must be shown in that font.
+- **Blocker: license.** The only published KFGQPC font license text found says
+  the font «may not be reproduced, modified without the express written approval
+  of King Fahd Glorious Quran Printing Complex»
+  (https://scancode-licensedb.aboutcode.org/kfgqpc-uthmanic-script-hafs.LICENSE).
+  The Complex's own font pages now read «قريباً» and the old terms page returns
+  404. The Quran Foundation terms allow bundling its font files with attribution
+  for registered developers, but say a build-time bundle of its content is not
+  authorized by default (https://api-docs.quran.foundation/legal/mushaf-fonts-and-images/).
+  So no KFGQPC font or text is bundled until the owner has written permission,
+  or chooses another route.
+- **Route chosen (owner, 2026-11-16): through the Quran Foundation.** The owner
+  registers a developer account with the Quran Foundation and asks its developer
+  team (developers@quran.com) in writing whether Namaa may bundle the QPC Hafs
+  font and the QPC Hafs text of 2:255, 2:285–286 and surahs 112–114, with
+  attribution. The Quran items (m11–m13, e10–e13 and Ayat al-Kursi) stay out of
+  the catalog until that written answer is recorded here and the owner has
+  approved the exact text as rendered in the app.
+- **Superseded by the owner on 2026-11-16: ship without waiting.** The owner
+  registered the Quran Foundation developer app (console app ID
+  `7b420fdd-d5bc-48e1-a96e-d3094e1184f4`, API access only) and decided, verbatim:
+  «ننزل و نكمل». So:
+  - The KFGQPC Uthmanic Hafs font is taken from a Quran Foundation documented
+    font URL and bundled as an integrated part of the app, with the Quran
+    Foundation credited in the app's credits (the QF terms for font files).
+  - The QPC Hafs text of the Quran items is bundled verbatim in the catalog,
+    with the same credit. The QF terms do not by default cover a build-time
+    bundle of their content; the owner accepted that risk and decided to ship.
+    The written request to developers@quran.com stays optional.
+  - The owner still approves the exact Quran text as rendered in the app's font
+    before T006 ships it (Constitution V).
+  - No Quran Foundation client secret is used by the app or stored in the repo.

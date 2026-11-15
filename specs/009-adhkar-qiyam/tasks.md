@@ -6,7 +6,7 @@
 
 **Tests**: Included. The constitution (VIII) and the spec require unit, widget, migration, SQL and device evidence.
 
-**Organization**: 79 tasks in 7 phases. Each task names its exact paths, the tasks it depends on, and a completion condition you can check.
+**Organization**: 99 tasks in 8 phases (Phase 6b added on 2026-11-15). Each task names its exact paths, the tasks it depends on, and a completion condition you can check.
 
 ## Instructions for the implementing model
 
@@ -22,7 +22,7 @@
 6. **Strings.** Every user-facing string goes in `lib/app/l10n/app_ar.arb` and `app_en.arb`. Edit them line by line; never re-serialize them. Religious text comes only from the reviewed catalog.
 7. **Marking done.** Mark a task `[x]` only when its **Done** condition is true and its focused test passes. Record commands and results in `specs/009-adhkar-qiyam/verification.md` at each checkpoint.
 8. **Approval needed for:**
-   - pushing migration 0016 to staging;
+   - pushing migrations 0016 and 0017 to staging;
    - adding Quran text (Ayat al-Kursi or the Mu'awwidhat);
    - committing, pushing or merging.
 
@@ -490,6 +490,89 @@
 
 ---
 
+## Phase 6b: Catalog revision and User Story 5 — My Adhkar (P2)
+
+Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-15; research R13, R14). Task IDs continue after T079 so the existing IDs stay stable.
+
+### Catalog revision (owner decisions D3, D4, D6 and the Hisn al-Muslim additions)
+
+- [ ] T080 Revise the catalog model and parser in lib/features/adhkar/domain/adhkar_catalog.dart to the Arabic-only shape in data-model.md.
+  - Remove `translation_en`, `virtue_en`, `reference_en` and `source_en`; make `virtue_ar` nullable.
+  - Add `kind` (`dhikr` or `quran`); for `quran` require `surah`, `ayah_from` and `ayah_to`, and allow `preface_ar`. Add the top-level `attribution`.
+  - Update every fixture and test that builds a catalog (adhkar_commands_test.dart, adhkar_qiyam_supplications_adapter_test.dart and the catalog tests), with placeholder text only.
+  - Update the item card: no English translation line; a Quran item shows its preface apart from the verses, the verses in the Quran font (T081), and its surah and verse numbers.
+  - **Depends**: none (code only).
+  - **Done**: The catalog, command, adapter and Adhkar widget tests pass; no real religious text is added.
+- [ ] T081 Bundle the KFGQPC Uthmanic Hafs font at assets/fonts/kfgqpc_hafs/, taken unmodified from a Quran Foundation documented font URL, register the family in pubspec.yaml, add the Quran Foundation credit to the app's credits, and record the source URL, the SHA-256 and the credit wording in verification.md. If the only documented file is a web format Flutter cannot load (for example WOFF2), stop and report it instead of converting the file: converting is a modification the owner must approve.
+  - **Depends**: none (owner decision 2026-11-16).
+  - **Done**: A widget test renders a placeholder Quran item with the family, and the attribution shows in the app's credits.
+- [ ] T082 The agent adds review entries to content-sources.md for every item the owner approves on the second review page: the Hisn al-Muslim additions, the Quran items (the KFGQPC QPC Hafs text verbatim, attribution, counts, placement, preface and basmala decisions) and the full s2 text. The owner confirms the final list.
+  - **Depends**: the owner's second review.
+  - **Done**: Every shipped item has an entry marked approved by the owner, with its final ID, list, position and target.
+- **T006 note (2026-11-15):** T006 now also depends on T080 and T082, and builds the asset in the revised shape.
+
+### User Story 5 — My Adhkar
+
+**Goal**: A third Adhkar tab where the user adds, edits, deletes and counts their own adhkar, synced, with no XP and no streak.
+
+**Independent test**: Spec Story 5: add a dhikr with target 33 offline, count it, restart, edit, delete; then add on device A and confirm it on device B.
+
+- [ ] T083 [P] [US5] Write tests in test/unit/features/adhkar/domain/my_dhikr_test.dart: text trimmed and 1–1000 characters, target 1–1000 (default 1), note ≤ 300, the 100-item limit, the target-lowering clamp, and that a deleted item stays deleted.
+  - **Depends**: none.
+  - **Done**: They fail before T084.
+- [ ] T084 [US5] Implement lib/features/adhkar/domain/my_dhikr.dart (the item, its draft validation and the count rules).
+  - **Depends**: T083.
+  - **Done**: T083 passes; the file imports domain code only.
+- [ ] T085 [P] [US5] Add `MyAdhkarIdentityPort` in lib/features/adhkar/application/ and its implementation in lib/features/adhkar/data/uuid_my_adhkar_identity.dart: UUIDv4 item IDs and `UUIDv5(NS009, 'my-adhkar/' + itemId + '/' + day)` count IDs. Extend test/fixtures/adhkar_qiyam/identity_vectors.json and add test/unit/features/adhkar/data/my_adhkar_identity_test.dart.
+  - **Depends**: none.
+  - **Done**: The count-ID vectors match the SQL helper added in T091.
+- [ ] T086 [US5] Local schema v11 in lib/core/data/local/foundation_database.dart: the `my_adhkar_items` and `my_adhkar_counts` tables and indexes from data-model.md, an additive v10→v11 migration, `kFoundationSchemaVersion = 11`, regenerated code, and migration tests (fresh v11, v10→v11 keeping Adhkar and Qiyam rows, every older path, and the failure/recovery case).
+  - **Depends**: none.
+  - **Done**: The migration tests pass, and AGENTS.md's schema number is updated in the same change.
+- [ ] T087 [P] [US5] Write tests in test/unit/features/adhkar/data/drift_my_adhkar_repository_test.dart: add, edit, delete, increment and reset; the limit; the clamp written in the same transaction as the edit; a deleted item hidden from `watchItems`; outbox entries of type `my_adhkar_item` and `my_adhkar_count`; owner isolation; and no `xp_awards` row ever written.
+  - **Depends**: T084, T086.
+  - **Done**: They fail before T088.
+- [ ] T088 [US5] Implement lib/features/adhkar/application/my_adhkar_repository.dart and lib/features/adhkar/data/drift_my_adhkar_repository.dart.
+  - **Depends**: T087.
+  - **Done**: T087 passes.
+- [ ] T089 [P] [US5] Write tests in test/unit/features/adhkar/application/my_adhkar_commands_test.dart: `AddMyDhikr`, `EditMyDhikr`, `DeleteMyDhikr`, `IncrementMyDhikr` and `ResetMyDhikr`, covering the day guard, the locked state, `itemDeleted`, `limitReached`, validation failures, and that no command touches the XP ledger.
+  - **Depends**: T084, T085.
+  - **Done**: They fail before T090.
+- [ ] T090 [US5] Implement lib/features/adhkar/application/my_adhkar_commands.dart.
+  - **Depends**: T089, T088.
+  - **Done**: T089 passes, and test/architecture/adhkar_qiyam_boundaries_test.dart gains a rule (with a negative control) that no `my_adhkar_*` file imports lib/features/xp/.
+- [ ] T091 [US5] Write supabase/migrations/0017_my_adhkar.sql (tables, receipts, conflicts, `apply_my_adhkar_item_change_v1`, `apply_my_adhkar_count_change_v1`, the identity helper, RLS and grants, per contracts/adhkar-qiyam-sync.md) and pgTAP tests supabase/tests/my_adhkar_account_isolation_test.sql, my_adhkar_operation_integrity_test.sql and my_adhkar_conflict_integrity_test.sql.
+  - **Depends**: T085.
+  - **Done**: `supabase test db` passes on the local stack, including the limit, the final delete against older and newer edits, `item_deleted`, and zero `xp_awards` rows. Nothing is pushed to staging.
+- [ ] T092 [P] [US5] Write tests in test/unit/features/adhkar/data/supabase_my_adhkar_sync_adapter_test.dart for both entity types: argument mapping, outcome mapping, finalization in one transaction before ACK, `item_deleted` treated as acknowledged with the local count discarded, failures left pending, and an old response never overwriting newer local work.
+  - **Depends**: T088, T091.
+  - **Done**: They fail before T093.
+- [ ] T093 [US5] Implement lib/features/adhkar/data/supabase_my_adhkar_gateway.dart and supabase_my_adhkar_sync_adapter.dart, and register `my_adhkar_item` and `my_adhkar_count` in `EntityDispatchRouter` through composition.
+  - **Depends**: T092.
+  - **Done**: T092 passes; the existing router tests are unchanged.
+- [ ] T094 [P] [US5] Write tests in test/unit/features/adhkar/data/my_adhkar_inbound_test.dart: keyset pages for items, counts and conflicts; a failed page retried without advancing; the owner validated; tombstones applied; pending local work kept.
+  - **Depends**: T093.
+  - **Done**: They fail before T095.
+- [ ] T095 [US5] Implement the My Adhkar reader and reconciler, and run them inside `AdhkarSyncService` / `AdhkarInboundSynchronizer`, so a failure stays isolated as in Phase 6.
+  - **Depends**: T094.
+  - **Done**: T094 passes, and the Phase 6 isolation test still passes.
+- [ ] T096 [P] [US5] Write tests in test/unit/features/adhkar/presentation/my_adhkar_cubit_test.dart, then implement the My Adhkar state (a `MyAdhkarCubit` composed beside `AdhkarCubit`, or a part of it): load, add, edit, delete, count, reset, the day change, the locked state, owner change, and no celebration or streak change.
+  - **Depends**: T090.
+  - **Done**: The tests pass.
+- [ ] T097 [US5] Build the My Adhkar tab per contracts/adhkar-qiyam-ui.md (third segment, header note, empty state, cards, overflow menu, add/edit sheet, in-page delete confirmation, locked state), with the strings added to app_ar.arb and app_en.arb line by line. Write test/widget/features/adhkar/my_adhkar_tab_test.dart: AR/EN, light/dark, 320 px, 200% text scale, mixed-direction text, the 100-item state and the validation errors.
+  - **Depends**: T096.
+  - **Done**: The widget tests pass with no overflow.
+- [ ] T098 [US5] Add My Adhkar conflicts to the Adhkar "Sync differences" list (both versions, long text shortened, no resolve action), with a widget test in test/widget/features/adhkar/adhkar_conflicts_test.dart.
+  - **Depends**: T095.
+  - **Done**: The test shows both versions and no foreign-owner data.
+- [ ] T099 [US5] Extend integration_test/adhkar_qiyam_offline_sync_test.dart with My Adhkar on the local stack: both devices add items, a concurrent edit gives one visible conflict, a delete stays final against a newer edit, a count of a deleted item is discarded, owner B is isolated, and no `xp_awards` row is written.
+  - **Depends**: T093, T095.
+  - **Done**: It passes on Windows against the local stack, run twice without a reset.
+
+**Checkpoint US5**: Spec Story 5's scenarios pass, and the results are recorded in verification.md.
+
+---
+
 ## Phase 7: Polish, verification and handoff
 
 - [x] T068 [P] Add test/architecture/adhkar_qiyam_boundaries_test.dart.
@@ -524,7 +607,7 @@
 - [ ] T075 The product owner checks the screens on the phone (CPH2481) and on Windows: AR/EN, light/dark, tashkeel rendering, and prototype order.
   - **Depends**: T074.
   - **Done**: The owner's reported result is recorded for SC-006. Nothing is claimed without it.
-- [ ] T076 With the owner's approval, push 0016 to the isolated staging project (never production), then run the hosted offline-sync entry through CI.
+- [ ] T076 With the owner's approval, push 0016 and 0017 to the isolated staging project (never production), then run the hosted offline-sync entry through CI.
   - **Depends**: T070, T073.
   - **Done**: The staging migration is recorded, and the hosted result is recorded with the run URL.
 - [ ] T077 Update the status table in AGENTS.md for 009 and finalize verification.md, quickstart.md and the task states.
@@ -548,12 +631,14 @@ Phase 1 (T001–T003)
         ├─> US2 (T037–T050)  needs T035 for the shell section
         │     └─> US3 (T051–T054)
         └─> US4 (T055–T067)  needs US1 + US2 (adapters and Cubits) and T019
-              └─> Phase 7 (T068–T079)
+              └─> Phase 6b (T080–T099): catalog revision, then US5 My Adhkar
+                    └─> Phase 7 (T068–T079)
 ```
 
 - US1 and US2 are independent after Phase 2, except that T049 reuses the shell work from T035.
 - US3 depends only on US2.
 - US4 integrates every story.
+- Phase 6b: T080–T082 revise the catalog and gate T006; US5 (T083–T099) needs US1's Adhkar screen and Phase 6's sync service, and is otherwise independent.
 
 ## Parallel opportunities
 
@@ -565,6 +650,7 @@ Phase 1 (T001–T003)
 - **US1:** T020, T022 and T024 run in parallel (domain versus data). Then T026, then T029.
 - **US2:** T037 and T039 run in parallel. Then T041, then T044.
 - **US4:** T055, T059 and T061 run in parallel. Then T063.
+- **Phase 6b:** T080, T081 and T082 run in parallel. In US5, T083, T085 and T086 run in parallel, then T087 and T089, then T091, then T092.
 - **Phase 7:** T068 and T069 run in parallel. Then T071 and T072 run in parallel.
 
 ## Implementation strategy
@@ -582,6 +668,8 @@ Phase 1 (T001–T003)
 - **US2:** 14.
 - **US3:** 4.
 - **US4:** 13.
+- **Catalog revision:** 3.
+- **US5:** 17.
 - **Polish:** 12.
 
-The total is 79 tasks.
+The total is 99 tasks.

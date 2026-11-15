@@ -25,6 +25,14 @@
   - Adhkar opens on the list whose time it is now.
   - When no Prayer schedule is available, both lists stay open, the day runs midnight to midnight on the device clock, and a prompt offers the Prayer location setup.
 
+### Session 2026-11-15
+
+- Q: Which content decisions did the owner take in the review of `content-sources.md`? → A: All 21 prototype entries are approved, in the forms D1–D10 select (recorded in `content-sources.md`, "Owner decisions"). The adhkar ship in Arabic only, with no English translation (D3). On 2026-11-16 the owner chose the King Fahd Complex Mushaf text for the Quran items, through the Quran Foundation, and Hisn al-Muslim's order for the lists. Ayat al-Kursi and the Mu'awwidhat are added (D4), after their own text review. The Qunut ships in full (D6).
+- Q: Does v1 ship only the prototype's 19 Morning/Evening items? → A: No. The owner wants the remaining Morning and Evening adhkar of Hisn al-Muslim in 009 itself. Each added item goes through the same review and approval in `content-sources.md` before it ships.
+- Q: Can users add their own adhkar and supplications? → A: Yes, in 009. They live in a third tab, «أذكاري», next to Morning and Evening. Each has its own text, target count and counter, and is available all day.
+- Q: Do the user's own adhkar count toward the set award or the Adhkar streak? → A: No. The 15 XP set award and the streak use only the reviewed catalog lists.
+- Q: Do the user's own adhkar sync across devices? → A: Yes, like the rest of the account's data, through a new versioned server table and RPC.
+
 **Scope note**: Phase 4 of `namaa_plan.md` covers Prayer, Quran (Reader, Wird, Audio, Memorization, Bookmarks/History), Dhikr and Qiyam. Prayer shipped in 008. On 2026-11-09 the product owner chose to build **Morning/Evening Adhkar and Qiyam** next, as one feature. Quran follows in separate later specs.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -34,10 +42,11 @@
 The user opens Adhkar and picks Morning or Evening. They go through a fixed, sourced list of adhkar.
 
 Each item shows:
-- its Arabic text;
-- its English translation when the app language is English;
+- its Arabic text (Quran verses in the Uthmani script);
 - its target count and current count;
 - an expandable "Virtue and source" panel.
+
+The adhkar are shown in Arabic in both app languages; there is no English translation in v1 (owner decision D3, 2026-11-15).
 
 A large tap target adds one to the count. When the count reaches the target, the item shows as completed and stops counting. The user can reset a single item.
 
@@ -59,7 +68,7 @@ A progress bar shows completed items out of total, and a percentage, for the sel
 8. **Given** both lists were completed on each of the last 3 Adhkar days, and only Morning is done today, **When** Adhkar shows, **Then** the Adhkar streak reads 3. It becomes 4 when Evening is completed today, and it resets to 0 if today ends without both lists done.
 9. **Given** a Prayer schedule and the time is 21:00, **When** Adhkar opens, **Then** Evening is selected. Morning is viewable but read-only, with "its time starts at Fajr (05:xx)".
 10. **Given** no Prayer location, **When** Adhkar opens, **Then** both lists are countable, and a prompt offers to set up the Prayer location so the Adhkar times apply.
-11. **Given** the user expands "Virtue and source" on an item, **When** shown, **Then** the virtue text and the hadith/book reference appear in the app language.
+11. **Given** the user expands "Virtue and source" on an item, **When** shown, **Then** the virtue text and the hadith/book reference appear in Arabic, and the panel's labels follow the app language.
 
 ---
 
@@ -140,6 +149,36 @@ Today the Track hub tiles and the Home "Daily Adhkar & Sunan" card are placehold
 
 ---
 
+### User Story 5 - My Adhkar: the user's own adhkar and supplications (Priority: P2)
+
+Added by the product owner on 2026-11-15. Adhkar gets a third tab, «أذكاري» ("My Adhkar"), next to Morning and Evening. The user adds their own adhkar and supplications there. Each one has:
+- its text, written by the user;
+- a target count;
+- an optional note, for example where the user learned it.
+
+Each item has its own counter that starts at 0 every Adhkar day, like the catalog items. The tab is countable all day; it has no Morning or Evening window. The user can edit or delete their items. They sync to the account's other devices.
+
+My Adhkar is the user's own content. It is never presented as reviewed or sourced content, and it does not count toward the set award or the Adhkar streak.
+
+**Why this priority**: The owner asked for it inside 009. It builds on Story 1's counter and Story 4's sync, so it follows them.
+
+**Independent Test**: Add a dhikr with target 33 offline, count it to 33, restart the app, edit its text, and delete it. Then add one on device A, sync, and confirm it and its count on device B.
+
+**Acceptance Scenarios**:
+
+1. **Given** My Adhkar is empty, **When** the user opens the tab, **Then** an empty state explains the tab and offers "Add a dhikr".
+2. **Given** the add form, **When** the user enters text and target 33 and saves, **Then** the item appears at the end of the list at count 0 of 33.
+3. **Given** an item at count 32 of 33, **When** the user taps count, **Then** it shows 33 of 33 as completed and further taps do not change it. Reset returns it to 0.
+4. **Given** a new Adhkar day begins, **When** the tab opens, **Then** every item starts at 0 for the new day, and the items themselves stay.
+5. **Given** an item, **When** the user edits its text or note, **Then** today's count stays. **When** the user lowers the target below today's count, **Then** today's count becomes the new target.
+6. **Given** an item, **When** the user deletes it and confirms, **Then** it disappears on every device of the account and is never shown again.
+7. **Given** every item in My Adhkar is complete, **When** the user views Morning and Evening, **Then** no set award, streak change or celebration comes from My Adhkar.
+8. **Given** the Prayer schedule is unavailable, **When** the tab opens, **Then** the items stay visible and counting is locked, as for the other lists (owner decision, 2026-11-10).
+9. **Given** the same item is edited on two devices offline, **When** both reconnect, **Then** the newest version wins and the other is kept as a visible conflict.
+10. **Given** a second account on the same device, **When** it opens My Adhkar, **Then** it never sees the first account's items.
+
+---
+
 ### Edge Cases
 
 - **The time changes while the screen is open** (for example, Maghrib arrives). The list's countable state updates without restarting.
@@ -150,6 +189,9 @@ Today the Track hub tiles and the Home "Daily Adhkar & Sunan" card are placehold
 - **Content update.** If a future app version changes the adhkar list, already recorded days keep their counts by stable item identity. Removed items are not shown as incomplete.
 - **Text scale up to 200% and narrow phones (320 px).** Arabic text wraps without clipping, and the count button stays reachable.
 - **Debug preview mode (no account).** Adhkar and Qiyam work locally without cloud sync, as Tasks, Habits and Prayer do.
+- **My Adhkar text.** Blank or whitespace-only text is rejected. Very long text (up to the limit) wraps without clipping. Mixed Arabic and Latin text keeps a readable direction.
+- **My Adhkar limit.** At 100 items the add action is disabled, with an explanation.
+- **Deleted while counting.** If an item is deleted on another device, the local list drops it on the next sync, and a pending count for it is discarded without error.
 
 ## Requirements *(mandatory)*
 
@@ -157,14 +199,16 @@ Today the Track hub tiles and the Home "Daily Adhkar & Sunan" card are placehold
 
 **Adhkar**
 
-- **FR-001**: The system MUST provide two fixed lists, Morning and Evening, from a reviewed, sourced set. Each item has:
+- **FR-001**: The system MUST provide two fixed lists, Morning and Evening, from a reviewed, sourced set: the prototype's items plus the Morning and Evening adhkar of Hisn al-Muslim that the owner approves (Session 2026-11-15). Each item has:
   - a stable identity;
   - Arabic text;
-  - an English translation;
   - a target count;
-  - a virtue text in Arabic and English;
-  - a hadith/book reference in Arabic and English.
-- **FR-002**: Adhkar Arabic text and references MUST come from a documented source review, like Prayer's guidance-sources review in 008. Text MUST NOT be generated or paraphrased by the app.
+  - an optional virtue text in Arabic;
+  - a hadith/book reference in Arabic;
+  - for a Quran item, its surah and verse numbers.
+
+  There is no English translation in v1 (owner decision D3).
+- **FR-002**: Adhkar Arabic text and references MUST come from a documented source review, like Prayer's guidance-sources review in 008. Text MUST NOT be generated or paraphrased by the app. Quran text MUST be the King Fahd Complex (KFGQPC) Madinah Mushaf text, Hafs, copied verbatim in the QPC Hafs encoding and shown in the matching KFGQPC font, with its attribution. The font and text are obtained through the Quran Foundation and credited in the app; the owner approves the rendered text before it ships (Constitution V; owner decisions 2026-11-16, content-sources.md "Quran source").
 - **FR-003**: Users MUST be able to increment an item by one, up to its target, and to reset a single item to 0.
 - **FR-004**: An item MUST show completed exactly when its count equals its target.
 - **FR-005**: Each list MUST show completed items out of total, and a percentage, for the current Adhkar day.
@@ -201,21 +245,37 @@ Today the Track hub tiles and the Home "Daily Adhkar & Sunan" card are placehold
 **Shared**
 
 - **FR-016**: Every action MUST apply and persist locally first, work fully offline, and survive restart.
-- **FR-017**: A signed-in account's Adhkar counts and Qiyam records MUST sync to its other devices.
+- **FR-017**: A signed-in account's Adhkar counts, Qiyam records, My Adhkar items and My Adhkar counts MUST sync to its other devices.
   - Retries and duplicates MUST be idempotent.
   - Conflicting versions MUST keep the newest as active and the other as a visible conflict record.
   - Records MUST be isolated per account.
 - **FR-018**: Home's Adhkar card and the Track hub MUST show live Morning, Evening and tonight's Qiyam progress, and MUST open the real screens. Navigation MUST follow the existing tab model: no stacked pages, no app-bar back arrow, and device back returns Home.
-- **FR-019**: All user-facing text MUST be localized in Arabic and English, with correct RTL layout. Adhkar and supplication Arabic text MUST display in the app's Quran/Arabic display font.
+- **FR-019**: All user-facing UI text MUST be localized in Arabic and English, with correct RTL layout. Adhkar and supplication Arabic text MUST display in the app's Arabic display font, and Quran verses in a font that renders the Uthmani script correctly.
 - **FR-020**: The screens MUST keep the prototype's structure.
   - **Adhkar:** a heading with a Morning/Evening switch, then a progress card, then the item cards (number, virtue toggle, reset, text, count/target, count button).
   - **Qiyam:** a heading with the last-third time, then the Yes/No tracker with the details form, then the supplications card.
   - The streak and history (Story 3) are added in the prototype's visual language.
 - **FR-021**: The screens MUST be usable by touch and keyboard, expose meaningful screen-reader labels (for example "Count, 2 of 3"), and adapt to phone and desktop widths in light and dark themes.
 
+**My Adhkar**
+
+- **FR-022**: Adhkar MUST offer a third tab, «أذكاري» / "My Adhkar", next to Morning and Evening.
+- **FR-023**: Users MUST be able to add, edit and delete their own items. Each item has:
+  - text: required, 1–1000 characters after trimming;
+  - a target count: a whole number from 1 to 1000, default 1;
+  - an optional note of up to 300 characters.
+
+  An account holds at most 100 items. Items show in the order they were added.
+- **FR-024**: Each My Adhkar item MUST have a counter per Adhkar day, with the same increment, completion and reset rules as FR-003 and FR-004. The tab is countable during the whole Adhkar day, with no Morning or Evening window. When the Prayer schedule is unavailable, counting is locked as for the other lists.
+- **FR-025**: Editing an item's text or note MUST keep today's count. Lowering the target below today's count MUST set today's count to the new target. Deleting an item MUST remove it and its counts from every device of the account, and it MUST NOT come back on a later sync.
+- **FR-026**: My Adhkar MUST NOT award XP, change the Adhkar streak, trigger the set celebration or appear in Home's x/N values. The screen MUST label the tab as the user's own content and MUST NOT show it as reviewed or sourced.
+- **FR-027**: My Adhkar items and their daily counts MUST follow FR-016 and FR-017: local first, offline, idempotent sync, newest wins, visible conflicts, and isolation per account. A delete is final: an edit of a deleted item, older or newer, is kept as a visible conflict and never restores the item.
+
 ### Key Entities
 
-- **Dhikr item** (reference content, not user data): stable ID, list (Morning or Evening), order, Arabic text, English translation, target count, virtue (AR/EN), reference (AR/EN).
+- **Dhikr item** (reference content, not user data): stable ID, list (Morning or Evening), order, Arabic text, target count, optional Arabic virtue, Arabic reference, and for a Quran item its surah and verses.
+- **My dhikr** (user data): the owner, a stable item ID, the text, the target, an optional note, its creation order, when it was updated, and a deletion marker that keeps a deleted item from coming back on sync.
+- **My dhikr day count**: the owner, the item, the Adhkar day and the count.
 - **Adhkar day progress**: the owner, the Adhkar day, and per item ID the current count. Completion is derived as count = target.
 - **Adhkar set completion**: the owner, the day and the list. It records whether XP was awarded, and it is the idempotency anchor for the award.
 - **Qiyam night record**: the owner and the night. Performed yes or no; rak'ahs; Witr; optional start, end and note; when it was updated; whether XP was awarded.
@@ -227,7 +287,7 @@ Today the Track hub tiles and the Home "Daily Adhkar & Sunan" card are placehold
 
 ### Measurable Outcomes
 
-- **SC-001**: A user can complete a full Morning list of 10 items, from opening Adhkar to "set complete", using only taps, with each count registering within 100 ms of the tap. In a scripted journey, a user records tonight's Qiyam (Yes, rak'ahs, Witr) in under 30 seconds.
+- **SC-001**: A user can complete the full approved Morning list, from opening Adhkar to "set complete", using only taps, with each count registering within 100 ms of the tap. In a scripted journey, a user records tonight's Qiyam (Yes, rak'ahs, Witr) in under 30 seconds.
 - **SC-002**: 100% of displayed adhkar and supplication texts and references match the documented source review, with zero app-generated religious text.
 - **SC-003**: Across 10 automated restart and offline cycles, 100% of counts, completions and Qiyam records persist unchanged.
 - **SC-004**: In two-device tests with retries, duplicates and concurrent edits, XP for each Adhkar set and day and each Qiyam night is awarded exactly once (0 duplicates). No record is lost silently; every non-winning version is visible as a conflict.
@@ -235,13 +295,16 @@ Today the Track hub tiles and the Home "Daily Adhkar & Sunan" card are placehold
 - **SC-006**: Home and Track progress match the Adhkar and Qiyam screens in 100% of checked states. Both screens render without clipping at 320 px, 100–200% text scale, AR/EN and light/dark, on a named phone and on desktop.
 - **SC-007**: Adhkar and Qiyam streak values are correct for every seeded pattern (consecutive, gap, unanswered current night, history across a time-zone change).
 - **SC-008**: Morning and Evening are countable exactly inside their Fajr–Maghrib and Maghrib–Fajr times, in 100% of tested locations and methods, including across midnight.
+- **SC-009**: A user can add a My Adhkar item and start counting it in under 30 seconds. Across two-device tests with offline edits, deletes and retries, every item converges on both devices, a deleted item never returns, and My Adhkar changes the XP ledger 0 times.
 
 ## Assumptions
 
-- **Source content.** The prototype's 10 Morning and 9 Evening adhkar, with their virtues and references, and its two Qiyam supplications, are the starting content. They are kept only after a source review documented in the spec folder. Items that fail review are removed rather than rewritten.
+- **Source content.** The prototype's 10 Morning and 9 Evening adhkar and its two Qiyam supplications were approved by the owner on 2026-11-15, in the forms decisions D1–D10 select. The remaining Morning and Evening adhkar of Hisn al-Muslim, Ayat al-Kursi and the Mu'awwidhat are added only after the owner approves them in the same review. Items that fail review are removed rather than rewritten.
 - **XP values.** The XP values follow the prototype defaults (Morning 15, Evening 15, Qiyam 30) and use the centralized XP authority from earlier features. They are not user-configurable in this feature.
 - **Adhkar streak.** The plan names streaks only for Qiyam and Quran Wird. The Adhkar streak was added by the product owner on 2026-11-09. It is a number only, with no history list.
-- **No editing of the lists.** Users cannot add, edit or reorder adhkar. Custom counters (the prototype's "Counters" page) are a separate area and out of scope.
+- **No editing of the reviewed lists.** Users cannot edit, hide or reorder the Morning and Evening items. Their own adhkar go in My Adhkar (Story 5). The prototype's free "Counters" page (a tasbeeh counter with no text) stays a separate area and out of scope.
+- **My Adhkar defaults.** The limits (100 items, 1000 characters, target 1–1000, note 300) and the add-order with no manual reordering are defaults chosen for v1; the owner can change them.
+- **Schema.** My Adhkar adds local schema v11 and server migration 0017. 0016 and v10 stay as reviewed; 0016 and 0017 go to staging together under T076.
 - **Qiyam rak'ahs.** The prototype's options 2, 4, 8 and 11 are kept. A free-number input is out of scope.
 - **Prayer is a dependency.** The last third and the Isha–Fajr window come from the existing Prayer schedule (008). Qiyam does not ask for location itself.
 - **Out of scope:**

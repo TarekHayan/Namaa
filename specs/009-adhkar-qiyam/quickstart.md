@@ -45,6 +45,9 @@ What each step must show:
 | 11 | Two devices count different Morning items offline, then reconnect | The set completes on both; one award | SC-004 |
 | 12 | Two devices change the same item or night offline | One active version and one visible "Sync difference" | FR-017 |
 | 13 | Home and Track versus the screens | The same x/N values and Qiyam state | SC-006 |
+| 14 | My Adhkar: add a dhikr with target 33, count to 33, restart, edit the text, lower the target to 10 | Count kept through the edit, then shown as 10 of 10; no XP and no streak change | FR-022…026 |
+| 15 | My Adhkar on two devices: add on A, sync, delete on B, edit on A offline, reconnect | The item is gone on both; the edit is a visible "Sync difference" | FR-025, FR-027 |
+| 16 | My Adhkar with the Prayer schedule unavailable | Items visible, counting locked | FR-024 |
 
 ## Device integration (planned files)
 

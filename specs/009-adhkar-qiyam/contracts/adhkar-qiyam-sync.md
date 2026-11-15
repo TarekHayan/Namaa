@@ -82,6 +82,42 @@ Each reader is owner-scoped, uses bounded keyset pages and restarts its pass fro
 
 The catalog table is read once per catalog version and cached.
 
+## My Adhkar (migration 0017, Story 5)
+
+### `apply_my_adhkar_item_change_v1`
+
+| Parameter | Type / rule |
+|---|---|
+| p_item_id | uuid; the item's stable ID. |
+| p_text | text; 1–1000 characters after trimming. |
+| p_target | integer; 1–1000. |
+| p_note | text or null; ≤ 300 characters. |
+| p_created_at | UTC; set by the first version, immutable afterwards. |
+| p_deleted | boolean; true marks the delete. |
+| p_updated_at, p_base_updated_at, p_operation_id | As above, without the day window (an item has no day). `p_updated_at` is rejected if it is more than 2 days after the server's current UTC time. |
+
+### `apply_my_adhkar_count_change_v1`
+
+| Parameter | Type / rule |
+|---|---|
+| p_item_id | uuid; must be an item of the caller. |
+| p_adhkar_day | date; the same two-days-ahead limit and `[day − 1 day, day + 2 days)` window for `p_updated_at` as Adhkar counts. |
+| p_count | integer; 0–1000. |
+| p_updated_at, p_base_updated_at, p_operation_id | As above. |
+
+### Rules that differ from 0016
+
+- **Limit.** A create is rejected with `limit_reached` when the caller already has 100 live items.
+- **Delete is final.** Once an item has `deleted = true`, the server keeps it deleted. A later change to the item, newer or older, is not applied; it is kept as a conflict, and the response's active record is the deleted version.
+- **Counts of a deleted or unknown item.** The RPC returns the outcome `item_deleted` with no row written. The client treats it as acknowledged and discards the local count.
+- **No award.** Neither RPC reads or writes `xp_awards`.
+- **Descriptors** for the equal-timestamp tie are in data-model.md.
+
+### Local finalization and inbound
+
+- Register `my_adhkar_item` and `my_adhkar_count` in `EntityDispatchRouter` through composition, with the same one-transaction finalization before `DispatchAcknowledged`.
+- The inbound reader pages `my_adhkar_items` by `item_id`, `my_adhkar_counts` by `record_id`, and `my_adhkar_conflicts` by `conflict_id`, owner-scoped, restarting each pass as in 008. It runs in the Adhkar sync service, so a failure stays isolated from the other domains.
+
 ## Required proofs (pgTAP and integration)
 
 - **Access control.** Anonymous callers and foreign owners are denied. Malformed inputs are rejected: an unknown item, a count above the target, rakahs outside the set, details sent with "No", a note over 500 characters, bad times, and dates beyond two days.
@@ -92,3 +128,4 @@ The catalog table is read once per catalog version and cached.
 - **Qiyam award.** Yes, then No, then Yes gives one 30 XP award. Two devices racing on their first Yes give one award.
 - **Replay safety.** An exact replay, a changed-content operation-ID collision, a lost ACK, a restart, a duplicate inbound record and a stale receipt against a newer descendant are all handled.
 - **Isolation.** Existing Task and Prayer awards stay readable and unchanged. A fresh third device sees the retained conflicts. No state leaks after an owner change.
+- **My Adhkar.** Access control and malformed input (blank text, text over 1000, target 0 or over 1000, note over 300); the 100-item limit; a delete that stays final against older and newer edits; `item_deleted` for a count of a deleted item; newest-wins with one stable conflict for concurrent edits; and zero rows written to `xp_awards`.
