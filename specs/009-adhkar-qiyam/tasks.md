@@ -566,7 +566,7 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [ ] T092 [P] [US5] Write tests in test/unit/features/adhkar/data/supabase_my_adhkar_sync_adapter_test.dart for the two entity types (group, then entry with `group_ids`): argument mapping, outcome mapping, finalization in one transaction before ACK, `group_deleted` applied as the entry's deletion, `group_missing` left pending, failures left pending, and an old response never overwriting newer local work.
   - **Depends**: T091, T101.
   - **Done**: They fail before T093.
-- [ ] T093 [US5] Implement lib/features/adhkar/data/supabase_my_adhkar_gateway.dart and supabase_my_adhkar_sync_adapter.dart, and register `my_adhkar_group` and `my_adhkar_item` in `EntityDispatchRouter` through composition, groups dispatched first.
+- [ ] T093 [US5] Implement lib/features/adhkar/data/supabase_my_adhkar_gateway.dart and supabase_my_adhkar_sync_adapter.dart, and register `my_adhkar_group` and `my_adhkar_item` in `EntityDispatchRouter` through composition, keeping the outbox's chronological order across both types (no groups-first reordering).
   - **Depends**: T092.
   - **Done**: T092 passes; the existing router tests are unchanged.
 - [ ] T094 [P] [US5] Write tests in test/unit/features/adhkar/data/my_adhkar_inbound_test.dart: keyset pages for groups, entries (with their group sets) and conflicts; a server group-delete cascade applied locally; a failed page retried without advancing; the owner validated; tombstones applied; pending local work kept.

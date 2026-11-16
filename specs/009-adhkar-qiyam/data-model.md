@@ -167,7 +167,7 @@ All lengths are counted in Unicode code points, on the device and on the server.
 
 - **Index:** `(account_id, group_id, added_at)` for the group view.
 - The membership set is part of the entry's version: it is written in the same transaction as the entry row, and it syncs inside the entry change (`group_ids`), not as a separate entity.
-- Entity types in `pending_changes`: `my_adhkar_group` and `my_adhkar_item`. Group operations are dispatched before entry operations.
+- Entity types in `pending_changes`: `my_adhkar_group` and `my_adhkar_item`. All My Adhkar operations are dispatched in the outbox's chronological order, with no reordering by type (a group create always precedes the entries that name it).
 
 ### Remote schema, migration 0017
 

@@ -101,7 +101,7 @@ The catalog table is read once per catalog version and cached.
 | p_item_id | uuid; the entry's stable ID. |
 | p_text | text; 1–2000 code points after trimming. |
 | p_source | text or null; ≤ 500 code points after trimming; blank is stored as null. |
-| p_group_ids | uuid[]; non-empty, no duplicates, each a group of the caller. |
+| p_group_ids | uuid[]; no duplicates, each a group of the caller. Non-empty for a live entry; ignored (and may be empty) when `p_deleted` is true, since the local delete removes the memberships. |
 | p_created_at | UTC; set by the first version, immutable afterwards. |
 | p_deleted | boolean; true marks the delete. |
 | p_updated_at, p_base_updated_at, p_operation_id | As above, without the day window (an entry has no day). `p_updated_at` is rejected if it is more than 2 days after the server's current UTC time. |
@@ -113,14 +113,14 @@ There is no count RPC: My Adhkar has no counter (owner, 2026-11-16).
 - **Limits.** An entry create is rejected with `limit_reached` when the caller already has 1000 live entries; a group create, when the caller already has 100 live groups.
 - **Lengths** are counted in code points (`char_length` on the trimmed text), matching the client.
 - **Group delete cascade.** In the same transaction as a group's delete, the server removes the group from every live item's membership and deletes every live item left with no live group. Each affected item gets a new server `updated_at`, so other devices pull it. A deleted group stays deleted; a later rename, newer or older, is kept as a conflict.
-- **Item groups.** On an item change, deleted groups are dropped from `p_group_ids`. If none is left, the item is deleted, the submitted version is kept as a conflict, and the outcome is `group_deleted`. A group the server does not know yet returns the retryable failure `group_missing`; the change stays pending (the client dispatches group operations first, so this only happens after a reorder or a partial pass).
+- **Item groups.** On an item change, deleted groups are dropped from `p_group_ids`. If none is left, the item is deleted, the submitted version is kept as a conflict, and the outcome is `group_deleted`. A group the server does not know yet returns the retryable failure `group_missing`; the change stays pending. The outbox dispatches in its chronological order, so a group create always reaches the server before an entry that names it; this outcome only happens after a partial pass.
 - **Delete is final.** Once an item has `deleted = true`, the server keeps it deleted. A later change to the item, newer or older, is not applied; it is kept as a conflict, and the response's active record is the deleted version.
 - **No award.** Neither RPC reads or writes `xp_awards`.
 - **Descriptors** for the equal-timestamp tie are in data-model.md.
 
 ### Local finalization and inbound
 
-- Register `my_adhkar_group` and `my_adhkar_item` in `EntityDispatchRouter` through composition, groups dispatched first, with the same one-transaction finalization before `DispatchAcknowledged`.
+- Register `my_adhkar_group` and `my_adhkar_item` in `EntityDispatchRouter` through composition. Keep the outbox's chronological order across both types, with no reordering: an entry edited offline and then left with no group by a group delete must reach the server before that group delete, or it becomes a false conflict. Use the same one-transaction finalization before `DispatchAcknowledged`.
 - The inbound reader pages `my_adhkar_groups` by `group_id`, `my_adhkar_items` (with their group sets) by `item_id`, and `my_adhkar_conflicts` by `conflict_id`, owner-scoped, restarting each pass as in 008. It runs in the Adhkar sync service, so a failure stays isolated from the other domains.
 
 ## Required proofs (pgTAP and integration)
