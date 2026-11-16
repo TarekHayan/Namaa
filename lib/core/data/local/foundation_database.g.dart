@@ -11166,19 +11166,10 @@ class $MyAdhkarItemsTable extends MyAdhkarItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _targetMeta = const VerificationMeta('target');
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
   @override
-  late final GeneratedColumn<int> target = GeneratedColumn<int>(
-    'target',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _noteMeta = const VerificationMeta('note');
-  @override
-  late final GeneratedColumn<String> note = GeneratedColumn<String>(
-    'note',
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -11233,8 +11224,7 @@ class $MyAdhkarItemsTable extends MyAdhkarItems
     accountId,
     itemId,
     content,
-    target,
-    note,
+    source,
     createdAt,
     updatedAt,
     lastAcknowledgedUpdatedAt,
@@ -11276,18 +11266,10 @@ class $MyAdhkarItemsTable extends MyAdhkarItems
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
-    if (data.containsKey('target')) {
+    if (data.containsKey('source')) {
       context.handle(
-        _targetMeta,
-        target.isAcceptableOrUnknown(data['target']!, _targetMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_targetMeta);
-    }
-    if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -11342,13 +11324,9 @@ class $MyAdhkarItemsTable extends MyAdhkarItems
         DriftSqlType.string,
         data['${effectivePrefix}text'],
       )!,
-      target: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}target'],
-      )!,
-      note: attachedDatabase.typeMapping.read(
+      source: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}note'],
+        data['${effectivePrefix}source'],
       ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -11382,8 +11360,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
   /// Named `text` in SQL (data-model.md); the Dart getter avoids drift's
   /// `Table.text` builder name.
   final String content;
-  final int target;
-  final String? note;
+  final String? source;
   final String createdAt;
   final String updatedAt;
   final String? lastAcknowledgedUpdatedAt;
@@ -11392,8 +11369,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
     required this.accountId,
     required this.itemId,
     required this.content,
-    required this.target,
-    this.note,
+    this.source,
     required this.createdAt,
     required this.updatedAt,
     this.lastAcknowledgedUpdatedAt,
@@ -11405,9 +11381,8 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
     map['account_id'] = Variable<String>(accountId);
     map['item_id'] = Variable<String>(itemId);
     map['text'] = Variable<String>(content);
-    map['target'] = Variable<int>(target);
-    if (!nullToAbsent || note != null) {
-      map['note'] = Variable<String>(note);
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
     }
     map['created_at'] = Variable<String>(createdAt);
     map['updated_at'] = Variable<String>(updatedAt);
@@ -11427,8 +11402,9 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
       accountId: Value(accountId),
       itemId: Value(itemId),
       content: Value(content),
-      target: Value(target),
-      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       lastAcknowledgedUpdatedAt:
@@ -11450,8 +11426,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
       accountId: serializer.fromJson<String>(json['accountId']),
       itemId: serializer.fromJson<String>(json['itemId']),
       content: serializer.fromJson<String>(json['content']),
-      target: serializer.fromJson<int>(json['target']),
-      note: serializer.fromJson<String?>(json['note']),
+      source: serializer.fromJson<String?>(json['source']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
       lastAcknowledgedUpdatedAt: serializer.fromJson<String?>(
@@ -11467,8 +11442,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
       'accountId': serializer.toJson<String>(accountId),
       'itemId': serializer.toJson<String>(itemId),
       'content': serializer.toJson<String>(content),
-      'target': serializer.toJson<int>(target),
-      'note': serializer.toJson<String?>(note),
+      'source': serializer.toJson<String?>(source),
       'createdAt': serializer.toJson<String>(createdAt),
       'updatedAt': serializer.toJson<String>(updatedAt),
       'lastAcknowledgedUpdatedAt': serializer.toJson<String?>(
@@ -11482,8 +11456,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
     String? accountId,
     String? itemId,
     String? content,
-    int? target,
-    Value<String?> note = const Value.absent(),
+    Value<String?> source = const Value.absent(),
     String? createdAt,
     String? updatedAt,
     Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
@@ -11492,8 +11465,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
     accountId: accountId ?? this.accountId,
     itemId: itemId ?? this.itemId,
     content: content ?? this.content,
-    target: target ?? this.target,
-    note: note.present ? note.value : this.note,
+    source: source.present ? source.value : this.source,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt.present
@@ -11506,8 +11478,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
       content: data.content.present ? data.content.value : this.content,
-      target: data.target.present ? data.target.value : this.target,
-      note: data.note.present ? data.note.value : this.note,
+      source: data.source.present ? data.source.value : this.source,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       lastAcknowledgedUpdatedAt: data.lastAcknowledgedUpdatedAt.present
@@ -11523,8 +11494,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
           ..write('accountId: $accountId, ')
           ..write('itemId: $itemId, ')
           ..write('content: $content, ')
-          ..write('target: $target, ')
-          ..write('note: $note, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
@@ -11538,8 +11508,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
     accountId,
     itemId,
     content,
-    target,
-    note,
+    source,
     createdAt,
     updatedAt,
     lastAcknowledgedUpdatedAt,
@@ -11552,8 +11521,7 @@ class MyAdhkarItem extends DataClass implements Insertable<MyAdhkarItem> {
           other.accountId == this.accountId &&
           other.itemId == this.itemId &&
           other.content == this.content &&
-          other.target == this.target &&
-          other.note == this.note &&
+          other.source == this.source &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.lastAcknowledgedUpdatedAt == this.lastAcknowledgedUpdatedAt &&
@@ -11564,8 +11532,7 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
   final Value<String> accountId;
   final Value<String> itemId;
   final Value<String> content;
-  final Value<int> target;
-  final Value<String?> note;
+  final Value<String?> source;
   final Value<String> createdAt;
   final Value<String> updatedAt;
   final Value<String?> lastAcknowledgedUpdatedAt;
@@ -11575,8 +11542,7 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
     this.accountId = const Value.absent(),
     this.itemId = const Value.absent(),
     this.content = const Value.absent(),
-    this.target = const Value.absent(),
-    this.note = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.lastAcknowledgedUpdatedAt = const Value.absent(),
@@ -11587,8 +11553,7 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
     required String accountId,
     required String itemId,
     required String content,
-    required int target,
-    this.note = const Value.absent(),
+    this.source = const Value.absent(),
     required String createdAt,
     required String updatedAt,
     this.lastAcknowledgedUpdatedAt = const Value.absent(),
@@ -11597,15 +11562,13 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
   }) : accountId = Value(accountId),
        itemId = Value(itemId),
        content = Value(content),
-       target = Value(target),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<MyAdhkarItem> custom({
     Expression<String>? accountId,
     Expression<String>? itemId,
     Expression<String>? content,
-    Expression<int>? target,
-    Expression<String>? note,
+    Expression<String>? source,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<String>? lastAcknowledgedUpdatedAt,
@@ -11616,8 +11579,7 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
       if (accountId != null) 'account_id': accountId,
       if (itemId != null) 'item_id': itemId,
       if (content != null) 'text': content,
-      if (target != null) 'target': target,
-      if (note != null) 'note': note,
+      if (source != null) 'source': source,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (lastAcknowledgedUpdatedAt != null)
@@ -11631,8 +11593,7 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
     Value<String>? accountId,
     Value<String>? itemId,
     Value<String>? content,
-    Value<int>? target,
-    Value<String?>? note,
+    Value<String?>? source,
     Value<String>? createdAt,
     Value<String>? updatedAt,
     Value<String?>? lastAcknowledgedUpdatedAt,
@@ -11643,8 +11604,7 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
       accountId: accountId ?? this.accountId,
       itemId: itemId ?? this.itemId,
       content: content ?? this.content,
-      target: target ?? this.target,
-      note: note ?? this.note,
+      source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastAcknowledgedUpdatedAt:
@@ -11666,11 +11626,8 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
     if (content.present) {
       map['text'] = Variable<String>(content.value);
     }
-    if (target.present) {
-      map['target'] = Variable<int>(target.value);
-    }
-    if (note.present) {
-      map['note'] = Variable<String>(note.value);
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
@@ -11698,8 +11655,7 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
           ..write('accountId: $accountId, ')
           ..write('itemId: $itemId, ')
           ..write('content: $content, ')
-          ..write('target: $target, ')
-          ..write('note: $note, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
@@ -11710,12 +11666,12 @@ class MyAdhkarItemsCompanion extends UpdateCompanion<MyAdhkarItem> {
   }
 }
 
-class $MyAdhkarCountsTable extends MyAdhkarCounts
-    with TableInfo<$MyAdhkarCountsTable, MyAdhkarCount> {
+class $MyAdhkarGroupsTable extends MyAdhkarGroups
+    with TableInfo<$MyAdhkarGroupsTable, MyAdhkarGroupRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $MyAdhkarCountsTable(this.attachedDatabase, [this._alias]);
+  $MyAdhkarGroupsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _accountIdMeta = const VerificationMeta(
     'accountId',
   );
@@ -11727,44 +11683,24 @@ class $MyAdhkarCountsTable extends MyAdhkarCounts
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
   @override
-  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
-    'item_id',
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _adhkarDayMeta = const VerificationMeta(
-    'adhkarDay',
-  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
-  late final GeneratedColumn<String> adhkarDay = GeneratedColumn<String>(
-    'adhkar_day',
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _recordIdMeta = const VerificationMeta(
-    'recordId',
-  );
-  @override
-  late final GeneratedColumn<String> recordId = GeneratedColumn<String>(
-    'record_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _countMeta = const VerificationMeta('count');
-  @override
-  late final GeneratedColumn<int> count = GeneratedColumn<int>(
-    'count',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
@@ -11800,25 +11736,35 @@ class $MyAdhkarCountsTable extends MyAdhkarCounts
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     accountId,
-    itemId,
-    adhkarDay,
-    recordId,
-    count,
+    groupId,
+    name,
     createdAt,
     updatedAt,
     lastAcknowledgedUpdatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'my_adhkar_counts';
+  static const String $name = 'my_adhkar_groups';
   @override
   VerificationContext validateIntegrity(
-    Insertable<MyAdhkarCount> instance, {
+    Insertable<MyAdhkarGroupRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -11831,37 +11777,21 @@ class $MyAdhkarCountsTable extends MyAdhkarCounts
     } else if (isInserting) {
       context.missing(_accountIdMeta);
     }
-    if (data.containsKey('item_id')) {
+    if (data.containsKey('group_id')) {
       context.handle(
-        _itemIdMeta,
-        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
       );
     } else if (isInserting) {
-      context.missing(_itemIdMeta);
+      context.missing(_groupIdMeta);
     }
-    if (data.containsKey('adhkar_day')) {
+    if (data.containsKey('name')) {
       context.handle(
-        _adhkarDayMeta,
-        adhkarDay.isAcceptableOrUnknown(data['adhkar_day']!, _adhkarDayMeta),
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
       );
     } else if (isInserting) {
-      context.missing(_adhkarDayMeta);
-    }
-    if (data.containsKey('record_id')) {
-      context.handle(
-        _recordIdMeta,
-        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_recordIdMeta);
-    }
-    if (data.containsKey('count')) {
-      context.handle(
-        _countMeta,
-        count.isAcceptableOrUnknown(data['count']!, _countMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_countMeta);
+      context.missing(_nameMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -11888,34 +11818,32 @@ class $MyAdhkarCountsTable extends MyAdhkarCounts
         ),
       );
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {accountId, itemId, adhkarDay};
+  Set<GeneratedColumn> get $primaryKey => {accountId, groupId};
   @override
-  MyAdhkarCount map(Map<String, dynamic> data, {String? tablePrefix}) {
+  MyAdhkarGroupRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return MyAdhkarCount(
+    return MyAdhkarGroupRow(
       accountId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}account_id'],
       )!,
-      itemId: attachedDatabase.typeMapping.read(
+      groupId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}item_id'],
+        data['${effectivePrefix}group_id'],
       )!,
-      adhkarDay: attachedDatabase.typeMapping.read(
+      name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}adhkar_day'],
-      )!,
-      recordId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}record_id'],
-      )!,
-      count: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}count'],
+        data['${effectivePrefix}name'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -11929,42 +11857,43 @@ class $MyAdhkarCountsTable extends MyAdhkarCounts
         DriftSqlType.string,
         data['${effectivePrefix}last_acknowledged_updated_at'],
       ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
   @override
-  $MyAdhkarCountsTable createAlias(String alias) {
-    return $MyAdhkarCountsTable(attachedDatabase, alias);
+  $MyAdhkarGroupsTable createAlias(String alias) {
+    return $MyAdhkarGroupsTable(attachedDatabase, alias);
   }
 }
 
-class MyAdhkarCount extends DataClass implements Insertable<MyAdhkarCount> {
+class MyAdhkarGroupRow extends DataClass
+    implements Insertable<MyAdhkarGroupRow> {
   final String accountId;
-  final String itemId;
-  final String adhkarDay;
-  final String recordId;
-  final int count;
+  final String groupId;
+  final String name;
   final String createdAt;
   final String updatedAt;
   final String? lastAcknowledgedUpdatedAt;
-  const MyAdhkarCount({
+  final String? deletedAt;
+  const MyAdhkarGroupRow({
     required this.accountId,
-    required this.itemId,
-    required this.adhkarDay,
-    required this.recordId,
-    required this.count,
+    required this.groupId,
+    required this.name,
     required this.createdAt,
     required this.updatedAt,
     this.lastAcknowledgedUpdatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['account_id'] = Variable<String>(accountId);
-    map['item_id'] = Variable<String>(itemId);
-    map['adhkar_day'] = Variable<String>(adhkarDay);
-    map['record_id'] = Variable<String>(recordId);
-    map['count'] = Variable<int>(count);
+    map['group_id'] = Variable<String>(groupId);
+    map['name'] = Variable<String>(name);
     map['created_at'] = Variable<String>(createdAt);
     map['updated_at'] = Variable<String>(updatedAt);
     if (!nullToAbsent || lastAcknowledgedUpdatedAt != null) {
@@ -11972,41 +11901,428 @@ class MyAdhkarCount extends DataClass implements Insertable<MyAdhkarCount> {
         lastAcknowledgedUpdatedAt,
       );
     }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
     return map;
   }
 
-  MyAdhkarCountsCompanion toCompanion(bool nullToAbsent) {
-    return MyAdhkarCountsCompanion(
+  MyAdhkarGroupsCompanion toCompanion(bool nullToAbsent) {
+    return MyAdhkarGroupsCompanion(
       accountId: Value(accountId),
-      itemId: Value(itemId),
-      adhkarDay: Value(adhkarDay),
-      recordId: Value(recordId),
-      count: Value(count),
+      groupId: Value(groupId),
+      name: Value(name),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       lastAcknowledgedUpdatedAt:
           lastAcknowledgedUpdatedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastAcknowledgedUpdatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
-  factory MyAdhkarCount.fromJson(
+  factory MyAdhkarGroupRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return MyAdhkarCount(
+    return MyAdhkarGroupRow(
       accountId: serializer.fromJson<String>(json['accountId']),
-      itemId: serializer.fromJson<String>(json['itemId']),
-      adhkarDay: serializer.fromJson<String>(json['adhkarDay']),
-      recordId: serializer.fromJson<String>(json['recordId']),
-      count: serializer.fromJson<int>(json['count']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+      name: serializer.fromJson<String>(json['name']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
       lastAcknowledgedUpdatedAt: serializer.fromJson<String?>(
         json['lastAcknowledgedUpdatedAt'],
       ),
+      deletedAt: serializer.fromJson<String?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<String>(accountId),
+      'groupId': serializer.toJson<String>(groupId),
+      'name': serializer.toJson<String>(name),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'lastAcknowledgedUpdatedAt': serializer.toJson<String?>(
+        lastAcknowledgedUpdatedAt,
+      ),
+      'deletedAt': serializer.toJson<String?>(deletedAt),
+    };
+  }
+
+  MyAdhkarGroupRow copyWith({
+    String? accountId,
+    String? groupId,
+    String? name,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+    Value<String?> deletedAt = const Value.absent(),
+  }) => MyAdhkarGroupRow(
+    accountId: accountId ?? this.accountId,
+    groupId: groupId ?? this.groupId,
+    name: name ?? this.name,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt.present
+        ? lastAcknowledgedUpdatedAt.value
+        : this.lastAcknowledgedUpdatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  MyAdhkarGroupRow copyWithCompanion(MyAdhkarGroupsCompanion data) {
+    return MyAdhkarGroupRow(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      name: data.name.present ? data.name.value : this.name,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      lastAcknowledgedUpdatedAt: data.lastAcknowledgedUpdatedAt.present
+          ? data.lastAcknowledgedUpdatedAt.value
+          : this.lastAcknowledgedUpdatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MyAdhkarGroupRow(')
+          ..write('accountId: $accountId, ')
+          ..write('groupId: $groupId, ')
+          ..write('name: $name, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    accountId,
+    groupId,
+    name,
+    createdAt,
+    updatedAt,
+    lastAcknowledgedUpdatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MyAdhkarGroupRow &&
+          other.accountId == this.accountId &&
+          other.groupId == this.groupId &&
+          other.name == this.name &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.lastAcknowledgedUpdatedAt == this.lastAcknowledgedUpdatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class MyAdhkarGroupsCompanion extends UpdateCompanion<MyAdhkarGroupRow> {
+  final Value<String> accountId;
+  final Value<String> groupId;
+  final Value<String> name;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> lastAcknowledgedUpdatedAt;
+  final Value<String?> deletedAt;
+  final Value<int> rowid;
+  const MyAdhkarGroupsCompanion({
+    this.accountId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MyAdhkarGroupsCompanion.insert({
+    required String accountId,
+    required String groupId,
+    required String name,
+    required String createdAt,
+    required String updatedAt,
+    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       groupId = Value(groupId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<MyAdhkarGroupRow> custom({
+    Expression<String>? accountId,
+    Expression<String>? groupId,
+    Expression<String>? name,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? lastAcknowledgedUpdatedAt,
+    Expression<String>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (groupId != null) 'group_id': groupId,
+      if (name != null) 'name': name,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (lastAcknowledgedUpdatedAt != null)
+        'last_acknowledged_updated_at': lastAcknowledgedUpdatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MyAdhkarGroupsCompanion copyWith({
+    Value<String>? accountId,
+    Value<String>? groupId,
+    Value<String>? name,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? lastAcknowledgedUpdatedAt,
+    Value<String?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return MyAdhkarGroupsCompanion(
+      accountId: accountId ?? this.accountId,
+      groupId: groupId ?? this.groupId,
+      name: name ?? this.name,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastAcknowledgedUpdatedAt:
+          lastAcknowledgedUpdatedAt ?? this.lastAcknowledgedUpdatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (lastAcknowledgedUpdatedAt.present) {
+      map['last_acknowledged_updated_at'] = Variable<String>(
+        lastAcknowledgedUpdatedAt.value,
+      );
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MyAdhkarGroupsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('groupId: $groupId, ')
+          ..write('name: $name, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MyAdhkarItemGroupsTable extends MyAdhkarItemGroups
+    with TableInfo<$MyAdhkarItemGroupsTable, MyAdhkarItemGroup> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MyAdhkarItemGroupsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<String> addedAt = GeneratedColumn<String>(
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [accountId, itemId, groupId, addedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'my_adhkar_item_groups';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MyAdhkarItemGroup> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_addedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, itemId, groupId};
+  @override
+  MyAdhkarItemGroup map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MyAdhkarItemGroup(
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $MyAdhkarItemGroupsTable createAlias(String alias) {
+    return $MyAdhkarItemGroupsTable(attachedDatabase, alias);
+  }
+}
+
+class MyAdhkarItemGroup extends DataClass
+    implements Insertable<MyAdhkarItemGroup> {
+  final String accountId;
+  final String itemId;
+  final String groupId;
+  final String addedAt;
+  const MyAdhkarItemGroup({
+    required this.accountId,
+    required this.itemId,
+    required this.groupId,
+    required this.addedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<String>(accountId);
+    map['item_id'] = Variable<String>(itemId);
+    map['group_id'] = Variable<String>(groupId);
+    map['added_at'] = Variable<String>(addedAt);
+    return map;
+  }
+
+  MyAdhkarItemGroupsCompanion toCompanion(bool nullToAbsent) {
+    return MyAdhkarItemGroupsCompanion(
+      accountId: Value(accountId),
+      itemId: Value(itemId),
+      groupId: Value(groupId),
+      addedAt: Value(addedAt),
+    );
+  }
+
+  factory MyAdhkarItemGroup.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MyAdhkarItemGroup(
+      accountId: serializer.fromJson<String>(json['accountId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+      addedAt: serializer.fromJson<String>(json['addedAt']),
     );
   }
   @override
@@ -12015,177 +12331,105 @@ class MyAdhkarCount extends DataClass implements Insertable<MyAdhkarCount> {
     return <String, dynamic>{
       'accountId': serializer.toJson<String>(accountId),
       'itemId': serializer.toJson<String>(itemId),
-      'adhkarDay': serializer.toJson<String>(adhkarDay),
-      'recordId': serializer.toJson<String>(recordId),
-      'count': serializer.toJson<int>(count),
-      'createdAt': serializer.toJson<String>(createdAt),
-      'updatedAt': serializer.toJson<String>(updatedAt),
-      'lastAcknowledgedUpdatedAt': serializer.toJson<String?>(
-        lastAcknowledgedUpdatedAt,
-      ),
+      'groupId': serializer.toJson<String>(groupId),
+      'addedAt': serializer.toJson<String>(addedAt),
     };
   }
 
-  MyAdhkarCount copyWith({
+  MyAdhkarItemGroup copyWith({
     String? accountId,
     String? itemId,
-    String? adhkarDay,
-    String? recordId,
-    int? count,
-    String? createdAt,
-    String? updatedAt,
-    Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
-  }) => MyAdhkarCount(
+    String? groupId,
+    String? addedAt,
+  }) => MyAdhkarItemGroup(
     accountId: accountId ?? this.accountId,
     itemId: itemId ?? this.itemId,
-    adhkarDay: adhkarDay ?? this.adhkarDay,
-    recordId: recordId ?? this.recordId,
-    count: count ?? this.count,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-    lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt.present
-        ? lastAcknowledgedUpdatedAt.value
-        : this.lastAcknowledgedUpdatedAt,
+    groupId: groupId ?? this.groupId,
+    addedAt: addedAt ?? this.addedAt,
   );
-  MyAdhkarCount copyWithCompanion(MyAdhkarCountsCompanion data) {
-    return MyAdhkarCount(
+  MyAdhkarItemGroup copyWithCompanion(MyAdhkarItemGroupsCompanion data) {
+    return MyAdhkarItemGroup(
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
-      adhkarDay: data.adhkarDay.present ? data.adhkarDay.value : this.adhkarDay,
-      recordId: data.recordId.present ? data.recordId.value : this.recordId,
-      count: data.count.present ? data.count.value : this.count,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      lastAcknowledgedUpdatedAt: data.lastAcknowledgedUpdatedAt.present
-          ? data.lastAcknowledgedUpdatedAt.value
-          : this.lastAcknowledgedUpdatedAt,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('MyAdhkarCount(')
+    return (StringBuffer('MyAdhkarItemGroup(')
           ..write('accountId: $accountId, ')
           ..write('itemId: $itemId, ')
-          ..write('adhkarDay: $adhkarDay, ')
-          ..write('recordId: $recordId, ')
-          ..write('count: $count, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt')
+          ..write('groupId: $groupId, ')
+          ..write('addedAt: $addedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-    accountId,
-    itemId,
-    adhkarDay,
-    recordId,
-    count,
-    createdAt,
-    updatedAt,
-    lastAcknowledgedUpdatedAt,
-  );
+  int get hashCode => Object.hash(accountId, itemId, groupId, addedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is MyAdhkarCount &&
+      (other is MyAdhkarItemGroup &&
           other.accountId == this.accountId &&
           other.itemId == this.itemId &&
-          other.adhkarDay == this.adhkarDay &&
-          other.recordId == this.recordId &&
-          other.count == this.count &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.lastAcknowledgedUpdatedAt == this.lastAcknowledgedUpdatedAt);
+          other.groupId == this.groupId &&
+          other.addedAt == this.addedAt);
 }
 
-class MyAdhkarCountsCompanion extends UpdateCompanion<MyAdhkarCount> {
+class MyAdhkarItemGroupsCompanion extends UpdateCompanion<MyAdhkarItemGroup> {
   final Value<String> accountId;
   final Value<String> itemId;
-  final Value<String> adhkarDay;
-  final Value<String> recordId;
-  final Value<int> count;
-  final Value<String> createdAt;
-  final Value<String> updatedAt;
-  final Value<String?> lastAcknowledgedUpdatedAt;
+  final Value<String> groupId;
+  final Value<String> addedAt;
   final Value<int> rowid;
-  const MyAdhkarCountsCompanion({
+  const MyAdhkarItemGroupsCompanion({
     this.accountId = const Value.absent(),
     this.itemId = const Value.absent(),
-    this.adhkarDay = const Value.absent(),
-    this.recordId = const Value.absent(),
-    this.count = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.addedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  MyAdhkarCountsCompanion.insert({
+  MyAdhkarItemGroupsCompanion.insert({
     required String accountId,
     required String itemId,
-    required String adhkarDay,
-    required String recordId,
-    required int count,
-    required String createdAt,
-    required String updatedAt,
-    this.lastAcknowledgedUpdatedAt = const Value.absent(),
+    required String groupId,
+    required String addedAt,
     this.rowid = const Value.absent(),
   }) : accountId = Value(accountId),
        itemId = Value(itemId),
-       adhkarDay = Value(adhkarDay),
-       recordId = Value(recordId),
-       count = Value(count),
-       createdAt = Value(createdAt),
-       updatedAt = Value(updatedAt);
-  static Insertable<MyAdhkarCount> custom({
+       groupId = Value(groupId),
+       addedAt = Value(addedAt);
+  static Insertable<MyAdhkarItemGroup> custom({
     Expression<String>? accountId,
     Expression<String>? itemId,
-    Expression<String>? adhkarDay,
-    Expression<String>? recordId,
-    Expression<int>? count,
-    Expression<String>? createdAt,
-    Expression<String>? updatedAt,
-    Expression<String>? lastAcknowledgedUpdatedAt,
+    Expression<String>? groupId,
+    Expression<String>? addedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (accountId != null) 'account_id': accountId,
       if (itemId != null) 'item_id': itemId,
-      if (adhkarDay != null) 'adhkar_day': adhkarDay,
-      if (recordId != null) 'record_id': recordId,
-      if (count != null) 'count': count,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (lastAcknowledgedUpdatedAt != null)
-        'last_acknowledged_updated_at': lastAcknowledgedUpdatedAt,
+      if (groupId != null) 'group_id': groupId,
+      if (addedAt != null) 'added_at': addedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  MyAdhkarCountsCompanion copyWith({
+  MyAdhkarItemGroupsCompanion copyWith({
     Value<String>? accountId,
     Value<String>? itemId,
-    Value<String>? adhkarDay,
-    Value<String>? recordId,
-    Value<int>? count,
-    Value<String>? createdAt,
-    Value<String>? updatedAt,
-    Value<String?>? lastAcknowledgedUpdatedAt,
+    Value<String>? groupId,
+    Value<String>? addedAt,
     Value<int>? rowid,
   }) {
-    return MyAdhkarCountsCompanion(
+    return MyAdhkarItemGroupsCompanion(
       accountId: accountId ?? this.accountId,
       itemId: itemId ?? this.itemId,
-      adhkarDay: adhkarDay ?? this.adhkarDay,
-      recordId: recordId ?? this.recordId,
-      count: count ?? this.count,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      lastAcknowledgedUpdatedAt:
-          lastAcknowledgedUpdatedAt ?? this.lastAcknowledgedUpdatedAt,
+      groupId: groupId ?? this.groupId,
+      addedAt: addedAt ?? this.addedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -12199,25 +12443,11 @@ class MyAdhkarCountsCompanion extends UpdateCompanion<MyAdhkarCount> {
     if (itemId.present) {
       map['item_id'] = Variable<String>(itemId.value);
     }
-    if (adhkarDay.present) {
-      map['adhkar_day'] = Variable<String>(adhkarDay.value);
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
     }
-    if (recordId.present) {
-      map['record_id'] = Variable<String>(recordId.value);
-    }
-    if (count.present) {
-      map['count'] = Variable<int>(count.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<String>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<String>(updatedAt.value);
-    }
-    if (lastAcknowledgedUpdatedAt.present) {
-      map['last_acknowledged_updated_at'] = Variable<String>(
-        lastAcknowledgedUpdatedAt.value,
-      );
+    if (addedAt.present) {
+      map['added_at'] = Variable<String>(addedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -12227,15 +12457,11 @@ class MyAdhkarCountsCompanion extends UpdateCompanion<MyAdhkarCount> {
 
   @override
   String toString() {
-    return (StringBuffer('MyAdhkarCountsCompanion(')
+    return (StringBuffer('MyAdhkarItemGroupsCompanion(')
           ..write('accountId: $accountId, ')
           ..write('itemId: $itemId, ')
-          ..write('adhkarDay: $adhkarDay, ')
-          ..write('recordId: $recordId, ')
-          ..write('count: $count, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('lastAcknowledgedUpdatedAt: $lastAcknowledgedUpdatedAt, ')
+          ..write('groupId: $groupId, ')
+          ..write('addedAt: $addedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -12279,7 +12505,9 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
   );
   late final $QiyamNightsTable qiyamNights = $QiyamNightsTable(this);
   late final $MyAdhkarItemsTable myAdhkarItems = $MyAdhkarItemsTable(this);
-  late final $MyAdhkarCountsTable myAdhkarCounts = $MyAdhkarCountsTable(this);
+  late final $MyAdhkarGroupsTable myAdhkarGroups = $MyAdhkarGroupsTable(this);
+  late final $MyAdhkarItemGroupsTable myAdhkarItemGroups =
+      $MyAdhkarItemGroupsTable(this);
   late final Index taskRecordsAccountDate = Index(
     'task_records_account_date',
     'CREATE INDEX task_records_account_date ON task_records (account_id, scheduled_date)',
@@ -12404,17 +12632,17 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     'my_adhkar_items_owner_version',
     'CREATE INDEX my_adhkar_items_owner_version ON my_adhkar_items (account_id, updated_at, item_id)',
   );
-  late final Index myAdhkarCountsOwnerDay = Index(
-    'my_adhkar_counts_owner_day',
-    'CREATE INDEX my_adhkar_counts_owner_day ON my_adhkar_counts (account_id, adhkar_day)',
+  late final Index myAdhkarGroupsOwnerTab = Index(
+    'my_adhkar_groups_owner_tab',
+    'CREATE INDEX my_adhkar_groups_owner_tab ON my_adhkar_groups (account_id, deleted_at, created_at)',
   );
-  late final Index myAdhkarCountsOwnerVersion = Index(
-    'my_adhkar_counts_owner_version',
-    'CREATE INDEX my_adhkar_counts_owner_version ON my_adhkar_counts (account_id, updated_at, record_id)',
+  late final Index myAdhkarGroupsOwnerVersion = Index(
+    'my_adhkar_groups_owner_version',
+    'CREATE INDEX my_adhkar_groups_owner_version ON my_adhkar_groups (account_id, updated_at, group_id)',
   );
-  late final Index myAdhkarCountsOwnerRecord = Index(
-    'my_adhkar_counts_owner_record',
-    'CREATE UNIQUE INDEX my_adhkar_counts_owner_record ON my_adhkar_counts (account_id, record_id)',
+  late final Index myAdhkarItemGroupsOwnerGroup = Index(
+    'my_adhkar_item_groups_owner_group',
+    'CREATE INDEX my_adhkar_item_groups_owner_group ON my_adhkar_item_groups (account_id, group_id, added_at)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -12440,7 +12668,8 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     adhkarItemCounts,
     qiyamNights,
     myAdhkarItems,
-    myAdhkarCounts,
+    myAdhkarGroups,
+    myAdhkarItemGroups,
     taskRecordsAccountDate,
     taskRecordsAccountCategory,
     taskRecordsAccountQuadrant,
@@ -12472,9 +12701,9 @@ abstract class _$FoundationDatabase extends GeneratedDatabase {
     qiyamNightsOwnerRecord,
     myAdhkarItemsOwnerTab,
     myAdhkarItemsOwnerVersion,
-    myAdhkarCountsOwnerDay,
-    myAdhkarCountsOwnerVersion,
-    myAdhkarCountsOwnerRecord,
+    myAdhkarGroupsOwnerTab,
+    myAdhkarGroupsOwnerVersion,
+    myAdhkarItemGroupsOwnerGroup,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -17958,8 +18187,7 @@ typedef $$MyAdhkarItemsTableCreateCompanionBuilder =
       required String accountId,
       required String itemId,
       required String content,
-      required int target,
-      Value<String?> note,
+      Value<String?> source,
       required String createdAt,
       required String updatedAt,
       Value<String?> lastAcknowledgedUpdatedAt,
@@ -17971,8 +18199,7 @@ typedef $$MyAdhkarItemsTableUpdateCompanionBuilder =
       Value<String> accountId,
       Value<String> itemId,
       Value<String> content,
-      Value<int> target,
-      Value<String?> note,
+      Value<String?> source,
       Value<String> createdAt,
       Value<String> updatedAt,
       Value<String?> lastAcknowledgedUpdatedAt,
@@ -18004,13 +18231,8 @@ class $$MyAdhkarItemsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get target => $composableBuilder(
-    column: $table.target,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -18059,13 +18281,8 @@ class $$MyAdhkarItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get target => $composableBuilder(
-    column: $table.target,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -18108,11 +18325,8 @@ class $$MyAdhkarItemsTableAnnotationComposer
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
 
-  GeneratedColumn<int> get target =>
-      $composableBuilder(column: $table.target, builder: (column) => column);
-
-  GeneratedColumn<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => column);
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -18169,8 +18383,7 @@ class $$MyAdhkarItemsTableTableManager
                 Value<String> accountId = const Value.absent(),
                 Value<String> itemId = const Value.absent(),
                 Value<String> content = const Value.absent(),
-                Value<int> target = const Value.absent(),
-                Value<String?> note = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
@@ -18180,8 +18393,7 @@ class $$MyAdhkarItemsTableTableManager
                 accountId: accountId,
                 itemId: itemId,
                 content: content,
-                target: target,
-                note: note,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
@@ -18193,8 +18405,7 @@ class $$MyAdhkarItemsTableTableManager
                 required String accountId,
                 required String itemId,
                 required String content,
-                required int target,
-                Value<String?> note = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 required String createdAt,
                 required String updatedAt,
                 Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
@@ -18204,8 +18415,7 @@ class $$MyAdhkarItemsTableTableManager
                 accountId: accountId,
                 itemId: itemId,
                 content: content,
-                target: target,
-                note: note,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
@@ -18237,34 +18447,32 @@ typedef $$MyAdhkarItemsTableProcessedTableManager =
       MyAdhkarItem,
       PrefetchHooks Function()
     >;
-typedef $$MyAdhkarCountsTableCreateCompanionBuilder =
-    MyAdhkarCountsCompanion Function({
+typedef $$MyAdhkarGroupsTableCreateCompanionBuilder =
+    MyAdhkarGroupsCompanion Function({
       required String accountId,
-      required String itemId,
-      required String adhkarDay,
-      required String recordId,
-      required int count,
+      required String groupId,
+      required String name,
       required String createdAt,
       required String updatedAt,
       Value<String?> lastAcknowledgedUpdatedAt,
+      Value<String?> deletedAt,
       Value<int> rowid,
     });
-typedef $$MyAdhkarCountsTableUpdateCompanionBuilder =
-    MyAdhkarCountsCompanion Function({
+typedef $$MyAdhkarGroupsTableUpdateCompanionBuilder =
+    MyAdhkarGroupsCompanion Function({
       Value<String> accountId,
-      Value<String> itemId,
-      Value<String> adhkarDay,
-      Value<String> recordId,
-      Value<int> count,
+      Value<String> groupId,
+      Value<String> name,
       Value<String> createdAt,
       Value<String> updatedAt,
       Value<String?> lastAcknowledgedUpdatedAt,
+      Value<String?> deletedAt,
       Value<int> rowid,
     });
 
-class $$MyAdhkarCountsTableFilterComposer
-    extends Composer<_$FoundationDatabase, $MyAdhkarCountsTable> {
-  $$MyAdhkarCountsTableFilterComposer({
+class $$MyAdhkarGroupsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $MyAdhkarGroupsTable> {
+  $$MyAdhkarGroupsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -18276,23 +18484,13 @@ class $$MyAdhkarCountsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get itemId => $composableBuilder(
-    column: $table.itemId,
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get adhkarDay => $composableBuilder(
-    column: $table.adhkarDay,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get recordId => $composableBuilder(
-    column: $table.recordId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get count => $composableBuilder(
-    column: $table.count,
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -18310,11 +18508,16 @@ class $$MyAdhkarCountsTableFilterComposer
     column: $table.lastAcknowledgedUpdatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$MyAdhkarCountsTableOrderingComposer
-    extends Composer<_$FoundationDatabase, $MyAdhkarCountsTable> {
-  $$MyAdhkarCountsTableOrderingComposer({
+class $$MyAdhkarGroupsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $MyAdhkarGroupsTable> {
+  $$MyAdhkarGroupsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -18326,23 +18529,13 @@ class $$MyAdhkarCountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get itemId => $composableBuilder(
-    column: $table.itemId,
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get adhkarDay => $composableBuilder(
-    column: $table.adhkarDay,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get recordId => $composableBuilder(
-    column: $table.recordId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get count => $composableBuilder(
-    column: $table.count,
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -18360,11 +18553,230 @@ class $$MyAdhkarCountsTableOrderingComposer
     column: $table.lastAcknowledgedUpdatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$MyAdhkarCountsTableAnnotationComposer
-    extends Composer<_$FoundationDatabase, $MyAdhkarCountsTable> {
-  $$MyAdhkarCountsTableAnnotationComposer({
+class $$MyAdhkarGroupsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $MyAdhkarGroupsTable> {
+  $$MyAdhkarGroupsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
+    column: $table.lastAcknowledgedUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$MyAdhkarGroupsTableTableManager
+    extends
+        RootTableManager<
+          _$FoundationDatabase,
+          $MyAdhkarGroupsTable,
+          MyAdhkarGroupRow,
+          $$MyAdhkarGroupsTableFilterComposer,
+          $$MyAdhkarGroupsTableOrderingComposer,
+          $$MyAdhkarGroupsTableAnnotationComposer,
+          $$MyAdhkarGroupsTableCreateCompanionBuilder,
+          $$MyAdhkarGroupsTableUpdateCompanionBuilder,
+          (
+            MyAdhkarGroupRow,
+            BaseReferences<
+              _$FoundationDatabase,
+              $MyAdhkarGroupsTable,
+              MyAdhkarGroupRow
+            >,
+          ),
+          MyAdhkarGroupRow,
+          PrefetchHooks Function()
+        > {
+  $$MyAdhkarGroupsTableTableManager(
+    _$FoundationDatabase db,
+    $MyAdhkarGroupsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MyAdhkarGroupsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MyAdhkarGroupsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MyAdhkarGroupsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> accountId = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MyAdhkarGroupsCompanion(
+                accountId: accountId,
+                groupId: groupId,
+                name: name,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String accountId,
+                required String groupId,
+                required String name,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MyAdhkarGroupsCompanion.insert(
+                accountId: accountId,
+                groupId: groupId,
+                name: name,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MyAdhkarGroupsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$FoundationDatabase,
+      $MyAdhkarGroupsTable,
+      MyAdhkarGroupRow,
+      $$MyAdhkarGroupsTableFilterComposer,
+      $$MyAdhkarGroupsTableOrderingComposer,
+      $$MyAdhkarGroupsTableAnnotationComposer,
+      $$MyAdhkarGroupsTableCreateCompanionBuilder,
+      $$MyAdhkarGroupsTableUpdateCompanionBuilder,
+      (
+        MyAdhkarGroupRow,
+        BaseReferences<
+          _$FoundationDatabase,
+          $MyAdhkarGroupsTable,
+          MyAdhkarGroupRow
+        >,
+      ),
+      MyAdhkarGroupRow,
+      PrefetchHooks Function()
+    >;
+typedef $$MyAdhkarItemGroupsTableCreateCompanionBuilder =
+    MyAdhkarItemGroupsCompanion Function({
+      required String accountId,
+      required String itemId,
+      required String groupId,
+      required String addedAt,
+      Value<int> rowid,
+    });
+typedef $$MyAdhkarItemGroupsTableUpdateCompanionBuilder =
+    MyAdhkarItemGroupsCompanion Function({
+      Value<String> accountId,
+      Value<String> itemId,
+      Value<String> groupId,
+      Value<String> addedAt,
+      Value<int> rowid,
+    });
+
+class $$MyAdhkarItemGroupsTableFilterComposer
+    extends Composer<_$FoundationDatabase, $MyAdhkarItemGroupsTable> {
+  $$MyAdhkarItemGroupsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MyAdhkarItemGroupsTableOrderingComposer
+    extends Composer<_$FoundationDatabase, $MyAdhkarItemGroupsTable> {
+  $$MyAdhkarItemGroupsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MyAdhkarItemGroupsTableAnnotationComposer
+    extends Composer<_$FoundationDatabase, $MyAdhkarItemGroupsTable> {
+  $$MyAdhkarItemGroupsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -18377,104 +18789,77 @@ class $$MyAdhkarCountsTableAnnotationComposer
   GeneratedColumn<String> get itemId =>
       $composableBuilder(column: $table.itemId, builder: (column) => column);
 
-  GeneratedColumn<String> get adhkarDay =>
-      $composableBuilder(column: $table.adhkarDay, builder: (column) => column);
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
 
-  GeneratedColumn<String> get recordId =>
-      $composableBuilder(column: $table.recordId, builder: (column) => column);
-
-  GeneratedColumn<int> get count =>
-      $composableBuilder(column: $table.count, builder: (column) => column);
-
-  GeneratedColumn<String> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<String> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<String> get lastAcknowledgedUpdatedAt => $composableBuilder(
-    column: $table.lastAcknowledgedUpdatedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
 }
 
-class $$MyAdhkarCountsTableTableManager
+class $$MyAdhkarItemGroupsTableTableManager
     extends
         RootTableManager<
           _$FoundationDatabase,
-          $MyAdhkarCountsTable,
-          MyAdhkarCount,
-          $$MyAdhkarCountsTableFilterComposer,
-          $$MyAdhkarCountsTableOrderingComposer,
-          $$MyAdhkarCountsTableAnnotationComposer,
-          $$MyAdhkarCountsTableCreateCompanionBuilder,
-          $$MyAdhkarCountsTableUpdateCompanionBuilder,
+          $MyAdhkarItemGroupsTable,
+          MyAdhkarItemGroup,
+          $$MyAdhkarItemGroupsTableFilterComposer,
+          $$MyAdhkarItemGroupsTableOrderingComposer,
+          $$MyAdhkarItemGroupsTableAnnotationComposer,
+          $$MyAdhkarItemGroupsTableCreateCompanionBuilder,
+          $$MyAdhkarItemGroupsTableUpdateCompanionBuilder,
           (
-            MyAdhkarCount,
+            MyAdhkarItemGroup,
             BaseReferences<
               _$FoundationDatabase,
-              $MyAdhkarCountsTable,
-              MyAdhkarCount
+              $MyAdhkarItemGroupsTable,
+              MyAdhkarItemGroup
             >,
           ),
-          MyAdhkarCount,
+          MyAdhkarItemGroup,
           PrefetchHooks Function()
         > {
-  $$MyAdhkarCountsTableTableManager(
+  $$MyAdhkarItemGroupsTableTableManager(
     _$FoundationDatabase db,
-    $MyAdhkarCountsTable table,
+    $MyAdhkarItemGroupsTable table,
   ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$MyAdhkarCountsTableFilterComposer($db: db, $table: table),
+              $$MyAdhkarItemGroupsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$MyAdhkarCountsTableOrderingComposer($db: db, $table: table),
+              $$MyAdhkarItemGroupsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$MyAdhkarCountsTableAnnotationComposer($db: db, $table: table),
+              $$MyAdhkarItemGroupsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
           updateCompanionCallback:
               ({
                 Value<String> accountId = const Value.absent(),
                 Value<String> itemId = const Value.absent(),
-                Value<String> adhkarDay = const Value.absent(),
-                Value<String> recordId = const Value.absent(),
-                Value<int> count = const Value.absent(),
-                Value<String> createdAt = const Value.absent(),
-                Value<String> updatedAt = const Value.absent(),
-                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<String> addedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => MyAdhkarCountsCompanion(
+              }) => MyAdhkarItemGroupsCompanion(
                 accountId: accountId,
                 itemId: itemId,
-                adhkarDay: adhkarDay,
-                recordId: recordId,
-                count: count,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                groupId: groupId,
+                addedAt: addedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String accountId,
                 required String itemId,
-                required String adhkarDay,
-                required String recordId,
-                required int count,
-                required String createdAt,
-                required String updatedAt,
-                Value<String?> lastAcknowledgedUpdatedAt = const Value.absent(),
+                required String groupId,
+                required String addedAt,
                 Value<int> rowid = const Value.absent(),
-              }) => MyAdhkarCountsCompanion.insert(
+              }) => MyAdhkarItemGroupsCompanion.insert(
                 accountId: accountId,
                 itemId: itemId,
-                adhkarDay: adhkarDay,
-                recordId: recordId,
-                count: count,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt,
+                groupId: groupId,
+                addedAt: addedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -18485,25 +18870,25 @@ class $$MyAdhkarCountsTableTableManager
       );
 }
 
-typedef $$MyAdhkarCountsTableProcessedTableManager =
+typedef $$MyAdhkarItemGroupsTableProcessedTableManager =
     ProcessedTableManager<
       _$FoundationDatabase,
-      $MyAdhkarCountsTable,
-      MyAdhkarCount,
-      $$MyAdhkarCountsTableFilterComposer,
-      $$MyAdhkarCountsTableOrderingComposer,
-      $$MyAdhkarCountsTableAnnotationComposer,
-      $$MyAdhkarCountsTableCreateCompanionBuilder,
-      $$MyAdhkarCountsTableUpdateCompanionBuilder,
+      $MyAdhkarItemGroupsTable,
+      MyAdhkarItemGroup,
+      $$MyAdhkarItemGroupsTableFilterComposer,
+      $$MyAdhkarItemGroupsTableOrderingComposer,
+      $$MyAdhkarItemGroupsTableAnnotationComposer,
+      $$MyAdhkarItemGroupsTableCreateCompanionBuilder,
+      $$MyAdhkarItemGroupsTableUpdateCompanionBuilder,
       (
-        MyAdhkarCount,
+        MyAdhkarItemGroup,
         BaseReferences<
           _$FoundationDatabase,
-          $MyAdhkarCountsTable,
-          MyAdhkarCount
+          $MyAdhkarItemGroupsTable,
+          MyAdhkarItemGroup
         >,
       ),
-      MyAdhkarCount,
+      MyAdhkarItemGroup,
       PrefetchHooks Function()
     >;
 
@@ -18551,6 +18936,8 @@ class $FoundationDatabaseManager {
       $$QiyamNightsTableTableManager(_db, _db.qiyamNights);
   $$MyAdhkarItemsTableTableManager get myAdhkarItems =>
       $$MyAdhkarItemsTableTableManager(_db, _db.myAdhkarItems);
-  $$MyAdhkarCountsTableTableManager get myAdhkarCounts =>
-      $$MyAdhkarCountsTableTableManager(_db, _db.myAdhkarCounts);
+  $$MyAdhkarGroupsTableTableManager get myAdhkarGroups =>
+      $$MyAdhkarGroupsTableTableManager(_db, _db.myAdhkarGroups);
+  $$MyAdhkarItemGroupsTableTableManager get myAdhkarItemGroups =>
+      $$MyAdhkarItemGroupsTableTableManager(_db, _db.myAdhkarItemGroups);
 }

@@ -8,49 +8,393 @@ import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/adhkar/application/my_adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
-/// The Drift My Adhkar store (data-model.md "My Adhkar"): item rows,
-/// per-day count rows and the outbox entries (`my_adhkar_item` /
-/// `my_adhkar_count`) written in one transaction each. There is no XP
-/// write anywhere in this store (FR-026).
+/// The Drift My Adhkar store (data-model.md "My Adhkar", reshaped
+/// 2026-11-16): groups, entries (text + optional source) and their
+/// membership join, with the outbox entries (`my_adhkar_group` /
+/// `my_adhkar_item`). There is no counter, count table or Adhkar-day
+/// dependency, and no XP write anywhere (FR-026). Every statement binds its
+/// inputs as parameters; the mutation primitives are called inside
+/// [runInTransaction], which gives them one transaction.
 final class DriftMyAdhkarRepository implements MyAdhkarRepository {
   DriftMyAdhkarRepository(this._database);
 
   static const String _itemEntityType = 'my_adhkar_item';
-  static const String _countEntityType = 'my_adhkar_count';
+  static const String _groupEntityType = 'my_adhkar_group';
 
   final FoundationDatabase _database;
 
-  @override
-  Stream<List<MyDhikrItem>> watchItems(String accountId) =>
-      (_database.select(_database.myAdhkarItems)
-            ..where(
-              (table) =>
-                  table.accountId.equals(accountId) & table.deletedAt.isNull(),
-            )
-            ..orderBy([
-              (table) => OrderingTerm.asc(table.createdAt),
-              (table) => OrderingTerm.asc(table.itemId),
-            ]))
-          .watch()
-          .map((rows) => List<MyDhikrItem>.unmodifiable(rows.map(_decodeItem)));
+  // -- Groups ---------------------------------------------------------------
 
   @override
-  Stream<List<MyAdhkarCountRecord>> watchCounts({
+  Stream<List<MyAdhkarGroupSummary>> watchGroups(String accountId) => _database
+      .customSelect(
+        'SELECT g.group_id, g.name, g.created_at, g.updated_at, '
+        'g.last_acknowledged_updated_at, g.deleted_at, '
+        '(SELECT COUNT(*) FROM my_adhkar_item_groups mig '
+        'JOIN my_adhkar_items mi ON mi.account_id = mig.account_id '
+        'AND mi.item_id = mig.item_id AND mi.deleted_at IS NULL '
+        'WHERE mig.account_id = g.account_id '
+        'AND mig.group_id = g.group_id) AS entry_count '
+        'FROM my_adhkar_groups g '
+        'WHERE g.account_id = ? AND g.deleted_at IS NULL '
+        'ORDER BY g.created_at, g.group_id',
+        variables: [Variable.withString(accountId)],
+        readsFrom: {
+          _database.myAdhkarGroups,
+          _database.myAdhkarItems,
+          _database.myAdhkarItemGroups,
+        },
+      )
+      .watch()
+      .map(
+        (rows) => List<MyAdhkarGroupSummary>.unmodifiable(
+          rows.map(
+            (row) => MyAdhkarGroupSummary(
+              group: _decodeGroup(
+                accountId: accountId,
+                groupId: row.read<String>('group_id'),
+                name: row.read<String>('name'),
+                createdAt: row.read<String>('created_at'),
+                updatedAt: row.read<String>('updated_at'),
+                lastAcknowledgedUpdatedAt: row.readNullable<String>(
+                  'last_acknowledged_updated_at',
+                ),
+                deletedAt: row.readNullable<String>('deleted_at'),
+              ),
+              liveEntryCount: row.read<int>('entry_count'),
+            ),
+          ),
+        ),
+      );
+
+  @override
+  Stream<List<MyDhikrItem>> watchGroupItems({
     required String accountId,
-    required String adhkarDay,
+    required String groupId,
   }) =>
-      (_database.select(_database.myAdhkarCounts)
+      (_database.select(_database.myAdhkarItems).join([
+              innerJoin(
+                _database.myAdhkarItemGroups,
+                _database.myAdhkarItemGroups.accountId.equalsExp(
+                      _database.myAdhkarItems.accountId,
+                    ) &
+                    _database.myAdhkarItemGroups.itemId.equalsExp(
+                      _database.myAdhkarItems.itemId,
+                    ),
+              ),
+            ])
             ..where(
-              (table) =>
-                  table.accountId.equals(accountId) &
-                  table.adhkarDay.equals(adhkarDay),
+              _database.myAdhkarItems.accountId.equals(accountId) &
+                  _database.myAdhkarItemGroups.groupId.equals(groupId) &
+                  _database.myAdhkarItems.deletedAt.isNull(),
             )
-            ..orderBy([(table) => OrderingTerm.asc(table.itemId)]))
+            ..orderBy([
+              OrderingTerm.asc(_database.myAdhkarItemGroups.addedAt),
+              OrderingTerm.asc(_database.myAdhkarItems.itemId),
+            ]))
           .watch()
           .map(
-            (rows) =>
-                List<MyAdhkarCountRecord>.unmodifiable(rows.map(_decodeCount)),
+            (rows) => List<MyDhikrItem>.unmodifiable(
+              rows.map(
+                (row) => _decodeItemRow(
+                  row.readTable(_database.myAdhkarItems),
+                  groupIds: [groupId],
+                ),
+              ),
+            ),
           );
+
+  @override
+  Future<AppResult<MyAdhkarGroup?>> readGroupFresh({
+    required String accountId,
+    required String groupId,
+  }) async {
+    try {
+      final row =
+          await (_database.select(_database.myAdhkarGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.groupId.equals(groupId),
+              ))
+              .getSingleOrNull();
+      return AppResult.success(row == null ? null : _decodeGroupRow(row));
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.group.store_failed'));
+    }
+  }
+
+  @override
+  Future<AppResult<int>> liveGroupCount({required String accountId}) async {
+    try {
+      final row = await _database
+          .customSelect(
+            'SELECT COUNT(*) AS c FROM my_adhkar_groups '
+            'WHERE account_id = ? AND deleted_at IS NULL',
+            variables: [Variable.withString(accountId)],
+          )
+          .getSingle();
+      return AppResult.success(row.data['c'] as int);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.group.store_failed'));
+    }
+  }
+
+  @override
+  Future<AppResult<void>> insertGroup(
+    MyAdhkarGroup group, {
+    required String operationId,
+    required bool queueForSync,
+  }) async {
+    try {
+      if (queueForSync) {
+        await _requireNewOperation(operationId);
+      }
+      await _database
+          .into(_database.myAdhkarGroups)
+          .insertOnConflictUpdate(
+            MyAdhkarGroupsCompanion.insert(
+              accountId: group.accountId,
+              groupId: group.groupId,
+              name: group.name,
+              createdAt: group.createdAt.toIso8601String(),
+              updatedAt: group.updatedAt.toIso8601String(),
+              lastAcknowledgedUpdatedAt: Value(
+                group.lastAcknowledgedUpdatedAt?.toIso8601String(),
+              ),
+              deletedAt: Value(group.deletedAt?.toIso8601String()),
+            ),
+          );
+      if (queueForSync) {
+        await _appendGroupOutbox(group, operationId, ChangeKind.create);
+      }
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.group.save_failed'));
+    }
+  }
+
+  @override
+  Future<AppResult<void>> renameGroup(
+    MyAdhkarGroup renamed, {
+    required DateTime priorUpdatedAt,
+    required String operationId,
+    required bool queueForSync,
+  }) async {
+    try {
+      if (queueForSync) {
+        await _requireNewOperation(operationId);
+      }
+      final updated = await _database.customUpdate(
+        'UPDATE my_adhkar_groups SET name = ?, updated_at = ?, '
+        'last_acknowledged_updated_at = ? '
+        'WHERE account_id = ? AND group_id = ? '
+        'AND deleted_at IS NULL AND updated_at = ?',
+        variables: [
+          Variable.withString(renamed.name),
+          Variable.withString(renamed.updatedAt.toIso8601String()),
+          Variable(renamed.lastAcknowledgedUpdatedAt?.toIso8601String()),
+          Variable.withString(renamed.accountId),
+          Variable.withString(renamed.groupId),
+          Variable.withString(priorUpdatedAt.toIso8601String()),
+        ],
+      );
+      if (updated == 0) {
+        throw StateError(
+          'My Adhkar group rename raced a delete or another writer',
+        );
+      }
+      if (queueForSync) {
+        await _appendGroupOutbox(renamed, operationId, ChangeKind.update);
+      }
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.group.save_failed'));
+    }
+  }
+
+  @override
+  Future<AppResult<int>> deleteGroupCascade({
+    required String accountId,
+    required String groupId,
+    required DateTime deletedAt,
+    required String operationId,
+    required bool queueForSync,
+  }) async {
+    try {
+      if (queueForSync) {
+        await _requireNewOperation(operationId);
+      }
+      final groupRow =
+          await (_database.select(_database.myAdhkarGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.groupId.equals(groupId),
+              ))
+              .getSingleOrNull();
+      if (groupRow == null) {
+        throw StateError('My Adhkar group to delete is missing');
+      }
+      if (groupRow.deletedAt != null) {
+        // Already deleted: the tombstone is set once and never moved, so
+        // this is the no-op path.
+        return const AppResult.success(0);
+      }
+      // The live entries that currently sit in this group.
+      final memberRows =
+          await (_database.select(_database.myAdhkarItemGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.groupId.equals(groupId),
+              ))
+              .get();
+      final cascadedIds = <String>[];
+      for (final row in memberRows) {
+        final entryRow =
+            await (_database.select(_database.myAdhkarItems)..where(
+                  (table) =>
+                      table.accountId.equals(accountId) &
+                      table.itemId.equals(row.itemId) &
+                      table.deletedAt.isNull(),
+                ))
+                .getSingleOrNull();
+        if (entryRow == null) continue;
+        final otherMemberships =
+            await (_database.select(_database.myAdhkarItemGroups)..where(
+                  (table) =>
+                      table.accountId.equals(accountId) &
+                      table.itemId.equals(row.itemId) &
+                      table.groupId.equals(groupId).not(),
+                ))
+                .get();
+        final hasOtherLiveGroup = await _hasLiveGroup(
+          accountId,
+          otherMemberships.map((row) => row.groupId).toList(),
+        );
+        if (!hasOtherLiveGroup) {
+          cascadedIds.add(row.itemId);
+        }
+      }
+      // 1. The group's tombstone.
+      final groupUpdated =
+          await (_database.update(_database.myAdhkarGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.groupId.equals(groupId) &
+                    table.deletedAt.isNull(),
+              ))
+              .write(
+                MyAdhkarGroupsCompanion(
+                  updatedAt: Value(deletedAt.toIso8601String()),
+                  deletedAt: Value(deletedAt.toIso8601String()),
+                ),
+              );
+      if (groupUpdated == 0) {
+        throw StateError('My Adhkar group delete raced another writer');
+      }
+      // 2. Remove this group's memberships.
+      await (_database.delete(_database.myAdhkarItemGroups)..where(
+            (table) =>
+                table.accountId.equals(accountId) &
+                table.groupId.equals(groupId),
+          ))
+          .go();
+      // 3. Tombstone the entries left with no live group, each with a
+      // monotonic updated_at.
+      for (final itemId in cascadedIds) {
+        final entryRow =
+            await (_database.select(_database.myAdhkarItems)..where(
+                  (table) =>
+                      table.accountId.equals(accountId) &
+                      table.itemId.equals(itemId) &
+                      table.deletedAt.isNull(),
+                ))
+                .getSingleOrNull();
+        if (entryRow == null) continue;
+        final monotonic = _maxInstant(deletedAt, _after(entryRow.updatedAt));
+        await (_database.update(_database.myAdhkarItems)..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.itemId.equals(itemId) &
+                  table.deletedAt.isNull(),
+            ))
+            .write(
+              MyAdhkarItemsCompanion(
+                updatedAt: Value(monotonic.toIso8601String()),
+                deletedAt: Value(deletedAt.toIso8601String()),
+              ),
+            );
+        await (_database.delete(_database.myAdhkarItemGroups)..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.itemId.equals(itemId),
+            ))
+            .go();
+      }
+      // 4. Exactly ONE outbox operation: the group only. The cascaded
+      // entries are not queued — the server applies the same cascade
+      // itself, so other devices receive them as server entry versions.
+      if (queueForSync) {
+        await _appendGroupOutbox(
+          _decodeGroupRow(groupRow).copyWith(updatedAt: deletedAt),
+          operationId,
+          ChangeKind.update,
+          deletedAtOverride: deletedAt,
+        );
+      }
+      return AppResult.success(cascadedIds.length);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.group.save_failed'));
+    }
+  }
+
+  @override
+  Future<AppResult<int>> liveEntriesOnlyInGroup({
+    required String accountId,
+    required String groupId,
+  }) async {
+    try {
+      final row = await _database
+          .customSelect(
+            'SELECT COUNT(*) AS c FROM my_adhkar_items mi '
+            'WHERE mi.account_id = ? AND mi.deleted_at IS NULL '
+            'AND EXISTS (SELECT 1 FROM my_adhkar_item_groups m '
+            'WHERE m.account_id = mi.account_id '
+            'AND m.item_id = mi.item_id AND m.group_id = ?) '
+            'AND NOT EXISTS ('
+            'SELECT 1 FROM my_adhkar_item_groups m2 '
+            'JOIN my_adhkar_groups g2 ON g2.account_id = m2.account_id '
+            'AND g2.group_id = m2.group_id AND g2.deleted_at IS NULL '
+            'WHERE m2.account_id = mi.account_id '
+            'AND m2.item_id = mi.item_id AND m2.group_id != ?)',
+            variables: [
+              Variable.withString(accountId),
+              Variable.withString(groupId),
+              Variable.withString(groupId),
+            ],
+          )
+          .getSingle();
+      return AppResult.success(row.data['c'] as int);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.group.store_failed'));
+    }
+  }
+
+  Future<bool> _hasLiveGroup(String accountId, List<String> groupIds) async {
+    for (final groupId in groupIds) {
+      final row =
+          await (_database.select(_database.myAdhkarGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.groupId.equals(groupId) &
+                    table.deletedAt.isNull(),
+              ))
+              .getSingleOrNull();
+      if (row != null) return true;
+    }
+    return false;
+  }
+
+  // -- Entries ---------------------------------------------------------------
 
   @override
   Future<AppResult<MyDhikrItem?>> readFresh({
@@ -65,35 +409,23 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
                     table.itemId.equals(itemId),
               ))
               .getSingleOrNull();
-      return AppResult.success(row == null ? null : _decodeItem(row));
+      if (row == null) return AppResult.success(null);
+      final memberships =
+          await (_database.select(_database.myAdhkarItemGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.itemId.equals(itemId),
+              ))
+              .get();
+      final groupIds = memberships.map((row) => row.groupId).toList()..sort();
+      return AppResult.success(_decodeItemRow(row, groupIds: groupIds));
     } catch (error) {
       return AppResult.failure(_failure(error, 'my_adhkar.item.store_failed'));
     }
   }
 
   @override
-  Future<AppResult<MyAdhkarCountRecord?>> readCountFresh({
-    required String accountId,
-    required String itemId,
-    required String adhkarDay,
-  }) async {
-    try {
-      final row =
-          await (_database.select(_database.myAdhkarCounts)..where(
-                (table) =>
-                    table.accountId.equals(accountId) &
-                    table.itemId.equals(itemId) &
-                    table.adhkarDay.equals(adhkarDay),
-              ))
-              .getSingleOrNull();
-      return AppResult.success(row == null ? null : _decodeCount(row));
-    } catch (error) {
-      return AppResult.failure(_failure(error, 'my_adhkar.count.store_failed'));
-    }
-  }
-
-  @override
-  Future<AppResult<int>> liveItemCount({required String accountId}) async {
+  Future<AppResult<int>> liveEntryCount({required String accountId}) async {
     try {
       final row = await _database
           .customSelect(
@@ -144,8 +476,7 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
               accountId: item.accountId,
               itemId: item.itemId,
               content: item.text,
-              target: item.target,
-              note: Value(item.note),
+              source: Value(item.source),
               createdAt: item.createdAt.toIso8601String(),
               updatedAt: item.updatedAt.toIso8601String(),
               lastAcknowledgedUpdatedAt: Value(
@@ -154,6 +485,7 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
               deletedAt: Value(item.deletedAt?.toIso8601String()),
             ),
           );
+      await _writeMemberships(item, addedAt: item.createdAt);
       if (queueForSync) {
         await _appendItemOutbox(item, operationId, ChangeKind.create);
       }
@@ -165,7 +497,8 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
 
   @override
   Future<AppResult<void>> updateItem(
-    MyDhikrItem item, {
+    MyDhikrItem edited, {
+    required DateTime priorUpdatedAt,
     required String operationId,
     required bool queueForSync,
   }) async {
@@ -173,28 +506,60 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
       if (queueForSync) {
         await _requireNewOperation(operationId);
       }
-      final updated =
-          await (_database.update(_database.myAdhkarItems)..where(
-                (table) =>
-                    table.accountId.equals(item.accountId) &
-                    table.itemId.equals(item.itemId),
-              ))
-              .write(
-                MyAdhkarItemsCompanion(
-                  content: Value(item.text),
-                  target: Value(item.target),
-                  note: Value(item.note),
-                  updatedAt: Value(item.updatedAt.toIso8601String()),
-                  lastAcknowledgedUpdatedAt: Value(
-                    item.lastAcknowledgedUpdatedAt?.toIso8601String(),
-                  ),
-                ),
-              );
+      final updated = await _database.customUpdate(
+        'UPDATE my_adhkar_items SET text = ?, source = ?, updated_at = ?, '
+        'last_acknowledged_updated_at = ? '
+        'WHERE account_id = ? AND item_id = ? '
+        'AND deleted_at IS NULL AND updated_at = ?',
+        variables: [
+          Variable.withString(edited.text),
+          Variable(edited.source),
+          Variable.withString(edited.updatedAt.toIso8601String()),
+          Variable(edited.lastAcknowledgedUpdatedAt?.toIso8601String()),
+          Variable.withString(edited.accountId),
+          Variable.withString(edited.itemId),
+          Variable.withString(priorUpdatedAt.toIso8601String()),
+        ],
+      );
       if (updated == 0) {
-        throw StateError('My Adhkar item to update is missing');
+        throw StateError('My Adhkar edit raced a delete or another writer');
+      }
+      // Membership is part of the entry's version: kept groups keep their
+      // added_at, a new group gets the edit time.
+      final currentRows =
+          await (_database.select(_database.myAdhkarItemGroups)..where(
+                (table) =>
+                    table.accountId.equals(edited.accountId) &
+                    table.itemId.equals(edited.itemId),
+              ))
+              .get();
+      final currentIds = currentRows.map((row) => row.groupId).toSet();
+      final targetIds = edited.groupIds.toSet();
+      for (final row in currentRows) {
+        if (!targetIds.contains(row.groupId)) {
+          await (_database.delete(_database.myAdhkarItemGroups)..where(
+                (table) =>
+                    table.accountId.equals(edited.accountId) &
+                    table.itemId.equals(edited.itemId) &
+                    table.groupId.equals(row.groupId),
+              ))
+              .go();
+        }
+      }
+      for (final groupId in targetIds.where((id) => !currentIds.contains(id))) {
+        await _database
+            .into(_database.myAdhkarItemGroups)
+            .insert(
+              MyAdhkarItemGroupsCompanion.insert(
+                accountId: edited.accountId,
+                itemId: edited.itemId,
+                groupId: groupId,
+                addedAt: edited.updatedAt.toIso8601String(),
+              ),
+            );
       }
       if (queueForSync) {
-        await _appendItemOutbox(item, operationId, ChangeKind.update);
+        await _appendItemOutbox(edited, operationId, ChangeKind.update);
       }
       return const AppResult.success(null);
     } catch (error) {
@@ -203,11 +568,10 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
   }
 
   @override
-  Future<AppResult<void>> markDeleted({
+  Future<AppResult<MyDhikrItem>> markItemDeleted({
     required String accountId,
     required String itemId,
     required DateTime deletedAt,
-    required DateTime updatedAt,
     required String operationId,
     required bool queueForSync,
   }) async {
@@ -215,141 +579,84 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
       if (queueForSync) {
         await _requireNewOperation(operationId);
       }
-      final prior =
+      final priorRow =
           await (_database.select(_database.myAdhkarItems)..where(
                 (table) =>
                     table.accountId.equals(accountId) &
                     table.itemId.equals(itemId),
               ))
               .getSingleOrNull();
-      if (prior == null) {
-        throw StateError('My Adhkar item to delete is missing');
+      if (priorRow == null) {
+        throw StateError('My Adhkar entry to delete is missing');
       }
-      if (prior.deletedAt != null) {
-        // Already deleted: the tombstone is set once and never cleared or
-        // moved (data-model.md, Delete command).
-        return const AppResult.success(null);
+      if (priorRow.deletedAt != null) {
+        // Already deleted: return the tombstone unchanged (set once, never
+        // moved).
+        final memberships =
+            await (_database.select(_database.myAdhkarItemGroups)..where(
+                  (table) =>
+                      table.accountId.equals(accountId) &
+                      table.itemId.equals(itemId),
+                ))
+                .get();
+        return AppResult.success(
+          _decodeItemRow(
+            priorRow,
+            groupIds: memberships.map((row) => row.groupId).toList()..sort(),
+          ),
+        );
       }
-      final updated =
-          await (_database.update(_database.myAdhkarItems)..where(
-                (table) =>
-                    table.accountId.equals(accountId) &
-                    table.itemId.equals(itemId) &
-                    table.deletedAt.isNull(),
-              ))
-              .write(
-                MyAdhkarItemsCompanion(
-                  updatedAt: Value(updatedAt.toIso8601String()),
-                  deletedAt: Value(deletedAt.toIso8601String()),
-                ),
-              );
+      // Monotonic: max(now, prior + 1 microsecond); the domain guarantees
+      // prior.updated_at >= createdAt, so the result is never before it.
+      final monotonic = _maxInstant(deletedAt, _after(priorRow.updatedAt));
+      final updated = await _database.customUpdate(
+        'UPDATE my_adhkar_items SET updated_at = ?, deleted_at = ? '
+        'WHERE account_id = ? AND item_id = ? AND deleted_at IS NULL',
+        variables: [
+          Variable.withString(monotonic.toIso8601String()),
+          Variable.withString(deletedAt.toIso8601String()),
+          Variable.withString(accountId),
+          Variable.withString(itemId),
+        ],
+      );
       if (updated == 0) {
         throw StateError('My Adhkar delete raced another writer');
       }
+      await (_database.delete(_database.myAdhkarItemGroups)..where(
+            (table) =>
+                table.accountId.equals(accountId) & table.itemId.equals(itemId),
+          ))
+          .go();
+      // Built directly: a deleted entry may have no groups left, so the
+      // live-entry decode would reject the empty set.
+      final tombstoned = MyDhikrItem(
+        accountId: priorRow.accountId,
+        itemId: priorRow.itemId,
+        text: priorRow.content,
+        source: priorRow.source,
+        groupIds: const [],
+        createdAt: DateTime.parse(priorRow.createdAt),
+        updatedAt: monotonic,
+        lastAcknowledgedUpdatedAt: priorRow.lastAcknowledgedUpdatedAt == null
+            ? null
+            : DateTime.parse(priorRow.lastAcknowledgedUpdatedAt!),
+        deletedAt: deletedAt,
+      );
       if (queueForSync) {
         await _appendItemOutbox(
-          _decodeItem(prior).copyWith(updatedAt: updatedAt),
+          tombstoned,
           operationId,
           ChangeKind.update,
           deletedAtOverride: deletedAt,
         );
       }
-      return const AppResult.success(null);
+      return AppResult.success(tombstoned);
     } catch (error) {
       return AppResult.failure(_failure(error, 'my_adhkar.item.save_failed'));
     }
   }
 
-  @override
-  Future<AppResult<MyAdhkarCountCommitOutcome>> commitCount(
-    MyAdhkarCountCommitRequest request,
-  ) async {
-    try {
-      final outcome = await _database.transaction(() async {
-        final prior = (await readCountFresh(
-          accountId: request.accountId,
-          itemId: request.itemId,
-          adhkarDay: request.adhkarDay,
-        )).valueOrNull;
-        if (request.expectedCurrentVersion != prior?.updatedAt ||
-            request.acknowledgedBase != prior?.lastAcknowledgedUpdatedAt ||
-            (prior != null && !request.updatedAt.isAfter(prior.updatedAt))) {
-          throw _TransactionFailure(
-            AppFailure.recoverable(
-              category: AppFailureCategory.validation,
-              messageKey: 'my_adhkar.count.stale_count',
-              occurredAt: request.updatedAt,
-            ),
-          );
-        }
-        if (prior != null && prior.count == request.newCount) {
-          return MyAdhkarCountCommitOutcome(
-            wroteCount: false,
-            newCount: prior.count,
-          );
-        }
-        if (request.queueForSync) {
-          await _requireNewOperation(request.operationId);
-        }
-        await _database
-            .into(_database.myAdhkarCounts)
-            .insertOnConflictUpdate(
-              MyAdhkarCountsCompanion.insert(
-                accountId: request.accountId,
-                itemId: request.itemId,
-                adhkarDay: request.adhkarDay,
-                recordId: request.recordId,
-                count: request.newCount,
-                createdAt: (prior?.createdAt ?? request.createdAt)
-                    .toIso8601String(),
-                updatedAt: request.updatedAt.toIso8601String(),
-                lastAcknowledgedUpdatedAt: Value(
-                  prior?.lastAcknowledgedUpdatedAt?.toIso8601String(),
-                ),
-              ),
-            );
-        if (request.queueForSync) {
-          await _database
-              .into(_database.pendingChanges)
-              .insert(
-                PendingChangesCompanion.insert(
-                  operationId: request.operationId,
-                  accountId: request.accountId,
-                  entityType: _countEntityType,
-                  entityId: request.recordId,
-                  kind: request.hadPrior
-                      ? ChangeKind.update
-                      : ChangeKind.create,
-                  state: PendingChangeState.pending,
-                  serializedChange: jsonEncode({
-                    'item_id': request.itemId,
-                    'adhkar_day': request.adhkarDay,
-                    'record_id': request.recordId,
-                    'count': request.newCount,
-                    'created_at': (prior?.createdAt ?? request.createdAt)
-                        .toIso8601String(),
-                    'updated_at': request.updatedAt.toIso8601String(),
-                    'base_updated_at': prior?.lastAcknowledgedUpdatedAt
-                        ?.toIso8601String(),
-                  }),
-                  createdAt: request.updatedAt,
-                  versionTimestamp: request.updatedAt,
-                  baseUpdatedAt: Value(prior?.lastAcknowledgedUpdatedAt),
-                ),
-              );
-        }
-        return MyAdhkarCountCommitOutcome(
-          wroteCount: true,
-          newCount: request.newCount,
-        );
-      });
-      return AppResult.success(outcome);
-    } on _TransactionFailure catch (error) {
-      return AppResult.failure(error.failure);
-    } catch (error) {
-      return AppResult.failure(_failure(error, 'my_adhkar.count.save_failed'));
-    }
-  }
+  // -- Shared helpers --------------------------------------------------------
 
   Future<void> _requireNewOperation(String operationId) async {
     final existing =
@@ -360,6 +667,61 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
       throw StateError('Duplicate my_adhkar operation');
     }
   }
+
+  Future<void> _writeMemberships(
+    MyDhikrItem item, {
+    required DateTime addedAt,
+  }) async {
+    await (_database.delete(_database.myAdhkarItemGroups)..where(
+          (table) =>
+              table.accountId.equals(item.accountId) &
+              table.itemId.equals(item.itemId),
+        ))
+        .go();
+    for (final groupId in item.groupIds) {
+      await _database
+          .into(_database.myAdhkarItemGroups)
+          .insert(
+            MyAdhkarItemGroupsCompanion.insert(
+              accountId: item.accountId,
+              itemId: item.itemId,
+              groupId: groupId,
+              addedAt: addedAt.toIso8601String(),
+            ),
+          );
+    }
+  }
+
+  Future<void> _appendGroupOutbox(
+    MyAdhkarGroup group,
+    String operationId,
+    ChangeKind kind, {
+    DateTime? deletedAtOverride,
+  }) => _database
+      .into(_database.pendingChanges)
+      .insert(
+        PendingChangesCompanion.insert(
+          operationId: operationId,
+          accountId: group.accountId,
+          entityType: _groupEntityType,
+          entityId: group.groupId,
+          kind: kind,
+          state: PendingChangeState.pending,
+          serializedChange: jsonEncode({
+            'group_id': group.groupId,
+            'name': group.name,
+            'created_at': group.createdAt.toIso8601String(),
+            'updated_at': group.updatedAt.toIso8601String(),
+            'deleted_at': (deletedAtOverride ?? group.deletedAt)
+                ?.toIso8601String(),
+            'base_updated_at': group.lastAcknowledgedUpdatedAt
+                ?.toIso8601String(),
+          }),
+          createdAt: group.updatedAt,
+          versionTimestamp: group.updatedAt,
+          baseUpdatedAt: Value(group.lastAcknowledgedUpdatedAt),
+        ),
+      );
 
   Future<void> _appendItemOutbox(
     MyDhikrItem item,
@@ -379,12 +741,12 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
           serializedChange: jsonEncode({
             'item_id': item.itemId,
             'text': item.text,
-            'target': item.target,
-            'note': item.note,
+            'source': item.source,
             'created_at': item.createdAt.toIso8601String(),
             'updated_at': item.updatedAt.toIso8601String(),
             'deleted_at': (deletedAtOverride ?? item.deletedAt)
                 ?.toIso8601String(),
+            'group_ids': [...item.groupIds]..sort(),
             'base_updated_at': item.lastAcknowledgedUpdatedAt
                 ?.toIso8601String(),
           }),
@@ -394,32 +756,58 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
         ),
       );
 
-  MyDhikrItem _decodeItem(MyAdhkarItem row) => MyDhikrItem(
+  MyDhikrItem _decodeItemRow(MyAdhkarItem row, {List<String>? groupIds}) =>
+      MyDhikrItem(
+        accountId: row.accountId,
+        itemId: row.itemId,
+        text: row.content,
+        source: row.source,
+        groupIds: groupIds ?? const [],
+        createdAt: DateTime.parse(row.createdAt),
+        updatedAt: DateTime.parse(row.updatedAt),
+        lastAcknowledgedUpdatedAt: row.lastAcknowledgedUpdatedAt == null
+            ? null
+            : DateTime.parse(row.lastAcknowledgedUpdatedAt!),
+        deletedAt: row.deletedAt == null
+            ? null
+            : DateTime.parse(row.deletedAt!),
+      );
+
+  MyAdhkarGroup _decodeGroupRow(MyAdhkarGroupRow row) => _decodeGroup(
     accountId: row.accountId,
-    itemId: row.itemId,
-    text: row.content,
-    target: row.target,
-    note: row.note,
-    createdAt: DateTime.parse(row.createdAt),
-    updatedAt: DateTime.parse(row.updatedAt),
-    lastAcknowledgedUpdatedAt: row.lastAcknowledgedUpdatedAt == null
-        ? null
-        : DateTime.parse(row.lastAcknowledgedUpdatedAt!),
-    deletedAt: row.deletedAt == null ? null : DateTime.parse(row.deletedAt!),
+    groupId: row.groupId,
+    name: row.name,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    lastAcknowledgedUpdatedAt: row.lastAcknowledgedUpdatedAt,
+    deletedAt: row.deletedAt,
   );
 
-  MyAdhkarCountRecord _decodeCount(MyAdhkarCount row) => MyAdhkarCountRecord(
-    accountId: row.accountId,
-    itemId: row.itemId,
-    adhkarDay: row.adhkarDay,
-    recordId: row.recordId,
-    count: row.count,
-    createdAt: DateTime.parse(row.createdAt),
-    updatedAt: DateTime.parse(row.updatedAt),
-    lastAcknowledgedUpdatedAt: row.lastAcknowledgedUpdatedAt == null
+  MyAdhkarGroup _decodeGroup({
+    required String accountId,
+    required String groupId,
+    required String name,
+    required String createdAt,
+    required String updatedAt,
+    required String? lastAcknowledgedUpdatedAt,
+    required String? deletedAt,
+  }) => MyAdhkarGroup(
+    accountId: accountId,
+    groupId: groupId,
+    name: name,
+    createdAt: DateTime.parse(createdAt),
+    updatedAt: DateTime.parse(updatedAt),
+    lastAcknowledgedUpdatedAt: lastAcknowledgedUpdatedAt == null
         ? null
-        : DateTime.parse(row.lastAcknowledgedUpdatedAt!),
+        : DateTime.parse(lastAcknowledgedUpdatedAt),
+    deletedAt: deletedAt == null ? null : DateTime.parse(deletedAt),
   );
+
+  /// `prior + 1 microsecond` for the monotonic version rule.
+  static DateTime _after(String isoUpdatedAt) =>
+      DateTime.parse(isoUpdatedAt).add(const Duration(microseconds: 1));
+
+  static DateTime _maxInstant(DateTime a, DateTime b) => a.isAfter(b) ? a : b;
 
   static AppFailure _failure(Object error, String messageKey) =>
       AppFailure.recoverable(

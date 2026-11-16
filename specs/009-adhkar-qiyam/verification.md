@@ -920,3 +920,78 @@ Gates (2026-11-16, Windows host):
 | Analyze | `flutter analyze` | No issues found |
 | Focused | `flutter test test/widget/features/adhkar/adhkar_screen_test.dart` | **11 passed** |
 | Full suite | `flutter test` | **1078 passed, 1 skipped, 0 failed** |
+
+## Phase 6b part 2 — My Adhkar collection and groups local core, T100–T102 (2026-11-16)
+
+The owner reshaped My Adhkar on 2026-11-16 (spec.md Session 2026-11-16,
+FR-022…FR-029; data-model.md "My Adhkar"): a personal collection of named
+groups and entries made of exactly two fields — text (1–2000 code points
+after trimming) and an optional free-text source (≤ 500 code points, plain
+text, never opened) — with no target, note, counter, day, reset, day guard
+or locked state. Schema v11 is unreleased, so it changed in place with no
+v12. Tests were written first and confirmed failing before each task's
+implementation.
+
+- **T100** `my_dhikr.dart` reshaped: the entry draft validates text 1–2000
+  and source ≤ 500 in code points (`runes.length`) and a non-empty group
+  set; `MyAdhkarGroupDraft` validates the 1–60 code-point name; limits are
+  1000 live entries and 100 live groups; the stored entry needs at least
+  one group while live and may have none once deleted (the cascade);
+  neither copy can clear a tombstone; no count code is left in the domain.
+  A supplementary-plane character (U+1D400, one code point over two UTF-16
+  units) counts as one. `MyAdhkarIdentityPort` becomes `newItemId()` +
+  `newGroupId()` (both UUIDv4); the `my-adhkar/` count vectors were removed
+  from `identity_vectors.json` and the identity test
+  (`my_dhikr_test.dart` 18 tests, `my_adhkar_identity_test.dart` 2 tests —
+  25 together).
+- **T101** schema v11 reshaped in place: `my_adhkar_items` gains `source`
+  and loses `target`/`note`; `my_adhkar_counts` is gone; `my_adhkar_groups`
+  and `my_adhkar_item_groups` (with `added_at`) and their five indexes
+  added; regenerated; the drift row class for groups is named
+  `MyAdhkarGroupRow` so it cannot collide with the domain type. The
+  repository port and `DriftMyAdhkarRepository` were reshaped:
+  `watchGroups` (live groups oldest first, each with its live-entry count),
+  `watchGroupItems` (membership `added_at` order), `readGroupFresh`,
+  `liveGroupCount`/`liveEntryCount`, transactional group create/rename
+  (the UPDATE guarded on `deleted_at IS NULL` and the prior `updated_at`)
+  and the FR-029 `deleteGroupCascade` — group tombstone, memberships
+  removed, every entry left with no live group tombstoned with a monotonic
+  `updated_at`, and exactly ONE outbox entry (the group; the server applies
+  the same cascade itself). Entry `updateItem` is guarded the same way and
+  syncs memberships in the same transaction, keeping `added_at` for a kept
+  group; `markItemDeleted` uses a monotonic `updated_at`
+  (`max(now, prior + 1 microsecond)`), never before `createdAt`; the
+  domain tombstone validation now requires UTC only, since a skewed clock
+  may place the delete instant before creation while the monotonic
+  `updated_at` still carries the version order. Outbox types are
+  `my_adhkar_group` and `my_adhkar_item` only; every statement binds its
+  inputs as parameters. Tests: `drift_my_adhkar_repository_test.dart`
+  (9) and the migration suite re-pinned to the reshaped v11
+  (`adhkar_qiyam_migration_test.dart`, `prayer_migration_test.dart`,
+  `habit_counter_migration_test.dart` — 52 tests).
+- **T102** `my_adhkar_commands.dart` reshaped: `CreateMyAdhkarGroup`,
+  `RenameMyAdhkarGroup`, `DeleteMyAdhkarGroup` (one-transaction cascade,
+  `previewDeleteGroup` returning the confirmation count), and `AddMyDhikr`,
+  `EditMyDhikr(owner, itemId, draft)`, `DeleteMyDhikr` with the group set.
+  `IncrementMyDhikr`, `ResetMyDhikr`, the day guard, the locked state and
+  the Adhkar times dependency are gone. `groupDeleted` reports a deleted
+  group in a draft's set or a rename/delete of a deleted group;
+  `groupLimitReached`, `limitReached`, `itemDeleted` and typed validation
+  failures are covered; the edit reads, checks and writes in one
+  transaction; the delete's tombstone moves forward monotonically and a
+  second delete is a no-op. No command references XP anywhere (FR-026) and
+  the architecture rule 6 with its negative controls still passes
+  (`my_adhkar_commands_test.dart` 14 tests).
+
+Gates (2026-11-16, Windows host):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (558 files) |
+| Analyze | `flutter analyze` | No issues found |
+| Focused suites | adhkar unit + local store + boundaries + composition + today adapter + adhkar/qiyam widgets | **299 passed** |
+| Full suite | `flutter test` | **1080 passed, 1 skipped, 0 failed** |
+
+The known-flaky `prayer_context_service_test.dart` "cached year wins…"
+did not fail. `supabase test db` and the local-stack integration run are
+PART 3 (T091–T099) gates and were not run here.

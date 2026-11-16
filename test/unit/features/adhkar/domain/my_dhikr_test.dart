@@ -1,172 +1,278 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
-/// T083: the My Adhkar item domain rules (FR-023…FR-025, contracts/
-/// adhkar-qiyam-application.md "My Adhkar ports and commands"): the draft's
-/// text 1–1000 after trimming, target 1–1000 with default 1, note ≤ 300,
-/// the 100-live-item limit, the target-lowering clamp, and that deletion
-/// is final. All text below is placeholder text; no real religious text.
+/// T100: the reshaped My Adhkar domain rules (FR-023…FR-029, data-model.md
+/// "My Adhkar", reshaped 2026-11-16): the entry is the text and an optional
+/// source plus its groups; every length is code points; there is no target,
+/// note, counter, day or clamp. All text below is placeholder text; no real
+/// religious text.
 void main() {
   MyDhikrItem item({
     String itemId = '11111111-2222-4333-8444-555555555555',
     String text = 'test dhikr',
-    int target = 33,
-    String? note = 'test note',
+    String? source = 'test source',
+    List<String> groupIds = const ['gggggggg-1111-4111-8111-111111111111'],
     DateTime? deletedAt,
   }) => MyDhikrItem(
     accountId: 'owner',
     itemId: itemId,
     text: text,
-    target: target,
-    note: note,
-    createdAt: DateTime.utc(2026, 11, 15, 8),
-    updatedAt: DateTime.utc(2026, 11, 15, 9),
+    source: source,
+    groupIds: groupIds,
+    createdAt: DateTime.utc(2026, 11, 16, 8),
+    updatedAt: DateTime.utc(2026, 11, 16, 9),
     lastAcknowledgedUpdatedAt: null,
     deletedAt: deletedAt,
   );
 
+  MyAdhkarGroup makeGroup({String name = 'test group', DateTime? deletedAt}) =>
+      MyAdhkarGroup(
+        accountId: 'owner',
+        groupId: 'gggggggg-1111-4111-8111-111111111111',
+        name: name,
+        createdAt: DateTime.utc(2026, 11, 16, 8),
+        updatedAt: DateTime.utc(2026, 11, 16, 9),
+        lastAcknowledgedUpdatedAt: null,
+        deletedAt: deletedAt,
+      );
+
   group('MyDhikrDraft text rules', () {
     test('a blank or whitespace-only text is rejected', () {
       expect(
-        const MyDhikrDraft(text: '').violations(),
+        const MyDhikrDraft(text: '', groupIds: ['g1']).violations(),
         contains(MyDhikrDraftViolation.text),
       );
       expect(
-        const MyDhikrDraft(text: '   ').violations(),
+        const MyDhikrDraft(text: '   ', groupIds: ['g1']).violations(),
         contains(MyDhikrDraftViolation.text),
       );
     });
 
-    test('text longer than 1000 characters after trimming is rejected', () {
+    test('text over 2000 code points after trimming is rejected', () {
       expect(
-        MyDhikrDraft(text: 'ا' * 1001).violations(),
+        MyDhikrDraft(text: 'ا' * 2001, groupIds: ['g1']).violations(),
         contains(MyDhikrDraftViolation.text),
       );
       expect(
-        MyDhikrDraft(text: ' ${'ا' * 1001} ').violations(),
+        MyDhikrDraft(text: ' ${'ا' * 2001} ', groupIds: ['g1']).violations(),
         contains(MyDhikrDraftViolation.text),
       );
     });
 
-    test('exactly 1000 characters after trimming is accepted', () {
-      final draft = MyDhikrDraft(text: ' ${'ا' * 1000} ');
+    test('exactly 2000 code points after trimming is accepted', () {
+      final draft = MyDhikrDraft(text: ' ${'ا' * 2000} ', groupIds: ['g1']);
       expect(draft.violations(), isEmpty);
-      expect(draft.trimmedText.length, 1000);
+      expect(draft.trimmedText.runes.length, 2000);
     });
 
-    test('a one-character text after trimming is accepted', () {
-      final draft = const MyDhikrDraft(text: '  ا  ');
+    test('a supplementary-plane character counts as one code point', () {
+      // U+1D400 MATHEMATICAL BOLD CAPITAL A is one code point over two
+      // UTF-16 units.
+      const mathA = '𝐀';
+      expect(mathA.runes.length, 1);
+      expect(mathA.length, 2, reason: 'two UTF-16 code units');
+      expect(
+        MyDhikrDraft(text: mathA * 2000, groupIds: ['g1']).violations(),
+        isEmpty,
+        reason: '2000 code points of a supplementary character are valid',
+      );
+      expect(
+        MyDhikrDraft(
+          text: '${mathA * 2000}$mathA',
+          groupIds: ['g1'],
+        ).violations(),
+        contains(MyDhikrDraftViolation.text),
+        reason: '2001 code points are invalid',
+      );
+    });
+
+    test('a one-code-point text after trimming is accepted', () {
+      final draft = const MyDhikrDraft(text: '  ا  ', groupIds: ['g1']);
       expect(draft.violations(), isEmpty);
       expect(draft.trimmedText, 'ا');
     });
 
     test('the trimmed text is what the draft reports', () {
-      final draft = const MyDhikrDraft(text: '  test dhikr  ');
+      final draft = const MyDhikrDraft(
+        text: '  test dhikr  ',
+        groupIds: ['g1'],
+      );
       expect(draft.violations(), isEmpty);
       expect(draft.trimmedText, 'test dhikr');
     });
   });
 
-  group('MyDhikrDraft target rules', () {
-    test('the target defaults to 1', () {
-      final draft = const MyDhikrDraft(text: 'test dhikr');
-      expect(draft.target, 1);
-      expect(draft.violations(), isEmpty);
+  group('MyDhikrDraft source rules', () {
+    test('a missing or blank source means no source', () {
+      expect(
+        const MyDhikrDraft(text: 'test dhikr', groupIds: ['g1']).violations(),
+        isEmpty,
+      );
+      final blank = const MyDhikrDraft(
+        text: 'test dhikr',
+        source: '   ',
+        groupIds: ['g1'],
+      );
+      expect(blank.violations(), isEmpty);
+      expect(blank.trimmedSource, isNull);
     });
 
-    test('a target below 1 is rejected', () {
+    test('a source over 500 code points is rejected and 500 is accepted', () {
       expect(
-        const MyDhikrDraft(text: 'test dhikr', target: 0).violations(),
-        contains(MyDhikrDraftViolation.target),
+        MyDhikrDraft(
+          text: 'test dhikr',
+          source: 'ا' * 501,
+          groupIds: ['g1'],
+        ).violations(),
+        contains(MyDhikrDraftViolation.source),
       );
       expect(
-        const MyDhikrDraft(text: 'test dhikr', target: -5).violations(),
-        contains(MyDhikrDraftViolation.target),
+        MyDhikrDraft(
+          text: 'test dhikr',
+          source: 'ا' * 500,
+          groupIds: ['g1'],
+        ).violations(),
+        isEmpty,
       );
     });
 
-    test('a target above 1000 is rejected and 1000 is accepted', () {
+    test('a supplementary-plane source counts code points too', () {
+      const mathA = '𝐀';
       expect(
-        const MyDhikrDraft(text: 'test dhikr', target: 1001).violations(),
-        contains(MyDhikrDraftViolation.target),
+        MyDhikrDraft(
+          text: 'test dhikr',
+          source: mathA * 500,
+          groupIds: ['g1'],
+        ).violations(),
+        isEmpty,
       );
       expect(
-        const MyDhikrDraft(text: 'test dhikr', target: 1000).violations(),
+        MyDhikrDraft(
+          text: 'test dhikr',
+          source: '${mathA * 500}$mathA',
+          groupIds: ['g1'],
+        ).violations(),
+        contains(MyDhikrDraftViolation.source),
+      );
+    });
+  });
+
+  group('MyDhikrDraft group-set rules', () {
+    test('an empty group set is rejected', () {
+      expect(
+        const MyDhikrDraft(text: 'test dhikr').violations(),
+        contains(MyDhikrDraftViolation.groupSet),
+      );
+    });
+
+    test('a non-empty group set passes the draft check', () {
+      expect(
+        const MyDhikrDraft(text: 'test dhikr', groupIds: ['g1']).violations(),
         isEmpty,
       );
     });
   });
 
-  group('MyDhikrDraft note rules', () {
-    test('a note of at most 300 characters is accepted', () {
-      final draft = MyDhikrDraft(text: 'test dhikr', note: 'ا' * 300);
-      expect(draft.violations(), isEmpty);
-    });
-
-    test('a note longer than 300 characters is rejected', () {
+  group('MyAdhkarGroupDraft name rules', () {
+    test('a blank or whitespace-only name is rejected', () {
       expect(
-        MyDhikrDraft(text: 'test dhikr', note: 'ا' * 301).violations(),
-        contains(MyDhikrDraftViolation.note),
+        const MyAdhkarGroupDraft(name: '').violations(),
+        contains(MyAdhkarGroupNameViolation.name),
+      );
+      expect(
+        const MyAdhkarGroupDraft(name: '   ').violations(),
+        contains(MyAdhkarGroupNameViolation.name),
       );
     });
 
-    test('a missing or blank note is fine and normalizes to null', () {
-      expect(const MyDhikrDraft(text: 'test dhikr').violations(), isEmpty);
-      final blank = const MyDhikrDraft(text: 'test dhikr', note: '   ');
-      expect(blank.violations(), isEmpty);
-      expect(blank.trimmedNote, isNull);
+    test('a name over 60 code points is rejected and 60 is accepted', () {
+      expect(
+        MyAdhkarGroupDraft(name: 'ا' * 61).violations(),
+        contains(MyAdhkarGroupNameViolation.name),
+      );
+      expect(MyAdhkarGroupDraft(name: 'ا' * 60).violations(), isEmpty);
+    });
+
+    test('the trimmed name is what the draft reports', () {
+      final draft = const MyAdhkarGroupDraft(name: '  test group  ');
+      expect(draft.violations(), isEmpty);
+      expect(draft.trimmedName, 'test group');
     });
   });
 
-  group('the live-item limit', () {
-    test('an account holds at most 100 live items', () {
-      expect(kMyDhikrItemLimit, 100);
+  group('the live limits', () {
+    test('an account holds at most 1000 live entries and 100 live groups', () {
+      expect(kMyAdhkarEntryLimit, 1000);
+      expect(kMyAdhkarGroupLimit, 100);
       expect(canAddMyDhikr(0), isTrue);
-      expect(canAddMyDhikr(99), isTrue);
-      expect(canAddMyDhikr(100), isFalse);
+      expect(canAddMyDhikr(999), isTrue);
+      expect(canAddMyDhikr(1000), isFalse);
+      expect(canCreateMyAdhkarGroup(0), isTrue);
+      expect(canCreateMyAdhkarGroup(99), isTrue);
+      expect(canCreateMyAdhkarGroup(100), isFalse);
     });
   });
 
-  group('the count rules', () {
-    test('a count completes exactly at its target and never passes it', () {
-      expect(isMyDhikrCountComplete(32, 33), isFalse);
-      expect(isMyDhikrCountComplete(33, 33), isTrue);
-      expect(isMyDhikrCountComplete(34, 33), isTrue);
-    });
-
-    test('lowering the target below today\'s count clamps to the new '
-        'target (FR-025)', () {
-      expect(clampMyDhikrCount(33, 33), 33);
-      expect(clampMyDhikrCount(33, 10), 10);
-      expect(clampMyDhikrCount(5, 10), 5, reason: 'an edit keeps the count');
-      expect(clampMyDhikrCount(0, 1), 0);
-    });
-  });
-
-  group('a deleted item stays deleted', () {
-    test('a tombstoned item reports deleted and keeps its fields', () {
-      final deleted = item(deletedAt: DateTime.utc(2026, 11, 15, 10));
+  group('a deleted entry stays deleted', () {
+    test('a tombstoned entry reports deleted and keeps its fields', () {
+      final deleted = item(deletedAt: DateTime.utc(2026, 11, 16, 10));
       expect(deleted.isDeleted, isTrue);
       expect(deleted.text, 'test dhikr');
-      expect(deleted.target, 33);
+      expect(deleted.source, 'test source');
     });
 
     test('no copy can clear the tombstone', () {
-      final deleted = item(deletedAt: DateTime.utc(2026, 11, 15, 10));
+      final deleted = item(deletedAt: DateTime.utc(2026, 11, 16, 10));
       final edited = deleted.copyWith(text: 'edited dhikr');
-      expect(edited.deletedAt, DateTime.utc(2026, 11, 15, 10));
+      expect(edited.deletedAt, DateTime.utc(2026, 11, 16, 10));
       expect(edited.isDeleted, isTrue);
       expect(edited.text, 'edited dhikr');
+    });
+
+    test('a live entry needs at least one group; a deleted one may lose '
+        'them', () {
+      expect(() => item(groupIds: const []), throwsArgumentError);
+      final deleted = item(
+        groupIds: const <String>[],
+        deletedAt: DateTime.utc(2026, 11, 16, 10),
+      );
+      expect(deleted.isDeleted, isTrue);
+      expect(deleted.groupIds, isEmpty);
     });
 
     test('a live item is not deleted', () {
       expect(item().isDeleted, isFalse);
     });
 
-    test('an invalid stored item throws', () {
+    test('an invalid stored entry throws', () {
       expect(() => item(text: '   '), throwsArgumentError);
-      expect(() => item(target: 0), throwsArgumentError);
-      expect(() => item(note: 'ا' * 301), throwsArgumentError);
+      expect(() => item(source: 'ا' * 501), throwsArgumentError);
+      expect(
+        () => item(text: ' ${'ا' * 2001} '),
+        throwsArgumentError,
+        reason: 'stored text must be 1-2000 code points after trimming',
+      );
+    });
+  });
+
+  group('a deleted or renamed group stays final', () {
+    test('a tombstoned group reports deleted and keeps its name', () {
+      final deleted = makeGroup(deletedAt: DateTime.utc(2026, 11, 16, 10));
+      expect(deleted.isDeleted, isTrue);
+      expect(deleted.name, 'test group');
+    });
+
+    test('no copy can clear a group tombstone', () {
+      final deleted = makeGroup(deletedAt: DateTime.utc(2026, 11, 16, 10));
+      final renamed = deleted.copyWith(name: 'renamed group');
+      expect(renamed.deletedAt, DateTime.utc(2026, 11, 16, 10));
+      expect(renamed.isDeleted, isTrue);
+      expect(renamed.name, 'renamed group');
+    });
+
+    test('an invalid stored group name throws', () {
+      expect(() => makeGroup(name: '   '), throwsArgumentError);
+      expect(() => makeGroup(name: 'ا' * 61), throwsArgumentError);
     });
   });
 }

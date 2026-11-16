@@ -26,7 +26,8 @@ const _tables = <String>[
   'adhkar_item_counts',
   'qiyam_nights',
   'my_adhkar_items',
-  'my_adhkar_counts',
+  'my_adhkar_groups',
+  'my_adhkar_item_groups',
 ];
 
 final _fixtures =

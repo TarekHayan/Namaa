@@ -543,13 +543,13 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [x] T090 [US5] Implement lib/features/adhkar/application/my_adhkar_commands.dart.
   - **Depends**: T089, T088.
   - **Done**: T089 passes, and test/architecture/adhkar_qiyam_boundaries_test.dart gains a rule (with a negative control) that no `my_adhkar_*` file imports lib/features/xp/.
-- [ ] T100 [US5] Reshape the domain and identity, test-first (spec FR-022…FR-029, data-model.md "My Adhkar"):
+- [x] T100 [US5] Reshape the domain and identity, test-first (spec FR-022…FR-029, data-model.md "My Adhkar"):
   - In lib/features/adhkar/domain/my_dhikr.dart and its test: the entry has `text` (1–2000 code points after trimming) and `source` (optional, ≤ 500 code points after trimming, blank stored as null) and a non-empty `groupIds`; add `MyAdhkarGroup` (name 1–60 code points after trimming, tombstone final); limits 1000 live entries and 100 live groups.
   - Remove `target`, `note`, the count rules and the clamp. Count every length with `runes.length`.
   - `MyAdhkarIdentityPort`: `newItemId()` and `newGroupId()` (UUIDv4). Remove `countRecordId` and the `my-adhkar/` vectors from test/fixtures/adhkar_qiyam/identity_vectors.json and my_adhkar_identity_test.dart.
   - **Depends**: T084, T085.
   - **Done**: The new tests fail first, then pass; a supplementary-plane character counts as one; no count code is left in the domain.
-- [ ] T101 [US5] Reshape storage in schema v11, test-first: in lib/core/data/local/foundation_database.dart, `my_adhkar_items` gets `source` and loses `target` and `note`; drop `my_adhkar_counts`; add `my_adhkar_groups` and `my_adhkar_item_groups` with their indexes (data-model.md); regenerate. Update the v10→v11 migration test and test/unit/features/adhkar/data/drift_my_adhkar_repository_test.dart:
+- [x] T101 [US5] Reshape storage in schema v11, test-first: in lib/core/data/local/foundation_database.dart, `my_adhkar_items` gets `source` and loses `target` and `note`; drop `my_adhkar_counts`; add `my_adhkar_groups` and `my_adhkar_item_groups` with their indexes (data-model.md); regenerate. Update the v10→v11 migration test and test/unit/features/adhkar/data/drift_my_adhkar_repository_test.dart:
   - group create, rename and delete; the delete cascade (an entry only in that group is deleted, an entry also in a live group stays); the group delete appends exactly ONE outbox entry;
   - membership written with the entry in one transaction, `added_at` kept for a kept group;
   - `watchGroups` (with entry counts) and `watchGroupItems` order;
@@ -557,7 +557,7 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
   - outbox types `my_adhkar_group` and `my_adhkar_item` only; owner isolation; no `xp_awards` row.
   - **Depends**: T086, T088, T100.
   - **Done**: The tests pass, and nothing references `my_adhkar_counts` or `my_adhkar_count`.
-- [ ] T102 [US5] Reshape the commands, test-first: my_adhkar_commands.dart and its tests get `CreateMyAdhkarGroup`, `RenameMyAdhkarGroup`, `DeleteMyAdhkarGroup` and `previewDeleteMyAdhkarGroup`, and `AddMyDhikr`, `EditMyDhikr(owner, itemId, draft)` and `DeleteMyDhikr` with the group set (`groupDeleted`, `groupLimitReached`, `limitReached`, `itemDeleted`, empty set rejected). Remove `IncrementMyDhikr`, `ResetMyDhikr`, the day guard, the locked state and the dependency on the Adhkar times port. Edit reads, checks and writes in one transaction; delete uses a monotonic `updated_at`.
+- [x] T102 [US5] Reshape the commands, test-first: my_adhkar_commands.dart and its tests get `CreateMyAdhkarGroup`, `RenameMyAdhkarGroup`, `DeleteMyAdhkarGroup` and `previewDeleteMyAdhkarGroup`, and `AddMyDhikr`, `EditMyDhikr(owner, itemId, draft)` and `DeleteMyDhikr` with the group set (`groupDeleted`, `groupLimitReached`, `limitReached`, `itemDeleted`, empty set rejected). Remove `IncrementMyDhikr`, `ResetMyDhikr`, the day guard, the locked state and the dependency on the Adhkar times port. Edit reads, checks and writes in one transaction; delete uses a monotonic `updated_at`.
   - **Depends**: T090, T101.
   - **Done**: The tests pass, and the architecture no-XP rule still passes.
 - [ ] T091 [US5] Write supabase/migrations/0017_my_adhkar.sql (`my_adhkar_groups`, `my_adhkar_items`, `my_adhkar_item_groups`, receipts, conflicts, `apply_my_adhkar_group_change_v1`, `apply_my_adhkar_item_change_v1` with `p_group_ids`, the server-side group delete cascade, RLS and grants, per contracts/adhkar-qiyam-sync.md; no count table or RPC) and pgTAP tests supabase/tests/my_adhkar_account_isolation_test.sql, my_adhkar_operation_integrity_test.sql and my_adhkar_conflict_integrity_test.sql.

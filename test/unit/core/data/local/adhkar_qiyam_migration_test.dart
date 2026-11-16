@@ -37,7 +37,8 @@ void main() {
   const v11Tables = <String>[
     ...v10Tables,
     'my_adhkar_items',
-    'my_adhkar_counts',
+    'my_adhkar_groups',
+    'my_adhkar_item_groups',
   ];
 
   const v8Tables = <String>[
@@ -237,9 +238,9 @@ void main() {
         await db.rawScalar(
           "SELECT count(*) FROM sqlite_master WHERE type='table' "
           "AND name IN ('adhkar_item_counts','qiyam_nights',"
-          "'my_adhkar_items','my_adhkar_counts')",
+          "'my_adhkar_items','my_adhkar_groups','my_adhkar_item_groups')",
         ),
-        4,
+        5,
       );
       // Restart after the upgrade works.
       await db.close();
@@ -283,9 +284,10 @@ void main() {
         expect(
           await db.rawScalar(
             "SELECT count(*) FROM sqlite_master WHERE type='table' "
-            "AND name IN ('my_adhkar_items','my_adhkar_counts')",
+            "AND name IN ('my_adhkar_items','my_adhkar_groups',"
+            "'my_adhkar_item_groups')",
           ),
-          2,
+          3,
         );
         // Restart after the upgrade works and the rows survive again.
         await db.close();
@@ -316,9 +318,9 @@ void main() {
         await db.rawScalar(
           "SELECT count(*) FROM sqlite_master WHERE type='table' "
           "AND name IN ('adhkar_item_counts','qiyam_nights',"
-          "'my_adhkar_items','my_adhkar_counts')",
+          "'my_adhkar_items','my_adhkar_groups','my_adhkar_item_groups')",
         ),
-        4,
+        5,
       );
     } finally {
       await db?.close();
@@ -459,7 +461,8 @@ void main() {
           ),
           6,
         );
-        // The v11 My Adhkar tables and their indexes.
+        // The v11 My Adhkar tables (reshaped 2026-11-16: groups, entries
+        // with text + source, membership join; no count table).
         final itemColumns = await db
             .customSelect('PRAGMA table_info(my_adhkar_items)')
             .get();
@@ -469,53 +472,63 @@ void main() {
             'account_id',
             'item_id',
             'text',
-            'target',
-            'note',
+            'source',
             'created_at',
             'updated_at',
             'last_acknowledged_updated_at',
             'deleted_at',
           ]),
         );
-        final countColumns = await db
-            .customSelect('PRAGMA table_info(my_adhkar_counts)')
+        final groupColumns = await db
+            .customSelect('PRAGMA table_info(my_adhkar_groups)')
             .get();
         expect(
-          countColumns.map((row) => row.read<String>('name')),
+          groupColumns.map((row) => row.read<String>('name')),
           containsAll([
             'account_id',
-            'item_id',
-            'adhkar_day',
-            'record_id',
-            'count',
+            'group_id',
+            'name',
             'created_at',
             'updated_at',
             'last_acknowledged_updated_at',
+            'deleted_at',
           ]),
         );
-        bool myNullable(String table, String column) =>
-            (table == 'my_adhkar_items' ? itemColumns : countColumns)
+        final joinColumns = await db
+            .customSelect('PRAGMA table_info(my_adhkar_item_groups)')
+            .get();
+        expect(
+          joinColumns.map((row) => row.read<String>('name')),
+          containsAll(['account_id', 'item_id', 'group_id', 'added_at']),
+        );
+        bool myNullable(List<dynamic> columns, String column) =>
+            columns
                 .firstWhere((row) => row.read<String>('name') == column)
                 .read<int>('notnull') ==
             0;
-        expect(myNullable('my_adhkar_items', 'note'), isTrue);
-        expect(myNullable('my_adhkar_items', 'deleted_at'), isTrue);
+        expect(myNullable(itemColumns, 'source'), isTrue);
+        expect(myNullable(itemColumns, 'deleted_at'), isTrue);
+        expect(myNullable(itemColumns, 'last_acknowledged_updated_at'), isTrue);
+        expect(myNullable(itemColumns, 'text'), isFalse);
+        expect(myNullable(groupColumns, 'deleted_at'), isTrue);
+        expect(myNullable(groupColumns, 'name'), isFalse);
+        expect(myNullable(joinColumns, 'added_at'), isFalse);
+        // No count table from the first v11 draft.
         expect(
-          myNullable('my_adhkar_items', 'last_acknowledged_updated_at'),
-          isTrue,
+          await db.rawScalar(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' "
+            "AND name = 'my_adhkar_counts'",
+          ),
+          0,
         );
-        expect(myNullable('my_adhkar_items', 'text'), isFalse);
-        expect(myNullable('my_adhkar_items', 'target'), isFalse);
-        expect(myNullable('my_adhkar_counts', 'count'), isFalse);
-        expect(myNullable('my_adhkar_counts', 'record_id'), isFalse);
         expect(
           await db.rawScalar(
             "SELECT count(*) FROM sqlite_master WHERE type='index' "
             "AND name IN ('my_adhkar_items_owner_tab',"
             "'my_adhkar_items_owner_version',"
-            "'my_adhkar_counts_owner_day',"
-            "'my_adhkar_counts_owner_version',"
-            "'my_adhkar_counts_owner_record')",
+            "'my_adhkar_groups_owner_tab',"
+            "'my_adhkar_groups_owner_version',"
+            "'my_adhkar_item_groups_owner_group')",
           ),
           5,
         );
@@ -623,9 +636,10 @@ void main() {
         expect(
           await db.rawScalar(
             "SELECT count(*) FROM sqlite_master WHERE type='table' "
-            "AND name IN ('my_adhkar_items','my_adhkar_counts')",
+            "AND name IN ('my_adhkar_items','my_adhkar_groups',"
+            "'my_adhkar_item_groups')",
           ),
-          2,
+          3,
         );
       } finally {
         await db?.close();
