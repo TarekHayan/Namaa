@@ -147,8 +147,11 @@ final class _DhikrItemCardState extends State<DhikrItemCard> {
               Directionality(
                 textDirection: TextDirection.rtl,
                 child: Text(
-                  '${widget.surah}: '
-                  '${widget.ayahFrom}–${widget.ayahTo}',
+                  // A single ayah reads "surah: N"; a range keeps the dash.
+                  widget.ayahFrom == widget.ayahTo
+                      ? '${widget.surah}: ${widget.ayahFrom}'
+                      : '${widget.surah}: '
+                            '${widget.ayahFrom}–${widget.ayahTo}',
                   key: Key('adhkar_surah_${widget.itemId}'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,

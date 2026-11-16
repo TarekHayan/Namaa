@@ -901,3 +901,22 @@ Tests were written first and confirmed failing before each implementation.
 The known-flaky `prayer_context_service_test.dart` "cached year wins…"
 did not fail in this run. `supabase test db` was not part of part A: the
 SQL side (0017 and its pgTAP tests) is T091 in part B.
+
+## Phase 6b part 1 — single-ayah label (2026-11-16)
+
+Review fix on 74c3dce: `DhikrItemCard` rendered "البقرة: 255–255" for a
+single-ayah item. It now reads `surah: N` when `ayah_from == ayah_to` and
+keeps `surah: from–to` for a range. The widget test renders both forms
+(single-ayah item and a 255–256 range) and asserts the range dash never
+appears for the single form. The edit/delete write guards (the other
+review finding) are delivered with T100–T102 below, as instructed, since
+that code is reshaped in the same session.
+
+Gates (2026-11-16, Windows host):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (558 files) |
+| Analyze | `flutter analyze` | No issues found |
+| Focused | `flutter test test/widget/features/adhkar/adhkar_screen_test.dart` | **11 passed** |
+| Full suite | `flutter test` | **1078 passed, 1 skipped, 0 failed** |

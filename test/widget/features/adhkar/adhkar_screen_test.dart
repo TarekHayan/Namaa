@@ -185,7 +185,8 @@ void main() {
   });
 
   testWidgets('a Quran item shows its preface apart from the verses, the '
-      'verses in the Quran font, and its surah and verse numbers', (
+      'verses in the Quran font, its surah and verse numbers, and a '
+      'single-ayah item reads "surah: N" without the range dash', (
     tester,
   ) async {
     final cubit = AdhkarCubit(
@@ -201,7 +202,11 @@ void main() {
     expect(verses.style?.fontFamily, kQuranFontFamily);
     expect(find.byKey(const Key('adhkar_preface_mq1')), findsOneWidget);
     expect(find.text('placeholder preface'), findsOneWidget);
-    expect(find.text('test surah: 255–255'), findsOneWidget);
+    // ayah_from == ayah_to: the single-ayah form, never "255–255".
+    expect(find.text('test surah: 255'), findsOneWidget);
+    expect(find.text('test surah: 255–255'), findsNothing);
+    // ayah_from < ayah_to: the range form keeps the dash.
+    expect(find.text('test surah: 255–256'), findsOneWidget);
     expect(find.byKey(const Key('adhkar_attribution')), findsOneWidget);
     await cubit.close();
   });
@@ -350,8 +355,8 @@ final class FakeCatalog implements AdhkarCatalogPort {
       );
 }
 
-/// A catalog holding one approved placeholder Quran item for the card's
-/// Quran rendering tests.
+/// A catalog holding two approved placeholder Quran items — a single-ayah
+/// one and a range — for the card's Quran rendering tests.
 final class QuranFakeCatalog implements AdhkarCatalogPort {
   @override
   Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async =>
@@ -373,6 +378,21 @@ final class QuranFakeCatalog implements AdhkarCatalogPort {
               'ayah_from': 255,
               'ayah_to': 255,
               'preface_ar': 'placeholder preface',
+              'approved': true,
+            },
+            {
+              'item_id': 'mq2',
+              'list': 'morning',
+              'position': 2,
+              'target': 1,
+              'kind': 'quran',
+              'text_ar': 'placeholder verse range',
+              'virtue_ar': null,
+              'reference_ar': 'test reference mq2',
+              'surah': 'test surah',
+              'ayah_from': 255,
+              'ayah_to': 256,
+              'preface_ar': null,
               'approved': true,
             },
           ],
