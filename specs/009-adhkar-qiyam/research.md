@@ -168,8 +168,16 @@ Each item below records the decision, the rationale and the alternatives conside
   - No XP and no streak (owner, 2026-11-15), so the RPCs never touch `xp_awards`, and nothing on the server needs to trust user text.
   - Additive local schema v11 and migration 0017, so the reviewed v10 and 0016 stay unchanged.
   - Defaults the owner can change: 100 items, text ≤ 1000, target 1–1000, note ≤ 300, add-order only.
+- **Groups (owner, 2026-11-16).** The user organizes the items in named groups («الفجر», «رمضان», «أدعية الكرب»). Every item is in at least one group and may be in several; deleting a group deletes the items left in no group.
+  - A third record type, the group (name, tombstone), with a random UUIDv4 ID.
+  - Membership is part of the item's version (`group_ids` in the item change), stored in a join table with the order the item was added to each group. This keeps one item, one counter and one conflict unit, instead of syncing memberships as separate records.
+  - The server applies the group delete cascade itself, so other devices converge from server item versions; the client queues only the group delete.
+  - v11 is unreleased, so the group tables join v11 in place.
+  - Defaults: 30 groups, name ≤ 60 code points. All lengths are counted in code points on both sides.
 - **Alternatives.**
   - Mixing user items into the Morning and Evening lists. Rejected by the owner (third tab chosen).
+  - A single group per item. Rejected by the owner: one dhikr may belong to several groups.
+  - Membership rows as their own sync entity. Rejected: more conflict cases for no user benefit.
   - Folding the text into the count record. Rejected: it would copy the text into every day's row and make edits rewrite history.
   - Amending v10 and 0016. Rejected: both are reviewed and tested; an additive step is safer.
 

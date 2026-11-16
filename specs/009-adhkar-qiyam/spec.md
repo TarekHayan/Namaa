@@ -33,6 +33,13 @@
 - Q: Do the user's own adhkar count toward the set award or the Adhkar streak? → A: No. The 15 XP set award and the streak use only the reviewed catalog lists.
 - Q: Do the user's own adhkar sync across devices? → A: Yes, like the rest of the account's data, through a new versioned server table and RPC.
 
+### Session 2026-11-16
+
+- Q: How is My Adhkar organized? → A: In groups the user creates and names, for example «الفجر», «رمضان», «أدعية الكرب». The tab opens on the list of groups with "Create a group"; the adhkar live inside the groups.
+- Q: Can a dhikr exist outside a group? → A: No. Every dhikr belongs to at least one group.
+- Q: Can one dhikr be in more than one group? → A: Yes. It is one dhikr shown in each of its groups; editing it changes it everywhere, and it has one counter per day.
+- Q: What happens to the adhkar when a group is deleted? → A: The group is deleted after a confirmation, and its adhkar are deleted with it. A dhikr that is also in another group stays in that group.
+
 **Scope note**: Phase 4 of `namaa_plan.md` covers Prayer, Quran (Reader, Wird, Audio, Memorization, Bookmarks/History), Dhikr and Qiyam. Prayer shipped in 008. On 2026-11-09 the product owner chose to build **Morning/Evening Adhkar and Qiyam** next, as one feature. Quran follows in separate later specs.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -151,27 +158,31 @@ Today the Track hub tiles and the Home "Daily Adhkar & Sunan" card are placehold
 
 ### User Story 5 - My Adhkar: the user's own adhkar and supplications (Priority: P2)
 
-Added by the product owner on 2026-11-15. Adhkar gets a third tab, «أذكاري» ("My Adhkar"), next to Morning and Evening. The user adds their own adhkar and supplications there. Each one has:
+Added by the product owner on 2026-11-15; groups added on 2026-11-16. Adhkar gets a third tab, «أذكاري» ("My Adhkar"), next to Morning and Evening. The tab opens on the user's **groups**. The user creates a group and names it, for example «الفجر», «رمضان», «آيات الشروق», «أدعية الغضب» or «أدعية الكرب», then adds their own adhkar and supplications inside it. Each dhikr has:
 - its text, written by the user;
 - a target count;
-- an optional note, for example where the user learned it.
+- an optional note, for example where the user learned it;
+- the groups it belongs to: at least one, and possibly several.
 
-Each item has its own counter that starts at 0 every Adhkar day, like the catalog items. The tab is countable all day; it has no Morning or Evening window. The user can edit or delete their items. They sync to the account's other devices.
+A dhikr in several groups is one dhikr: it shows in each of its groups, an edit changes it everywhere, and it has one counter per day. Each dhikr's counter starts at 0 every Adhkar day, like the catalog items. The tab is countable all day; it has no Morning or Evening window. The user can rename or delete a group, and edit or delete a dhikr. Deleting a group deletes its adhkar, except a dhikr that is also in another group, which stays there. Everything syncs to the account's other devices.
 
 My Adhkar is the user's own content. It is never presented as reviewed or sourced content, and it does not count toward the set award or the Adhkar streak.
 
 **Why this priority**: The owner asked for it inside 009. It builds on Story 1's counter and Story 4's sync, so it follows them.
 
-**Independent Test**: Add a dhikr with target 33 offline, count it to 33, restart the app, edit its text, and delete it. Then add one on device A, sync, and confirm it and its count on device B.
+**Independent Test**: Offline, create the group «الفجر», add a dhikr with target 33 to it, count it to 33, restart the app, edit its text, add it to a second group, then delete the first group and confirm the dhikr stays in the second. Then add a group and a dhikr on device A, sync, and confirm them and the count on device B.
 
 **Acceptance Scenarios**:
 
-1. **Given** My Adhkar is empty, **When** the user opens the tab, **Then** an empty state explains the tab and offers "Add a dhikr".
-2. **Given** the add form, **When** the user enters text and target 33 and saves, **Then** the item appears at the end of the list at count 0 of 33.
+1. **Given** My Adhkar has no groups, **When** the user opens the tab, **Then** an empty state explains the tab and offers "Create a group".
+2. **Given** the user creates the group «الفجر» and opens it, **When** they add a dhikr with target 33, **Then** it appears at the end of the group at count 0 of 33, and the group is preselected in the add form.
+2a. **Given** a dhikr in «الفجر», **When** the user also adds it to «أدعية الكرب», **Then** it shows in both groups with the same count, and counting it in one group shows the new count in the other.
+2b. **Given** the group «الفجر» holds a dhikr that is only there and one that is also in «رمضان», **When** the user deletes «الفجر» and confirms (the confirmation says how many adhkar will be deleted), **Then** the group and its first dhikr disappear on every device, and the second dhikr stays in «رمضان».
+2c. **Given** a group, **When** the user renames it, **Then** its adhkar and their counts stay.
 3. **Given** an item at count 32 of 33, **When** the user taps count, **Then** it shows 33 of 33 as completed and further taps do not change it. Reset returns it to 0.
 4. **Given** a new Adhkar day begins, **When** the tab opens, **Then** every item starts at 0 for the new day, and the items themselves stay.
 5. **Given** an item, **When** the user edits its text or note, **Then** today's count stays. **When** the user lowers the target below today's count, **Then** today's count becomes the new target.
-6. **Given** an item, **When** the user deletes it and confirms, **Then** it disappears on every device of the account and is never shown again.
+6. **Given** an item, **When** the user deletes it and confirms, **Then** it disappears from all its groups on every device of the account and is never shown again.
 7. **Given** every item in My Adhkar is complete, **When** the user views Morning and Evening, **Then** no set award, streak change or celebration comes from My Adhkar.
 8. **Given** the Prayer schedule is unavailable, **When** the tab opens, **Then** the items stay visible and counting is locked, as for the other lists (owner decision, 2026-11-10).
 9. **Given** the same item is edited on two devices offline, **When** both reconnect, **Then** the newest version wins and the other is kept as a visible conflict.
@@ -190,8 +201,10 @@ My Adhkar is the user's own content. It is never presented as reviewed or source
 - **Text scale up to 200% and narrow phones (320 px).** Arabic text wraps without clipping, and the count button stays reachable.
 - **Debug preview mode (no account).** Adhkar and Qiyam work locally without cloud sync, as Tasks, Habits and Prayer do.
 - **My Adhkar text.** Blank or whitespace-only text is rejected. Very long text (up to the limit) wraps without clipping. Mixed Arabic and Latin text keeps a readable direction.
-- **My Adhkar limit.** At 100 items the add action is disabled, with an explanation.
+- **My Adhkar limit.** At 100 adhkar the add action is disabled, with an explanation. At 30 groups "Create a group" is disabled, with an explanation.
 - **Deleted while counting.** If an item is deleted on another device, the local list drops it on the next sync, and a pending count for it is discarded without error.
+- **Group deleted on another device.** If a group is deleted on device A while device B adds a dhikr to it offline, the group delete wins on sync. A dhikr left in no group is deleted, and B's version is kept as a visible conflict. A dhikr that also belongs to a live group stays there.
+- **Last group of a dhikr.** The edit form does not allow saving a dhikr with no group selected.
 
 ## Requirements *(mandatory)*
 
@@ -263,18 +276,28 @@ My Adhkar is the user's own content. It is never presented as reviewed or source
 - **FR-023**: Users MUST be able to add, edit and delete their own items. Each item has:
   - text: required, 1–1000 characters after trimming;
   - a target count: a whole number from 1 to 1000, default 1;
-  - an optional note of up to 300 characters.
+  - an optional note of up to 300 characters;
+  - its groups: at least one of the account's live groups (FR-028).
 
-  An account holds at most 100 items. Items show in the order they were added.
+  An account holds at most 100 items. Characters are counted as Unicode code points.
 - **FR-024**: Each My Adhkar item MUST have a counter per Adhkar day, with the same increment, completion and reset rules as FR-003 and FR-004. The tab is countable during the whole Adhkar day, with no Morning or Evening window. When the Prayer schedule is unavailable, counting is locked as for the other lists.
 - **FR-025**: Editing an item's text or note MUST keep today's count. Lowering the target below today's count MUST set today's count to the new target. Deleting an item MUST remove it and its counts from every device of the account, and it MUST NOT come back on a later sync.
 - **FR-026**: My Adhkar MUST NOT award XP, change the Adhkar streak, trigger the set celebration or appear in Home's x/N values. The screen MUST label the tab as the user's own content and MUST NOT show it as reviewed or sourced.
-- **FR-027**: My Adhkar items and their daily counts MUST follow FR-016 and FR-017: local first, offline, idempotent sync, newest wins, visible conflicts, and isolation per account. A delete is final: an edit of a deleted item, older or newer, is kept as a visible conflict and never restores the item.
+- **FR-027**: My Adhkar groups, items and daily counts MUST follow FR-016 and FR-017: local first, offline, idempotent sync, newest wins, visible conflicts, and isolation per account. A delete is final: an edit of a deleted item, older or newer, is kept as a visible conflict and never restores the item.
+- **FR-028**: My Adhkar MUST be organized in groups (owner decision, 2026-11-16).
+  - The tab opens on the list of groups, in the order they were created, each showing its name and number of adhkar, with "Create a group".
+  - A group has a name: required, 1–60 characters after trimming. Names need not be unique. An account holds at most 30 groups.
+  - Users MUST be able to create, rename and delete a group. A new group is empty.
+  - Opening a group shows its adhkar in the order they were added to that group, with "Add a dhikr", which preselects that group.
+  - A dhikr MAY belong to several groups, chosen in the add/edit form. It is one item: it shows in each group, an edit changes it everywhere, and it has one counter per Adhkar day.
+  - There is no manual reordering of groups or adhkar.
+- **FR-029**: Deleting a group MUST ask for confirmation that states how many adhkar will be deleted. It MUST delete the group and every dhikr whose only live group it was; a dhikr in another live group MUST stay there. The delete is final, like an item delete (FR-025, FR-027).
 
 ### Key Entities
 
 - **Dhikr item** (reference content, not user data): stable ID, list (Morning or Evening), order, Arabic text, target count, optional Arabic virtue, Arabic reference, and for a Quran item its surah and verses.
-- **My dhikr** (user data): the owner, a stable item ID, the text, the target, an optional note, its creation order, when it was updated, and a deletion marker that keeps a deleted item from coming back on sync.
+- **My Adhkar group** (user data): the owner, a stable group ID, the name, its creation order, when it was updated, and a deletion marker that keeps a deleted group from coming back on sync.
+- **My dhikr** (user data): the owner, a stable item ID, the text, the target, an optional note, its groups (one or more, each with the order the dhikr was added to it), its creation order, when it was updated, and a deletion marker that keeps a deleted item from coming back on sync.
 - **My dhikr day count**: the owner, the item, the Adhkar day and the count.
 - **Adhkar day progress**: the owner, the Adhkar day, and per item ID the current count. Completion is derived as count = target.
 - **Adhkar set completion**: the owner, the day and the list. It records whether XP was awarded, and it is the idempotency anchor for the award.
@@ -295,7 +318,7 @@ My Adhkar is the user's own content. It is never presented as reviewed or source
 - **SC-006**: Home and Track progress match the Adhkar and Qiyam screens in 100% of checked states. Both screens render without clipping at 320 px, 100–200% text scale, AR/EN and light/dark, on a named phone and on desktop.
 - **SC-007**: Adhkar and Qiyam streak values are correct for every seeded pattern (consecutive, gap, unanswered current night, history across a time-zone change).
 - **SC-008**: Morning and Evening are countable exactly inside their Fajr–Maghrib and Maghrib–Fajr times, in 100% of tested locations and methods, including across midnight.
-- **SC-009**: A user can add a My Adhkar item and start counting it in under 30 seconds. Across two-device tests with offline edits, deletes and retries, every item converges on both devices, a deleted item never returns, and My Adhkar changes the XP ledger 0 times.
+- **SC-009**: A user can create a My Adhkar group, add a dhikr to it and start counting it in under 30 seconds. Across two-device tests with offline edits, deletes and retries, every group and item converges on both devices, a deleted group or item never returns, and My Adhkar changes the XP ledger 0 times.
 
 ## Assumptions
 
@@ -303,7 +326,7 @@ My Adhkar is the user's own content. It is never presented as reviewed or source
 - **XP values.** The XP values follow the prototype defaults (Morning 15, Evening 15, Qiyam 30) and use the centralized XP authority from earlier features. They are not user-configurable in this feature.
 - **Adhkar streak.** The plan names streaks only for Qiyam and Quran Wird. The Adhkar streak was added by the product owner on 2026-11-09. It is a number only, with no history list.
 - **No editing of the reviewed lists.** Users cannot edit, hide or reorder the Morning and Evening items. Their own adhkar go in My Adhkar (Story 5). The prototype's free "Counters" page (a tasbeeh counter with no text) stays a separate area and out of scope.
-- **My Adhkar defaults.** The limits (100 items, 1000 characters, target 1–1000, note 300) and the add-order with no manual reordering are defaults chosen for v1; the owner can change them.
+- **My Adhkar defaults.** The limits (100 adhkar, 30 groups, group name 60 characters, text 1000 characters, target 1–1000, note 300) and the add-order with no manual reordering are defaults chosen for v1; the owner can change them.
 - **Schema.** My Adhkar adds local schema v11 and server migration 0017. 0016 and v10 stay as reviewed; 0016 and 0017 go to staging together under T076.
 - **Qiyam rak'ahs.** The prototype's options 2, 4, 8 and 11 are kept. A free-number input is out of scope.
 - **Prayer is a dependency.** The last third and the Isha–Fajr window come from the existing Prayer schedule (008). Qiyam does not ask for location itself.

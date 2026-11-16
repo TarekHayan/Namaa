@@ -36,16 +36,25 @@ References: [spec](../spec.md) FR-018…021, prototype `AdhkarView.tsx` and `Qiy
 
 ## My Adhkar tab (Story 5)
 
-1. **Header line.** "Your own adhkar" with a short note that they are not part of the reviewed lists and earn no XP. An **Add** button, disabled at 100 items with the reason.
-2. **Empty state.** One sentence on what the tab is for, and the Add button.
-3. **Item cards**, oldest first, in the same card style as the catalog items:
+The tab has two levels inside the Adhkar page: the **group list** and an opened **group**. Opening a group replaces the list in place, with a "back to groups" control in the tab itself (no app-bar back arrow; device back returns to the group list first, then Home).
+
+1. **Header line.** "Your own adhkar" with a short note that they are not part of the reviewed lists and earn no XP.
+2. **Group list.**
+   - A **Create a group** button, disabled at 30 groups with the reason.
+   - Group rows, oldest first: the name (direction from the text) and "n adhkar". An overflow menu with **Rename** and **Delete**.
+   - Delete asks for confirmation in the page itself, stating how many adhkar will be deleted and that adhkar also in other groups stay there.
+   - Create and rename use a small sheet (dialog on desktop) with the name field (counter to 60).
+3. **Empty state** (no groups). One sentence on what the tab is for, with examples of groups, and the Create a group button.
+4. **Opened group.** The group name as the heading, an **Add a dhikr** button (disabled at 100 adhkar, with the reason), an empty state when the group has no adhkar, and the item cards in the order they were added to the group.
+5. **Item cards**, in the same card style as the catalog items:
    - the user's text in Amiri, with `TextDirection` taken from the text itself so mixed Arabic and Latin text stays readable;
    - the note, when present, in the secondary style;
    - count/target, the count button and reset, with the same semantics labels;
-   - an overflow menu with **Edit** and **Delete**. Delete asks for confirmation in the page itself.
+   - when the item is in other groups too, a small line with their names;
+   - an overflow menu with **Edit** and **Delete**. Delete asks for confirmation in the page itself and says the dhikr leaves all its groups.
    - No number badge, no "Virtue and source" toggle and no completion celebration.
-4. **Add / edit sheet.** A bottom sheet on phone and a dialog on desktop, with the text field (counter to 1000), the target field (1–1000, default 1) and the note field (counter to 300). Save is disabled until the text is valid. Errors are inline and localized.
-5. **Locked state.** When the schedule is unavailable, the cards stay visible, counting is disabled, and the same notice as the other tabs shows.
+6. **Add / edit sheet.** A bottom sheet on phone and a dialog on desktop, with the text field (counter to 1000), the target field (1–1000, default 1), the note field (counter to 300) and the group choice (chips of the live groups, multi-select, the opened group preselected). Save is disabled until the text is valid and at least one group is selected. Errors are inline and localized.
+7. **Locked state.** When the schedule is unavailable, the cards stay visible, counting is disabled, and the same notice as the other tabs shows.
 
 ## Qiyam screen (prototype order)
 

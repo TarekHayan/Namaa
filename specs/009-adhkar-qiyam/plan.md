@@ -20,7 +20,7 @@ Add two new local-first domains, **Adhkar** (Morning and Evening lists with tap 
 - **Content.** The reviewed adhkar and supplications ship as a versioned asset, Arabic only, displayed in Amiri. Since 2026-11-15 the catalog also holds the owner-approved Hisn al-Muslim additions and the Quran items (Ayat al-Kursi, the Mu'awwidhat), with the Quran text from the King Fahd Complex Mushaf (QPC Hafs) in its matching font, obtained through the Quran Foundation and credited in the app (research R13).
 - **Sync.** It uses migration 0016 with typed RPCs, receipts, newest-wins and visible conflicts, as 008 does.
 - **Home and Track** show live progress and open the real screens.
-- **My Adhkar** (Story 5, added 2026-11-15). A third Adhkar tab for the user's own adhkar: add, edit and delete, a daily counter per item, no XP and no streak, synced through local schema v11 and migration 0017 (research R14).
+- **My Adhkar** (Story 5, added 2026-11-15). A third Adhkar tab for the user's own adhkar, organized in user-named groups (2026-11-16; a dhikr may be in several groups): create, rename and delete groups; add, edit and delete adhkar; a daily counter per item, no XP and no streak, synced through local schema v11 and migration 0017 (research R14).
 
 This command produces design artifacts only.
 
@@ -127,7 +127,7 @@ No exception is required. The content source review, the font license check and 
 | FR-015 | No notification dependency or permission is added (dependency and manifest audit). |
 | FR-016, 017 | Offline/restart integration; pgTAP convergence and conflicts; hosted two-device sync. |
 | FR-018 | Route, shell and Today bridge widget tests; the localized route integration test. |
-| FR-022…027 | My Adhkar command and repository tests (limits, clamp on target change, final delete); the v10→v11 migration test; 0017 pgTAP (validation, limit, final delete, `item_deleted`, no XP rows); the tab's widget matrix; the two-device integration cases. |
+| FR-022…029 | My Adhkar command and repository tests (limits, clamp on target change, final delete, groups and the group delete cascade); the v10→v11 migration test; 0017 pgTAP (validation, limit, final delete, `item_deleted`, no XP rows); the tab's widget matrix; the two-device integration cases. |
 
 ## Project Structure
 

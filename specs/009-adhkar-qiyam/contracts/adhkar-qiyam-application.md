@@ -39,12 +39,16 @@ Stream<void> changes(ownerId)   // the saved location or method changed
 My Adhkar lives inside the Adhkar feature: it shares the Adhkar day, the clock and the counter rules, and it never imports Qiyam.
 
 - **`MyAdhkarRepository`**:
-  - `watchItems(owner)` returns the live items, oldest first;
+  - `watchGroups(owner)` returns the live groups, oldest first, each with its number of live items;
+  - `watchGroupItems(owner, groupId)` returns the group's live items in the order they were added to it, each with its full group set;
   - `watchCounts(owner, day)` returns that day's counts;
-  - transactional `add`, `edit`, `delete`, `increment` and `reset`.
-- **`MyAdhkarIdentityPort`**: new item IDs (UUIDv4) and count record IDs (UUIDv5, data-model.md).
-- **`AddMyDhikr(owner, draft)`**: validates the draft (text 1–1000 after trimming, target 1–1000, note ≤ 300) and the 100-item limit, then adds. Returns `added(itemId)`, `limitReached` or a typed validation failure.
-- **`EditMyDhikr(owner, itemId, capturedDay, draft)`**: the same validation. Lowering the target below today's count clamps today's count in the same transaction. Rejects a deleted item with `itemDeleted`.
+  - transactional group `create`, `rename` and `delete`, and item `add`, `edit`, `delete`, `increment` and `reset`.
+- **`MyAdhkarIdentityPort`**: new group and item IDs (UUIDv4) and count record IDs (UUIDv5, data-model.md).
+- **`CreateMyAdhkarGroup(owner, name)`**: validates the name (1–60 code points after trimming) and the 30-group limit. Returns `created(groupId)`, `groupLimitReached` or a typed validation failure.
+- **`RenameMyAdhkarGroup(owner, groupId, name)`**: the same name rule. Rejects a deleted group with `groupDeleted`.
+- **`DeleteMyAdhkarGroup(owner, groupId)`**: the cascade in data-model.md (FR-029), in one transaction. `previewDeleteMyAdhkarGroup(owner, groupId)` returns how many items the delete would remove, for the confirmation. Deleting an already deleted group is a no-op.
+- **`AddMyDhikr(owner, draft)`**: validates the draft (text 1–1000 code points after trimming, target 1–1000, note ≤ 300, `groupIds` non-empty and all live) and the 100-item limit, then adds. Returns `added(itemId)`, `limitReached`, `groupDeleted` or a typed validation failure.
+- **`EditMyDhikr(owner, itemId, capturedDay, draft)`**: the same validation, including the group set. A group kept in the set keeps its `added_at`; a new group gets the edit time. Lowering the target below today's count clamps today's count in the same transaction. Rejects a deleted item with `itemDeleted`.
 - **`DeleteMyDhikr(owner, itemId)`**: sets the tombstone. Deleting an already deleted item is a no-op.
 - **`IncrementMyDhikr(owner, capturedDay, itemId)`** and **`ResetMyDhikr(owner, capturedDay, itemId)`**: the same day guard as `IncrementDhikr`, with no period check and no award. They are rejected with `locked` when the schedule is unavailable, and with `itemDeleted` for a deleted item.
 
