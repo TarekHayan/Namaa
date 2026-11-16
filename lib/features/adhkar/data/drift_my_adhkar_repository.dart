@@ -274,7 +274,10 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
           cascadedIds.add(row.itemId);
         }
       }
-      // 1. The group's tombstone.
+      // 1. The group's tombstone with a monotonic updated_at
+      // (max(now, prior + 1 microsecond)), the same rule as
+      // markItemDeleted — a skewed clock never moves the version backwards.
+      final groupMonotonic = _maxInstant(deletedAt, _after(groupRow.updatedAt));
       final groupUpdated =
           await (_database.update(_database.myAdhkarGroups)..where(
                 (table) =>
@@ -284,7 +287,7 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
               ))
               .write(
                 MyAdhkarGroupsCompanion(
-                  updatedAt: Value(deletedAt.toIso8601String()),
+                  updatedAt: Value(groupMonotonic.toIso8601String()),
                   deletedAt: Value(deletedAt.toIso8601String()),
                 ),
               );
@@ -330,12 +333,24 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
             ))
             .go();
       }
-      // 4. Exactly ONE outbox operation: the group only. The cascaded
-      // entries are not queued — the server applies the same cascade
-      // itself, so other devices receive them as server entry versions.
+      // 4. Exactly ONE outbox operation: the group only, built directly so
+      // no copy can throw on a skewed clock. The cascaded entries are not
+      // queued — the server applies the same cascade itself, so other
+      // devices receive them as server entry versions.
       if (queueForSync) {
         await _appendGroupOutbox(
-          _decodeGroupRow(groupRow).copyWith(updatedAt: deletedAt),
+          MyAdhkarGroup(
+            accountId: groupRow.accountId,
+            groupId: groupRow.groupId,
+            name: groupRow.name,
+            createdAt: DateTime.parse(groupRow.createdAt),
+            updatedAt: groupMonotonic,
+            lastAcknowledgedUpdatedAt:
+                groupRow.lastAcknowledgedUpdatedAt == null
+                ? null
+                : DateTime.parse(groupRow.lastAcknowledgedUpdatedAt!),
+            deletedAt: deletedAt,
+          ),
           operationId,
           ChangeKind.update,
           deletedAtOverride: deletedAt,

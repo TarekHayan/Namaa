@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
+import 'package:namma_project/core/domain/results/app_result.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_clock_port.dart';
 import 'package:namma_project/features/adhkar/application/my_adhkar_commands.dart';
 import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
@@ -311,10 +312,12 @@ void main() {
     'add reports limitReached at 1000 live entries, counting live only',
     () async {
       final groupId = await seedGroup('group a');
-      for (var i = 0; i < 999; i++) {
-        final n = i.toString().padLeft(12, '0');
-        await repository.runInTransaction(() {
-          return repository.insertItem(
+      // One transaction for the whole seed: 999 separate transactions sit
+      // near the 30-second test timeout on Windows (one commit each).
+      await repository.runInTransaction(() async {
+        for (var i = 0; i < 999; i++) {
+          final n = i.toString().padLeft(12, '0');
+          final insert = await repository.insertItem(
             MyDhikrItem(
               accountId: 'owner',
               itemId: '$n-4444-4333-8444-555555555555',
@@ -329,8 +332,12 @@ void main() {
             operationId: 'seed-$i',
             queueForSync: false,
           );
-        });
-      }
+          if (insert.failureOrNull != null) {
+            throw StateError('seed $i failed');
+          }
+        }
+        return const AppResult<void>.success(null);
+      });
       final tombstoneSeed = await repository.runInTransaction(() {
         return repository.insertItem(
           MyDhikrItem(
@@ -485,6 +492,48 @@ void main() {
     expect(await xpRows(), 0);
   });
 
+  test('deleteGroup succeeds with a monotonic updated_at when the clock '
+      'sits one hour behind the creation', () async {
+    final groupId = await seedGroup('group a');
+    final prior = (await repository.readGroupFresh(
+      accountId: 'owner',
+      groupId: groupId,
+    )).valueOrNull!;
+    // Move the clock one hour BEFORE the group's created_at, then delete.
+    clock.now = now.subtract(const Duration(hours: 1));
+    final outcome = await commands.deleteGroup(groupId: groupId);
+    final deleted = outcome.valueOrNull as MyAdhkarGroupDeleted;
+    expect(deleted.cascadedEntries, 0);
+    final stored = (await repository.readGroupFresh(
+      accountId: 'owner',
+      groupId: groupId,
+    )).valueOrNull!;
+    expect(stored.isDeleted, isTrue);
+    expect(
+      stored.updatedAt.isAfter(prior.updatedAt),
+      isTrue,
+      reason: 'max(now, prior + 1 microsecond) keeps the version forward',
+    );
+    // Exactly one outbox row for the group DELETE (the create row from
+    // seedGroup is the other one, with kind create). Ordered by rowid —
+    // version_timestamp has second precision and the two versions tie.
+    final rows = await db
+        .customSelect(
+          'SELECT entity_type, kind, version_timestamp FROM pending_changes '
+          'ORDER BY rowid',
+        )
+        .get();
+    expect(rows, hasLength(2));
+    expect(rows.last.read<String>('entity_type'), 'my_adhkar_group');
+    expect(rows.last.read<int>('kind'), 1, reason: 'the delete is an update');
+    expect(
+      DateTime.parse(rows.last.read<String>('version_timestamp')).year,
+      stored.updatedAt.year,
+      reason: 'the delete row is stamped with the group version',
+    );
+    expect(await xpRows(), 0);
+  });
+
   test('delete of an unknown entry fails with a typed failure', () async {
     final result = await commands.delete(
       itemId: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
@@ -496,10 +545,10 @@ void main() {
 
 /// A fixed clock: the commands sample `now` once per command.
 final class FakeClock implements AdhkarClockPort {
-  FakeClock(this._now);
+  FakeClock(this.now);
 
-  final DateTime _now;
+  DateTime now;
 
   @override
-  DateTime nowUtc() => _now;
+  DateTime nowUtc() => now;
 }

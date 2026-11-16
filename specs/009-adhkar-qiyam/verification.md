@@ -995,3 +995,31 @@ Gates (2026-11-16, Windows host):
 The known-flaky `prayer_context_service_test.dart` "cached year wins…"
 did not fail. `supabase test db` and the local-stack integration run are
 PART 3 (T091–T099) gates and were not run here.
+
+## Phase 6b part 3a — monotonic My Adhkar group delete (2026-11-16)
+
+Review fix on d71a770: `deleteGroupCascade` stamped the group with
+`updated_at = deletedAt` (now) and built the outbox row through
+`copyWith(updatedAt: deletedAt)`, which threw — and rolled the delete
+back — when the device clock sat behind the group's `created_at`, and the
+version could go backwards anyway. The fix stamps the group's `updated_at`
+and the outbox `version_timestamp` with the same monotonic rule as
+`markItemDeleted` (`max(now, prior.updated_at + 1 microsecond)`) and builds
+the outbox group directly. Two new tests prove it (one in the drift
+repository, one over the commands): a delete issued with the clock one
+hour before the group's creation succeeds, its `updated_at` is greater
+than the prior version, and exactly one outbox row carries the delete. The
+commands-test seed for the 1000-entry limit was also gathered into one
+transaction: 999 separate transactions sat at the 30-second test timeout
+on Windows (one commit each). One full-suite run showed the known-flaky
+`prayer_context_service_test.dart` "cached year wins…" failing
+(`flutter test test/unit/features/prayer/application/prayer_context_service_test.dart`
+alone: **8 passed** — recorded as flaky, not a pass).
+
+Gates (2026-11-16, Windows host):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (558 files) |
+| Analyze | `flutter analyze` | No issues found |
+| Full suite | `flutter test` | **1082 passed, 1 skipped, 0 failed** (after the flaky rerun above) |

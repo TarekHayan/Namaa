@@ -242,6 +242,53 @@ void main() {
     expect(await xpAwardsCount(), 0);
   });
 
+  test('the group delete uses a monotonic updated_at when the clock sits '
+      'behind the creation', () async {
+    await seedGroup();
+    // A delete "now" one hour BEFORE the group's created_at: the version
+    // still moves forward and the delete succeeds.
+    final cascaded = await repository.runInTransaction(() {
+      return repository.deleteGroupCascade(
+        accountId: 'owner',
+        groupId: entryGroupId,
+        deletedAt: DateTime.utc(2026, 11, 16, 7),
+        operationId: 'op-del-early-group',
+        queueForSync: true,
+      );
+    });
+    expect(cascaded.valueOrNull, 0);
+    final stored = (await repository.readGroupFresh(
+      accountId: 'owner',
+      groupId: entryGroupId,
+    )).valueOrNull!;
+    expect(stored.isDeleted, isTrue);
+    expect(
+      stored.updatedAt,
+      DateTime.utc(2026, 11, 16, 8, 30, 0, 0, 1),
+      reason: 'max(now, prior + 1 microsecond)',
+    );
+    expect(
+      stored.updatedAt.isAfter(stored.createdAt),
+      isTrue,
+      reason: 'the version never goes backwards',
+    );
+    // Exactly one outbox row, stamped with the monotonic version.
+    final rows = await outboxRows();
+    expect(rows, hasLength(1));
+    expect(rows.single['entityType'], 'my_adhkar_group');
+    final timestamps = await db
+        .customSelect(
+          'SELECT version_timestamp FROM pending_changes '
+          "WHERE operation_id = 'op-del-early-group'",
+        )
+        .get();
+    expect(
+      DateTime.parse(timestamps.single.read<String>('version_timestamp')),
+      DateTime.utc(2026, 11, 16, 8, 30, 0, 0, 1),
+    );
+    expect(await xpAwardsCount(), 0);
+  });
+
   test('previewDeleteMyAdhkarGroup support: liveEntriesOnlyInGroup counts '
       'the entries the delete would remove', () async {
     await seedGroup();
