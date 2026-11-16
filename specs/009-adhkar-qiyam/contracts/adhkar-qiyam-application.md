@@ -36,21 +36,19 @@ Stream<void> changes(ownerId)   // the saved location or method changed
 
 ## My Adhkar ports and commands (`lib/features/adhkar/`, Story 5)
 
-My Adhkar lives inside the Adhkar feature: it shares the Adhkar day, the clock and the counter rules, and it never imports Qiyam.
+My Adhkar lives inside the Adhkar feature and never imports Qiyam. It is a personal collection: groups and entries (text and optional source). It has no target, counter, Adhkar day or clock dependency, so it works the same when the Prayer schedule is unavailable.
 
 - **`MyAdhkarRepository`**:
-  - `watchGroups(owner)` returns the live groups, oldest first, each with its number of live items;
-  - `watchGroupItems(owner, groupId)` returns the group's live items in the order they were added to it, each with its full group set;
-  - `watchCounts(owner, day)` returns that day's counts;
-  - transactional group `create`, `rename` and `delete`, and item `add`, `edit`, `delete`, `increment` and `reset`.
-- **`MyAdhkarIdentityPort`**: new group and item IDs (UUIDv4) and count record IDs (UUIDv5, data-model.md).
-- **`CreateMyAdhkarGroup(owner, name)`**: validates the name (1–60 code points after trimming) and the 30-group limit. Returns `created(groupId)`, `groupLimitReached` or a typed validation failure.
+  - `watchGroups(owner)` returns the live groups, oldest first, each with its number of live entries;
+  - `watchGroupItems(owner, groupId)` returns the group's live entries in the order they were added to it, each with its full group set;
+  - transactional group `create`, `rename` and `delete`, and entry `add`, `edit` and `delete`.
+- **`MyAdhkarIdentityPort`**: new group and entry IDs (UUIDv4).
+- **`CreateMyAdhkarGroup(owner, name)`**: validates the name (1–60 code points after trimming) and the 100-group limit. Returns `created(groupId)`, `groupLimitReached` or a typed validation failure.
 - **`RenameMyAdhkarGroup(owner, groupId, name)`**: the same name rule. Rejects a deleted group with `groupDeleted`.
-- **`DeleteMyAdhkarGroup(owner, groupId)`**: the cascade in data-model.md (FR-029), in one transaction. `previewDeleteMyAdhkarGroup(owner, groupId)` returns how many items the delete would remove, for the confirmation. Deleting an already deleted group is a no-op.
-- **`AddMyDhikr(owner, draft)`**: validates the draft (text 1–1000 code points after trimming, target 1–1000, note ≤ 300, `groupIds` non-empty and all live) and the 100-item limit, then adds. Returns `added(itemId)`, `limitReached`, `groupDeleted` or a typed validation failure.
-- **`EditMyDhikr(owner, itemId, capturedDay, draft)`**: the same validation, including the group set. A group kept in the set keeps its `added_at`; a new group gets the edit time. Lowering the target below today's count clamps today's count in the same transaction. Rejects a deleted item with `itemDeleted`.
-- **`DeleteMyDhikr(owner, itemId)`**: sets the tombstone. Deleting an already deleted item is a no-op.
-- **`IncrementMyDhikr(owner, capturedDay, itemId)`** and **`ResetMyDhikr(owner, capturedDay, itemId)`**: the same day guard as `IncrementDhikr`, with no period check and no award. They are rejected with `locked` when the schedule is unavailable, and with `itemDeleted` for a deleted item.
+- **`DeleteMyAdhkarGroup(owner, groupId)`**: the cascade in data-model.md (FR-029), in one transaction. `previewDeleteMyAdhkarGroup(owner, groupId)` returns how many entries the delete would remove, for the confirmation. Deleting an already deleted group is a no-op.
+- **`AddMyDhikr(owner, draft)`**: validates the draft (text 1–2000 code points after trimming, source ≤ 500 code points or blank, `groupIds` non-empty and all live) and the 1000-entry limit, then adds. Returns `added(itemId)`, `limitReached`, `groupDeleted` or a typed validation failure.
+- **`EditMyDhikr(owner, itemId, draft)`**: the same validation, including the group set. A group kept in the set keeps its `added_at`; a new group gets the edit time. The read, the deleted check and the write happen in one transaction, guarded on the prior version. Rejects a deleted entry with `itemDeleted`.
+- **`DeleteMyDhikr(owner, itemId)`**: sets the tombstone with a monotonic `updated_at`. Deleting an already deleted entry is a no-op.
 
 None of these commands calls the XP ledger.
 
@@ -79,7 +77,7 @@ None of these commands calls the XP ledger.
   - It schedules one timer for `nextBoundary`, and re-resolves the clock on resume and on Prayer `changes`.
   - A completed set emits a one-shot celebration event.
   - Results from an earlier owner generation are discarded.
-  - The third tab, My Adhkar, reads `MyAdhkarRepository` through the same Cubit (or a child `MyAdhkarCubit` composed beside it). Its counts never feed the set completion, the celebration or the streak.
+  - The third tab, My Adhkar, reads `MyAdhkarRepository` through a child `MyAdhkarCubit` composed beside it. It never feeds the set completion, the celebration or the streak.
 - **`QiyamCubit(owner)`**:
   - It loads the night, the record, the streak and the first history page.
   - It re-resolves the night at the next Maghrib, on resume and on Prayer `changes`.

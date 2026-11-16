@@ -160,26 +160,25 @@ Each item below records the decision, the rationale and the alternatives conside
   - Copy the Quran text from the Hisn al-Muslim dataset. Rejected: it mixes imla'i and Uthmani spellings.
   - Ship the expansion as a later catalog version. Rejected by the owner on 2026-11-15.
 
-## R14. My Adhkar (2026-11-15)
+## R14. My Adhkar (2026-11-15, reshaped 2026-11-16)
 
-- **Decision.** The user's own adhkar live in the Adhkar feature, not a new feature folder, because they share the Adhkar day, clock, counter widgets and sync service.
-  - Two record types: the item (text, target, note, tombstone) and the per-day count. Item IDs are random UUIDv4 values, since two devices can add items offline; count IDs are UUIDv5 like the catalog counts.
+- **Decision.** The user's own collection lives in the Adhkar feature, not a new feature folder, because it shares the Adhkar screen, card style and sync service.
+  - On 2026-11-16 the owner reshaped it into a **personal collection** built over time: named groups («الفجر», «رمضان», «أدعية الكرب»), and entries with two fields, the text and an optional free-text source (a book, a scholar or a link). There is no target, counter or daily reset, so there is no count record and no dependency on the Adhkar clock.
+  - Two record types: the group (name, tombstone) and the entry (text, source, group set, tombstone). IDs are random UUIDv4 values, since two devices can create offline.
+  - An entry is in at least one group and may be in several. Membership is part of the entry's version (`group_ids`), stored in a join table with the order the entry was added to each group. This keeps one entry and one conflict unit, instead of syncing memberships as separate records.
+  - Deleting a group deletes the entries left in no group. The server applies this cascade itself, so other devices converge from server entry versions; the client queues only the group delete.
   - A delete is final, so a tombstone always wins. Newest-wins applies only between live versions.
   - No XP and no streak (owner, 2026-11-15), so the RPCs never touch `xp_awards`, and nothing on the server needs to trust user text.
-  - Additive local schema v11 and migration 0017, so the reviewed v10 and 0016 stay unchanged.
-  - Defaults the owner can change: 100 items, text ≤ 1000, target 1–1000, note ≤ 300, add-order only.
-- **Groups (owner, 2026-11-16).** The user organizes the items in named groups («الفجر», «رمضان», «أدعية الكرب»). Every item is in at least one group and may be in several; deleting a group deletes the items left in no group.
-  - A third record type, the group (name, tombstone), with a random UUIDv4 ID.
-  - Membership is part of the item's version (`group_ids` in the item change), stored in a join table with the order the item was added to each group. This keeps one item, one counter and one conflict unit, instead of syncing memberships as separate records.
-  - The server applies the group delete cascade itself, so other devices converge from server item versions; the client queues only the group delete.
-  - v11 is unreleased, so the group tables join v11 in place.
-  - Defaults: 30 groups, name ≤ 60 code points. All lengths are counted in code points on both sides.
+  - A link in the source is plain text and is never opened (owner, 2026-11-16), so no URL-launching package is added.
+  - v11 is unreleased, so it is changed in place to this shape (no v12); migration 0017 is additive on 0016.
+  - Defaults the owner can change: 1000 entries, 100 groups, group name ≤ 60, text ≤ 2000, source ≤ 500, all in code points; add-order only.
+  - Sharing a group is a possible later feature, outside 009.
 - **Alternatives.**
   - Mixing user items into the Morning and Evening lists. Rejected by the owner (third tab chosen).
-  - A single group per item. Rejected by the owner: one dhikr may belong to several groups.
+  - A counter and target per entry (the first 2026-11-15 shape). Replaced by the owner on 2026-11-16.
+  - A single group per entry. Rejected by the owner: one entry may belong to several groups.
   - Membership rows as their own sync entity. Rejected: more conflict cases for no user benefit.
-  - Folding the text into the count record. Rejected: it would copy the text into every day's row and make edits rewrite history.
-  - Amending v10 and 0016. Rejected: both are reviewed and tested; an additive step is safer.
+  - Opening links. Rejected by the owner; it would also need a new package.
 
 ## R12. CI placement
 

@@ -104,21 +104,22 @@ Design date: 2026-11-09. This document lists planned names and fields; no schema
 
 RLS limits every exposed row to `auth.uid()`. There is no direct client INSERT, UPDATE or DELETE. Anonymous and public users get no execute rights.
 
-## My Adhkar (Story 5, added 2026-11-15; groups 2026-11-16)
+## My Adhkar (Story 5, added 2026-11-15; reshaped 2026-11-16)
+
+A personal collection: groups, and entries made of a text and an optional source. There is no target, counter, day or count record.
 
 ### Identity
 
-- **My Adhkar group ID**: a random UUIDv4 created on the device that creates the group. It never changes and is never reused.
-- **My dhikr item ID**: a random UUIDv4 created on the device that adds the item. It never changes and is never reused.
-- **My dhikr count record ID**: `UUIDv5(NS009, 'my-adhkar/' + itemId + '/' + day)`, where `day` is the AdhkarDay.
+- **My Adhkar group ID** and **entry ID**: random UUIDv4 values created on the device that creates them. They never change and are never reused.
 - **Conflict ID**: built as above, with these descriptors:
   - group: `<updated_at micros>:<deleted>|<name-sha256>`;
-  - item: `<updated_at micros>:<deleted>|<target>|<text-sha256>|<note-sha256>|<sorted-group-ids-sha256>`;
-  - count: `<updated_at micros>:<count>`.
+  - entry: `<updated_at micros>:<deleted>|<text-sha256>|<source-sha256>|<sorted-group-ids-sha256>`.
 
 ### Encrypted local schema v11 (additive on v10)
 
-v11 is not released yet (it exists only on the 009 branch), so the groups tables are part of v11 itself, not a v12.
+v11 is not released yet (it exists only on the 009 branch), so it is changed in place to this shape, with no v12. The `my_adhkar_counts` table and the `target` and `note` columns of the first v11 draft are removed.
+
+All lengths are counted in Unicode code points, on the device and on the server.
 
 #### my_adhkar_groups
 
@@ -131,65 +132,50 @@ v11 is not released yet (it exists only on the 009 branch), so the groups tables
 | deleted_at | Nullable. Set once on delete and never cleared. |
 
 - **Index:** `(account_id, deleted_at, created_at)` for the group list, and `(account_id, updated_at, group_id)` for sync.
-- **Create command.** One transaction: re-validate the owner, check fewer than 30 live groups, insert the row, append the outbox operation.
+- **Create command.** One transaction: re-validate the owner, check fewer than 100 live groups, insert the row, append the outbox operation.
 - **Rename command.** Updates the name and appends the outbox operation. A deleted group returns `groupDeleted`.
 - **Delete command.** One transaction (FR-029):
   1. set the group's `deleted_at`;
-  2. remove the group from every live item's membership;
-  3. set `deleted_at` on every live item left with no live group;
+  2. remove the group from every live entry's membership;
+  3. set `deleted_at` on every live entry left with no live group;
   4. append ONE outbox operation, for the group only.
 
-  The server applies the same cascade itself (contracts/adhkar-qiyam-sync.md), so the cascaded item changes are not queued; other devices receive them as server item versions.
+  The server applies the same cascade itself (contracts/adhkar-qiyam-sync.md), so the cascaded entry changes are not queued; other devices receive them as server entry versions.
 
-#### my_adhkar_items
+#### my_adhkar_items (the entries)
 
 | Field | Constraint / purpose |
 |---|---|
 | account_id, item_id | Composite primary key. |
-| text | 1–1000 characters after trimming; never blank. |
-| target | 1–1000. |
-| note | Nullable, ≤ 300 characters. |
-| created_at | UTC; when the item was created. |
+| text | 1–2000 characters after trimming; never blank. |
+| source | Nullable; ≤ 500 characters after trimming; blank is stored as null. Plain text, never opened. |
+| created_at | UTC; when the entry was created. |
 | updated_at, last_acknowledged_updated_at | As for the other records. |
-| deleted_at | Nullable. Set once on delete and never cleared: the tombstone keeps the item from coming back on sync. |
+| deleted_at | Nullable. Set once on delete and never cleared: the tombstone keeps the entry from coming back on sync. |
 
-- **Index:** `(account_id, deleted_at, created_at)` for the tab, and `(account_id, updated_at, item_id)` for sync.
-- Text and note lengths are counted in Unicode code points, on the device and on the server.
-- **Add command.** One transaction: re-validate the owner, check fewer than 100 live items, check every chosen group is live and at least one is chosen, insert the row and its memberships, append the outbox operation.
-- **Edit command.** Updates text, target, note or the group set (at least one live group); lowering the target below today's count also writes today's count as the new target, in the same transaction.
-- **Delete command.** Sets `deleted_at` and appends the outbox operation. Counts of a deleted item are no longer shown or synced.
+- **Index:** `(account_id, deleted_at, created_at)` and `(account_id, updated_at, item_id)` for sync.
+- **Add command.** One transaction: re-validate the owner, check fewer than 1000 live entries, check at least one group is chosen and every chosen group is live, insert the row and its memberships, append the outbox operation.
+- **Edit command.** Updates the text, the source or the group set (at least one live group), guarded so it never writes over a deleted entry.
+- **Delete command.** Sets `deleted_at` (with a monotonic `updated_at`) and appends the outbox operation.
 
 #### my_adhkar_item_groups
 
 | Field | Constraint / purpose |
 |---|---|
-| account_id, item_id, group_id | Composite primary key. The item and the group belong to the same owner. |
-| added_at | UTC; the order of the item inside that group (oldest first). Kept when the item is saved again with the same group. |
+| account_id, item_id, group_id | Composite primary key. The entry and the group belong to the same owner. |
+| added_at | UTC; the order of the entry inside that group (oldest first). Kept when the entry is saved again with the same group. |
 
 - **Index:** `(account_id, group_id, added_at)` for the group view.
-- The membership set is part of the item's version: it is written in the same transaction as the item row, and it syncs inside the item change (`group_ids`), not as a separate entity.
-
-#### my_adhkar_counts
-
-| Field | Constraint / purpose |
-|---|---|
-| account_id, item_id, adhkar_day | Composite primary key. |
-| record_id | Deterministic UUID (above). |
-| count | 0 ≤ count ≤ 1000. The screen shows `min(count, target)`, so a target lowered on another device never shows an overflow. |
-| created_at, updated_at, last_acknowledged_updated_at | As above. |
-
-- **Increment and reset** follow the catalog rules (Adhkar day, no period window, locked when the schedule is unavailable), with no set award.
-- One count per item per day, shared by all the item's groups.
-- Entity types in `pending_changes`: `my_adhkar_group`, `my_adhkar_item` and `my_adhkar_count`. Group operations are dispatched before item operations, and item operations before count operations.
+- The membership set is part of the entry's version: it is written in the same transaction as the entry row, and it syncs inside the entry change (`group_ids`), not as a separate entity.
+- Entity types in `pending_changes`: `my_adhkar_group` and `my_adhkar_item`. Group operations are dispatched before entry operations.
 
 ### Remote schema, migration 0017
 
-- **`my_adhkar_groups`**: the owner, `group_id` (uuid), the name with the same checks, `created_at`, `updated_at` and `deleted_at`. Primary key `(owner, group_id)`. At most 30 live groups per owner.
-- **`my_adhkar_item_groups`**: the owner, `item_id`, `group_id` and `added_at`, with foreign keys to the owner's item and group. Primary key `(owner, item_id, group_id)`.
-- **`my_adhkar_items`**: the owner, `item_id` (uuid), the text, target and note with the same checks, `created_at`, `updated_at` and `deleted_at`. Primary key `(owner, item_id)`.
-- **`my_adhkar_counts`**: the owner, the item ID (foreign key to the owner's item), the day, the record UUID (identity checked), the count (0–1000) and the version fields. Primary key `(owner, item_id, adhkar_day)`.
+- **`my_adhkar_groups`**: the owner, `group_id` (uuid), the name with the same checks, `created_at`, `updated_at` and `deleted_at`. Primary key `(owner, group_id)`. At most 100 live groups per owner.
+- **`my_adhkar_items`**: the owner, `item_id` (uuid), the text and source with the same checks, `created_at`, `updated_at` and `deleted_at`. Primary key `(owner, item_id)`. At most 1000 live entries per owner.
+- **`my_adhkar_item_groups`**: the owner, `item_id`, `group_id` and `added_at`, with foreign keys to the owner's entry and group. Primary key `(owner, item_id, group_id)`.
 - **Receipts and conflicts**: `my_adhkar_operation_receipts` and `my_adhkar_conflicts`, as in 0016.
-- **RPCs**: `apply_my_adhkar_group_change_v1`, `apply_my_adhkar_item_change_v1` (with `group_ids`) and `apply_my_adhkar_count_change_v1` (contracts/adhkar-qiyam-sync.md).
+- **RPCs**: `apply_my_adhkar_group_change_v1` and `apply_my_adhkar_item_change_v1` (with `group_ids`) (contracts/adhkar-qiyam-sync.md).
 - Same RLS and grants as 0016. There is no XP write anywhere in 0017.
 
 ## Derived and memory-only values
@@ -207,9 +193,8 @@ v11 is not released yet (it exists only on the 009 branch), so the groups tables
 - **Adhkar item:** count k → k+1 when k < target and the period is countable; any k → 0 on reset. There is no transition driven by a timer, and the day change never writes rows.
 - **Adhkar set:** complete whenever every item in the list for that day and catalog version is at its target. The award is inserted on the first completion and is permanent.
 - **Qiyam night:** not recorded → performed or not performed. Either can switch to the other, and details can change while the night is current. Earlier nights are frozen in the UI. The award is inserted on the first `performed = true` and is permanent.
-- **My Adhkar group:** absent → live → deleted. Live groups can be renamed any number of times. Deleted is final, and it deletes every item left with no live group.
-- **My dhikr item:** absent → live → deleted. Live items can be edited any number of times, including their group set (never empty). Deleted is final.
-- **My dhikr count:** the same transitions as an Adhkar item, with no award.
+- **My Adhkar group:** absent → live → deleted. Live groups can be renamed any number of times. Deleted is final, and it deletes every entry left with no live group.
+- **My Adhkar entry:** absent → live → deleted. Live entries can be edited any number of times, including their group set (never empty). Deleted is final.
 
 ## Migration integrity
 

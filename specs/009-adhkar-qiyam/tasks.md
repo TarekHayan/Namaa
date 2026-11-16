@@ -6,7 +6,7 @@
 
 **Tests**: Included. The constitution (VIII) and the spec require unit, widget, migration, SQL and device evidence.
 
-**Organization**: 102 tasks in 8 phases (Phase 6b added on 2026-11-15; My Adhkar groups T100–T102 added on 2026-11-16). Each task names its exact paths, the tasks it depends on, and a completion condition you can check.
+**Organization**: 102 tasks in 8 phases (Phase 6b added on 2026-11-15; My Adhkar reshape T100–T102 added on 2026-11-16). Each task names its exact paths, the tasks it depends on, and a completion condition you can check.
 
 ## Instructions for the implementing model
 
@@ -513,11 +513,11 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 
 ### User Story 5 — My Adhkar
 
-**Goal**: A third Adhkar tab where the user creates groups and adds, edits, deletes and counts their own adhkar inside them, synced, with no XP and no streak.
+**Goal**: A third Adhkar tab, «أذكاري», where the user builds a personal collection over time: named groups holding entries of text and an optional source, an entry possibly in several groups, synced, with no counter, no XP and no streak.
 
-**Independent test**: Spec Story 5: create a group offline, add a dhikr with target 33, count it, restart, edit it, add it to a second group, delete the first group; then create a group and a dhikr on device A and confirm them on device B.
+**Independent test**: Spec Story 5: offline, create a group, save a supplication with a source link, restart, edit it, add it to a second group, delete the first group; then create a group and an entry on device A and confirm them on device B.
 
-**Groups (owner decision, 2026-11-16).** T083–T090 were built before the groups decision. T100–T102 add the groups to the same local core (schema v11 is unreleased, so it changes in place, with no v12). T091–T099 include the groups.
+**Reshape (owner decisions, 2026-11-16).** T083–T090 were built for the first shape (target, note, daily counter). The owner then chose groups, and a collection with no counter: each entry is the text and an optional free-text source, and a link is never opened. T100–T102 reshape the same local core (schema v11 is unreleased, so it changes in place, with no v12): they add groups and remove the target, the note, the counter, the count table, the count IDs, the clamp, the day guard and the locked state. T091–T099 follow the new shape.
 
 - [x] T083 [P] [US5] Write tests in test/unit/features/adhkar/domain/my_dhikr_test.dart: text trimmed and 1–1000 characters, target 1–1000 (default 1), note ≤ 300, the 100-item limit, the target-lowering clamp, and that a deleted item stays deleted.
   - **Depends**: none.
@@ -543,40 +543,48 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [x] T090 [US5] Implement lib/features/adhkar/application/my_adhkar_commands.dart.
   - **Depends**: T089, T088.
   - **Done**: T089 passes, and test/architecture/adhkar_qiyam_boundaries_test.dart gains a rule (with a negative control) that no `my_adhkar_*` file imports lib/features/xp/.
-- [ ] T100 [P] [US5] Groups domain and identity, test-first: extend test/unit/features/adhkar/domain/my_dhikr_test.dart and lib/features/adhkar/domain/my_dhikr.dart with `MyAdhkarGroup` (name 1–60 code points after trimming, 30 live groups, tombstone final) and the draft's non-empty `groupIds`; switch every text, note and name length to code points (`runes.length`); add `newGroupId()` (UUIDv4) to `MyAdhkarIdentityPort`.
+- [ ] T100 [US5] Reshape the domain and identity, test-first (spec FR-022…FR-029, data-model.md "My Adhkar"):
+  - In lib/features/adhkar/domain/my_dhikr.dart and its test: the entry has `text` (1–2000 code points after trimming) and `source` (optional, ≤ 500 code points after trimming, blank stored as null) and a non-empty `groupIds`; add `MyAdhkarGroup` (name 1–60 code points after trimming, tombstone final); limits 1000 live entries and 100 live groups.
+  - Remove `target`, `note`, the count rules and the clamp. Count every length with `runes.length`.
+  - `MyAdhkarIdentityPort`: `newItemId()` and `newGroupId()` (UUIDv4). Remove `countRecordId` and the `my-adhkar/` vectors from test/fixtures/adhkar_qiyam/identity_vectors.json and my_adhkar_identity_test.dart.
   - **Depends**: T084, T085.
-  - **Done**: The new tests fail first, then pass; a supplementary-plane character counts as one.
-- [ ] T101 [US5] Groups storage in schema v11, test-first: add `my_adhkar_groups` and `my_adhkar_item_groups` with their indexes (data-model.md) to lib/core/data/local/foundation_database.dart, regenerate, and extend the v10→v11 migration test and test/unit/features/adhkar/data/drift_my_adhkar_repository_test.dart: group create, rename and delete; the delete cascade (an item only in that group is deleted, an item also in a live group stays); membership written with the item in one transaction, `added_at` kept for a kept group; `watchGroups` and `watchGroupItems` order; outbox type `my_adhkar_group`; owner isolation.
+  - **Done**: The new tests fail first, then pass; a supplementary-plane character counts as one; no count code is left in the domain.
+- [ ] T101 [US5] Reshape storage in schema v11, test-first: in lib/core/data/local/foundation_database.dart, `my_adhkar_items` gets `source` and loses `target` and `note`; drop `my_adhkar_counts`; add `my_adhkar_groups` and `my_adhkar_item_groups` with their indexes (data-model.md); regenerate. Update the v10→v11 migration test and test/unit/features/adhkar/data/drift_my_adhkar_repository_test.dart:
+  - group create, rename and delete; the delete cascade (an entry only in that group is deleted, an entry also in a live group stays); the group delete appends exactly ONE outbox entry;
+  - membership written with the entry in one transaction, `added_at` kept for a kept group;
+  - `watchGroups` (with entry counts) and `watchGroupItems` order;
+  - the edit guarded on `deleted_at IS NULL` and the prior `updated_at`;
+  - outbox types `my_adhkar_group` and `my_adhkar_item` only; owner isolation; no `xp_awards` row.
   - **Depends**: T086, T088, T100.
-  - **Done**: The tests pass, and the group delete appends exactly one outbox entry.
-- [ ] T102 [US5] Group commands, test-first: extend my_adhkar_commands.dart and its tests with `CreateMyAdhkarGroup`, `RenameMyAdhkarGroup`, `DeleteMyAdhkarGroup` and `previewDeleteMyAdhkarGroup`, and the group set in `AddMyDhikr` and `EditMyDhikr` (`groupDeleted`, `groupLimitReached`, empty set rejected).
+  - **Done**: The tests pass, and nothing references `my_adhkar_counts` or `my_adhkar_count`.
+- [ ] T102 [US5] Reshape the commands, test-first: my_adhkar_commands.dart and its tests get `CreateMyAdhkarGroup`, `RenameMyAdhkarGroup`, `DeleteMyAdhkarGroup` and `previewDeleteMyAdhkarGroup`, and `AddMyDhikr`, `EditMyDhikr(owner, itemId, draft)` and `DeleteMyDhikr` with the group set (`groupDeleted`, `groupLimitReached`, `limitReached`, `itemDeleted`, empty set rejected). Remove `IncrementMyDhikr`, `ResetMyDhikr`, the day guard, the locked state and the dependency on the Adhkar times port. Edit reads, checks and writes in one transaction; delete uses a monotonic `updated_at`.
   - **Depends**: T090, T101.
   - **Done**: The tests pass, and the architecture no-XP rule still passes.
-- [ ] T091 [US5] Write supabase/migrations/0017_my_adhkar.sql (tables including `my_adhkar_groups` and `my_adhkar_item_groups`, receipts, conflicts, `apply_my_adhkar_group_change_v1`, receipts, conflicts, `apply_my_adhkar_item_change_v1`, `apply_my_adhkar_count_change_v1`, the identity helper, RLS and grants, per contracts/adhkar-qiyam-sync.md) and pgTAP tests supabase/tests/my_adhkar_account_isolation_test.sql, my_adhkar_operation_integrity_test.sql and my_adhkar_conflict_integrity_test.sql.
-  - **Depends**: T085, T100.
-  - **Done**: `supabase test db` passes on the local stack, including both limits, the final delete against older and newer edits, the group delete cascade, `item_deleted`, `group_deleted`, `group_missing`, the identity vectors, and zero `xp_awards` rows. Nothing is pushed to staging.
-- [ ] T092 [P] [US5] Write tests in test/unit/features/adhkar/data/supabase_my_adhkar_sync_adapter_test.dart for the three entity types (group, item with `group_ids`, count), dispatched in that order: argument mapping, outcome mapping, finalization in one transaction before ACK, `item_deleted` treated as acknowledged with the local count discarded, `group_deleted` applied as the item's deletion, `group_missing` left pending, failures left pending, and an old response never overwriting newer local work.
+- [ ] T091 [US5] Write supabase/migrations/0017_my_adhkar.sql (`my_adhkar_groups`, `my_adhkar_items`, `my_adhkar_item_groups`, receipts, conflicts, `apply_my_adhkar_group_change_v1`, `apply_my_adhkar_item_change_v1` with `p_group_ids`, the server-side group delete cascade, RLS and grants, per contracts/adhkar-qiyam-sync.md; no count table or RPC) and pgTAP tests supabase/tests/my_adhkar_account_isolation_test.sql, my_adhkar_operation_integrity_test.sql and my_adhkar_conflict_integrity_test.sql.
+  - **Depends**: T100.
+  - **Done**: `supabase test db` passes on the local stack, including both limits, code-point lengths, the final delete against older and newer edits, the group delete cascade, `group_deleted`, `group_missing`, and zero `xp_awards` rows. Nothing is pushed to staging.
+- [ ] T092 [P] [US5] Write tests in test/unit/features/adhkar/data/supabase_my_adhkar_sync_adapter_test.dart for the two entity types (group, then entry with `group_ids`): argument mapping, outcome mapping, finalization in one transaction before ACK, `group_deleted` applied as the entry's deletion, `group_missing` left pending, failures left pending, and an old response never overwriting newer local work.
   - **Depends**: T091, T101.
   - **Done**: They fail before T093.
-- [ ] T093 [US5] Implement lib/features/adhkar/data/supabase_my_adhkar_gateway.dart and supabase_my_adhkar_sync_adapter.dart, and register `my_adhkar_group`, `my_adhkar_item` and `my_adhkar_count` in `EntityDispatchRouter` through composition.
+- [ ] T093 [US5] Implement lib/features/adhkar/data/supabase_my_adhkar_gateway.dart and supabase_my_adhkar_sync_adapter.dart, and register `my_adhkar_group` and `my_adhkar_item` in `EntityDispatchRouter` through composition, groups dispatched first.
   - **Depends**: T092.
   - **Done**: T092 passes; the existing router tests are unchanged.
-- [ ] T094 [P] [US5] Write tests in test/unit/features/adhkar/data/my_adhkar_inbound_test.dart: keyset pages for groups, items (with their group sets), counts and conflicts; a server group-delete cascade applied locally; a failed page retried without advancing; the owner validated; tombstones applied; pending local work kept.
+- [ ] T094 [P] [US5] Write tests in test/unit/features/adhkar/data/my_adhkar_inbound_test.dart: keyset pages for groups, entries (with their group sets) and conflicts; a server group-delete cascade applied locally; a failed page retried without advancing; the owner validated; tombstones applied; pending local work kept.
   - **Depends**: T093.
   - **Done**: They fail before T095.
 - [ ] T095 [US5] Implement the My Adhkar reader and reconciler, and run them inside `AdhkarSyncService` / `AdhkarInboundSynchronizer`, so a failure stays isolated as in Phase 6.
   - **Depends**: T094.
   - **Done**: T094 passes, and the Phase 6 isolation test still passes.
-- [ ] T096 [P] [US5] Write tests in test/unit/features/adhkar/presentation/my_adhkar_cubit_test.dart, then implement the My Adhkar state (a `MyAdhkarCubit` composed beside `AdhkarCubit`, or a part of it): load the groups, open and close a group, create, rename and delete a group (with the preview count), add, edit (including the group set), delete, count, reset, the day change, the locked state, owner change, and no celebration or streak change.
+- [ ] T096 [P] [US5] Write tests in test/unit/features/adhkar/presentation/my_adhkar_cubit_test.dart, then implement `MyAdhkarCubit`, composed beside `AdhkarCubit`: load the groups, open and close a group, create, rename and delete a group (with the preview count), add, edit (including the group set) and delete an entry, the limits, owner change, and no celebration or streak change. It works the same when the Prayer schedule is unavailable.
   - **Depends**: T102.
   - **Done**: The tests pass.
-- [ ] T097 [US5] Build the My Adhkar tab per contracts/adhkar-qiyam-ui.md (third segment, header note, group list, create/rename sheet, in-page group delete confirmation with the count, opened group with its back control, empty states, cards with their other groups, overflow menu, add/edit sheet with the group chips, in-page delete confirmation, locked state), with the strings added to app_ar.arb and app_en.arb line by line. Write test/widget/features/adhkar/my_adhkar_tab_test.dart: AR/EN, light/dark, 320 px, 200% text scale, mixed-direction text, the 100-item and 30-group states, device back from an opened group, and the validation errors.
+- [ ] T097 [US5] Build the My Adhkar tab per contracts/adhkar-qiyam-ui.md (third segment, header note, group list, create/rename sheet, in-page group delete confirmation with the count, opened group with its back control, empty states, entry cards with selectable text and source and their other groups, overflow menu with Edit, Copy and Delete, the two-field add/edit sheet with the group chips, in-page delete confirmation; no counter and no locked state), with the strings added to app_ar.arb and app_en.arb line by line. Write test/widget/features/adhkar/my_adhkar_tab_test.dart: AR/EN, light/dark, 320 px, 200% text scale, mixed-direction text, a link source shown as plain text, an entry with no source, the 1000-entry and 100-group states, device back from an opened group, and the validation errors.
   - **Depends**: T096.
-  - **Done**: The widget tests pass with no overflow.
-- [ ] T098 [US5] Add My Adhkar conflicts to the Adhkar "Sync differences" list (both versions, long text shortened, no resolve action), with a widget test in test/widget/features/adhkar/adhkar_conflicts_test.dart.
+  - **Done**: The widget tests pass with no overflow, and no URL-launching package is added.
+- [ ] T098 [US5] Add My Adhkar conflicts (groups and entries) to the Adhkar "Sync differences" list (both versions, long text shortened, no resolve action), with a widget test in test/widget/features/adhkar/adhkar_conflicts_test.dart.
   - **Depends**: T095.
   - **Done**: The test shows both versions and no foreign-owner data.
-- [ ] T099 [US5] Extend integration_test/adhkar_qiyam_offline_sync_test.dart with My Adhkar on the local stack: both devices create groups and add items, one item in two groups, a group deleted on A while B adds to it offline (B's version kept as a conflict, an item in another group kept), a concurrent edit gives one visible conflict, a delete stays final against a newer edit, a count of a deleted item is discarded, owner B is isolated, and no `xp_awards` row is written.
+- [ ] T099 [US5] Extend integration_test/adhkar_qiyam_offline_sync_test.dart with My Adhkar on the local stack: both devices create groups and add entries, one entry in two groups, a group deleted on A while B adds to it offline (B's version kept as a conflict, an entry in another group kept), a concurrent edit gives one visible conflict, a delete stays final against a newer edit, owner B is isolated, and no `xp_awards` row is written.
   - **Depends**: T093, T095.
   - **Done**: It passes on Windows against the local stack, run twice without a reset.
 

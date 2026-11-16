@@ -98,39 +98,30 @@ The catalog table is read once per catalog version and cached.
 
 | Parameter | Type / rule |
 |---|---|
-| p_item_id | uuid; the item's stable ID. |
-| p_text | text; 1–1000 characters after trimming. |
-| p_target | integer; 1–1000. |
-| p_note | text or null; ≤ 300 characters. |
+| p_item_id | uuid; the entry's stable ID. |
+| p_text | text; 1–2000 code points after trimming. |
+| p_source | text or null; ≤ 500 code points after trimming; blank is stored as null. |
 | p_group_ids | uuid[]; non-empty, no duplicates, each a group of the caller. |
 | p_created_at | UTC; set by the first version, immutable afterwards. |
 | p_deleted | boolean; true marks the delete. |
-| p_updated_at, p_base_updated_at, p_operation_id | As above, without the day window (an item has no day). `p_updated_at` is rejected if it is more than 2 days after the server's current UTC time. |
+| p_updated_at, p_base_updated_at, p_operation_id | As above, without the day window (an entry has no day). `p_updated_at` is rejected if it is more than 2 days after the server's current UTC time. |
 
-### `apply_my_adhkar_count_change_v1`
-
-| Parameter | Type / rule |
-|---|---|
-| p_item_id | uuid; must be an item of the caller. |
-| p_adhkar_day | date; the same two-days-ahead limit and `[day − 1 day, day + 2 days)` window for `p_updated_at` as Adhkar counts. |
-| p_count | integer; 0–1000. |
-| p_updated_at, p_base_updated_at, p_operation_id | As above. |
+There is no count RPC: My Adhkar has no counter (owner, 2026-11-16).
 
 ### Rules that differ from 0016
 
-- **Limits.** An item create is rejected with `limit_reached` when the caller already has 100 live items; a group create, when the caller already has 30 live groups.
+- **Limits.** An entry create is rejected with `limit_reached` when the caller already has 1000 live entries; a group create, when the caller already has 100 live groups.
 - **Lengths** are counted in code points (`char_length` on the trimmed text), matching the client.
 - **Group delete cascade.** In the same transaction as a group's delete, the server removes the group from every live item's membership and deletes every live item left with no live group. Each affected item gets a new server `updated_at`, so other devices pull it. A deleted group stays deleted; a later rename, newer or older, is kept as a conflict.
 - **Item groups.** On an item change, deleted groups are dropped from `p_group_ids`. If none is left, the item is deleted, the submitted version is kept as a conflict, and the outcome is `group_deleted`. A group the server does not know yet returns the retryable failure `group_missing`; the change stays pending (the client dispatches group operations first, so this only happens after a reorder or a partial pass).
 - **Delete is final.** Once an item has `deleted = true`, the server keeps it deleted. A later change to the item, newer or older, is not applied; it is kept as a conflict, and the response's active record is the deleted version.
-- **Counts of a deleted or unknown item.** The RPC returns the outcome `item_deleted` with no row written. The client treats it as acknowledged and discards the local count.
 - **No award.** Neither RPC reads or writes `xp_awards`.
 - **Descriptors** for the equal-timestamp tie are in data-model.md.
 
 ### Local finalization and inbound
 
-- Register `my_adhkar_group`, `my_adhkar_item` and `my_adhkar_count` in `EntityDispatchRouter` through composition, dispatched in that order, with the same one-transaction finalization before `DispatchAcknowledged`.
-- The inbound reader pages `my_adhkar_groups` by `group_id`, `my_adhkar_items` (with their group sets) by `item_id`, `my_adhkar_counts` by `record_id`, and `my_adhkar_conflicts` by `conflict_id`, owner-scoped, restarting each pass as in 008. It runs in the Adhkar sync service, so a failure stays isolated from the other domains.
+- Register `my_adhkar_group` and `my_adhkar_item` in `EntityDispatchRouter` through composition, groups dispatched first, with the same one-transaction finalization before `DispatchAcknowledged`.
+- The inbound reader pages `my_adhkar_groups` by `group_id`, `my_adhkar_items` (with their group sets) by `item_id`, and `my_adhkar_conflicts` by `conflict_id`, owner-scoped, restarting each pass as in 008. It runs in the Adhkar sync service, so a failure stays isolated from the other domains.
 
 ## Required proofs (pgTAP and integration)
 
@@ -142,4 +133,4 @@ The catalog table is read once per catalog version and cached.
 - **Qiyam award.** Yes, then No, then Yes gives one 30 XP award. Two devices racing on their first Yes give one award.
 - **Replay safety.** An exact replay, a changed-content operation-ID collision, a lost ACK, a restart, a duplicate inbound record and a stale receipt against a newer descendant are all handled.
 - **Isolation.** Existing Task and Prayer awards stay readable and unchanged. A fresh third device sees the retained conflicts. No state leaks after an owner change.
-- **My Adhkar.** Access control and malformed input (blank text, text over 1000, target 0 or over 1000, note over 300, blank or over-60 group name, empty or foreign `p_group_ids`); the 100-item and 30-group limits; the group delete cascade (an item only in that group is deleted, an item also in a live group stays there); `group_deleted` and `group_missing`; the count-ID helper matching test/fixtures/adhkar_qiyam/identity_vectors.json; a delete that stays final against older and newer edits; `item_deleted` for a count of a deleted item; newest-wins with one stable conflict for concurrent edits; and zero rows written to `xp_awards`.
+- **My Adhkar.** Access control and malformed input (blank text, text over 2000, source over 500, blank or over-60 group name, empty or foreign `p_group_ids`); the 1000-entry and 100-group limits; the group delete cascade (an entry only in that group is deleted, an entry also in a live group stays there); `group_deleted` and `group_missing`; a delete that stays final against older and newer edits; newest-wins with one stable conflict for concurrent edits; and zero rows written to `xp_awards`.
