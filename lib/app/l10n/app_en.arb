@@ -552,6 +552,7 @@
     "placeholders": {"days": {"type": "int"}}
   },
   "adhkarSetComplete": "Set complete! +15 XP",
+  "quranAttribution": "Quran text and font: King Fahd Glorious Quran Printing Complex (KFGQPC), Madinah Mushaf, Hafs — provided through the Quran Foundation.",
   "adhkarContentUnavailable": "The Adhkar content could not be loaded.",
   "adhkarCountingLocked": "The times are unavailable; counting is paused until they return.",
   "adhkarOpenPrayerSetup": "Set up Prayer location",

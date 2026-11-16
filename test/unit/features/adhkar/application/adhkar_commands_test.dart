@@ -244,18 +244,17 @@ final class FakeCatalog implements AdhkarCatalogPort {
       AppResult.success(
         AdhkarCatalog.fromJson(const {
           'catalog_version': 1,
+          'attribution': 'test attribution line',
           'items': [
             {
               'item_id': 'm1',
               'list': 'morning',
               'position': 1,
               'target': 1,
+              'kind': 'dhikr',
               'text_ar': 'test m1',
-              'translation_en': 'test m1',
               'virtue_ar': 'test virtue m1',
-              'virtue_en': 'test virtue m1',
               'reference_ar': 'test ref m1',
-              'reference_en': 'test ref m1',
               'approved': true,
             },
             {
@@ -263,12 +262,10 @@ final class FakeCatalog implements AdhkarCatalogPort {
               'list': 'morning',
               'position': 2,
               'target': 3,
+              'kind': 'dhikr',
               'text_ar': 'test m2',
-              'translation_en': 'test m2',
               'virtue_ar': 'test virtue m2',
-              'virtue_en': 'test virtue m2',
               'reference_ar': 'test ref m2',
-              'reference_en': 'test ref m2',
               'approved': true,
             },
             {
@@ -276,12 +273,10 @@ final class FakeCatalog implements AdhkarCatalogPort {
               'list': 'evening',
               'position': 1,
               'target': 1,
+              'kind': 'dhikr',
               'text_ar': 'test e1',
-              'translation_en': 'test e1',
               'virtue_ar': 'test virtue e1',
-              'virtue_en': 'test virtue e1',
               'reference_ar': 'test ref e1',
-              'reference_en': 'test ref e1',
               'approved': true,
             },
           ],

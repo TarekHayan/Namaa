@@ -25,6 +25,8 @@ const _tables = <String>[
   'prayer_reports',
   'adhkar_item_counts',
   'qiyam_nights',
+  'my_adhkar_items',
+  'my_adhkar_counts',
 ];
 
 final _fixtures =
@@ -157,7 +159,7 @@ void main() {
       ''');
         await db.close();
         db = await FoundationDatabase.openEncrypted(path: path, key: key);
-        expect(db.schemaVersion, 10);
+        expect(db.schemaVersion, 11);
         expect(
           await db.rawScalar(
             "SELECT report_id FROM prayer_reports WHERE account_id='owner'",
@@ -177,14 +179,14 @@ void main() {
       }
     },
   );
-  test('fresh v10 has Prayer tables and no Task completion_xp', () async {
+  test('fresh v11 has Prayer tables and no Task completion_xp', () async {
     final temp = TemporaryDatabasePath();
     final db = await FoundationDatabase.openEncrypted(
       path: temp.allocate(),
       key: key,
     );
     try {
-      expect(db.schemaVersion, 10);
+      expect(db.schemaVersion, 11);
       expect(
         await db.rawScalar(
           'SELECT count(*) FROM sqlite_master '
@@ -223,7 +225,7 @@ void main() {
           db = await _installed(path, key, version);
           await db.close();
           db = await FoundationDatabase.openEncrypted(path: path, key: key);
-          expect(await db.journalStatusFor(10), 'completed');
+          expect(await db.journalStatusFor(11), 'completed');
           expect(
             await db.rawScalar('SELECT value FROM foundation_preferences'),
             'ar',
@@ -363,7 +365,7 @@ void main() {
       );
       await db.close();
       db = await FoundationDatabase.openEncrypted(path: path, key: key);
-      expect(await db.journalStatusFor(10), 'completed');
+      expect(await db.journalStatusFor(11), 'completed');
     } finally {
       await db?.close();
       temp.dispose();

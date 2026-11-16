@@ -99,7 +99,7 @@ Other rules:
   - There is no app-bar back arrow. Device back returns to Home.
 - **Local DB.** It is an encrypted Drift/SQLite database,
   `lib/core/data/local/foundation_database.dart`, now at
-  `kFoundationSchemaVersion = 9`.
+  `kFoundationSchemaVersion = 11`.
   - Every schema change needs an automatic migration that keeps existing data,
     and a migration test.
   - Generated `*.g.dart` files are committed. Regenerate them with

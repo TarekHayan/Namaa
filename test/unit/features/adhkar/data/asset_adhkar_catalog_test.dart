@@ -48,18 +48,17 @@ void main() {
     () async {
       Future<String> loadInvalid(String path) async => jsonEncode({
         'catalog_version': 1,
+        'attribution': 'test attribution line',
         'items': [
           {
             'item_id': 'm1',
             'list': 'morning',
             'position': 1,
             'target': 0,
+            'kind': 'dhikr',
             'text_ar': 'x',
-            'translation_en': 'x',
             'virtue_ar': 'x',
-            'virtue_en': 'x',
             'reference_ar': 'x',
-            'reference_en': 'x',
             'approved': true,
           },
         ],

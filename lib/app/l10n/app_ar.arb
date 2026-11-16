@@ -549,6 +549,7 @@
     "placeholders": {"days": {"type": "int"}}
   },
   "adhkarSetComplete": "اكتملت الأذكار! +15 نقطة",
+  "quranAttribution": "نص القرآن والخط: مجمع الملك فهد لطباعة المصحف الشريف، مصحف المدينة، برواية حفص — من خلال مؤسسة القرآن.",
   "adhkarContentUnavailable": "تعذّر تحميل محتوى الأذكار.",
   "adhkarCountingLocked": "الأوقات غير متاحة الآن؛ العدّ متوقف حتى تعود الأوقات.",
   "adhkarOpenPrayerSetup": "إعداد موقع الصلاة",

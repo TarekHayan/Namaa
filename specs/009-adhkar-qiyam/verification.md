@@ -786,3 +786,118 @@ linux`:
    adhkar/supplication text (009, R8). No other asset added.
 
 Nothing else appeared in the audited paths; no stop condition triggered.
+
+## Phase 6b part A — T080, T081, T083–T090 (2026-11-16)
+
+### T080 — catalog revision (owner decisions D3/D4, data-model.md revised)
+
+`lib/features/adhkar/domain/adhkar_catalog.dart` now parses the Arabic-only
+shape: `translation_en`, `virtue_en`, `reference_en` and `source_en` are
+gone, `virtue_ar` is nullable, every item carries `kind` (`dhikr` | `quran`),
+a `quran` item requires `surah`, `ayah_from` and `ayah_to` (`from ≤ to`) and
+allows `preface_ar`, a `dhikr` item must carry no Quran fields, and the
+document requires a non-blank top-level `attribution`. The item card renders
+no English line in either language; a Quran item shows its preface apart
+from the verses, the verses in the Quran font, and `surah: from–to`.
+`QiyamSupplication` (both the catalog and Qiyam domain types) is Arabic-only
+and the supplications card drops its locale switch. Fixture and test
+catalogs updated with placeholder text only; an unapproved placeholder Quran
+item sits in the fixture so the shape exists without moving any pinned
+count. Tests: `adhkar_catalog_test.dart` (25), `asset_adhkar_catalog_test`,
+`catalog_seed_sync_test`, command/cubit/today-adapter/widget suites.
+
+### T081 — KFGQPC Uthmanic Hafs font
+
+- **Source (documented by the Quran Foundation):**
+  `https://api-docs.quran.foundation/docs/tutorials/fonts/font-rendering/`
+  ("Font Files & CDN → Unicode Fonts → QPC Hafs / Uthmanic Hafs") lists
+  `https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.ttf`
+  (a TrueType file — Flutter loads it directly; no conversion needed).
+- **File:** downloaded unmodified to
+  `assets/fonts/kfgqpc_hafs/UthmanicHafs1Ver18.ttf`; 242,368 bytes;
+  SHA-256 `a0636e68e375af9552470d67773936f54d536e6586ce2608311b2fe7f9cbec3a`;
+  TTF magic `00 01 00 00` verified.
+- **Registration:** family `KFGQPC HAFS` in `pubspec.yaml`; the verse text
+  renders with it (`kQuranFontFamily` in `dhikr_item_card.dart`).
+- **Bundling terms:** the same guide allows bundling with an active
+  Developer Console account (the owner's app `7b420fdd-d5bc-48e1-a96e-
+  d3094e1184f4`) and a reasonably accessible credit; the file ships only as
+  an integrated part of the app.
+- **Credit wording (shown as an `adhkar_attribution` footer line on the
+  Adhkar screen — the app has no separate credits/about surface, so the ARB
+  string `quranAttribution` is rendered where the catalog attribution
+  belongs):**
+  - EN: "Quran text and font: King Fahd Glorious Quran Printing Complex
+    (KFGQPC), Madinah Mushaf, Hafs — provided through the Quran
+    Foundation."
+  - AR: "نص القرآن والخط: مجمع الملك فهد لطباعة المصحف الشريف، مصحف
+    المدينة، برواية حفص — من خلال مؤسسة القرآن."
+- **Done proof:** the widget test in `adhkar_screen_test.dart` renders a
+  placeholder Quran item with the family (preface apart, verses in the
+  Quran font, `test surah: 255–255`) and asserts the attribution line.
+  The bundled copy should be revisited on new app releases, as the guide
+  recommends, since font files can receive corrections.
+
+### T083–T090 — My Adhkar local core (US5, FR-022…FR-027)
+
+Tests were written first and confirmed failing before each implementation.
+
+- **T083/T084** `my_dhikr.dart` (domain only): draft text 1–1000 after
+  trimming (stored trimmed), target 1–1000 default 1, note ≤ 300 with a
+  blank note normalized to null, `kMyDhikrItemLimit = 100` judging live
+  items only, the FR-025 clamp `clampMyDhikrCount`, and a stored item whose
+  `copyWith` cannot clear or move the `deletedAt` tombstone (18 tests).
+- **T085** `MyAdhkarIdentityPort` + `UuidMyAdhkarIdentity`: UUIDv4 item
+  IDs and `UUIDv5(NS009, 'my-adhkar/' + itemId + '/' + day)` count IDs.
+  Two new vectors in `identity_vectors.json`, computed with Python's
+  independent RFC 4122 implementation; the Dart adapter matches them, and
+  they are the same values migration 0017's SQL helper must reproduce
+  (`my_adhkar_identity_test.dart`, 4 tests).
+- **T086** schema v11 in `foundation_database.dart`: `my_adhkar_items` and
+  `my_adhkar_counts` with the data-model indexes (the item text column is
+  named `content` in Dart but `text` in SQL), `kFoundationSchemaVersion =
+  11`, regenerated code. Migration tests (`adhkar_qiyam_migration_test.dart`
+  extended; `prayer_migration_test.dart` and `habit_counter_migration_test.dart`
+  re-pinned): fresh v11 columns/indices/nullability, v10→v11 keeping real
+  Adhkar and Qiyam rows across a restart, v9/v8/v1–v7 upgrades, the hook
+  firing once per step (7→11 runs steps 8/9/10/11), and the v11
+  failure/recovery case (journal `failed` then `recovered`). 52 local-store
+  tests. AGENTS.md section 5 now says `kFoundationSchemaVersion = 11`.
+- **T087/T088** `MyAdhkarRepository` (application port) +
+  `DriftMyAdhkarRepository`: `watchItems` (live, oldest first),
+  `watchCounts`, `readFresh` (returns the tombstone row), `readCountFresh`,
+  `liveItemCount`, `runInTransaction` (a returned failure rolls everything
+  back), transactional `insertItem`/`updateItem`/`markDeleted` (delete is a
+  no-op on an already deleted item and never moves the tombstone) and
+  `commitCount` with the adhkar stale-version backstop. Tests prove: the
+  limit counts only live items, the clamp written in the SAME transaction
+  as the edit (and a failure after the count write rolls BOTH back), the
+  deleted item hidden from `watchItems`, outbox entity types
+  `my_adhkar_item`/`my_adhkar_count` with create/update kinds, payloads
+  without owner/list/XP fields, owner isolation, and zero `xp_awards` rows
+  (9 tests).
+- **T089/T090** `MyAdhkarCommands`: `add` (validation → limitReached →
+  added), `edit` (validation → itemDeleted → day guard when scheduled →
+  clamp in the same transaction; when the schedule is unavailable the edit
+  applies and the clamp is skipped because there is no "today" — the screen
+  shows min(count, target)), `delete` (tombstone, no-op on deleted),
+  `increment`/`reset` (the same day guard as IncrementDhikr, no period
+  check, locked when unavailable, `itemDeleted`, at-target no-op, reset
+  always persists the 0 row). No command references XP anywhere; the tests
+  assert `xp_awards` stays empty after every path (15 tests). The
+  architecture test gains rule 6 with negative controls: no `my_adhkar_*`
+  file imports `lib/features/xp/` in any layer (the reviewed-catalog set
+  award path in the non-My-Adhkar files stays legal).
+
+### Gates (2026-11-16, Windows host)
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (558 files, 0 changed) |
+| Analyze | `flutter analyze` | No issues found |
+| Focused suites | adhkar unit + composition + today adapter + local store + adhkar/qiyam widgets + boundaries | **260 passed** |
+| Full suite | `flutter test` | **1078 passed, 1 skipped, 0 failed** |
+
+The known-flaky `prayer_context_service_test.dart` "cached year wins…"
+did not fail in this run. `supabase test db` was not part of part A: the
+SQL side (0017 and its pgTAP tests) is T091 in part B.

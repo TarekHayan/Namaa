@@ -96,12 +96,14 @@ final class AdhkarScreen extends StatelessWidget {
                     itemId: item.itemId,
                     position: item.position,
                     target: item.target,
+                    isQuran: item.kind == DhikrKind.quran,
                     textAr: item.textAr,
-                    translationEn: item.translationEn,
                     virtueAr: item.virtueAr,
-                    virtueEn: item.virtueEn,
                     referenceAr: item.referenceAr,
-                    referenceEn: item.referenceEn,
+                    surah: item.surah,
+                    ayahFrom: item.ayahFrom,
+                    ayahTo: item.ayahTo,
+                    prefaceAr: item.prefaceAr,
                     count: state.countOf(item.itemId),
                     status: state.itemStatus[item.itemId],
                     countable: morning
@@ -110,6 +112,18 @@ final class AdhkarScreen extends StatelessWidget {
                     onCount: () =>
                         cubit.increment(item.itemId, clock?.day ?? ''),
                     onReset: () => cubit.reset(item.itemId, clock?.day ?? ''),
+                  ),
+                ),
+              if (items.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    copy.quranAttribution,
+                    key: const Key('adhkar_attribution'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
             ],

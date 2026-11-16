@@ -415,13 +415,11 @@ final class FakeSupplications implements QiyamSupplicationsPort {
       id: 's1',
       textAr: 'test supplication s1',
       sourceAr: 'test source s1',
-      sourceEn: 'test source s1',
     ),
     QiyamSupplication(
       id: 's2',
       textAr: 'test supplication s2',
       sourceAr: 'test source s2',
-      sourceEn: 'test source s2',
     ),
   ]);
 }

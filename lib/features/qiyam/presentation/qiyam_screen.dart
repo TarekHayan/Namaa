@@ -74,7 +74,6 @@ final class QiyamScreen extends StatelessWidget {
                 QiyamSupplicationsCard(
                   copy: copy,
                   supplications: state.supplications,
-                  locale: locale,
                 ),
               ],
             );

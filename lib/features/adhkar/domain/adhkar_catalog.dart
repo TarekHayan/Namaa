@@ -4,9 +4,12 @@
 /// Content comes from `assets/religious/adhkar_catalog_v1.json`, whose texts
 /// are approved by the product owner through
 /// specs/009-adhkar-qiyam/content-sources.md. This model validates the
-/// document on load (data-model.md): unique IDs, unique positions per list,
-/// targets >= 1, non-blank texts and references, and known lists. Items the
-/// owner has not marked approved are excluded before validation.
+/// document on load (data-model.md, revised 2026-11-15): unique IDs, unique
+/// positions per list, targets >= 1, non-blank Arabic texts and references,
+/// known lists, a `kind` per item, the Quran fields exactly when
+/// `kind = quran`, and a top-level attribution. Items the owner has not
+/// marked approved are excluded before validation. There is no English
+/// content field (owner decision D3).
 ///
 /// Validation failures throw [ArgumentError]; the loading adapter turns them
 /// into a recoverable "content unavailable" state.
@@ -15,32 +18,50 @@ library;
 /// The two fixed Adhkar lists.
 enum AdhkarList { morning, evening }
 
+/// Whether an item is a plain dhikr or a Quran passage.
+enum DhikrKind { dhikr, quran }
+
 /// One adhkar entry: stable identity, ordered position, target count and
-/// reviewed Arabic/English content.
+/// reviewed Arabic content. A [DhikrKind.quran] item additionally carries
+/// its surah, verse range and optional preface; a [DhikrKind.dhikr] item
+/// never does.
 final class DhikrItem {
   const DhikrItem({
     required this.itemId,
     required this.list,
     required this.position,
     required this.target,
+    required this.kind,
     required this.textAr,
-    required this.translationEn,
     required this.virtueAr,
-    required this.virtueEn,
     required this.referenceAr,
-    required this.referenceEn,
+    required this.surah,
+    required this.ayahFrom,
+    required this.ayahTo,
+    required this.prefaceAr,
   });
 
   final String itemId;
   final AdhkarList list;
   final int position;
   final int target;
+  final DhikrKind kind;
   final String textAr;
-  final String translationEn;
-  final String virtueAr;
-  final String virtueEn;
+
+  /// The optional virtue text in Arabic; null when the source review has
+  /// none for this item.
+  final String? virtueAr;
+
   final String referenceAr;
-  final String referenceEn;
+
+  /// Quran fields: non-null exactly for a [DhikrKind.quran] item.
+  final String? surah;
+  final int? ayahFrom;
+  final int? ayahTo;
+
+  /// An optional preface shown apart from the verse text (for example the
+  /// isti'adha), Arabic only.
+  final String? prefaceAr;
 
   @override
   bool operator ==(Object other) =>
@@ -56,13 +77,11 @@ final class QiyamSupplication {
     required this.id,
     required this.textAr,
     required this.sourceAr,
-    required this.sourceEn,
   });
 
   final String id;
   final String textAr;
   final String sourceAr;
-  final String sourceEn;
 
   @override
   bool operator ==(Object other) =>
@@ -76,6 +95,7 @@ final class QiyamSupplication {
 final class AdhkarCatalog {
   const AdhkarCatalog._({
     required this.version,
+    required this.attribution,
     required this.items,
     required this.qiyamSupplications,
   });
@@ -89,6 +109,7 @@ final class AdhkarCatalog {
     if (versionJson is! int || versionJson < 1) {
       throw ArgumentError.value(versionJson, 'catalog_version');
     }
+    final attribution = _nonBlank(json['attribution'], 'attribution');
     final itemsJson = json['items'];
     if (itemsJson is! List<Object?>) {
       throw ArgumentError.value(itemsJson, 'items');
@@ -154,6 +175,7 @@ final class AdhkarCatalog {
 
     return AdhkarCatalog._(
       version: versionJson,
+      attribution: attribution,
       items: List.unmodifiable(orderedItems),
       qiyamSupplications: List.unmodifiable(supplications.values),
     );
@@ -179,20 +201,69 @@ final class AdhkarCatalog {
     if (target is! int || target < 1) {
       throw ArgumentError.value(target, 'items[].target');
     }
+    final kindJson = _nonBlank(entry['kind'], 'items[].kind');
+    final DhikrKind kind;
+    switch (kindJson) {
+      case 'dhikr':
+        kind = DhikrKind.dhikr;
+      case 'quran':
+        kind = DhikrKind.quran;
+      default:
+        throw ArgumentError.value(kindJson, 'items[].kind', 'unknown kind');
+    }
+    final textAr = _nonBlank(entry['text_ar'], 'items[].text_ar');
+    final virtueAr = _optionalText(entry['virtue_ar'], 'items[].virtue_ar');
+    final referenceAr = _nonBlank(
+      entry['reference_ar'],
+      'items[].reference_ar',
+    );
+
+    String? surah;
+    int? ayahFrom;
+    int? ayahTo;
+    String? prefaceAr;
+    if (kind == DhikrKind.quran) {
+      surah = _nonBlank(entry['surah'], 'items[].surah');
+      final fromJson = entry['ayah_from'];
+      final toJson = entry['ayah_to'];
+      if (fromJson is! int || fromJson < 1) {
+        throw ArgumentError.value(fromJson, 'items[].ayah_from');
+      }
+      if (toJson is! int || toJson < 1) {
+        throw ArgumentError.value(toJson, 'items[].ayah_to');
+      }
+      if (toJson < fromJson) {
+        throw ArgumentError.value(
+          toJson,
+          'items[].ayah_to',
+          'before ayah_from',
+        );
+      }
+      ayahFrom = fromJson;
+      ayahTo = toJson;
+      prefaceAr = _optionalText(entry['preface_ar'], 'items[].preface_ar');
+    } else {
+      // A dhikr item carries no Quran fields at all.
+      for (final field in ['surah', 'ayah_from', 'ayah_to', 'preface_ar']) {
+        if (entry[field] != null) {
+          throw ArgumentError.value(entry[field], 'items[].$field', 'on dhikr');
+        }
+      }
+    }
+
     return DhikrItem(
       itemId: itemId,
       list: list,
       position: position,
       target: target,
-      textAr: _nonBlank(entry['text_ar'], 'items[].text_ar'),
-      translationEn: _nonBlank(
-        entry['translation_en'],
-        'items[].translation_en',
-      ),
-      virtueAr: _nonBlank(entry['virtue_ar'], 'items[].virtue_ar'),
-      virtueEn: _nonBlank(entry['virtue_en'], 'items[].virtue_en'),
-      referenceAr: _nonBlank(entry['reference_ar'], 'items[].reference_ar'),
-      referenceEn: _nonBlank(entry['reference_en'], 'items[].reference_en'),
+      kind: kind,
+      textAr: textAr,
+      virtueAr: virtueAr,
+      referenceAr: referenceAr,
+      surah: surah,
+      ayahFrom: ayahFrom,
+      ayahTo: ayahTo,
+      prefaceAr: prefaceAr,
     );
   }
 
@@ -204,13 +275,10 @@ final class AdhkarCatalog {
         entry['source_ar'],
         'qiyam_supplications[].source_ar',
       ),
-      sourceEn: _nonBlank(
-        entry['source_en'],
-        'qiyam_supplications[].source_en',
-      ),
     );
   }
 
+  /// A required non-blank string field.
   static String _nonBlank(Object? value, String name) {
     if (value is! String || value.trim().isEmpty) {
       throw ArgumentError.value(value, name, 'blank');
@@ -218,7 +286,18 @@ final class AdhkarCatalog {
     return value;
   }
 
+  /// An optional field: either absent/null or a non-blank string.
+  static String? _optionalText(Object? value, String name) {
+    if (value == null) return null;
+    return _nonBlank(value, name);
+  }
+
   final int version;
+
+  /// The attribution line for the Quran text (KFGQPC Madinah Mushaf, Hafs,
+  /// through the Quran Foundation), shown wherever Quran content renders.
+  final String attribution;
+
   final List<DhikrItem> items;
   final List<QiyamSupplication> qiyamSupplications;
 

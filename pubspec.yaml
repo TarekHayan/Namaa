@@ -120,3 +120,11 @@ flutter:
     - family: Amiri
       fonts:
         - asset: assets/fonts/amiri/Amiri-Regular.ttf
+
+    # Quran verse font (009, T081): KFGQPC Uthmanic Hafs, taken unmodified
+    # from the Quran Foundation documented font URL and bundled with
+    # attribution per its font terms; see verification.md for the URL and
+    # SHA-256.
+    - family: KFGQPC HAFS
+      fonts:
+        - asset: assets/fonts/kfgqpc_hafs/UthmanicHafs1Ver18.ttf

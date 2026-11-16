@@ -12,20 +12,19 @@ import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 void main() {
   final catalog = AdhkarCatalog.fromJson(const {
     'catalog_version': 1,
+    'attribution': 'test attribution line',
     'items': <Map<String, Object?>>[],
     'qiyam_supplications': [
       {
         'id': 's1',
         'text_ar': 'test supplication s1',
         'source_ar': 'test source s1',
-        'source_en': 'test source s1',
         'approved': true,
       },
       {
         'id': 's2',
         'text_ar': 'test supplication s2',
         'source_ar': 'test source s2',
-        'source_en': 'test source s2',
         'approved': false,
       },
     ],
@@ -43,7 +42,6 @@ void main() {
       expect(supplications.single.id, 's1');
       expect(supplications.single.textAr, 'test supplication s1');
       expect(supplications.single.sourceAr, 'test source s1');
-      expect(supplications.single.sourceEn, 'test source s1');
     },
   );
 

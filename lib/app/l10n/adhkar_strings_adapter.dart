@@ -33,4 +33,5 @@ final class AdhkarStrings {
   String get contentUnavailable => copy.adhkarContentUnavailable;
   String get countingLocked => copy.adhkarCountingLocked;
   String get openPrayerSetup => copy.adhkarOpenPrayerSetup;
+  String get quranAttribution => copy.quranAttribution;
 }

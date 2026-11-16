@@ -496,14 +496,14 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 
 ### Catalog revision (owner decisions D3, D4, D6 and the Hisn al-Muslim additions)
 
-- [ ] T080 Revise the catalog model and parser in lib/features/adhkar/domain/adhkar_catalog.dart to the Arabic-only shape in data-model.md.
+- [x] T080 Revise the catalog model and parser in lib/features/adhkar/domain/adhkar_catalog.dart to the Arabic-only shape in data-model.md.
   - Remove `translation_en`, `virtue_en`, `reference_en` and `source_en`; make `virtue_ar` nullable.
   - Add `kind` (`dhikr` or `quran`); for `quran` require `surah`, `ayah_from` and `ayah_to`, and allow `preface_ar`. Add the top-level `attribution`.
   - Update every fixture and test that builds a catalog (adhkar_commands_test.dart, adhkar_qiyam_supplications_adapter_test.dart and the catalog tests), with placeholder text only.
   - Update the item card: no English translation line; a Quran item shows its preface apart from the verses, the verses in the Quran font (T081), and its surah and verse numbers.
   - **Depends**: none (code only).
   - **Done**: The catalog, command, adapter and Adhkar widget tests pass; no real religious text is added.
-- [ ] T081 Bundle the KFGQPC Uthmanic Hafs font at assets/fonts/kfgqpc_hafs/, taken unmodified from a Quran Foundation documented font URL, register the family in pubspec.yaml, add the Quran Foundation credit to the app's credits, and record the source URL, the SHA-256 and the credit wording in verification.md. If the only documented file is a web format Flutter cannot load (for example WOFF2), stop and report it instead of converting the file: converting is a modification the owner must approve.
+- [x] T081 Bundle the KFGQPC Uthmanic Hafs font at assets/fonts/kfgqpc_hafs/, taken unmodified from a Quran Foundation documented font URL, register the family in pubspec.yaml, add the Quran Foundation credit to the app's credits, and record the source URL, the SHA-256 and the credit wording in verification.md. If the only documented file is a web format Flutter cannot load (for example WOFF2), stop and report it instead of converting the file: converting is a modification the owner must approve.
   - **Depends**: none (owner decision 2026-11-16).
   - **Done**: A widget test renders a placeholder Quran item with the family, and the attribution shows in the app's credits.
 - [x] T082 The agent adds review entries to content-sources.md for every item the owner approves on the second review page: the Hisn al-Muslim additions, the Quran items (the KFGQPC QPC Hafs text verbatim, attribution, counts, placement, preface and basmala decisions) and the full s2 text. The owner confirms the final list.
@@ -517,28 +517,28 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 
 **Independent test**: Spec Story 5: add a dhikr with target 33 offline, count it, restart, edit, delete; then add on device A and confirm it on device B.
 
-- [ ] T083 [P] [US5] Write tests in test/unit/features/adhkar/domain/my_dhikr_test.dart: text trimmed and 1–1000 characters, target 1–1000 (default 1), note ≤ 300, the 100-item limit, the target-lowering clamp, and that a deleted item stays deleted.
+- [x] T083 [P] [US5] Write tests in test/unit/features/adhkar/domain/my_dhikr_test.dart: text trimmed and 1–1000 characters, target 1–1000 (default 1), note ≤ 300, the 100-item limit, the target-lowering clamp, and that a deleted item stays deleted.
   - **Depends**: none.
   - **Done**: They fail before T084.
-- [ ] T084 [US5] Implement lib/features/adhkar/domain/my_dhikr.dart (the item, its draft validation and the count rules).
+- [x] T084 [US5] Implement lib/features/adhkar/domain/my_dhikr.dart (the item, its draft validation and the count rules).
   - **Depends**: T083.
   - **Done**: T083 passes; the file imports domain code only.
-- [ ] T085 [P] [US5] Add `MyAdhkarIdentityPort` in lib/features/adhkar/application/ and its implementation in lib/features/adhkar/data/uuid_my_adhkar_identity.dart: UUIDv4 item IDs and `UUIDv5(NS009, 'my-adhkar/' + itemId + '/' + day)` count IDs. Extend test/fixtures/adhkar_qiyam/identity_vectors.json and add test/unit/features/adhkar/data/my_adhkar_identity_test.dart.
+- [x] T085 [P] [US5] Add `MyAdhkarIdentityPort` in lib/features/adhkar/application/ and its implementation in lib/features/adhkar/data/uuid_my_adhkar_identity.dart: UUIDv4 item IDs and `UUIDv5(NS009, 'my-adhkar/' + itemId + '/' + day)` count IDs. Extend test/fixtures/adhkar_qiyam/identity_vectors.json and add test/unit/features/adhkar/data/my_adhkar_identity_test.dart.
   - **Depends**: none.
   - **Done**: The count-ID vectors match the SQL helper added in T091.
-- [ ] T086 [US5] Local schema v11 in lib/core/data/local/foundation_database.dart: the `my_adhkar_items` and `my_adhkar_counts` tables and indexes from data-model.md, an additive v10→v11 migration, `kFoundationSchemaVersion = 11`, regenerated code, and migration tests (fresh v11, v10→v11 keeping Adhkar and Qiyam rows, every older path, and the failure/recovery case).
+- [x] T086 [US5] Local schema v11 in lib/core/data/local/foundation_database.dart: the `my_adhkar_items` and `my_adhkar_counts` tables and indexes from data-model.md, an additive v10→v11 migration, `kFoundationSchemaVersion = 11`, regenerated code, and migration tests (fresh v11, v10→v11 keeping Adhkar and Qiyam rows, every older path, and the failure/recovery case).
   - **Depends**: none.
   - **Done**: The migration tests pass, and AGENTS.md's schema number is updated in the same change.
-- [ ] T087 [P] [US5] Write tests in test/unit/features/adhkar/data/drift_my_adhkar_repository_test.dart: add, edit, delete, increment and reset; the limit; the clamp written in the same transaction as the edit; a deleted item hidden from `watchItems`; outbox entries of type `my_adhkar_item` and `my_adhkar_count`; owner isolation; and no `xp_awards` row ever written.
+- [x] T087 [P] [US5] Write tests in test/unit/features/adhkar/data/drift_my_adhkar_repository_test.dart: add, edit, delete, increment and reset; the limit; the clamp written in the same transaction as the edit; a deleted item hidden from `watchItems`; outbox entries of type `my_adhkar_item` and `my_adhkar_count`; owner isolation; and no `xp_awards` row ever written.
   - **Depends**: T084, T086.
   - **Done**: They fail before T088.
-- [ ] T088 [US5] Implement lib/features/adhkar/application/my_adhkar_repository.dart and lib/features/adhkar/data/drift_my_adhkar_repository.dart.
+- [x] T088 [US5] Implement lib/features/adhkar/application/my_adhkar_repository.dart and lib/features/adhkar/data/drift_my_adhkar_repository.dart.
   - **Depends**: T087.
   - **Done**: T087 passes.
-- [ ] T089 [P] [US5] Write tests in test/unit/features/adhkar/application/my_adhkar_commands_test.dart: `AddMyDhikr`, `EditMyDhikr`, `DeleteMyDhikr`, `IncrementMyDhikr` and `ResetMyDhikr`, covering the day guard, the locked state, `itemDeleted`, `limitReached`, validation failures, and that no command touches the XP ledger.
+- [x] T089 [P] [US5] Write tests in test/unit/features/adhkar/application/my_adhkar_commands_test.dart: `AddMyDhikr`, `EditMyDhikr`, `DeleteMyDhikr`, `IncrementMyDhikr` and `ResetMyDhikr`, covering the day guard, the locked state, `itemDeleted`, `limitReached`, validation failures, and that no command touches the XP ledger.
   - **Depends**: T084, T085.
   - **Done**: They fail before T090.
-- [ ] T090 [US5] Implement lib/features/adhkar/application/my_adhkar_commands.dart.
+- [x] T090 [US5] Implement lib/features/adhkar/application/my_adhkar_commands.dart.
   - **Depends**: T089, T088.
   - **Done**: T089 passes, and test/architecture/adhkar_qiyam_boundaries_test.dart gains a rule (with a negative control) that no `my_adhkar_*` file imports lib/features/xp/.
 - [ ] T091 [US5] Write supabase/migrations/0017_my_adhkar.sql (tables, receipts, conflicts, `apply_my_adhkar_item_change_v1`, `apply_my_adhkar_count_change_v1`, the identity helper, RLS and grants, per contracts/adhkar-qiyam-sync.md) and pgTAP tests supabase/tests/my_adhkar_account_isolation_test.sql, my_adhkar_operation_integrity_test.sql and my_adhkar_conflict_integrity_test.sql.

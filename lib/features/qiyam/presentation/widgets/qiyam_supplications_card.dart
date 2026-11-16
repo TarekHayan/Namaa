@@ -4,23 +4,20 @@ import 'package:namma_project/features/qiyam/domain/qiyam_supplication.dart';
 
 /// The supplications card (the prototype's third group): the approved
 /// Witr/Sujood supplications of the reviewed catalog, each in Amiri with
-/// its authentic source.
+/// its authentic Arabic source (Arabic only — owner decision D3).
 final class QiyamSupplicationsCard extends StatelessWidget {
   const QiyamSupplicationsCard({
     super.key,
     required this.copy,
     required this.supplications,
-    required this.locale,
   });
 
   final QiyamStrings copy;
   final List<QiyamSupplication> supplications;
-  final String locale;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final isEnglish = locale.startsWith('en');
     return Card(
       key: const Key('qiyam_supplications_card'),
       margin: EdgeInsets.zero,
@@ -64,7 +61,7 @@ final class QiyamSupplicationsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      isEnglish ? supplication.sourceEn : supplication.sourceAr,
+                      supplication.sourceAr,
                       key: Key('qiyam_supplication_source_${supplication.id}'),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: colors.onSurfaceVariant,

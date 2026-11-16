@@ -28,7 +28,6 @@ final class AdhkarQiyamSupplicationsAdapter implements QiyamSupplicationsPort {
           id: supplication.id,
           textAr: supplication.textAr,
           sourceAr: supplication.sourceAr,
-          sourceEn: supplication.sourceEn,
         ),
     ]);
   }

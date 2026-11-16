@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 10;
+const int kFoundationSchemaVersion = 11;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -469,6 +469,68 @@ class QiyamNights extends Table {
   Set<Column> get primaryKey => {accountId, nightDate};
 }
 
+/// Added in schema version 11: the user's own Adhkar items (My Adhkar,
+/// FR-023). The field rules (text 1–1000 after trimming, target 1–1000,
+/// note <= 300) are enforced by the commands and mirrored by migration
+/// 0017's check constraints. The tombstone [deletedAt] is set once on
+/// delete and never cleared: deletion is final (FR-025, FR-027).
+@TableIndex(
+  name: 'my_adhkar_items_owner_tab',
+  columns: {#accountId, #deletedAt, #createdAt},
+)
+@TableIndex(
+  name: 'my_adhkar_items_owner_version',
+  columns: {#accountId, #updatedAt, #itemId},
+)
+class MyAdhkarItems extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get itemId => text()();
+
+  /// Named `text` in SQL (data-model.md); the Dart getter avoids drift's
+  /// `Table.text` builder name.
+  TextColumn get content => text().named('text')();
+  IntColumn get target => integer()();
+  TextColumn get note => text().nullable()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+  TextColumn get deletedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, itemId};
+}
+
+/// Added in schema version 11: one My Adhkar count row per
+/// (owner, item, Adhkar day). The deterministic [recordId] is unique per
+/// owner; the count bounds (0 <= count <= 1000, the screen showing
+/// min(count, target)) are enforced by the commands.
+@TableIndex(
+  name: 'my_adhkar_counts_owner_day',
+  columns: {#accountId, #adhkarDay},
+)
+@TableIndex(
+  name: 'my_adhkar_counts_owner_version',
+  columns: {#accountId, #updatedAt, #recordId},
+)
+@TableIndex(
+  name: 'my_adhkar_counts_owner_record',
+  columns: {#accountId, #recordId},
+  unique: true,
+)
+class MyAdhkarCounts extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get itemId => text()();
+  TextColumn get adhkarDay => text()();
+  TextColumn get recordId => text()();
+  IntColumn get count => integer()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, itemId, adhkarDay};
+}
+
 @DriftDatabase(
   tables: [
     FoundationPreferences,
@@ -489,6 +551,8 @@ class QiyamNights extends Table {
     PrayerReports,
     AdhkarItemCounts,
     QiyamNights,
+    MyAdhkarItems,
+    MyAdhkarCounts,
   ],
 )
 class FoundationDatabase extends _$FoundationDatabase {
@@ -735,6 +799,20 @@ class FoundationDatabase extends _$FoundationDatabase {
           qiyamNightsOwnerNight,
           qiyamNightsOwnerVersion,
           qiyamNightsOwnerRecord,
+        ]) {
+          await _createIndexIfMissing(migrator, index);
+        }
+      }
+      if (to >= 11 && from < 11) {
+        await testMigrationHook?.call(migrator, from, to, 11);
+        await migrator.createTable(myAdhkarItems);
+        await migrator.createTable(myAdhkarCounts);
+        for (final index in <Index>[
+          myAdhkarItemsOwnerTab,
+          myAdhkarItemsOwnerVersion,
+          myAdhkarCountsOwnerDay,
+          myAdhkarCountsOwnerVersion,
+          myAdhkarCountsOwnerRecord,
         ]) {
           await _createIndexIfMissing(migrator, index);
         }

@@ -4,12 +4,24 @@ import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
 
 import '../adhkar_state.dart';
 
+/// The Arabic display font for dhikr text (registered in pubspec.yaml).
+const String kDhikrFontFamily = 'Amiri';
+
+/// The Quran font for verse text — KFGQPC Uthmanic Hafs, bundled unmodified
+/// through the Quran Foundation (T081) so the Uthmani script and the QPC
+/// Hafs encoding render correctly (FR-019).
+const String kQuranFontFamily = 'KFGQPC HAFS';
+
 /// One dhikr card (the prototype's third group): the number badge, the
-/// "virtue and source" toggle, the reset button with its tooltip, the Arabic
-/// text in Amiri with the English translation below it only when the app
-/// language is English, the count/target line, and the large count button
-/// ("Tap to count (n)" or "Completed"), disabled when the item is complete
-/// or the list is not countable. The semantic label is "Count, x of y".
+/// "virtue and source" toggle, the reset button with its tooltip, the
+/// Arabic text — dhikr in Amiri, a Quran item's verses in the Quran font —
+/// with no English translation line in any language (owner decision D3),
+/// the count/target line, and the large count button ("Tap to count (n)"
+/// or "Completed"), disabled when the item is complete or the list is not
+/// countable. The semantic label is "Count, x of y".
+///
+/// A Quran item shows its optional preface as a small separate line, then
+/// the verses, then "surah: from–to".
 final class DhikrItemCard extends StatefulWidget {
   const DhikrItemCard({
     super.key,
@@ -18,12 +30,14 @@ final class DhikrItemCard extends StatefulWidget {
     required this.itemId,
     required this.position,
     required this.target,
+    required this.isQuran,
     required this.textAr,
-    required this.translationEn,
     required this.virtueAr,
-    required this.virtueEn,
     required this.referenceAr,
-    required this.referenceEn,
+    required this.surah,
+    required this.ayahFrom,
+    required this.ayahTo,
+    required this.prefaceAr,
     required this.count,
     required this.status,
     required this.countable,
@@ -36,12 +50,14 @@ final class DhikrItemCard extends StatefulWidget {
   final String itemId;
   final int position;
   final int target;
+  final bool isQuran;
   final String textAr;
-  final String translationEn;
-  final String virtueAr;
-  final String virtueEn;
+  final String? virtueAr;
   final String referenceAr;
-  final String referenceEn;
+  final String? surah;
+  final int? ayahFrom;
+  final int? ayahTo;
+  final String? prefaceAr;
   final int count;
   final AdhkarActionStatus? status;
   final bool countable;
@@ -61,7 +77,7 @@ final class _DhikrItemCardState extends State<DhikrItemCard> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final isEnglish = widget.locale.startsWith('en');
+    final bodyFont = widget.isQuran ? kQuranFontFamily : kDhikrFontFamily;
     return Card(
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -102,23 +118,43 @@ final class _DhikrItemCardState extends State<DhikrItemCard> {
                 ),
               ],
             ),
+            if (widget.isQuran && widget.prefaceAr != null) ...[
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text(
+                  widget.prefaceAr!,
+                  key: Key('adhkar_preface_${widget.itemId}'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: kDhikrFontFamily,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
             Directionality(
               textDirection: TextDirection.rtl,
               child: Text(
                 widget.textAr,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontFamily: 'Amiri',
+                  fontFamily: bodyFont,
                   height: 1.9,
                 ),
               ),
             ),
-            if (isEnglish) ...[
-              const SizedBox(height: 6),
-              Text(
-                widget.translationEn,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+            if (widget.isQuran && widget.surah != null) ...[
+              const SizedBox(height: 4),
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text(
+                  '${widget.surah}: '
+                  '${widget.ayahFrom}–${widget.ayahTo}',
+                  key: Key('adhkar_surah_${widget.itemId}'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: kDhikrFontFamily,
+                  ),
+                ),
               ),
             ],
             if (_expanded)
@@ -126,15 +162,14 @@ final class _DhikrItemCardState extends State<DhikrItemCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  Text(
-                    '${widget.copy.virtueLabel} '
-                    '${isEnglish ? widget.virtueEn : widget.virtueAr}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  if (widget.virtueAr != null)
+                    Text(
+                      '${widget.copy.virtueLabel} ${widget.virtueAr}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.copy.sourceLabel} '
-                    '${isEnglish ? widget.referenceEn : widget.referenceAr}',
+                    '${widget.copy.sourceLabel} ${widget.referenceAr}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],

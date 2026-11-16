@@ -15,6 +15,7 @@ import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_screen.dart';
+import 'package:namma_project/features/adhkar/presentation/widgets/dhikr_item_card.dart';
 
 /// T032: the Adhkar screen (contracts/adhkar-qiyam-ui.md): the prototype's
 /// group order, the count button gates, the virtue toggle, the Amiri Arabic
@@ -167,19 +168,42 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets('the English translation shows only in English and the Arabic '
-      'text uses the Amiri font', (tester) async {
+  testWidgets('no English translation line in either language and the Arabic '
+      'dhikr text uses the Amiri font', (tester) async {
     final englishCubit = buildCubit();
     await pump(tester, cubit: englishCubit, locale: const Locale('en'));
+    // The Arabic text renders; there is no English translation line at all
+    // (owner decision D3), so the text appears exactly once.
     expect(find.text('test item m1', findRichText: true), findsWidgets);
     final arabicText = tester.widget<Text>(find.text('test item m1').first);
     expect(arabicText.style?.fontFamily, 'Amiri');
     await englishCubit.close();
     final arabicCubit = buildCubit();
     await pump(tester, cubit: arabicCubit);
-    // In Arabic the English translation is absent; only the Arabic text.
     expect(find.text('test item m1'), findsOneWidget);
     await arabicCubit.close();
+  });
+
+  testWidgets('a Quran item shows its preface apart from the verses, the '
+      'verses in the Quran font, and its surah and verse numbers', (
+    tester,
+  ) async {
+    final cubit = AdhkarCubit(
+      ownerId: 'owner',
+      times: times,
+      catalog: QuranFakeCatalog(),
+      repository: repository,
+      commands: commands,
+      clock: clock,
+    );
+    await pump(tester, cubit: cubit);
+    final verses = tester.widget<Text>(find.text('placeholder verse text'));
+    expect(verses.style?.fontFamily, kQuranFontFamily);
+    expect(find.byKey(const Key('adhkar_preface_mq1')), findsOneWidget);
+    expect(find.text('placeholder preface'), findsOneWidget);
+    expect(find.text('test surah: 255–255'), findsOneWidget);
+    expect(find.byKey(const Key('adhkar_attribution')), findsOneWidget);
+    await cubit.close();
   });
 
   testWidgets('during Evening the morning notice shows the next Fajr time', (
@@ -285,18 +309,17 @@ final class FakeCatalog implements AdhkarCatalogPort {
       AppResult.success(
         AdhkarCatalog.fromJson(const {
           'catalog_version': 1,
+          'attribution': 'test attribution line',
           'items': [
             {
               'item_id': 'm1',
               'list': 'morning',
               'position': 1,
               'target': 1,
+              'kind': 'dhikr',
               'text_ar': 'test item m1',
-              'translation_en': 'test item m1',
               'virtue_ar': 'test virtue m1',
-              'virtue_en': 'test virtue m1',
               'reference_ar': 'test ref m1',
-              'reference_en': 'test ref m1',
               'approved': true,
             },
             {
@@ -304,12 +327,10 @@ final class FakeCatalog implements AdhkarCatalogPort {
               'list': 'morning',
               'position': 2,
               'target': 3,
+              'kind': 'dhikr',
               'text_ar': 'test item m2',
-              'translation_en': 'test item m2',
               'virtue_ar': 'test virtue m2',
-              'virtue_en': 'test virtue m2',
               'reference_ar': 'test ref m2',
-              'reference_en': 'test ref m2',
               'approved': true,
             },
             {
@@ -317,12 +338,41 @@ final class FakeCatalog implements AdhkarCatalogPort {
               'list': 'evening',
               'position': 1,
               'target': 1,
+              'kind': 'dhikr',
               'text_ar': 'test item e1',
-              'translation_en': 'test item e1',
               'virtue_ar': 'test virtue e1',
-              'virtue_en': 'test virtue e1',
               'reference_ar': 'test ref e1',
-              'reference_en': 'test ref e1',
+              'approved': true,
+            },
+          ],
+          'qiyam_supplications': <Map<String, Object?>>[],
+        }),
+      );
+}
+
+/// A catalog holding one approved placeholder Quran item for the card's
+/// Quran rendering tests.
+final class QuranFakeCatalog implements AdhkarCatalogPort {
+  @override
+  Future<AppResult<AdhkarCatalog>> snapshot(String ownerId) async =>
+      AppResult.success(
+        AdhkarCatalog.fromJson(const {
+          'catalog_version': 1,
+          'attribution': 'test attribution line',
+          'items': [
+            {
+              'item_id': 'mq1',
+              'list': 'morning',
+              'position': 1,
+              'target': 1,
+              'kind': 'quran',
+              'text_ar': 'placeholder verse text',
+              'virtue_ar': null,
+              'reference_ar': 'test reference mq1',
+              'surah': 'test surah',
+              'ayah_from': 255,
+              'ayah_to': 255,
+              'preface_ar': 'placeholder preface',
               'approved': true,
             },
           ],

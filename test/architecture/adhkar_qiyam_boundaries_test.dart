@@ -119,6 +119,13 @@ List<String> _violations(String path, String source) {
           issues.add('$path presentation imports data: $reference');
         }
     }
+
+    // Rule 6 (T090): My Adhkar never touches XP (FR-026) — no my_adhkar_*
+    // file imports lib/features/xp/, no matter its layer.
+    if (normalized.split('/').last.startsWith('my_adhkar_') &&
+        target.startsWith('lib/features/xp/')) {
+      issues.add('$path imports XP from My Adhkar: $reference');
+    }
   }
 
   // Rule 5: storage stays in data/ — the encrypted database and the
@@ -313,6 +320,32 @@ void main() {
       );
     },
   );
+
+  test('negative controls reject My Adhkar reaching XP', () {
+    expect(
+      _violations(
+        'lib/features/adhkar/data/my_adhkar_xp_probe.dart',
+        "import 'package:namma_project/features/xp/application/award_ledger.dart';",
+      ),
+      isNotEmpty,
+    );
+    expect(
+      _violations(
+        'lib/features/adhkar/application/my_adhkar_commands.dart',
+        "import 'package:namma_project/features/xp/domain/xp_award.dart';",
+      ),
+      isNotEmpty,
+    );
+    // The reviewed-catalog set-award path lives in non-my_adhkar files and
+    // stays legal there.
+    expect(
+      _violations(
+        'lib/features/adhkar/data/drift_adhkar_repository.dart',
+        "import 'package:namma_project/features/xp/application/award_ledger.dart';",
+      ),
+      isEmpty,
+    );
+  });
 
   test('Adhkar, Qiyam and Today honor the boundaries on current code', () {
     final violations = <String>[];

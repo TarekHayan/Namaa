@@ -64,6 +64,20 @@
       "expected": "b8a5dd72-ccb0-5fc5-90e3-bb2c295752d4"
     }
   ],
+  "myAdhkarCountRecords": [
+    {
+      "itemId": "11111111-2222-4333-8444-555555555555",
+      "day": "2026-11-15",
+      "name": "my-adhkar/11111111-2222-4333-8444-555555555555/2026-11-15",
+      "expected": "c8e37642-65ed-579b-82af-4b8838ba548f"
+    },
+    {
+      "itemId": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+      "day": "2026-11-09",
+      "name": "my-adhkar/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/2026-11-09",
+      "expected": "d4899eb3-e9c7-558a-932e-07918d853b88"
+    }
+  ],
   "crossChecks": {
     "conflictOrderStable": true,
     "qiyamAwardIsRecordId": true

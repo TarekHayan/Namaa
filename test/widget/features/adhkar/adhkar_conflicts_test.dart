@@ -217,18 +217,17 @@ final class _FixtureCatalog implements AdhkarCatalogPort {
     return AppResult.success(
       AdhkarCatalog.fromJson(const {
         'catalog_version': 1,
+        'attribution': 'test attribution line',
         'items': [
           {
             'item_id': 'm1',
             'list': 'morning',
             'position': 1,
             'target': 1,
+            'kind': 'dhikr',
             'text_ar': 'fixture',
-            'translation_en': 'fixture',
             'virtue_ar': 'fixture',
-            'virtue_en': 'fixture',
             'reference_ar': 'fixture',
-            'reference_en': 'fixture',
             'approved': true,
           },
         ],

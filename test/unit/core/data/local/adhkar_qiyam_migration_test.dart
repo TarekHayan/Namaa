@@ -6,9 +6,10 @@ import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import '../../../../support/foundation_test_support.dart';
 
-/// T015: every historical local schema (v1…v9) upgrades to v10 with all
-/// existing rows preserved; a fresh v10 is created correctly; an injected
-/// v10 migration failure leaves the v9 database readable and recoverable.
+/// T015 + T086: every historical local schema (v1…v10) upgrades to v11 with
+/// all existing rows preserved (v10→v11 keeps the Adhkar and Qiyam rows); a
+/// fresh v11 is created correctly; an injected migration failure leaves the
+/// prior database readable and recoverable.
 void main() {
   final key = List<int>.generate(32, (index) => index + 80);
 
@@ -31,6 +32,12 @@ void main() {
     'prayer_reports',
     'adhkar_item_counts',
     'qiyam_nights',
+  ];
+
+  const v11Tables = <String>[
+    ...v10Tables,
+    'my_adhkar_items',
+    'my_adhkar_counts',
   ];
 
   const v8Tables = <String>[
@@ -135,10 +142,10 @@ void main() {
     } else if (version == 8) {
       keep = v8Tables;
     } else {
-      // v9 also carries the customStatement annual-timetable table.
+      // v9 and v10 also carry the customStatement annual-timetable table.
       keep = [...v10Tables, 'prayer_annual_timetables'];
     }
-    for (final table in v10Tables.reversed) {
+    for (final table in v11Tables.reversed) {
       if (!keep.contains(table)) {
         await db.rawExecute('DROP TABLE IF EXISTS $table');
       }
@@ -215,7 +222,7 @@ void main() {
     );
   }
 
-  test('installed v9 upgrades to v10, keeps every row and restarts', () async {
+  test('installed v9 upgrades to v11, keeps every row and restarts', () async {
     final temp = TemporaryDatabasePath();
     FoundationDatabase? db;
     try {
@@ -223,15 +230,16 @@ void main() {
       db = await installed(path, key, 9);
       await db.close();
       db = await FoundationDatabase.openEncrypted(path: path, key: key);
-      expect(db.schemaVersion, 10);
-      expect(await db.journalStatusFor(10), 'completed');
+      expect(db.schemaVersion, 11);
+      expect(await db.journalStatusFor(11), 'completed');
       await expectLegacyRowsSurvive(db);
       expect(
         await db.rawScalar(
           "SELECT count(*) FROM sqlite_master WHERE type='table' "
-          "AND name IN ('adhkar_item_counts','qiyam_nights')",
+          "AND name IN ('adhkar_item_counts','qiyam_nights',"
+          "'my_adhkar_items','my_adhkar_counts')",
         ),
-        2,
+        4,
       );
       // Restart after the upgrade works.
       await db.close();
@@ -243,7 +251,55 @@ void main() {
     }
   });
 
-  test('installed v8 upgrades to v10 and keeps its Prayer report', () async {
+  test(
+    'installed v10 upgrades to v11 and keeps its Adhkar and Qiyam rows',
+    () async {
+      final temp = TemporaryDatabasePath();
+      FoundationDatabase? db;
+      try {
+        final path = temp.allocate();
+        db = await installed(path, key, 10);
+        // Seed real v10 rows before the upgrade.
+        await db.rawExecute(
+          'INSERT INTO adhkar_item_counts (account_id, adhkar_day, item_id, '
+          'record_id, catalog_version, list, count, created_at, updated_at) '
+          "VALUES ('owner', '2026-11-15', 'm1', 'rec-m1', 1, 'morning', 1, "
+          "'2026-11-15T08:00:00Z', '2026-11-15T08:00:00Z')",
+        );
+        await db.rawExecute(
+          'INSERT INTO qiyam_nights (account_id, night_date, record_id, '
+          'performed, rakahs, witr, recorded_zone_id, '
+          'recorded_offset_minutes, created_at, updated_at) '
+          "VALUES ('owner', '2026-11-15', 'rec-night', 1, 8, 1, "
+          "'Africa/Cairo', 120, '2026-11-15T20:00:00Z', "
+          "'2026-11-15T20:00:00Z')",
+        );
+        await db.close();
+        db = await FoundationDatabase.openEncrypted(path: path, key: key);
+        expect(db.schemaVersion, 11);
+        expect(await db.journalStatusFor(11), 'completed');
+        expect(await db.rawScalar('SELECT count FROM adhkar_item_counts'), 1);
+        expect(await db.rawScalar('SELECT performed FROM qiyam_nights'), 1);
+        expect(
+          await db.rawScalar(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' "
+            "AND name IN ('my_adhkar_items','my_adhkar_counts')",
+          ),
+          2,
+        );
+        // Restart after the upgrade works and the rows survive again.
+        await db.close();
+        db = await FoundationDatabase.openEncrypted(path: path, key: key);
+        expect(await db.rawScalar('SELECT count FROM adhkar_item_counts'), 1);
+        expect(await db.rawScalar('SELECT performed FROM qiyam_nights'), 1);
+      } finally {
+        await db?.close();
+        temp.dispose();
+      }
+    },
+  );
+
+  test('installed v8 upgrades to v11 and keeps its Prayer report', () async {
     final temp = TemporaryDatabasePath();
     FoundationDatabase? db;
     try {
@@ -251,7 +307,7 @@ void main() {
       db = await installed(path, key, 8);
       await db.close();
       db = await FoundationDatabase.openEncrypted(path: path, key: key);
-      expect(db.schemaVersion, 10);
+      expect(db.schemaVersion, 11);
       expect(
         await db.rawScalar('SELECT report_id FROM prayer_reports'),
         'old-report',
@@ -259,9 +315,10 @@ void main() {
       expect(
         await db.rawScalar(
           "SELECT count(*) FROM sqlite_master WHERE type='table' "
-          "AND name IN ('adhkar_item_counts','qiyam_nights')",
+          "AND name IN ('adhkar_item_counts','qiyam_nights',"
+          "'my_adhkar_items','my_adhkar_counts')",
         ),
-        2,
+        4,
       );
     } finally {
       await db?.close();
@@ -271,7 +328,7 @@ void main() {
 
   for (var version = 1; version <= 7; version++) {
     test(
-      'physical v$version upgrades to v10, retains rows and restarts',
+      'physical v$version upgrades to v11, retains rows and restarts',
       () async {
         final temp = TemporaryDatabasePath();
         FoundationDatabase? db;
@@ -280,8 +337,8 @@ void main() {
           db = await installed(path, key, version);
           await db.close();
           db = await FoundationDatabase.openEncrypted(path: path, key: key);
-          expect(db.schemaVersion, 10);
-          expect(await db.journalStatusFor(10), 'completed');
+          expect(db.schemaVersion, 11);
+          expect(await db.journalStatusFor(11), 'completed');
           expect(
             await db.rawScalar('SELECT value FROM foundation_preferences'),
             'ar',
@@ -329,7 +386,7 @@ void main() {
   }
 
   test(
-    'fresh v10 creates the two tables with their columns and indexes',
+    'fresh v11 creates the four tables with their columns and indexes',
     () async {
       final temp = TemporaryDatabasePath();
       final db = await FoundationDatabase.openEncrypted(
@@ -337,7 +394,7 @@ void main() {
         key: key,
       );
       try {
-        expect(db.schemaVersion, 10);
+        expect(db.schemaVersion, 11);
         final adhkarColumns = await db
             .customSelect('PRAGMA table_info(adhkar_item_counts)')
             .get();
@@ -402,6 +459,66 @@ void main() {
           ),
           6,
         );
+        // The v11 My Adhkar tables and their indexes.
+        final itemColumns = await db
+            .customSelect('PRAGMA table_info(my_adhkar_items)')
+            .get();
+        expect(
+          itemColumns.map((row) => row.read<String>('name')),
+          containsAll([
+            'account_id',
+            'item_id',
+            'text',
+            'target',
+            'note',
+            'created_at',
+            'updated_at',
+            'last_acknowledged_updated_at',
+            'deleted_at',
+          ]),
+        );
+        final countColumns = await db
+            .customSelect('PRAGMA table_info(my_adhkar_counts)')
+            .get();
+        expect(
+          countColumns.map((row) => row.read<String>('name')),
+          containsAll([
+            'account_id',
+            'item_id',
+            'adhkar_day',
+            'record_id',
+            'count',
+            'created_at',
+            'updated_at',
+            'last_acknowledged_updated_at',
+          ]),
+        );
+        bool myNullable(String table, String column) =>
+            (table == 'my_adhkar_items' ? itemColumns : countColumns)
+                .firstWhere((row) => row.read<String>('name') == column)
+                .read<int>('notnull') ==
+            0;
+        expect(myNullable('my_adhkar_items', 'note'), isTrue);
+        expect(myNullable('my_adhkar_items', 'deleted_at'), isTrue);
+        expect(
+          myNullable('my_adhkar_items', 'last_acknowledged_updated_at'),
+          isTrue,
+        );
+        expect(myNullable('my_adhkar_items', 'text'), isFalse);
+        expect(myNullable('my_adhkar_items', 'target'), isFalse);
+        expect(myNullable('my_adhkar_counts', 'count'), isFalse);
+        expect(myNullable('my_adhkar_counts', 'record_id'), isFalse);
+        expect(
+          await db.rawScalar(
+            "SELECT count(*) FROM sqlite_master WHERE type='index' "
+            "AND name IN ('my_adhkar_items_owner_tab',"
+            "'my_adhkar_items_owner_version',"
+            "'my_adhkar_counts_owner_day',"
+            "'my_adhkar_counts_owner_version',"
+            "'my_adhkar_counts_owner_record')",
+          ),
+          5,
+        );
       } finally {
         await db.close();
         temp.dispose();
@@ -426,9 +543,9 @@ void main() {
             seen.add('$from>$to@$step');
           },
         );
-        expect(db.schemaVersion, 10);
-        // A v7 -> v10 upgrade runs steps 8, 9 and 10, each firing once.
-        expect(seen, ['7>10@8', '7>10@9', '7>10@10']);
+        expect(db.schemaVersion, 11);
+        // A v7 -> v11 upgrade runs steps 8, 9, 10 and 11, each firing once.
+        expect(seen, ['7>11@8', '7>11@9', '7>11@10', '7>11@11']);
       } finally {
         await db?.close();
         temp.dispose();
@@ -437,21 +554,27 @@ void main() {
   );
 
   test(
-    'an injected v10 failure leaves the v9 database readable and the '
+    'an injected v11 failure leaves the v10 database readable and the '
     'journal records the failed attempt, then a clean reopen recovers',
     () async {
       final temp = TemporaryDatabasePath();
       FoundationDatabase? db;
       try {
         final path = temp.allocate();
-        db = await installed(path, key, 9);
+        db = await installed(path, key, 10);
+        await db.rawExecute(
+          'INSERT INTO adhkar_item_counts (account_id, adhkar_day, item_id, '
+          'record_id, catalog_version, list, count, created_at, updated_at) '
+          "VALUES ('owner', '2026-11-15', 'm1', 'rec-m1', 1, 'morning', 1, "
+          "'2026-11-15T08:00:00Z', '2026-11-15T08:00:00Z')",
+        );
         await db.close();
         await expectLater(
           FoundationDatabase.openEncrypted(
             path: path,
             key: key,
             testMigrationHook: (migrator, from, to, step) async {
-              if (to >= 10 && from < 10) {
+              if (to >= 11 && from < 11) {
                 throw Exception('injected migration failure');
               }
             },
@@ -466,31 +589,43 @@ void main() {
                 .having((f) => f.recoverable, 'recoverable', isTrue),
           ),
         );
-        // The v9 data is still readable when the upgrade is not requested.
+        // The v10 data is still readable when the upgrade is not requested.
         final reopened = await FoundationDatabase.openEncrypted(
           path: path,
           key: key,
-          schemaVersion: 9,
+          schemaVersion: 10,
         );
         expect(
           await reopened.rawScalar('SELECT report_id FROM prayer_reports'),
           'old-report',
         );
         expect(
+          await reopened.rawScalar('SELECT count FROM adhkar_item_counts'),
+          1,
+        );
+        expect(
           await reopened.rawScalar(
             'SELECT version FROM migration_journal '
             "WHERE status = 'failed' ORDER BY started_at DESC LIMIT 1",
           ),
-          10,
+          11,
         );
         await reopened.close();
         // A subsequent clean upgrade marks the failed attempt recovered.
         db = await FoundationDatabase.openEncrypted(path: path, key: key);
-        expect(db.schemaVersion, 10);
-        expect(await db.journalStatusFor(10), 'recovered');
+        expect(db.schemaVersion, 11);
+        expect(await db.journalStatusFor(11), 'recovered');
         expect(
           await db.rawScalar('SELECT report_id FROM prayer_reports'),
           'old-report',
+        );
+        expect(await db.rawScalar('SELECT count FROM adhkar_item_counts'), 1);
+        expect(
+          await db.rawScalar(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' "
+            "AND name IN ('my_adhkar_items','my_adhkar_counts')",
+          ),
+          2,
         );
       } finally {
         await db?.close();
