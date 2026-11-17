@@ -681,9 +681,9 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
   /// row changed. It is skipped when the local row already acknowledged a
   /// newer server version, when it carries the same acknowledged version,
   /// and when the local row is deleted but the remote one is live: a
-  /// tombstone never clears (FR-027). The memberships of a deleted group are
-  /// settled by the entry versions the server cascades, never here, so a
-  /// pending local entry never ends up with no group.
+  /// tombstone never clears (FR-027). A tombstone that is new here also
+  /// applies the group-delete cascade locally (see
+  /// [_applyRemoteGroupDeleteCascade]).
   Future<AppResult<bool>> applyRemoteGroup(
     MyAdhkarRemoteGroup remote, {
     required String accountId,
@@ -731,9 +731,102 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
               deletedAt: Value(remote.deletedAt?.toIso8601String()),
             ),
           );
+      if (remote.isDeleted && local?.deletedAt == null) {
+        await _applyRemoteGroupDeleteCascade(accountId, remote);
+      }
       return const AppResult.success(true);
     } catch (error) {
       return AppResult.failure(_failure(error, 'my_adhkar.group.save_failed'));
+    }
+  }
+
+  /// The local half of the server's group-delete cascade, for a tombstone
+  /// that arrives from another device. The server drops the group from
+  /// every membership and deletes the entries left with no live group, but
+  /// it does not bump the version of an entry that merely loses a group, so
+  /// no entry version would ever bring that change here. This does the same
+  /// work locally, in the caller's transaction: the group's membership rows
+  /// go, and every live entry left with no live group gets a tombstone with
+  /// a monotonic `updated_at` (`max(group's version, prior + 1 µs)`). No
+  /// outbox row is appended (the server did it already) and no entry's
+  /// `last_acknowledged_updated_at` moves. A group this device does not hold
+  /// yet counts as live, so an entry is never deleted on partial knowledge;
+  /// the entry's own server version settles it later. A live entry is never
+  /// left with an empty group set. A pending local operation for a deleted
+  /// entry still dispatches: its receipt cannot resurrect the tombstone
+  /// (`finalizeItemReceipt` only replaces the exact version it sent).
+  Future<void> _applyRemoteGroupDeleteCascade(
+    String accountId,
+    MyAdhkarRemoteGroup remote,
+  ) async {
+    final members =
+        await (_database.select(_database.myAdhkarItemGroups)..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.groupId.equals(remote.groupId),
+            ))
+            .get();
+    for (final member in members) {
+      await (_database.delete(_database.myAdhkarItemGroups)..where(
+            (table) =>
+                table.accountId.equals(accountId) &
+                table.itemId.equals(member.itemId) &
+                table.groupId.equals(remote.groupId),
+          ))
+          .go();
+      final entry =
+          await (_database.select(_database.myAdhkarItems)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.itemId.equals(member.itemId) &
+                    table.deletedAt.isNull(),
+              ))
+              .getSingleOrNull();
+      if (entry == null) continue;
+      final remaining =
+          await (_database.select(_database.myAdhkarItemGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.itemId.equals(member.itemId),
+              ))
+              .get();
+      var hasLiveGroup = false;
+      for (final row in remaining) {
+        final group =
+            await (_database.select(_database.myAdhkarGroups)..where(
+                  (table) =>
+                      table.accountId.equals(accountId) &
+                      table.groupId.equals(row.groupId),
+                ))
+                .getSingleOrNull();
+        if (group == null || group.deletedAt == null) {
+          hasLiveGroup = true;
+          break;
+        }
+      }
+      if (hasLiveGroup) continue;
+      final instant = _maxInstant(
+        remote.updatedAt,
+        _after(entry.updatedAt),
+      ).toIso8601String();
+      await (_database.update(_database.myAdhkarItems)..where(
+            (table) =>
+                table.accountId.equals(accountId) &
+                table.itemId.equals(member.itemId) &
+                table.deletedAt.isNull(),
+          ))
+          .write(
+            MyAdhkarItemsCompanion(
+              updatedAt: Value(instant),
+              deletedAt: Value(instant),
+            ),
+          );
+      await (_database.delete(_database.myAdhkarItemGroups)..where(
+            (table) =>
+                table.accountId.equals(accountId) &
+                table.itemId.equals(member.itemId),
+          ))
+          .go();
     }
   }
 
@@ -746,7 +839,8 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
   /// device already made and not yet sent never brings a deleted group
   /// back); a kept group keeps its local `added_at`, a new one takes the
   /// server's. A live remote entry whose every group is deleted locally is
-  /// left alone: the group-delete path settles it.
+  /// left alone (the local group delete, or the inbound tombstone cascade
+  /// in [applyRemoteGroup], has deleted or will delete it).
   Future<AppResult<bool>> applyRemoteItem(
     MyAdhkarRemoteItem remote, {
     required String accountId,
@@ -876,7 +970,10 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
         final newerAck =
             current.lastAcknowledgedUpdatedAt != null &&
             current.lastAcknowledgedUpdatedAt!.isAfter(active.updatedAt);
-        if (canReplace && !newerAck) {
+        // A local tombstone never clears (FR-027), even for the exact
+        // version that was sent.
+        final wouldResurrect = current.isDeleted && !active.isDeleted;
+        if (canReplace && !newerAck && !wouldResurrect) {
           await (_database.update(_database.myAdhkarGroups)..where(
                 (table) =>
                     table.accountId.equals(accountId) &
@@ -892,6 +989,11 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
                   deletedAt: Value(active.deletedAt?.toIso8601String()),
                 ),
               );
+          // Another device deleted this group while this rename was
+          // pending: apply the same local cascade as an inbound tombstone.
+          if (active.isDeleted && !current.isDeleted) {
+            await _applyRemoteGroupDeleteCascade(accountId, active);
+          }
         } else if (!newerAck) {
           await (_database.update(_database.myAdhkarGroups)..where(
                 (table) =>
@@ -946,7 +1048,10 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
         final newerAck =
             current.lastAcknowledgedUpdatedAt != null &&
             current.lastAcknowledgedUpdatedAt!.isAfter(active.updatedAt);
-        if (canReplace && !newerAck) {
+        // A local tombstone never clears (FR-027), even for the exact
+        // version that was sent.
+        final wouldResurrect = current.isDeleted && !active.isDeleted;
+        if (canReplace && !newerAck && !wouldResurrect) {
           await (_database.update(_database.myAdhkarItems)..where(
                 (table) =>
                     table.accountId.equals(accountId) &

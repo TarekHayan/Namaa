@@ -1192,3 +1192,29 @@ the screen/header/l10n edits); `my_adhkar_tab_test.dart` does not compile yet
 | Analyze | `dart analyze` on the same directories | No issues found |
 | Full suite | `flutter test test/unit test/architecture test/widget_test.dart test/widget/{app,testing} test/widget/features/{habits,mind_maps,prayer,qiyam,tasks,today} test/widget/features/adhkar/{adhkar_screen,adhkar_conflicts}_test.dart` | **1133 passed, 1 skipped, 0 failed** |
 | SQL/RLS | `supabase test db` (local stack) | **27 files, 418 tests, all passed** |
+
+### Part 3d review fix — inbound group tombstone cascade (2026-11-17)
+
+A group tombstone pulled from another device only upserted the group row, so
+an entry that merely lost that group (the server drops the membership but does
+not bump the entry's version) kept a stale membership on the receiving device.
+`applyRemoteGroup` (and the receipt finalization of a pending group change that
+the server answers with a tombstone) now applies the group-delete cascade
+locally in the same transaction: the group's memberships go and every live entry
+left with no live group gets a tombstone with a monotonic `updated_at`, with no
+outbox row and no change to any entry's acknowledged version. A group this
+device does not hold yet counts as live; a local tombstone is never cleared by
+a receipt, even for the exact version sent. Six new tests in
+`my_adhkar_inbound_test.dart` (now 27): the survivor case, the only-in-group
+case before the entry's own version arrives (and then converging), an unknown
+group counted as live, an already-deleted group, a pending edit of a cascaded
+entry whose receipt (deletion or live) never resurrects it, and a pending edit
+that keeps a live group.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format` on `lib/features/adhkar/data`, `test/unit/features/adhkar/data` | clean |
+| Analyze | `dart analyze` on adhkar data/application, core sync, composition, adhkar data tests | No issues found |
+| Focused suites | `flutter test test/unit/features/adhkar test/unit/core/data/sync` | **226 passed** |
+
+No SQL was touched, so `supabase test db` was not re-run.

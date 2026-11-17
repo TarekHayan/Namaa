@@ -13,6 +13,7 @@ import 'package:namma_project/features/adhkar/application/my_adhkar_inbound_sync
 import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/data/my_adhkar_inbound_synchronizer.dart';
 import 'package:namma_project/features/adhkar/data/my_adhkar_reconciler.dart';
+import 'package:namma_project/features/adhkar/data/my_adhkar_remote_models.dart';
 import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_reader.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
@@ -595,6 +596,211 @@ void main() {
         ];
       await receive();
       expect((await entry(i1))!.groupIds, [g1, g5]);
+    });
+  });
+
+  suite('inbound group tombstone cascade', () {
+    final deleteAt = at.add(const Duration(minutes: 30));
+
+    test('the survivor case: an entry in the deleted group and in a live '
+        'group ends only in the live one, with no outbox row and its '
+        'acknowledged version untouched', () async {
+      await seedLocal(
+        groups: [
+          localGroup(g1),
+          localGroup(g2, acknowledged: created),
+        ],
+        items: [
+          localItem(i1, [g1, g2], acknowledged: created),
+        ],
+      );
+      // The server dropped (i1, g1) without bumping i1, so the snapshot has
+      // no newer entry version: only the group's tombstone arrives.
+      source
+        ..groups = [
+          groupRow(g1, name: 'local group', deleted: true, updated: deleteAt),
+          groupRow(g2, name: 'local group', updated: created),
+        ]
+        ..items = [];
+      final summary = (await receive()).valueOrNull!;
+      expect(summary.importedGroups, 1);
+      final survivor = (await entry(i1))!;
+      expect(survivor.isDeleted, isFalse);
+      expect(survivor.groupIds, [g2]);
+      expect(survivor.updatedAt, created);
+      expect(survivor.lastAcknowledgedUpdatedAt, created);
+      expect(
+        (await DriftLocalStore(db).readPendingChanges('owner')).valueOrNull,
+        isEmpty,
+      );
+      expect(await xpRows(), 0);
+    });
+
+    test(
+      'an entry only in the deleted group is deleted locally before its '
+      'own server version arrives, and that version then converges',
+      () async {
+        await seedLocal(
+          groups: [localGroup(g1)],
+          items: [
+            localItem(i1, [g1], acknowledged: created),
+          ],
+        );
+        source
+          ..groups = [
+            groupRow(g1, name: 'local group', deleted: true, updated: deleteAt),
+          ]
+          ..items = [];
+        await receive();
+        final doomed = (await entry(i1))!;
+        expect(doomed.isDeleted, isTrue);
+        expect(doomed.groupIds, isEmpty);
+        expect(
+          doomed.updatedAt.isAfter(created),
+          isTrue,
+          reason: 'the tombstone moves the version forward',
+        );
+        expect(doomed.lastAcknowledgedUpdatedAt, created);
+        expect(
+          (await DriftLocalStore(db).readPendingChanges('owner')).valueOrNull,
+          isEmpty,
+          reason: 'the server applies the same cascade; nothing is queued',
+        );
+        final serverVersion = deleteAt.add(const Duration(microseconds: 1));
+        source.items = [
+          itemRow(i1, const [], deleted: true, updated: serverVersion),
+        ];
+        final summary = (await receive()).valueOrNull!;
+        expect(summary.importedItems, 1);
+        final converged = (await entry(i1))!;
+        expect(converged.isDeleted, isTrue);
+        expect(converged.lastAcknowledgedUpdatedAt, serverVersion);
+      },
+    );
+
+    test('a group not known on this device counts as live, so an entry that '
+        'also names it is not deleted', () async {
+      await seedLocal(
+        groups: [localGroup(g1)],
+        items: [
+          localItem(i1, [g1, g2], acknowledged: created),
+        ],
+      );
+      source
+        ..groups = [
+          groupRow(g1, name: 'local group', deleted: true, updated: deleteAt),
+        ]
+        ..items = [];
+      await receive();
+      final kept = (await entry(i1))!;
+      expect(kept.isDeleted, isFalse);
+      expect(kept.groupIds, [g2]);
+    });
+
+    test(
+      'a tombstone for a group already deleted here changes nothing',
+      () async {
+        await seedLocal(
+          groups: [localGroup(g1, deletedAt: created)],
+          items: [
+            localItem(i1, [g1], acknowledged: created),
+          ],
+        );
+        source.groups = [
+          groupRow(g1, name: 'local group', deleted: true, updated: deleteAt),
+        ];
+        expect((await receive()).failureOrNull, isNull);
+        expect(
+          (await entry(i1))!.isDeleted,
+          isFalse,
+          reason: 'only a newly applied tombstone cascades',
+        );
+      },
+    );
+
+    test('a pending local edit of an entry the cascade deleted still '
+        'dispatches safely: its receipt never resurrects the entry', () async {
+      await seedLocal(groups: [localGroup(g1)]);
+      final pendingAt = at.subtract(const Duration(minutes: 10));
+      await seedLocal(
+        items: [
+          localItem(i1, [g1], text: 'local edit', updatedAt: pendingAt),
+        ],
+        queue: true,
+      );
+      source
+        ..groups = [
+          groupRow(g1, name: 'local group', deleted: true, updated: deleteAt),
+        ]
+        ..items = [];
+      await receive();
+      final tombstoned = (await entry(i1))!;
+      expect(tombstoned.isDeleted, isTrue);
+      expect(tombstoned.groupIds, isEmpty);
+      expect(tombstoned.updatedAt.isAfter(pendingAt), isTrue);
+      expect(
+        (await DriftLocalStore(db).readPendingChanges('owner')).valueOrNull,
+        hasLength(1),
+        reason: 'the pending operation is still pending',
+      );
+
+      // The server answers the pending edit with group_deleted (a deletion)
+      // or, in the worst case, with a live version: neither resurrects it.
+      for (final live in [false, true]) {
+        final serverVersion = deleteAt.add(
+          Duration(microseconds: live ? 2 : 1),
+        );
+        final receipt = MyAdhkarDispatchReceipt(
+          operationId: 'seed-i-$i1',
+          entityType: 'item',
+          group: null,
+          item: MyAdhkarRemoteItem(
+            accountId: 'owner',
+            itemId: i1,
+            text: 'local edit',
+            source: null,
+            groupIds: live ? [g2] : const [],
+            createdAt: created,
+            updatedAt: serverVersion,
+            deletedAt: live ? null : serverVersion,
+          ),
+          conflict: null,
+          groupDeleted: !live,
+        );
+        final finalized = await repository.finalizeItemReceipt(
+          accountId: 'owner',
+          itemId: i1,
+          outboundVersion: pendingAt,
+          receipt: receipt,
+        );
+        expect(finalized.failureOrNull, isNull);
+        final after = (await entry(i1))!;
+        expect(after.isDeleted, isTrue, reason: 'no resurrection (live=$live)');
+        expect(after.groupIds, isEmpty);
+        expect(after.lastAcknowledgedUpdatedAt, serverVersion);
+      }
+    });
+
+    test('a pending edit of an entry that keeps a live group stays live '
+        'with the smaller set', () async {
+      await seedLocal(groups: [localGroup(g1), localGroup(g2)]);
+      await seedLocal(
+        items: [
+          localItem(i1, [g1, g2], text: 'local edit', updatedAt: at),
+        ],
+        queue: true,
+      );
+      source
+        ..groups = [
+          groupRow(g1, name: 'local group', deleted: true, updated: deleteAt),
+          groupRow(g2, name: 'local group', updated: created),
+        ]
+        ..items = [];
+      await receive();
+      final kept = (await entry(i1))!;
+      expect(kept.isDeleted, isFalse);
+      expect(kept.groupIds, [g2]);
+      expect(kept.text, 'local edit');
     });
   });
 

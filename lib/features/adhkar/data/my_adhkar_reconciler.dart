@@ -23,8 +23,11 @@ final class MyAdhkarReconciliationSummary {
 /// entry's group set can be checked against the local groups. Rows with
 /// pending local work survive untouched: their own RPC receipt resolves a
 /// stale base on the server. A tombstone is applied, and never cleared. A
-/// server group-delete cascade arrives as the group's tombstone plus the
-/// entries' own versions (deleted, or with a smaller group set).
+/// server group-delete cascade arrives as the group's tombstone: applying it
+/// removes the group's memberships here and deletes the live entries left
+/// with no live group (no outbox row), because an entry that only loses a
+/// group gets no new server version. The deleted entries' own versions that
+/// follow in the snapshot then converge.
 final class MyAdhkarReconciler {
   const MyAdhkarReconciler({
     required DriftMyAdhkarRepository repository,
