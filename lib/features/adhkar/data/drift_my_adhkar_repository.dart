@@ -95,16 +95,36 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
               OrderingTerm.asc(_database.myAdhkarItems.itemId),
             ]))
           .watch()
-          .map(
-            (rows) => List<MyDhikrItem>.unmodifiable(
-              rows.map(
+          .asyncMap((rows) async {
+            final itemRows = [
+              for (final row in rows) row.readTable(_database.myAdhkarItems),
+            ];
+            // Each entry carries its FULL group set (the contract): the
+            // other groups feed the card's "also in" line and the edit
+            // form's preselection.
+            final memberships = itemRows.isEmpty
+                ? const <MyAdhkarItemGroup>[]
+                : await (_database.select(_database.myAdhkarItemGroups)..where(
+                        (table) =>
+                            table.accountId.equals(accountId) &
+                            table.itemId.isIn(
+                              itemRows.map((row) => row.itemId),
+                            ),
+                      ))
+                      .get();
+            final groupsByItem = <String, List<String>>{};
+            for (final membership in memberships) {
+              (groupsByItem[membership.itemId] ??= []).add(membership.groupId);
+            }
+            return List<MyDhikrItem>.unmodifiable(
+              itemRows.map(
                 (row) => _decodeItemRow(
-                  row.readTable(_database.myAdhkarItems),
-                  groupIds: [groupId],
+                  row,
+                  groupIds: (groupsByItem[row.itemId] ?? [groupId])..sort(),
                 ),
               ),
-            ),
-          );
+            );
+          });
 
   @override
   Future<AppResult<MyAdhkarGroup?>> readGroupFresh({
@@ -199,6 +219,8 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
           Variable.withString(renamed.groupId),
           Variable.withString(priorUpdatedAt.toIso8601String()),
         ],
+        // Declares the write so watching streams (the group list) re-emit.
+        updates: {_database.myAdhkarGroups},
       );
       if (updated == 0) {
         throw StateError(
@@ -537,6 +559,9 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
           Variable.withString(edited.itemId),
           Variable.withString(priorUpdatedAt.toIso8601String()),
         ],
+        // Declares the write so watching streams (the opened group's
+        // entries) re-emit, even when the group set did not change.
+        updates: {_database.myAdhkarItems},
       );
       if (updated == 0) {
         throw StateError('My Adhkar edit raced a delete or another writer');
@@ -635,6 +660,7 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
           Variable.withString(accountId),
           Variable.withString(itemId),
         ],
+        updates: {_database.myAdhkarItems},
       );
       if (updated == 0) {
         throw StateError('My Adhkar delete raced another writer');

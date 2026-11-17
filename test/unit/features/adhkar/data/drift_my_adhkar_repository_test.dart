@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -427,6 +428,90 @@ void main() {
       ],
       reason: 'the order inside the group is added_at, oldest first',
     );
+  });
+
+  test(
+    'watchGroupItems carries each entry\'s full group set, sorted',
+    () async {
+      await seedGroup();
+      await seedGroup(group(groupId: otherGroupId, name: 'other group'), 'g2');
+      await seedItem(item(groupIds: const [entryGroupId, otherGroupId]));
+      await seedItem(
+        item(
+          itemId: '22222222-3333-4333-8444-555555555555',
+          groupIds: const [entryGroupId],
+        ),
+      );
+      final items = await repository
+          .watchGroupItems(accountId: 'owner', groupId: entryGroupId)
+          .first;
+      expect(items, hasLength(2));
+      expect(
+        items.firstWhere((i) => i.itemId.startsWith('1111')).groupIds,
+        [entryGroupId, otherGroupId],
+        reason: 'the full group set, not only the watched group',
+      );
+      expect(items.firstWhere((i) => i.itemId.startsWith('2222')).groupIds, [
+        entryGroupId,
+      ]);
+    },
+  );
+
+  Future<T> nextAfterInitial<T>(
+    Stream<T> stream,
+    Future<void> Function() change,
+  ) async {
+    final iterator = StreamIterator(stream);
+    expect(
+      await iterator.moveNext().timeout(const Duration(seconds: 10)),
+      true,
+    );
+    await change();
+    expect(
+      await iterator.moveNext().timeout(const Duration(seconds: 10)),
+      isTrue,
+      reason: 'the write must notify the watching stream',
+    );
+    final value = iterator.current;
+    await iterator.cancel();
+    return value;
+  }
+
+  test('a group rename re-emits the watched group list', () async {
+    await seedGroup();
+    final summaries = await nextAfterInitial(
+      repository.watchGroups('owner'),
+      () => repository.runInTransaction(
+        () => repository.renameGroup(
+          group(name: 'renamed group', updatedAt: now),
+          priorUpdatedAt: DateTime.utc(2026, 11, 16, 8, 30),
+          operationId: 'op-rename',
+          queueForSync: false,
+        ),
+      ),
+    );
+    expect(summaries.single.group.name, 'renamed group');
+  });
+
+  test('a text-only edit re-emits the watched group entries', () async {
+    await seedGroup();
+    await seedItem(item(groupIds: const [entryGroupId]));
+    final prior = (await repository.readFresh(
+      accountId: 'owner',
+      itemId: '11111111-2222-4333-8444-555555555555',
+    )).valueOrNull!;
+    final items = await nextAfterInitial(
+      repository.watchGroupItems(accountId: 'owner', groupId: entryGroupId),
+      () => repository.runInTransaction(
+        () => repository.updateItem(
+          prior.copyWith(text: 'edited dhikr', updatedAt: now),
+          priorUpdatedAt: prior.updatedAt,
+          operationId: 'op-edit-text',
+          queueForSync: false,
+        ),
+      ),
+    );
+    expect(items.single.text, 'edited dhikr');
   });
 
   test(

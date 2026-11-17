@@ -1218,3 +1218,37 @@ that keeps a live group.
 | Focused suites | `flutter test test/unit/features/adhkar test/unit/core/data/sync` | **226 passed** |
 
 No SQL was touched, so `supabase test db` was not re-run.
+
+### T096 — MyAdhkarCubit (2026-11-17)
+
+`MyAdhkarCubit` (with `MyAdhkarState`, typed `MyAdhkarFailure` and
+`MyAdhkarActionResult`) is composed beside `AdhkarCubit`. It is bound to one
+owner, has no Adhkar clock, times port, counter, celebration or streak, and
+ignores a command while another is in flight. `my_adhkar_cubit_test.dart`
+(16 tests, real encrypted store, stepping clock): load (oldest first, counts,
+idempotent), open and close a group with the entries carrying their full
+group set and following later changes, create/rename/delete a group with the
+preview count, an opened group deleted by sync closing by itself, add/edit
+(group set and text-only)/delete an entry, typed validation failures that
+write nothing, `groupDeleted`/`itemDeleted`, the 100-group and 1000-entry
+limits as flags and typed failures (and lifting the flag on a delete), the
+in-flight guard, a throwing command releasing the guard, close during a
+command, owner isolation, and zero `xp_awards` / Adhkar count rows with only
+`my_adhkar_group` and `my_adhkar_item` outbox types.
+
+Two defects in the committed data layer were found by these tests and fixed
+(each proven first by a failing test in `drift_my_adhkar_repository_test.dart`):
+
+- `watchGroupItems` returned each entry with only the watched group in
+  `groupIds`; the contract says its full group set (needed for the card's
+  "also in" line and the edit form). It now reads the memberships.
+- The group rename and the entry edit/delete `customUpdate` calls did not
+  declare the table they write, so a rename or a text-only edit did not
+  re-emit the watching streams (the UI would not refresh). They now declare
+  `updates:`.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (570 files) |
+| Analyze | `flutter analyze` (whole tree) | No issues found |
+| Focused | `flutter test test/unit/features/adhkar test/architecture` | **257 passed, 0 failed** |
