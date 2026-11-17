@@ -171,8 +171,8 @@ void main() {
       }
       store.addGroup('مجموعة ب', id: 'gb');
       await pumpTab(tester, locale: const Locale('ar'));
-      expect(find.text('3 عناصر'), findsOneWidget);
-      expect(find.text('لا عناصر'), findsOneWidget);
+      expect(find.text('3 أذكار'), findsOneWidget);
+      expect(find.text('لا أذكار'), findsOneWidget);
     });
 
     testWidgets('create a group: counter, save, and the new row', (
@@ -304,7 +304,7 @@ void main() {
       store.addItem(text: 'نص تجريبي ٢', groupIds: [group.groupId]);
       await pumpTab(tester, locale: const Locale('ar'));
       await pickMenu(tester, 'my_adhkar_group_menu_ga', 'حذف');
-      expect(find.textContaining('سيُحذف عنصران.'), findsOneWidget);
+      expect(find.textContaining('سيُحذف ذكران.'), findsOneWidget);
       expect(find.textContaining('تبقى فيها'), findsOneWidget);
     });
 

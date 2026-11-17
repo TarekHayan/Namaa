@@ -556,7 +556,7 @@
   "myAdhkarLoadFailed": "تعذّر تحميل مجموعتك.",
   "myAdhkarCreateGroup": "إنشاء مجموعة",
   "myAdhkarCreateGroupDisabled": "وصلت إلى الحد الأقصى: 100 مجموعة.",
-  "myAdhkarGroupEntries": "{count, plural, =0{لا عناصر} =1{عنصر واحد} =2{عنصران} few{{count} عناصر} many{{count} عنصرًا} other{{count} عنصر}}",
+  "myAdhkarGroupEntries": "{count, plural, =0{لا أذكار} =1{ذكر واحد} =2{ذكران} few{{count} أذكار} many{{count} ذكرًا} other{{count} ذكر}}",
   "@myAdhkarGroupEntries": {
     "placeholders": {"count": {"type": "int"}}
   },
@@ -571,7 +571,7 @@
   },
   "myAdhkarGroupNameInvalid": "اكتب اسمًا من 1 إلى 60 حرفًا.",
   "myAdhkarGroupDeleteTitle": "حذف هذه المجموعة؟",
-  "myAdhkarGroupDeleteBody": "{count, plural, =0{لن يُحذف أي عنصر.} =1{سيُحذف عنصر واحد.} =2{سيُحذف عنصران.} few{سيُحذف {count} عناصر.} many{سيُحذف {count} عنصرًا.} other{سيُحذف {count} عنصر.}} العناصر الموجودة أيضًا في مجموعات أخرى تبقى فيها.",
+  "myAdhkarGroupDeleteBody": "{count, plural, =0{لن يُحذف أي ذكر.} =1{سيُحذف ذكر واحد.} =2{سيُحذف ذكران.} few{سيُحذف {count} أذكار.} many{سيُحذف {count} ذكرًا.} other{سيُحذف {count} ذكر.}} الأذكار الموجودة أيضًا في مجموعات أخرى تبقى فيها.",
   "@myAdhkarGroupDeleteBody": {
     "placeholders": {"count": {"type": "int"}}
   },
@@ -580,8 +580,8 @@
   "myAdhkarEmptyTitle": "ابدأ مجموعتك الخاصة",
   "myAdhkarEmptyBody": "أنشئ مجموعات مثل «الفجر» و«رمضان» و«أدعية الكرب»، ثم احفظ فيها أدعيتك وأذكارك.",
   "myAdhkarAdd": "إضافة",
-  "myAdhkarAddDisabled": "وصلت إلى الحد الأقصى: 1000 عنصر.",
-  "myAdhkarGroupEmpty": "لا توجد عناصر في هذه المجموعة بعد. استخدم «إضافة» لحفظ أول عنصر.",
+  "myAdhkarAddDisabled": "وصلت إلى الحد الأقصى: 1000 ذكر.",
+  "myAdhkarGroupEmpty": "لا توجد أذكار في هذه المجموعة بعد. استخدم «إضافة» لحفظ أول ذكر.",
   "myAdhkarBackToGroups": "العودة إلى المجموعات",
   "myAdhkarOtherGroups": "موجود أيضًا في: {names}",
   "@myAdhkarOtherGroups": {
@@ -601,11 +601,11 @@
   "myAdhkarSourceInvalid": "المصدر لا يزيد عن 500 حرف.",
   "myAdhkarGroupSetInvalid": "اختر مجموعة واحدة على الأقل.",
   "myAdhkarGroupDeleted": "حُذفت هذه المجموعة.",
-  "myAdhkarItemDeleted": "حُذف هذا العنصر.",
+  "myAdhkarItemDeleted": "حُذف هذا الذكر.",
   "myAdhkarGroupUnknown": "هذه المجموعة لم تعد موجودة.",
-  "myAdhkarItemUnknown": "هذا العنصر لم يعد موجودًا.",
+  "myAdhkarItemUnknown": "هذا الذكر لم يعد موجودًا.",
   "myAdhkarSaveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
-  "myAdhkarEntryDeleteTitle": "حذف هذا العنصر؟",
+  "myAdhkarEntryDeleteTitle": "حذف هذا الذكر؟",
   "myAdhkarEntryDeleteBody": "سيُحذف من كل مجموعاته على كل أجهزتك، ولن يعود.",
   "adhkarContentUnavailable": "تعذّر تحميل محتوى الأذكار.",
   "adhkarCountingLocked": "الأوقات غير متاحة الآن؛ العدّ متوقف حتى تعود الأوقات.",
@@ -681,7 +681,7 @@
   "adhkarConflictListMorning": "أذكار الصباح",
   "adhkarConflictListEvening": "أذكار المساء",
   "myAdhkarConflictGroup": "أذكاري · مجموعة",
-  "myAdhkarConflictEntry": "أذكاري · عنصر",
+  "myAdhkarConflictEntry": "أذكاري · ذكر",
   "myAdhkarConflictDeleted": "محذوف",
   "adhkarConflictItem": "الذكر {position}",
   "@adhkarConflictItem": {
