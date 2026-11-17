@@ -673,6 +673,169 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
     }
   }
 
+  // -- Inbound ----------------------------------------------------------------
+
+  /// Applies one remote group version (the inbound reconciler; call inside
+  /// [runInTransaction]). The row is upserted stamped as acknowledged at the
+  /// server's version, and no outbox entry is appended. Returns whether the
+  /// row changed. It is skipped when the local row already acknowledged a
+  /// newer server version, when it carries the same acknowledged version,
+  /// and when the local row is deleted but the remote one is live: a
+  /// tombstone never clears (FR-027). The memberships of a deleted group are
+  /// settled by the entry versions the server cascades, never here, so a
+  /// pending local entry never ends up with no group.
+  Future<AppResult<bool>> applyRemoteGroup(
+    MyAdhkarRemoteGroup remote, {
+    required String accountId,
+  }) async {
+    try {
+      if (remote.accountId != accountId) {
+        throw const FormatException('Foreign My Adhkar group');
+      }
+      final local =
+          await (_database.select(_database.myAdhkarGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.groupId.equals(remote.groupId),
+              ))
+              .getSingleOrNull();
+      if (local != null) {
+        final acknowledged = local.lastAcknowledgedUpdatedAt == null
+            ? null
+            : DateTime.parse(local.lastAcknowledgedUpdatedAt!);
+        if (acknowledged != null && acknowledged.isAfter(remote.updatedAt)) {
+          return const AppResult.success(false);
+        }
+        if (local.deletedAt != null && !remote.isDeleted) {
+          return const AppResult.success(false);
+        }
+        if (acknowledged == remote.updatedAt &&
+            DateTime.parse(local.updatedAt) == remote.updatedAt &&
+            local.name == remote.name &&
+            (local.deletedAt != null) == remote.isDeleted) {
+          return const AppResult.success(false);
+        }
+      }
+      await _database
+          .into(_database.myAdhkarGroups)
+          .insertOnConflictUpdate(
+            MyAdhkarGroupsCompanion.insert(
+              accountId: accountId,
+              groupId: remote.groupId,
+              name: remote.name,
+              createdAt: remote.createdAt.toIso8601String(),
+              updatedAt: remote.updatedAt.toIso8601String(),
+              lastAcknowledgedUpdatedAt: Value(
+                remote.updatedAt.toIso8601String(),
+              ),
+              deletedAt: Value(remote.deletedAt?.toIso8601String()),
+            ),
+          );
+      return const AppResult.success(true);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.group.save_failed'));
+    }
+  }
+
+  /// Applies one remote entry version with its group set (the inbound
+  /// reconciler; call inside [runInTransaction]; no outbox entry). Returns
+  /// whether the row changed. Skipped under the same rules as
+  /// [applyRemoteGroup] (a newer acknowledged version, the same version, a
+  /// local tombstone against a live remote). The membership rows follow the
+  /// remote set minus any group that is deleted locally (so a delete the
+  /// device already made and not yet sent never brings a deleted group
+  /// back); a kept group keeps its local `added_at`, a new one takes the
+  /// server's. A live remote entry whose every group is deleted locally is
+  /// left alone: the group-delete path settles it.
+  Future<AppResult<bool>> applyRemoteItem(
+    MyAdhkarRemoteItem remote, {
+    required String accountId,
+  }) async {
+    try {
+      if (remote.accountId != accountId) {
+        throw const FormatException('Foreign My Adhkar entry');
+      }
+      final local =
+          await (_database.select(_database.myAdhkarItems)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.itemId.equals(remote.itemId),
+              ))
+              .getSingleOrNull();
+      var groupIds = remote.groupIds;
+      if (!remote.isDeleted) {
+        final deletedLocally =
+            await (_database.select(_database.myAdhkarGroups)..where(
+                  (table) =>
+                      table.accountId.equals(accountId) &
+                      table.groupId.isIn(remote.groupIds) &
+                      table.deletedAt.isNotNull(),
+                ))
+                .map((row) => row.groupId)
+                .get();
+        groupIds = [
+          for (final id in remote.groupIds)
+            if (!deletedLocally.contains(id)) id,
+        ];
+        if (groupIds.isEmpty) return const AppResult.success(false);
+      }
+      if (local != null) {
+        final acknowledged = local.lastAcknowledgedUpdatedAt == null
+            ? null
+            : DateTime.parse(local.lastAcknowledgedUpdatedAt!);
+        if (acknowledged != null && acknowledged.isAfter(remote.updatedAt)) {
+          return const AppResult.success(false);
+        }
+        if (local.deletedAt != null && !remote.isDeleted) {
+          return const AppResult.success(false);
+        }
+        final memberships =
+            await (_database.select(_database.myAdhkarItemGroups)..where(
+                  (table) =>
+                      table.accountId.equals(accountId) &
+                      table.itemId.equals(remote.itemId),
+                ))
+                .map((row) => row.groupId)
+                .get();
+        if (acknowledged == remote.updatedAt &&
+            DateTime.parse(local.updatedAt) == remote.updatedAt &&
+            local.content == remote.text &&
+            local.source == remote.source &&
+            (local.deletedAt != null) == remote.isDeleted &&
+            memberships.toSet().difference(groupIds.toSet()).isEmpty &&
+            groupIds.toSet().difference(memberships.toSet()).isEmpty) {
+          return const AppResult.success(false);
+        }
+      }
+      await _database
+          .into(_database.myAdhkarItems)
+          .insertOnConflictUpdate(
+            MyAdhkarItemsCompanion.insert(
+              accountId: accountId,
+              itemId: remote.itemId,
+              content: remote.text,
+              source: Value(remote.source),
+              createdAt: remote.createdAt.toIso8601String(),
+              updatedAt: remote.updatedAt.toIso8601String(),
+              lastAcknowledgedUpdatedAt: Value(
+                remote.updatedAt.toIso8601String(),
+              ),
+              deletedAt: Value(remote.deletedAt?.toIso8601String()),
+            ),
+          );
+      await _syncMemberships(
+        accountId: accountId,
+        itemId: remote.itemId,
+        groupIds: remote.isDeleted ? const [] : groupIds,
+        newAddedAt: remote.createdAt,
+        serverAddedAt: remote.groupAddedAt,
+      );
+      return const AppResult.success(true);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.item.save_failed'));
+    }
+  }
+
   // -- Receipt finalization --------------------------------------------------
 
   /// Settles one acknowledged group receipt locally in one transaction

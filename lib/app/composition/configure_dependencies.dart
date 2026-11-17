@@ -48,14 +48,18 @@ import 'package:namma_project/core/platform/secure_credential_vault.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_inbound_sync_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_sync_service.dart';
+import 'package:namma_project/features/adhkar/application/my_adhkar_inbound_sync_port.dart';
 import 'package:namma_project/features/adhkar/data/adhkar_inbound_synchronizer.dart';
 import 'package:namma_project/features/adhkar/data/adhkar_reconciler.dart';
 import 'package:namma_project/features/adhkar/data/drift_adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/data/my_adhkar_inbound_synchronizer.dart';
+import 'package:namma_project/features/adhkar/data/my_adhkar_reconciler.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_gateway.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_reader.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_sync_adapter.dart';
 import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_gateway.dart';
+import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_reader.dart';
 import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_sync_adapter.dart';
 import 'package:namma_project/features/foundation/application/foundation_use_cases.dart';
 import 'package:namma_project/features/foundation/application/locale_preferences.dart';
@@ -326,6 +330,17 @@ Future<void> configureDependencies({
         gateway: myAdhkarGateway,
         repository: myAdhkarRepository,
       );
+      getIt.registerLazySingleton<MyAdhkarInboundSyncPort>(
+        () => MyAdhkarInboundSynchronizer(
+          reader: SupabaseMyAdhkarReader(
+            SupabaseMyAdhkarPageSource(cloud.client),
+          ),
+          reconciler: MyAdhkarReconciler(
+            repository: myAdhkarRepository,
+            localStore: localStore,
+          ),
+        ),
+      );
       getIt.registerLazySingleton<SupabaseTaskGateway>(() => taskGateway);
       getIt.registerLazySingleton<SupabaseHabitGateway>(() => habitGateway);
       getIt.registerLazySingleton<SupabaseMapGateway>(() => mapGateway);
@@ -583,6 +598,7 @@ Future<void> configureDependencies({
           connectivity: getIt<ConnectivityPort>(),
           outbound: getIt<PendingSynchronizationEngine>(),
           inbound: getIt<AdhkarInboundSyncPort>(),
+          myAdhkarInbound: getIt<MyAdhkarInboundSyncPort>(),
         ),
         dispose: (service) => service.dispose(),
       );

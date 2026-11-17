@@ -1134,3 +1134,61 @@ touches:
 | Format | `dart format --output=none --set-exit-if-changed lib/features/adhkar/{data,application,domain} lib/core/data/sync lib/app/composition test/unit/features/adhkar/{data,application}` | clean (60 files) |
 | Analyze | `dart analyze` on the same directories | No issues found |
 | Focused suites | `flutter test test/unit/features/adhkar test/unit/core/data/sync test/architecture` | **232 passed** |
+
+## Phase 6b part 3d — My Adhkar inbound sync (T094–T095) (2026-11-17)
+
+`supabase_my_adhkar_reader.dart` (keyset pages over a `MyAdhkarPageSource`:
+`my_adhkar_groups` by `group_id`, `my_adhkar_items` by `item_id` with the
+`my_adhkar_item_groups` rows embedded in the same row so a group set always
+belongs to its version, and `my_adhkar_conflicts` by `conflict_id`; each
+pass restarts from the first key, a page that does not advance, an
+oversized page, a foreign owner or an account change fails the pass),
+`my_adhkar_reconciler.dart` (one transaction; groups before entries; rows
+with pending local work are skipped; conflicts upserted by their stable id)
+and `my_adhkar_inbound_synchronizer.dart`, plus
+`applyRemoteGroup` / `applyRemoteItem` in the Drift repository (skipped when
+a newer server version is already acknowledged, when the same version is
+already stored, and when a local tombstone meets a live remote row — a
+tombstone never clears; a remote group set never re-links a group deleted
+on this device; a kept membership keeps its local `added_at`, a new one
+takes the server's). `AdhkarSyncService` runs the My Adhkar import
+independently of the Adhkar import: each has its own failure, so one never
+stops the other, and the pass reports one recoverable failure when either
+failed. Registered through composition. No schema change was needed: the
+acknowledged version and the conflict evidence already live in v11.
+
+The PostgREST embed `my_adhkar_items?select=*,my_adhkar_item_groups(...)`
+was checked against the local stack with the anon key: the relationship
+resolves (permission denied on the table, not `PGRST200`), while a bogus
+relationship returns `PGRST200` as a control. No credential was used.
+
+`my_adhkar_inbound_test.dart` (21 tests): keyset cursors for groups,
+entries and conflicts (page size 2, an exact multiple ending on an empty
+page); group sets and `added_at` read from an entry page; a failed page
+fails the read and the retry restarts from the first key; a non-advancing
+or oversized page, a foreign owner row and an account change fail the read;
+a snapshot of groups, entries and a conflict imported with no outbound
+operation queued and no `xp_awards` row; re-import changes nothing; a
+failed page applies nothing; a foreign owner fails the pass with nothing
+applied; a stale scope fails before anything is applied; a server
+group-delete cascade applied locally (the entry left with no live group is
+deleted, the entry in another group stays with the smaller set); tombstones
+applied and a local tombstone never cleared; pending local work kept; an
+older remote version never overwrites a newer acknowledged one; a locally
+deleted group is not linked again; `added_at` rules; and the isolation
+inside `AdhkarSyncService` (a failing My Adhkar import fails only this pass,
+a failing Adhkar import does not stop the My Adhkar import, both succeeding
+is a successful pass). The existing `adhkar_sync_service_test.dart` (Phase 6
+isolation) is unchanged and passes.
+
+Gates (2026-11-17, Windows host). The working tree also holds uncommitted
+presentation drafts for T096–T097 (the cubit, the tab, their tests and
+the screen/header/l10n edits); `my_adhkar_tab_test.dart` does not compile yet
+(it is owned by T097), so the full suite excludes only that one file:
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib/features/adhkar/{data,application,domain} lib/core/data/sync lib/app/composition test/unit/features/adhkar/{data,application}` | clean (64 files) |
+| Analyze | `dart analyze` on the same directories | No issues found |
+| Full suite | `flutter test test/unit test/architecture test/widget_test.dart test/widget/{app,testing} test/widget/features/{habits,mind_maps,prayer,qiyam,tasks,today} test/widget/features/adhkar/{adhkar_screen,adhkar_conflicts}_test.dart` | **1133 passed, 1 skipped, 0 failed** |
+| SQL/RLS | `supabase test db` (local stack) | **27 files, 418 tests, all passed** |

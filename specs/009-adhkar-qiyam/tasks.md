@@ -569,10 +569,10 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [x] T093 [US5] Implement lib/features/adhkar/data/supabase_my_adhkar_gateway.dart and supabase_my_adhkar_sync_adapter.dart, and register `my_adhkar_group` and `my_adhkar_item` in `EntityDispatchRouter` through composition, keeping the outbox's chronological order across both types (no groups-first reordering).
   - **Depends**: T092.
   - **Done**: T092 passes; the existing router tests are unchanged.
-- [ ] T094 [P] [US5] Write tests in test/unit/features/adhkar/data/my_adhkar_inbound_test.dart: keyset pages for groups, entries (with their group sets) and conflicts; a server group-delete cascade applied locally; a failed page retried without advancing; the owner validated; tombstones applied; pending local work kept.
+- [x] T094 [P] [US5] Write tests in test/unit/features/adhkar/data/my_adhkar_inbound_test.dart: keyset pages for groups, entries (with their group sets) and conflicts; a server group-delete cascade applied locally; a failed page retried without advancing; the owner validated; tombstones applied; pending local work kept.
   - **Depends**: T093.
   - **Done**: They fail before T095.
-- [ ] T095 [US5] Implement the My Adhkar reader and reconciler, and run them inside `AdhkarSyncService` / `AdhkarInboundSynchronizer`, so a failure stays isolated as in Phase 6.
+- [x] T095 [US5] Implement the My Adhkar reader and reconciler, and run them inside `AdhkarSyncService` / `AdhkarInboundSynchronizer`, so a failure stays isolated as in Phase 6.
   - **Depends**: T094.
   - **Done**: T094 passes, and the Phase 6 isolation test still passes.
 - [ ] T096 [P] [US5] Write tests in test/unit/features/adhkar/presentation/my_adhkar_cubit_test.dart, then implement `MyAdhkarCubit`, composed beside `AdhkarCubit`: load the groups, open and close a group, create, rename and delete a group (with the preview count), add, edit (including the group set) and delete an entry, the limits, owner change, and no celebration or streak change. It works the same when the Prayer schedule is unavailable.

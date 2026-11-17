@@ -6,6 +6,7 @@ import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
 
 import 'adhkar_inbound_sync_port.dart';
+import 'my_adhkar_inbound_sync_port.dart';
 
 final class AdhkarSyncSummary {
   const AdhkarSyncSummary({required this.outbound, required this.inbound});
@@ -16,17 +17,22 @@ final class AdhkarSyncSummary {
 /// The Adhkar owner scope sends durable operations before importing pages.
 /// This service is domain-scoped: a failure here never fails or delays
 /// Tasks, Habits, Maps or Prayer sync, and never shows in the global sync
-/// status (Phase 6, isolation).
+/// status (Phase 6, isolation). The My Adhkar inbound pass runs in the same
+/// service, independently of the Adhkar import: a My Adhkar failure fails
+/// this domain's pass but never stops the Adhkar import and never reaches
+/// the other domains (T095).
 final class AdhkarSyncService {
   AdhkarSyncService({
     required CloudSessionPort session,
     required ConnectivityPort connectivity,
     required PendingSynchronizationEngine outbound,
     required AdhkarInboundSyncPort inbound,
+    MyAdhkarInboundSyncPort? myAdhkarInbound,
   }) : _session = session,
        _connectivity = connectivity,
        _outbound = outbound,
-       _inbound = inbound {
+       _inbound = inbound,
+       _myAdhkarInbound = myAdhkarInbound {
     _connectivitySubscription = _connectivity.changes.listen((status) {
       if (status == ConnectivityStatus.online) unawaited(synchronize());
     });
@@ -48,6 +54,7 @@ final class AdhkarSyncService {
   final ConnectivityPort _connectivity;
   final PendingSynchronizationEngine _outbound;
   final AdhkarInboundSyncPort _inbound;
+  final MyAdhkarInboundSyncPort? _myAdhkarInbound;
   late final StreamSubscription<ConnectivityStatus> _connectivitySubscription;
   late final StreamSubscription<CloudSessionSnapshot> _sessionSubscription;
   String? _owner;
@@ -108,8 +115,26 @@ final class AdhkarSyncService {
     if (!await _stillOwner(owner, generation)) {
       return AppResult.failure(_failure(AppFailureCategory.authorization));
     }
+    // The My Adhkar import runs in the same service but independently of
+    // the Adhkar import: each has its own failure, so a My Adhkar failure
+    // never stops the Adhkar import (nor the reverse), and the pass is
+    // reported as one recoverable failure when either one failed.
+    AppResult<MyAdhkarInboundSummary>? myInbound;
+    if (_myAdhkarInbound case final port?) {
+      myInbound = await port.receive(
+        accountId: owner,
+        isCurrentScope: () =>
+            !_disposed && _generation == generation && _owner == owner,
+      );
+      if (!await _stillOwner(owner, generation)) {
+        return AppResult.failure(_failure(AppFailureCategory.authorization));
+      }
+    }
     if (inbound.failureOrNull case final failure?) {
       return AppResult.failure(failure);
+    }
+    if (myInbound?.failureOrNull != null) {
+      return AppResult.failure(_failure(AppFailureCategory.cloud));
     }
     final summary = outbound.valueOrNull!;
     if (summary.recoverableFailures > 0 ||
