@@ -584,7 +584,7 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [x] T098 [US5] Add My Adhkar conflicts (groups and entries) to the Adhkar "Sync differences" list (both versions, long text shortened, no resolve action), with a widget test in test/widget/features/adhkar/adhkar_conflicts_test.dart.
   - **Depends**: T095.
   - **Done**: The test shows both versions and no foreign-owner data.
-- [ ] T099 [US5] Extend integration_test/adhkar_qiyam_offline_sync_test.dart with My Adhkar on the local stack: both devices create groups and add entries, one entry in two groups, a group deleted on A while B adds to it offline (B's version kept as a conflict, an entry in another group kept), a concurrent edit gives one visible conflict, a delete stays final against a newer edit, owner B is isolated, and no `xp_awards` row is written.
+- [x] T099 [US5] Extend integration_test/adhkar_qiyam_offline_sync_test.dart with My Adhkar on the local stack: both devices create groups and add entries, one entry in two groups, a group deleted on A while B adds to it offline (B's version kept as a conflict, an entry in another group kept), a concurrent edit gives one visible conflict, a delete stays final against a newer edit, owner B is isolated, and no `xp_awards` row is written.
   - **Depends**: T093, T095.
   - **Done**: It passes on Windows against the local stack, run twice without a reset.
 

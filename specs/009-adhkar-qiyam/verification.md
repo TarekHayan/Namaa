@@ -1301,3 +1301,41 @@ The My Adhkar conflicts list is a widget parameter
 (`myAdhkarConflicts`, fed by `DriftMyAdhkarRepository.watchConflicts`);
 composing the view into a route belongs to the Adhkar route wiring (T034/T035),
 which is still open.
+
+### T099 — My Adhkar two-device integration (2026-11-17)
+
+`integration_test/adhkar_qiyam_offline_sync_test.dart` gained a second test on
+the LOCAL Supabase stack: two encrypted stores for one owner and a third client
+for owner B, one script clock (every command is stamped one minute after the
+previous one, inside the server's two-day window), run-tagged names and texts,
+and assertions addressed by the IDs the run created (so a shared hosted account
+or a repeated run never collides). Cases: (1) both devices create groups and
+add entries, one entry in two groups, and both stores converge with no
+conflict; (2) group A1 deleted on device A while device B, offline, adds to it:
+the entry only in A1 is deleted and kept as one conflict (on the server, on B
+and, after its pull, on A), B's entry also in B1 stays there, A's entry also in
+A2 stays there; (3) one entry edited on both devices gives one stable conflict
+and the newest version wins on both, and a duplicate pass adds none; (4) a
+delete stays final against a newer edit (the edit is one conflict, memberships
+stay empty, the entry stays deleted on both); (5) on device B, offline, an
+entry is edited and then its only group is deleted: the edit reaches the
+server first, the entry is deleted on both devices and there is NO conflict
+record; (6) owner B is isolated in both directions (row-level security and the
+local stores); (7) My Adhkar writes no `xp_awards` row locally or on the server.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Integration, run 1 | `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows --dart-define=NAMAA_SUPABASE_ENV=local --dart-define=NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=<local key>` | **2 passed** (the existing test and the My Adhkar test) |
+| Integration, run 2 | same command, no `supabase db reset` between | **2 passed** |
+| SQL/RLS | `supabase test db` (local stack, freshly reset) | **27 files, 418 tests, all passed** |
+| Full suite | `flutter test` | **1197 passed, 1 skipped, 0 failed** |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (575 files) |
+| Analyze | `flutter analyze` (whole tree) | No issues found |
+
+The integration runs above were done twice before the final reset and twice
+after it (4 passing runs in all, local stack only; no staging, no production).
+Note: `supabase test db` is not clean on a stack that has just run integration
+tests, because two My Adhkar pgTAP assertions count global rows (`xp_awards`
+and the operation receipts); it passed on a freshly reset local stack, and
+`supabase db reset --local` was used for that. Run the SQL suite before the
+integration tests, or after a local reset.

@@ -9,14 +9,24 @@ import 'package:namma_project/core/data/local/drift_local_store.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart'
     hide XpAward;
 import 'package:namma_project/core/data/local/qiyam_unit_of_work.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_clock_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/application/my_adhkar_commands.dart';
 import 'package:namma_project/features/adhkar/data/adhkar_inbound_synchronizer.dart';
 import 'package:namma_project/features/adhkar/data/adhkar_reconciler.dart';
 import 'package:namma_project/features/adhkar/data/drift_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/data/my_adhkar_inbound_synchronizer.dart';
+import 'package:namma_project/features/adhkar/data/my_adhkar_reconciler.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_gateway.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_reader.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_sync_adapter.dart';
+import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_gateway.dart';
+import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_reader.dart';
+import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_sync_adapter.dart';
 import 'package:namma_project/features/adhkar/data/uuid_adhkar_identity.dart';
+import 'package:namma_project/features/adhkar/data/uuid_my_adhkar_identity.dart';
+import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 import 'package:namma_project/features/qiyam/application/qiyam_repository.dart';
 import 'package:namma_project/features/qiyam/data/drift_qiyam_repository.dart';
 import 'package:namma_project/features/qiyam/data/qiyam_inbound_synchronizer.dart';
@@ -718,4 +728,596 @@ void main() {
       reason: 'owner A keeps exactly its own settled award',
     );
   });
+
+  testWidgets('two encrypted devices converge on My Adhkar groups and '
+      'entries, with visible conflicts and final deletes', (tester) async {
+    final environment = resolveTestSupabaseEnvironment();
+    const localKey = String.fromEnvironment(
+      'NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY',
+    );
+    const stagingUrl = String.fromEnvironment('NAMAA_SUPABASE_URL');
+    const stagingKey = String.fromEnvironment('NAMAA_SUPABASE_PUBLISHABLE_KEY');
+    const emailA = String.fromEnvironment('NAMAA_STAGING_TEST_USER_A_EMAIL');
+    const passwordA = String.fromEnvironment(
+      'NAMAA_STAGING_TEST_USER_A_PASSWORD',
+    );
+    const emailB = String.fromEnvironment('NAMAA_STAGING_TEST_USER_B_EMAIL');
+    const passwordB = String.fromEnvironment(
+      'NAMAA_STAGING_TEST_USER_B_PASSWORD',
+    );
+    final local = environment == SupabaseEnvironmentKind.localStack;
+    late final SupabaseEnvironmentConfig config;
+    if (local) {
+      if (localKey.isEmpty) fail('Local Supabase publishable key is required');
+      config = SupabaseEnvironmentConfig.localStack(
+        url: requireLocalStackUrl(kSupabaseLocalUrl),
+        publishableKey: localKey,
+      );
+    } else {
+      for (final value in [
+        stagingUrl,
+        stagingKey,
+        emailA,
+        passwordA,
+        emailB,
+        passwordB,
+      ]) {
+        if (value.isEmpty) fail('Isolated staging credentials are required');
+      }
+      final uri = Uri.parse(stagingUrl);
+      config = SupabaseEnvironmentConfig.isolatedNonProduction(
+        url: uri,
+        publishableKey: stagingKey,
+        approvedHosts: {uri.host},
+      );
+    }
+    SupabaseClient testClient() => SupabaseClient(
+      config.url.toString(),
+      config.publishableKey,
+      authOptions: const AuthClientOptions(authFlowType: AuthFlowType.implicit),
+    );
+    // Clients 0 and 1 are the same owner on two devices; client 2 is owner B.
+    final clients = <SupabaseClient>[testClient(), testClient(), testClient()];
+    final paths = [TemporaryDatabasePath(), TemporaryDatabasePath()];
+    final dbs = <FoundationDatabase>[];
+    addTearDown(() async {
+      for (final db in dbs) {
+        await db.close();
+      }
+      for (final path in paths) {
+        path.dispose();
+      }
+      for (final client in clients) {
+        await client.dispose();
+      }
+    });
+    const password = 'LocalMyAdhkarIntegration2026!';
+    late final String owner;
+    late final String ownerB;
+    if (local) {
+      final stamp = DateTime.now().microsecondsSinceEpoch;
+      final signup = await clients[0].auth.signUp(
+        email: 'my-adhkar-$stamp@example.test',
+        password: password,
+      );
+      if (signup.session == null || signup.user == null) {
+        fail('Local Supabase did not create an authenticated test session');
+      }
+      owner = signup.user!.id;
+      await clients[1].auth.signInWithPassword(
+        email: 'my-adhkar-$stamp@example.test',
+        password: password,
+      );
+      final signupB = await clients[2].auth.signUp(
+        email: 'my-adhkar-b-$stamp@example.test',
+        password: password,
+      );
+      if (signupB.session == null || signupB.user == null) {
+        fail('Local Supabase did not create the second test owner');
+      }
+      ownerB = signupB.user!.id;
+    } else {
+      owner = (await clients[0].auth.signInWithPassword(
+        email: emailA,
+        password: passwordA,
+      )).user!.id;
+      await clients[1].auth.signInWithPassword(
+        email: emailA,
+        password: passwordA,
+      );
+      ownerB = (await clients[2].auth.signInWithPassword(
+        email: emailB,
+        password: passwordB,
+      )).user!.id;
+    }
+    for (var i = 0; i < 2; i++) {
+      dbs.add(
+        await FoundationDatabase.openEncrypted(
+          path: paths[i].allocate(),
+          key: List<int>.generate(32, (j) => j + 80 + i),
+        ),
+      );
+    }
+
+    // Per-run unique fixtures: every name, text and operation carries the
+    // run tag, and every assertion addresses the entities this run created
+    // by their IDs, so a shared account and repeated runs never collide.
+    final runTag = Random.secure().nextInt(1 << 32).toRadixString(16);
+    // One global script clock: each command on either device is stamped one
+    // minute after the previous one (all in the recent past, inside the
+    // server's two-day future window), so "newer" is exactly script order.
+    final scriptBase = DateTime.now().toUtc().subtract(
+      const Duration(hours: 2),
+    );
+    var step = 0;
+    final clocks = [_ScriptClock(scriptBase), _ScriptClock(scriptBase)];
+    void tick(int device) =>
+        clocks[device].now = scriptBase.add(Duration(minutes: ++step));
+
+    final repos = [for (final db in dbs) DriftMyAdhkarRepository(db)];
+    final cmds = [
+      for (var i = 0; i < 2; i++)
+        MyAdhkarCommands(
+          ownerId: owner,
+          clock: clocks[i],
+          repository: repos[i],
+          identity: const UuidMyAdhkarIdentity(),
+        ),
+    ];
+    final adapters = [
+      for (var i = 0; i < 2; i++)
+        SupabaseMyAdhkarSyncAdapter(
+          gateway: SupabaseMyAdhkarGatewayImpl(clients[i]),
+          repository: repos[i],
+        ),
+    ];
+    final inbound = [
+      for (var i = 0; i < 2; i++)
+        MyAdhkarInboundSynchronizer(
+          reader: SupabaseMyAdhkarReader(
+            SupabaseMyAdhkarPageSource(clients[i]),
+            pageSize: 2,
+          ),
+          reconciler: MyAdhkarReconciler(
+            repository: repos[i],
+            localStore: DriftLocalStore(dbs[i]),
+          ),
+        ),
+    ];
+
+    Future<int> awardRows(SupabaseClient client, String forOwner) async =>
+        (await client.from('xp_awards').select().eq('owner', forOwner)).length;
+    final awardsBefore = await awardRows(clients[0], owner);
+    final awardsBeforeB = await awardRows(clients[2], ownerB);
+
+    // ---- helpers -------------------------------------------------------
+    Future<void> push(
+      int device,
+      String forOwner,
+      CloudSyncPort adapter,
+    ) async {
+      final rows = (await DriftLocalStore(
+        dbs[device],
+      ).readPendingChanges(forOwner)).valueOrNull!;
+      for (final row in rows) {
+        final change = OutboundChange(
+          operationId: row.operationId,
+          accountId: forOwner,
+          entityType: row.entityType,
+          entityId: row.entityId,
+          kind: row.kind,
+          payload: row.serializedChange,
+          versionTimestamp: row.versionTimestamp,
+          baseUpdatedAt: row.baseUpdatedAt,
+        );
+        final result = await adapter.dispatchChange(change);
+        expect(result.failureOrNull, isNull, reason: row.operationId);
+        expect(
+          result.valueOrNull,
+          isA<DispatchAcknowledged>(),
+          reason: row.operationId,
+        );
+        final ack = result.valueOrNull! as DispatchAcknowledged;
+        expect(
+          (await DriftLocalStore(dbs[device]).acknowledgeChange(
+            row.operationId,
+            ack.acknowledgementId,
+            ack.remoteVersionTimestamp!,
+          )).failureOrNull,
+          isNull,
+          reason: row.operationId,
+        );
+      }
+    }
+
+    Future<void> pushAll(int device) => push(device, owner, adapters[device]);
+
+    Future<void> pull(int device) async {
+      final result = await inbound[device].receive(
+        accountId: owner,
+        isCurrentScope: () => true,
+      );
+      expect(result.failureOrNull, isNull, reason: 'inbound pass $device');
+    }
+
+    Future<void> syncBoth() async {
+      await pushAll(0);
+      await pushAll(1);
+      await pull(0);
+      await pull(1);
+    }
+
+    Future<String> newGroup(int device, String name) async {
+      tick(device);
+      final result = await cmds[device].createGroup(name: '$name $runTag');
+      return (result.valueOrNull! as MyAdhkarGroupCreated).groupId;
+    }
+
+    Future<String> newEntry(
+      int device,
+      String text,
+      List<String> groups, {
+      String? source,
+    }) async {
+      tick(device);
+      final result = await cmds[device].add(
+        draft: MyDhikrDraft(
+          text: '$text $runTag',
+          source: source,
+          groupIds: groups,
+        ),
+      );
+      return (result.valueOrNull! as MyAdhkarAdded).itemId;
+    }
+
+    Future<MyDhikrItem> localEntry(int device, String id) async =>
+        (await repos[device].readFresh(
+          accountId: owner,
+          itemId: id,
+        )).valueOrNull!;
+
+    Future<bool> localGroupLive(int device, String id) async {
+      final group = (await repos[device].readGroupFresh(
+        accountId: owner,
+        groupId: id,
+      )).valueOrNull;
+      return group != null && !group.isDeleted;
+    }
+
+    Future<int> localConflicts(int device, String entityId) async =>
+        (await dbs[device].rawScalar(
+              'SELECT count(*) FROM conflict_records WHERE account_id = '
+              "'$owner' AND entity_id = '$entityId'",
+            ))
+            as int;
+
+    Future<Map<String, dynamic>?> remoteItem(String id) async {
+      final rows = await clients[0]
+          .from('my_adhkar_items')
+          .select()
+          .eq('owner', owner)
+          .eq('item_id', id);
+      return rows.isEmpty ? null : Map<String, dynamic>.from(rows.single);
+    }
+
+    Future<List<String>> remoteMemberships(String id) async =>
+        (await clients[0]
+                .from('my_adhkar_item_groups')
+                .select()
+                .eq('owner', owner)
+                .eq('item_id', id))
+            .map((row) => (row as Map)['group_id'] as String)
+            .toList()
+          ..sort();
+
+    Future<int> remoteConflicts(String entityId) async =>
+        (await clients[0]
+                .from('my_adhkar_conflicts')
+                .select()
+                .eq('owner', owner)
+                .eq('entity_id', entityId))
+            .length;
+
+    // --------------------------------------------------------------------
+    // Case 1: both devices create groups and add entries; one entry is in
+    // two groups; everything converges on both devices.
+    // --------------------------------------------------------------------
+    final groupA1 = await newGroup(0, 'group a1');
+    final groupA2 = await newGroup(0, 'group a2');
+    final entryShared = await newEntry(0, 'entry shared', [
+      groupA1,
+      groupA2,
+    ], source: 'source shared');
+    final entryOnlyA1 = await newEntry(0, 'entry only a1', [groupA1]);
+    final groupB1 = await newGroup(1, 'group b1');
+    final entryB = await newEntry(1, 'entry b', [groupB1]);
+    await syncBoth();
+    for (final device in [0, 1]) {
+      for (final id in [groupA1, groupA2, groupB1]) {
+        expect(await localGroupLive(device, id), isTrue, reason: 'group $id');
+      }
+      for (final id in [entryShared, entryOnlyA1, entryB]) {
+        expect((await localEntry(device, id)).isDeleted, isFalse);
+      }
+      expect(
+        (await localEntry(device, entryShared)).groupIds.toSet(),
+        {groupA1, groupA2},
+        reason: 'one entry in two groups is one entry on device $device',
+      );
+      expect((await localEntry(device, entryShared)).source, 'source shared');
+    }
+    expect(await remoteMemberships(entryShared), [groupA1, groupA2]..sort());
+    expect(
+      await dbs[0].rawScalar('SELECT count(*) FROM conflict_records'),
+      0,
+      reason: 'a clean convergence has no conflict',
+    );
+    expect(await dbs[1].rawScalar('SELECT count(*) FROM conflict_records'), 0);
+
+    // --------------------------------------------------------------------
+    // Case 2: group A1 is deleted on device A while device B, offline, adds
+    // to it. The group delete wins; B's entry that was only in A1 is
+    // deleted and kept as a visible conflict; B's entry also in group B1
+    // stays there; A's entry also in A2 stays there.
+    // --------------------------------------------------------------------
+    final entryBOnlyA1 = await newEntry(1, 'entry b only a1', [groupA1]);
+    final entryBKept = await newEntry(1, 'entry b kept', [groupA1, groupB1]);
+    tick(0);
+    final deleteResult = await cmds[0].deleteGroup(groupId: groupA1);
+    expect(
+      (deleteResult.valueOrNull! as MyAdhkarGroupDeleted).cascadedEntries,
+      1,
+      reason: 'only the entry that was solely in A1',
+    );
+    await pushAll(0);
+    await pushAll(1);
+    await pull(0);
+    await pull(1);
+    for (final device in [0, 1]) {
+      expect(await localGroupLive(device, groupA1), isFalse);
+      expect((await localEntry(device, entryOnlyA1)).isDeleted, isTrue);
+      expect(
+        (await localEntry(device, entryBOnlyA1)).isDeleted,
+        isTrue,
+        reason: 'B\'s entry left with no live group is deleted',
+      );
+      final kept = await localEntry(device, entryBKept);
+      expect(kept.isDeleted, isFalse);
+      expect(kept.groupIds, [groupB1]);
+      final shared = await localEntry(device, entryShared);
+      expect(shared.isDeleted, isFalse);
+      expect(shared.groupIds, [groupA2]);
+    }
+    expect(
+      await remoteConflicts(entryBOnlyA1),
+      1,
+      reason: 'B\'s version is kept as one conflict on the server',
+    );
+    expect(await localConflicts(1, entryBOnlyA1), 1);
+    expect(
+      await localConflicts(0, entryBOnlyA1),
+      1,
+      reason: 'device A sees the conflict after its inbound pass',
+    );
+    expect(await localConflicts(1, entryBKept), 0);
+    expect(await remoteConflicts(entryOnlyA1), 0);
+
+    // --------------------------------------------------------------------
+    // Case 3: the same entry edited on both devices offline gives ONE
+    // visible conflict and converges on the newest version.
+    // --------------------------------------------------------------------
+    tick(0);
+    expect(
+      (await cmds[0].edit(
+        itemId: entryB,
+        draft: MyDhikrDraft(
+          text: 'entry b edited on a $runTag',
+          groupIds: [groupB1],
+        ),
+      )).valueOrNull,
+      isA<MyAdhkarEdited>(),
+    );
+    tick(1);
+    expect(
+      (await cmds[1].edit(
+        itemId: entryB,
+        draft: MyDhikrDraft(
+          text: 'entry b edited on b $runTag',
+          groupIds: [groupB1],
+        ),
+      )).valueOrNull,
+      isA<MyAdhkarEdited>(),
+    );
+    await syncBoth();
+    expect(await remoteConflicts(entryB), 1, reason: 'one stable conflict');
+    for (final device in [0, 1]) {
+      expect(
+        (await localEntry(device, entryB)).text,
+        'entry b edited on b $runTag',
+        reason: 'the newest version wins on device $device',
+      );
+      expect(await localConflicts(device, entryB), 1);
+    }
+    // A duplicate inbound pass adds no second conflict.
+    await pull(0);
+    expect(await localConflicts(0, entryB), 1);
+
+    // --------------------------------------------------------------------
+    // Case 4: a delete stays final against a newer edit made on the other
+    // device: the edit is kept as a conflict and never restores the entry.
+    // --------------------------------------------------------------------
+    tick(0);
+    expect(
+      (await cmds[0].delete(itemId: entryBKept)).valueOrNull,
+      isA<MyAdhkarDeleted>(),
+    );
+    tick(1);
+    expect(
+      (await cmds[1].edit(
+        itemId: entryBKept,
+        draft: MyDhikrDraft(
+          text: 'entry b kept edited later $runTag',
+          groupIds: [groupB1],
+        ),
+      )).valueOrNull,
+      isA<MyAdhkarEdited>(),
+    );
+    await pushAll(0);
+    await pushAll(1);
+    await pull(0);
+    await pull(1);
+    expect((await remoteItem(entryBKept))!['deleted_at'], isNotNull);
+    expect(await remoteMemberships(entryBKept), isEmpty);
+    expect(await remoteConflicts(entryBKept), 1);
+    for (final device in [0, 1]) {
+      expect(
+        (await localEntry(device, entryBKept)).isDeleted,
+        isTrue,
+        reason: 'a delete is final on device $device',
+      );
+    }
+    // A fresh pull keeps it deleted.
+    await pull(1);
+    expect((await localEntry(1, entryBKept)).isDeleted, isTrue);
+
+    // --------------------------------------------------------------------
+    // Case 5: on one device, offline, edit an entry and then delete its only
+    // group; after sync the entry is deleted on both devices with NO
+    // conflict record: the edit reaches the server before the cascade.
+    // --------------------------------------------------------------------
+    final groupC = await newGroup(0, 'group c');
+    final entryC = await newEntry(0, 'entry c', [groupC]);
+    await syncBoth();
+    expect(await localGroupLive(1, groupC), isTrue);
+    tick(1);
+    expect(
+      (await cmds[1].edit(
+        itemId: entryC,
+        draft: MyDhikrDraft(
+          text: 'entry c edited offline $runTag',
+          groupIds: [groupC],
+        ),
+      )).valueOrNull,
+      isA<MyAdhkarEdited>(),
+    );
+    tick(1);
+    expect(
+      (await cmds[1].deleteGroup(groupId: groupC)).valueOrNull,
+      isA<MyAdhkarGroupDeleted>(),
+    );
+    expect(
+      (await localEntry(1, entryC)).isDeleted,
+      isTrue,
+      reason: 'the local cascade deleted it at once',
+    );
+    await pushAll(1);
+    await pull(0);
+    await pull(1);
+    expect((await remoteItem(entryC))!['deleted_at'], isNotNull);
+    expect(
+      await remoteConflicts(entryC),
+      0,
+      reason: 'no conflict: the edit arrived before the group delete',
+    );
+    for (final device in [0, 1]) {
+      expect(await localGroupLive(device, groupC), isFalse);
+      expect((await localEntry(device, entryC)).isDeleted, isTrue);
+      expect(await localConflicts(device, entryC), 0);
+    }
+
+    // --------------------------------------------------------------------
+    // Case 6: owner B is isolated. Its group and entry never reach owner A,
+    // and owner B never sees owner A's rows.
+    // --------------------------------------------------------------------
+    final cmdB = MyAdhkarCommands(
+      ownerId: ownerB,
+      clock: clocks[1],
+      repository: repos[1],
+      identity: const UuidMyAdhkarIdentity(),
+    );
+    tick(1);
+    final groupOfB =
+        ((await cmdB.createGroup(name: 'owner b group $runTag')).valueOrNull!
+                as MyAdhkarGroupCreated)
+            .groupId;
+    tick(1);
+    final entryOfB =
+        ((await cmdB.add(
+                  draft: MyDhikrDraft(
+                    text: 'owner b entry $runTag',
+                    groupIds: [groupOfB],
+                  ),
+                )).valueOrNull!
+                as MyAdhkarAdded)
+            .itemId;
+    await push(
+      1,
+      ownerB,
+      SupabaseMyAdhkarSyncAdapter(
+        gateway: SupabaseMyAdhkarGatewayImpl(clients[2]),
+        repository: repos[1],
+      ),
+    );
+    await pull(0);
+    expect(await localGroupLive(0, groupOfB), isFalse);
+    expect(
+      (await repos[0].readFresh(
+        accountId: owner,
+        itemId: entryOfB,
+      )).valueOrNull,
+      isNull,
+      reason: 'owner A\'s store never holds owner B\'s entry',
+    );
+    expect(
+      await clients[0]
+          .from('my_adhkar_groups')
+          .select()
+          .eq('group_id', groupOfB),
+      isEmpty,
+      reason: 'row-level security hides owner B\'s group from owner A',
+    );
+    expect(
+      await clients[0].from('my_adhkar_items').select().eq('item_id', entryOfB),
+      isEmpty,
+    );
+    expect(
+      await clients[2]
+          .from('my_adhkar_items')
+          .select()
+          .eq('item_id', entryShared),
+      isEmpty,
+      reason: 'owner B never sees owner A\'s entries',
+    );
+    expect(
+      await clients[2]
+          .from('my_adhkar_groups')
+          .select()
+          .eq('group_id', groupA2),
+      isEmpty,
+    );
+    expect(
+      await clients[2]
+          .from('my_adhkar_conflicts')
+          .select()
+          .eq('entity_id', entryB),
+      isEmpty,
+    );
+
+    // --------------------------------------------------------------------
+    // Case 7: My Adhkar never writes the XP ledger, locally or on the server.
+    // --------------------------------------------------------------------
+    expect(await dbs[0].rawScalar('SELECT count(*) FROM xp_awards'), 0);
+    expect(await dbs[1].rawScalar('SELECT count(*) FROM xp_awards'), 0);
+    expect(await awardRows(clients[0], owner), awardsBefore);
+    expect(await awardRows(clients[2], ownerB), awardsBeforeB);
+  });
+}
+
+final class _ScriptClock implements AdhkarClockPort {
+  _ScriptClock(this.now);
+
+  DateTime now;
+
+  @override
+  DateTime nowUtc() => now;
 }
