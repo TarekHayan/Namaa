@@ -12,28 +12,51 @@ final class AdhkarStrings {
   String get subtitle => copy.adhkarSubtitle;
   String tabLabel(bool morning) =>
       morning ? copy.adhkarTabMorning : copy.adhkarTabEvening;
+
+  /// The list's own name ("Morning adhkar"), used in the progress card and as
+  /// the reader's title; the tab labels are shorter in English.
+  String listLabel(bool morning) =>
+      morning ? copy.adhkarListMorning : copy.adhkarListEvening;
   String progress(String list, int count, int total) =>
       copy.adhkarProgress(list, count, total);
   String percent(int percent) => copy.adhkarPercent(percent);
-  String completedSummary(int completed) =>
-      copy.adhkarCompletedSummary(completed);
+  String doneCount(int count) => copy.adhkarDoneCount(count);
   String startsAt(String time) => copy.adhkarStartsAt(time);
   String get setupPrompt => copy.adhkarSetupPrompt;
-  String get virtueAndSource => copy.adhkarVirtueAndSource;
-  String get virtueLabel => copy.adhkarVirtueLabel;
-  String get sourceLabel => copy.adhkarSourceLabel;
-  String get resetTooltip => copy.adhkarResetTooltip;
-  String target(int count, int target) => copy.adhkarTarget(count, target);
-  String tapToCount(int nextCount) => copy.adhkarTapToCountN(nextCount);
-  String get completed => copy.adhkarCompleted;
   String countSemantic(int count, int target) =>
       copy.adhkarCountSemantic(count, target);
   String streak(int days) => copy.adhkarStreak(days);
-  String get setComplete => copy.adhkarSetComplete;
   String get contentUnavailable => copy.adhkarContentUnavailable;
   String get countingLocked => copy.adhkarCountingLocked;
   String get openPrayerSetup => copy.adhkarOpenPrayerSetup;
   String get quranAttribution => copy.quranAttribution;
+  String get start => copy.adhkarStart;
+  String continueFrom(int position) => copy.adhkarContinueFrom(position);
+  String get readAgain => copy.adhkarReadAgain;
+  String get completeTitle => copy.adhkarCompleteTitle;
+  String get points => copy.adhkarPoints;
+  String get backToAdhkar => copy.adhkarBackToAdhkar;
+  String get retry => copy.adhkarRetry;
+  String get syncRow => copy.adhkarConflicts;
+
+  // -- The reader ------------------------------------------------------------
+
+  String get listButton => copy.adhkarListButton;
+  String get close => copy.adhkarClose;
+  String get resetCount => copy.adhkarResetCount;
+  String get virtue => copy.adhkarVirtue;
+  String get done => copy.adhkarDone;
+  String get next => copy.adhkarNext;
+  String repeat(int count) => copy.adhkarRepeat(count);
+  String position(int position, int total) =>
+      copy.adhkarPosition(position, total);
+  String get resetTitle => copy.adhkarResetTitle;
+  String get resetBody => copy.adhkarResetBody;
+  String get resetConfirm => copy.adhkarResetConfirm;
+  String get keyCount => copy.adhkarKeyCount;
+  String get keyMove => copy.adhkarKeyMove;
+  String get previousItem => copy.adhkarPreviousItem;
+  String get nextItem => copy.adhkarNextItem;
 
   // -- My Adhkar (Story 5) ---------------------------------------------------
 
@@ -67,6 +90,7 @@ final class AdhkarStrings {
   String get myAdhkarEdit => copy.myAdhkarEdit;
   String get myAdhkarCopy => copy.myAdhkarCopy;
   String get myAdhkarCopied => copy.myAdhkarCopied;
+  String get menuLabel => copy.myAdhkarMenuLabel;
   String get myAdhkarEntrySheetTitleAdd => copy.myAdhkarEntrySheetTitleAdd;
   String get myAdhkarEntrySheetTitleEdit => copy.myAdhkarEntrySheetTitleEdit;
   String get myAdhkarTextLabel => copy.myAdhkarTextLabel;

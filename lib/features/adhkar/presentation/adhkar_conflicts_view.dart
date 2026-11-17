@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
@@ -6,128 +8,199 @@ import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
 import '../domain/adhkar_conflict_evidence.dart';
+import 'widgets/adhkar_list_page.dart';
+import 'widgets/adhkar_style.dart';
 import 'widgets/my_adhkar_support.dart';
 
-/// Read-only evidence from the encrypted owner-scoped conflict store
-/// (contracts/adhkar-qiyam-ui.md): both versions of each retained count
-/// conflict and of each retained My Adhkar group or entry conflict, with no
-/// resolve action of any kind. Count entries name the list and the item's
-/// position from the catalog (never the internal item id), and the day is
-/// formatted with the app locale (Phase 6 review finding 3). My Adhkar
-/// entries show the user's own text, shortened when long.
-class AdhkarConflictsView extends StatelessWidget {
-  // Not const: the view caches its catalog future in a late final field.
-  AdhkarConflictsView({
-    super.key,
+/// The owner-scoped conflict evidence behind the "Sync differences" row and
+/// page (contracts/adhkar-qiyam-ui.md): the owner's retained count conflicts
+/// and, when the caller wires them (T098), the retained My Adhkar group and
+/// entry conflicts. Nothing here can resolve a conflict.
+final class AdhkarConflictsSource {
+  // Not const: the source caches its catalog future in a late final field.
+  AdhkarConflictsSource({
     required this.conflicts,
     this.myAdhkarConflicts,
     required this.catalog,
     required this.ownerId,
     required this.locale,
-  });
+    DateTime Function()? now,
+  }) : now = now ?? DateTime.now;
 
   final Stream<List<AdhkarConflictEvidence>> conflicts;
 
-  /// The owner's retained My Adhkar group and entry conflicts, when the
-  /// caller wires them (T098); null shows only the count conflicts.
+  /// The owner's retained My Adhkar group and entry conflicts; null shows
+  /// only the count conflicts.
   final Stream<List<MyAdhkarConflictEvidence>>? myAdhkarConflicts;
   final AdhkarCatalogPort catalog;
   final String ownerId;
   final String locale;
 
-  /// The longest text shown for a version of a My Adhkar entry, and for its
-  /// source; longer text ends with an ellipsis.
-  static const int maxTextCodePoints = 80;
-  static const int maxSourceCodePoints = 60;
+  /// The clock behind "Today" and "Yesterday" in the version times.
+  final DateTime Function() now;
 
-  /// The catalog resolves once per view; every row's title is a synchronous
-  /// lookup over it (a future created inside build would be replaced on
-  /// every rebuild and never surface).
-  late final Future<AdhkarCatalog?> _catalogFuture = catalog
+  /// The catalog resolves once per source; every entry's title is a
+  /// synchronous lookup over it (a future created inside build would be
+  /// replaced on every rebuild and never surface).
+  late final Future<AdhkarCatalog?> catalogFuture = catalog
       .snapshot(ownerId)
       .then((result) => result.valueOrNull);
+}
+
+/// The compact "Sync differences" row on the Adhkar page: it renders nothing
+/// unless the owner has retained conflicts, and opens the read-only page.
+final class AdhkarConflictsRow extends StatelessWidget {
+  const AdhkarConflictsRow({
+    super.key,
+    required this.source,
+    required this.onOpen,
+  });
+
+  final AdhkarConflictsSource source;
+  final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<AdhkarCatalog?>(
-    future: _catalogFuture,
-    builder: (context, catalogSnapshot) =>
-        StreamBuilder<List<AdhkarConflictEvidence>>(
-          stream: conflicts,
-          builder: (context, snapshot) =>
-              StreamBuilder<List<MyAdhkarConflictEvidence>>(
-                stream: myAdhkarConflicts,
-                builder: (context, mineSnapshot) {
-                  final rows =
-                      snapshot.data ?? const <AdhkarConflictEvidence>[];
-                  final mine =
-                      mineSnapshot.data ?? const <MyAdhkarConflictEvidence>[];
-                  if (rows.isEmpty && mine.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  final copy = FoundationLocalizations.of(context);
-                  final theme = Theme.of(context);
-                  final resolvedCatalog = catalogSnapshot.data;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        copy.adhkarConflicts,
-                        style: theme.textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      for (final row in rows)
-                        _countCard(context, copy, resolvedCatalog, row),
-                      for (final row in mine) _myAdhkarCard(context, copy, row),
-                    ],
-                  );
-                },
-              ),
+  Widget build(BuildContext context) =>
+      StreamBuilder<List<AdhkarConflictEvidence>>(
+        stream: source.conflicts,
+        builder: (context, snapshot) =>
+            StreamBuilder<List<MyAdhkarConflictEvidence>>(
+              stream: source.myAdhkarConflicts,
+              builder: (context, mineSnapshot) {
+                final any =
+                    (snapshot.data?.isNotEmpty ?? false) ||
+                    (mineSnapshot.data?.isNotEmpty ?? false);
+                if (!any) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: AdhkarSyncRow(
+                    label: FoundationLocalizations.of(context).adhkarConflicts,
+                    onTap: onOpen,
+                  ),
+                );
+              },
+            ),
+      );
+}
+
+/// The read-only "Sync differences" page, inside `/adhkar`: each entry has a
+/// title and both versions, stacked on a phone and side by side on a wide
+/// window, each with its time and its value (a count, a group name, a dhikr's
+/// text cut to three lines, or "Deleted"), and the footer. No resolution
+/// action is offered; the only control returns to the Adhkar page.
+final class AdhkarConflictsPage extends StatelessWidget {
+  const AdhkarConflictsPage({
+    super.key,
+    required this.source,
+    required this.onBack,
+  });
+
+  final AdhkarConflictsSource source;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AdhkarPalette.of(context);
+    final copy = FoundationLocalizations.of(context);
+    final wide = MediaQuery.sizeOf(context).width >= kAdhkarWideBreakpoint;
+    return Scaffold(
+      backgroundColor: palette.bg,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final base = wide ? 32.0 : 20.0;
+            final side = math.max(
+              base,
+              (constraints.maxWidth - kAdhkarColumnMaxWidth) / 2,
+            );
+            return FutureBuilder<AdhkarCatalog?>(
+              future: source.catalogFuture,
+              builder: (context, catalogSnapshot) =>
+                  StreamBuilder<List<AdhkarConflictEvidence>>(
+                    stream: source.conflicts,
+                    builder: (context, snapshot) =>
+                        StreamBuilder<List<MyAdhkarConflictEvidence>>(
+                          stream: source.myAdhkarConflicts,
+                          builder: (context, mineSnapshot) {
+                            final rows =
+                                snapshot.data ??
+                                const <AdhkarConflictEvidence>[];
+                            final mine =
+                                mineSnapshot.data ??
+                                const <MyAdhkarConflictEvidence>[];
+                            final resolvedCatalog = catalogSnapshot.data;
+                            return ListView(
+                              key: const Key('adhkar_sync_page'),
+                              padding: EdgeInsets.fromLTRB(side, 24, side, 24),
+                              children: [
+                                Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: _BackAction(
+                                    label: copy.adhkarBackToAdhkar,
+                                    onTap: onBack,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  copy.adhkarConflicts,
+                                  style: adhkarText(
+                                    28,
+                                    FontWeight.w800,
+                                    palette.text,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                for (final row in rows) ...[
+                                  const SizedBox(height: 16),
+                                  _countCard(
+                                    context,
+                                    copy,
+                                    resolvedCatalog,
+                                    row,
+                                    wide,
+                                  ),
+                                ],
+                                for (final row in mine) ...[
+                                  const SizedBox(height: 16),
+                                  _myAdhkarCard(context, copy, row, wide),
+                                ],
+                                const SizedBox(height: 20),
+                                _Footer(text: copy.adhkarConflictReadOnly),
+                              ],
+                            );
+                          },
+                        ),
+                  ),
+            );
+          },
         ),
-  );
+      ),
+    );
+  }
 
   Widget _countCard(
     BuildContext context,
     FoundationLocalizations copy,
     AdhkarCatalog? resolvedCatalog,
     AdhkarConflictEvidence row,
+    bool wide,
   ) {
-    final theme = Theme.of(context);
-    final day = _day(row);
     final title = _titleFor(copy, resolvedCatalog, row);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              key: ValueKey('adhkar-conflict-${row.id}'),
-              style: theme.textTheme.titleMedium,
-            ),
-            // The title falls back to the day when the catalog or the list
-            // is unknown; the day is not repeated underneath.
-            if (title != day)
-              Text(
-                day,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            const SizedBox(height: 10),
-            _VersionLine(
-              label: copy.adhkarConflictActive,
-              state: copy.adhkarConflictCount(row.activeCount),
-            ),
-            const SizedBox(height: 6),
-            _VersionLine(
-              label: copy.adhkarConflictRetained,
-              state: copy.adhkarConflictCount(row.retainedCount),
-            ),
-            const SizedBox(height: 10),
-            Text(copy.adhkarConflictReadOnly, style: theme.textTheme.bodySmall),
-          ],
-        ),
+    return _EntryCard(
+      cardKey: ValueKey('adhkar-conflict-${row.id}'),
+      title: title,
+      wide: wide,
+      active: _VersionView(
+        label: copy.adhkarConflictActive,
+        time: _stamp(context, copy, row.activeAt),
+        value: copy.adhkarConflictCount(row.activeCount),
+        activeVersion: true,
+      ),
+      saved: _VersionView(
+        label: copy.adhkarConflictRetained,
+        time: _stamp(context, copy, row.retainedAt),
+        value: copy.adhkarConflictCount(row.retainedCount),
+        activeVersion: false,
       ),
     );
   }
@@ -136,54 +209,68 @@ class AdhkarConflictsView extends StatelessWidget {
     BuildContext context,
     FoundationLocalizations copy,
     MyAdhkarConflictEvidence row,
+    bool wide,
   ) {
-    final theme = Theme.of(context);
     final isGroup = row.entityType == 'group';
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              isGroup ? copy.myAdhkarConflictGroup : copy.myAdhkarConflictEntry,
-              key: ValueKey('my-adhkar-conflict-${row.id}'),
-              style: theme.textTheme.titleMedium,
-            ),
-            Text(
-              DateFormat.yMMMd(
-                locale,
-              ).add_jm().format(row.detectedAt.toLocal()),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 10),
-            _MyAdhkarVersion(
-              label: copy.adhkarConflictActive,
-              version: row.active,
-              isGroup: isGroup,
-              locale: locale,
-              deletedLabel: copy.myAdhkarConflictDeleted,
-            ),
-            const SizedBox(height: 8),
-            _MyAdhkarVersion(
-              label: copy.adhkarConflictRetained,
-              version: row.retained,
-              isGroup: isGroup,
-              locale: locale,
-              deletedLabel: copy.myAdhkarConflictDeleted,
-            ),
-            const SizedBox(height: 10),
-            Text(copy.adhkarConflictReadOnly, style: theme.textTheme.bodySmall),
-          ],
-        ),
+    _VersionView version(
+      Map<String, dynamic> data,
+      String label, {
+      required bool activeVersion,
+    }) {
+      final deleted = data['deleted_at'] != null;
+      final value = deleted
+          ? null
+          : (isGroup ? _string(data['name']) : _string(data['text']));
+      final savedAt = DateTime.tryParse(_string(data['updated_at']) ?? '');
+      return _VersionView(
+        label: label,
+        time: savedAt == null ? null : _stamp(context, copy, savedAt),
+        value: value,
+        deleted: deleted,
+        deletedLabel: copy.myAdhkarConflictDeleted,
+        longText: !isGroup,
+        activeVersion: activeVersion,
+      );
+    }
+
+    return _EntryCard(
+      cardKey: ValueKey('my-adhkar-conflict-${row.id}'),
+      title: isGroup ? copy.myAdhkarConflictGroup : copy.myAdhkarConflictEntry,
+      wide: wide,
+      active: version(
+        row.active,
+        copy.adhkarConflictActive,
+        activeVersion: true,
+      ),
+      saved: version(
+        row.retained,
+        copy.adhkarConflictRetained,
+        activeVersion: false,
       ),
     );
   }
 
+  static String? _string(Object? value) => value is String ? value : null;
+
+  /// "Today 6:12 AM", "Yesterday 9:40 PM", or the full date and time.
+  String _stamp(
+    BuildContext context,
+    FoundationLocalizations copy,
+    DateTime at,
+  ) {
+    final local = at.toLocal();
+    final now = source.now();
+    final time = DateFormat.jm(source.locale).format(local);
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(local.year, local.month, local.day);
+    final difference = today.difference(day).inDays;
+    if (difference == 0) return copy.adhkarSyncToday(time);
+    if (difference == 1) return copy.adhkarSyncYesterday(time);
+    return DateFormat.yMMMd(source.locale).add_jm().format(local);
+  }
+
   /// The human entry title: the list name plus the item's position from the
-  /// catalog ("Morning adhkar · item 1"); an item the catalog does not know
+  /// catalog ("Morning adhkar · Dhikr 8"); an item the catalog does not know
   /// falls back to the list name alone, and an unknown list or catalog keeps
   /// the formatted day. No internal ids, no religious text.
   String _titleFor(
@@ -214,101 +301,246 @@ class AdhkarConflictsView extends StatelessWidget {
     return listName;
   }
 
-  String _day(AdhkarConflictEvidence row) => DateFormat.MMMEd(locale).format(
-    DateTime.utc(
-      int.parse(row.adhkarDay.substring(0, 4)),
-      int.parse(row.adhkarDay.substring(5, 7)),
-      int.parse(row.adhkarDay.substring(8, 10)),
-    ),
-  );
+  String _day(AdhkarConflictEvidence row) =>
+      DateFormat.MMMEd(source.locale).format(
+        DateTime.utc(
+          int.parse(row.adhkarDay.substring(0, 4)),
+          int.parse(row.adhkarDay.substring(5, 7)),
+          int.parse(row.adhkarDay.substring(8, 10)),
+        ),
+      );
 }
 
-class _VersionLine extends StatelessWidget {
-  const _VersionLine({required this.label, required this.state});
+final class _BackAction extends StatelessWidget {
+  const _BackAction({required this.label, required this.onTap});
 
   final String label;
-  final String state;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(child: Text(label)),
-      Flexible(child: Text(state, textAlign: TextAlign.end)),
-    ],
-  );
-}
-
-/// One stored version of a My Adhkar group or entry: its label, then the
-/// name (group) or the shortened text and source (entry), or "Deleted" for a
-/// tombstone, then when that version was saved.
-class _MyAdhkarVersion extends StatelessWidget {
-  const _MyAdhkarVersion({
-    required this.label,
-    required this.version,
-    required this.isGroup,
-    required this.locale,
-    required this.deletedLabel,
-  });
-
-  final String label;
-  final Map<String, dynamic> version;
-  final bool isGroup;
-  final String locale;
-  final String deletedLabel;
-
-  static String? _string(Object? value) => value is String ? value : null;
-
-  static String _shorten(String text, int limit) {
-    final runes = text.runes.toList();
-    if (runes.length <= limit) return text;
-    return '${String.fromCharCodes(runes.take(limit))}…';
-  }
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ambient = Directionality.of(context);
-    final deleted = version['deleted_at'] != null;
-    final primary = deleted
-        ? deletedLabel
-        : isGroup
-        ? _string(version['name'])
-        : _string(version['text']);
-    final source = deleted || isGroup ? null : _string(version['source']);
-    final savedAt = DateTime.tryParse(_string(version['updated_at']) ?? '');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(label, style: theme.textTheme.labelLarge),
-        if (primary != null)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: Text(
-              deleted
-                  ? primary
-                  : _shorten(primary, AdhkarConflictsView.maxTextCodePoints),
-              textDirection: myAdhkarTextDirection(primary, ambient),
-            ),
+    final palette = AdhkarPalette.of(context);
+    return InkWell(
+      key: const Key('adhkar_sync_back'),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.arrow_back, size: 20, color: palette.accent),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  style: adhkarText(16, FontWeight.w700, palette.accent),
+                ),
+              ),
+            ],
           ),
-        if (source != null && source.trim().isNotEmpty)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
+        ),
+      ),
+    );
+  }
+}
+
+final class _Footer extends StatelessWidget {
+  const _Footer({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AdhkarPalette.of(context);
+    return Row(
+      key: const Key('adhkar_sync_footer'),
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(Icons.info_outline, size: 18, color: palette.text2),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: adhkarText(14, FontWeight.w400, palette.text2, height: 1.6),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _EntryCard extends StatelessWidget {
+  const _EntryCard({
+    required this.cardKey,
+    required this.title,
+    required this.wide,
+    required this.active,
+    required this.saved,
+  });
+
+  final Key cardKey;
+  final String title;
+  final bool wide;
+  final _VersionView active;
+  final _VersionView saved;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AdhkarPalette.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: palette.card(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            key: cardKey,
+            style: adhkarText(17, FontWeight.w700, palette.text),
+          ),
+          const SizedBox(height: 12),
+          if (wide)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: active),
+                const SizedBox(width: 12),
+                Expanded(child: saved),
+              ],
+            )
+          else ...[
+            active,
+            const SizedBox(height: 12),
+            saved,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One stored version: its label chip, when it was saved, and its value (a
+/// count, a name, a dhikr's text cut to three lines, or "Deleted").
+final class _VersionView extends StatelessWidget {
+  const _VersionView({
+    required this.label,
+    required this.time,
+    required this.activeVersion,
+    this.value,
+    this.deleted = false,
+    this.deletedLabel = '',
+    this.longText = false,
+  });
+
+  final String label;
+  final String? time;
+  final String? value;
+  final bool deleted;
+  final String deletedLabel;
+  final bool longText;
+  final bool activeVersion;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AdhkarPalette.of(context);
+    final ambient = Directionality.of(context);
+    final text = value;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: activeVersion ? palette.soft : palette.surface2,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: activeVersion ? palette.primary : palette.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+            decoration: BoxDecoration(
+              color: activeVersion ? palette.button : palette.surface,
+              borderRadius: BorderRadius.circular(999),
+              border: activeVersion ? null : Border.all(color: palette.border),
+            ),
             child: Text(
-              _shorten(source, AdhkarConflictsView.maxSourceCodePoints),
-              textDirection: myAdhkarTextDirection(source, ambient),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              label,
+              style: adhkarText(
+                14,
+                FontWeight.w700,
+                activeVersion ? palette.onButton : palette.text,
               ),
             ),
           ),
-        if (savedAt != null)
-          Text(
-            DateFormat.yMMMd(locale).add_jm().format(savedAt.toLocal()),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          if (time != null) ...[
+            const SizedBox(height: 8),
+            Text(time!, style: adhkarText(14, FontWeight.w400, palette.text2)),
+          ],
+          const SizedBox(height: 8),
+          if (deleted)
+            Container(
+              key: const Key('adhkar_sync_deleted'),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: palette.errorSoft,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: palette.error),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.delete_outline, size: 16, color: palette.error),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      deletedLabel,
+                      style: adhkarText(16, FontWeight.w700, palette.text),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (text != null && longText)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                text,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textDirection: myAdhkarTextDirection(text, ambient),
+                style: adhkarText(
+                  22,
+                  FontWeight.w400,
+                  palette.text,
+                  height: 1.9,
+                ).copyWith(fontFamily: kDhikrFontFamily),
+              ),
+            )
+          else if (text != null)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                text,
+                textDirection: myAdhkarTextDirection(text, ambient),
+                style: adhkarText(
+                  16,
+                  FontWeight.w600,
+                  palette.text,
+                  height: 1.7,
+                ),
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

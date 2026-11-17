@@ -6,12 +6,12 @@ import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/app.dart';
 import 'package:namma_project/app/composition/configure_dependencies.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
-import 'package:namma_project/features/adhkar/presentation/widgets/dhikr_item_card.dart';
+import 'package:namma_project/features/adhkar/presentation/widgets/adhkar_style.dart';
 
 /// T035/T034 end to end on the real debug-preview graph: the Home Adhkar hub
-/// opens `/adhkar`, the screen renders the real approved catalog (Quran items
+/// opens `/adhkar`, the reader renders the real approved catalog (Quran items
 /// first, in the Quran font), a count is stored locally, and device back
-/// returns Home. Real encrypted database, real asset, no network.
+/// closes the reader and then returns Home. Real encrypted database, real asset, no network.
 void main() {
   testWidgets('Home opens Adhkar with the real catalog and counts locally', (
     tester,
@@ -60,40 +60,63 @@ void main() {
     await tester.tap(adhkarHub);
     await pumpUntil(find.byKey(const Key('adhkar_header')));
 
-    // The real catalog: the first Morning item is Ayat al-Kursi (m25), a
-    // Quran item shown with its isti'adha preface, in the Quran font.
-    await pumpUntil(find.byKey(const Key('adhkar_item_card_m25')));
+    // The page: the progress card, the time-window line and the main button
+    // (no list of item cards any more). Nothing is counted yet, so «Start».
+    await pumpUntil(find.byKey(const Key('adhkar_main_button')));
+    expect(find.byKey(const Key('adhkar_progress_card')), findsOneWidget);
+    expect(find.byKey(const Key('adhkar_item_card_m25')), findsNothing);
+    expect(find.byKey(const Key('adhkar_attribution')), findsOneWidget);
+
+    // The reader opens at the first item: Ayat al-Kursi (m25), a Quran item
+    // shown with its isti'adha preface, in the Quran font.
+    await tester.tap(find.byKey(const Key('adhkar_main_button')));
+    await pumpUntil(find.byKey(const Key('adhkar_reader_page_m25')));
     expect(find.byKey(const Key('adhkar_preface_m25')), findsOneWidget);
-    expect(find.byKey(const Key('adhkar_surah_m25')), findsOneWidget);
     final quranText = tester
         .widgetList<Text>(
           find.descendant(
-            of: find.byKey(const Key('adhkar_item_card_m25')),
+            of: find.byKey(const Key('adhkar_reader_page_m25')),
             matching: find.byType(Text),
           ),
         )
         .where((t) => t.style?.fontFamily == kQuranFontFamily);
     expect(quranText, isNotEmpty);
-    // The attribution line is shown under the cards.
-    expect(find.byKey(const Key('adhkar_attribution')), findsOneWidget);
 
     // No Prayer location is saved in this run, so counting is unrestricted:
-    // one tap counts and the item reaches its target of 1.
-    final count = find.byKey(const Key('adhkar_count_m25'));
-    await tester.ensureVisible(count);
-    expect(tester.widget<FilledButton>(count).onPressed, isNotNull);
+    // one tap counts and the item reaches its target of 1, then the done bar
+    // and the slide to the next item.
+    final count = find.byKey(const Key('adhkar_reader_count'));
+    expect(tester.widget<InkWell>(count).onTap, isNotNull);
     await tester.tap(count);
+    await pumpUntil(find.byKey(const Key('adhkar_reader_done_bar')));
     await pumpUntilTrue(
-      () => tester.widget<FilledButton>(count).onPressed == null,
-      'the item to reach its target',
+      () => find.byKey(const Key('adhkar_reader_done_bar')).evaluate().isEmpty,
+      'the slide to the next item',
+    );
+    await pumpUntil(find.byKey(const Key('adhkar_reader_page_m11')));
+    await pumpUntilTrue(
+      () => find.byKey(const Key('adhkar_reader_page_m25')).evaluate().isEmpty,
+      'the first page to leave',
     );
 
-    // Evening has its own Quran items first.
+    // Device back closes the reader first, back on the Adhkar page.
+    await tester.binding.handlePopRoute();
+    await pumpUntil(find.byKey(const Key('adhkar_main_button')));
+    expect(find.byKey(const Key('adhkar_reader')), findsNothing);
+    expect(
+      find.byKey(const Key('adhkar_switch_evening')),
+      findsOneWidget,
+      reason: 'still on the Adhkar page',
+    );
+
+    // Evening has its own list and progress.
     final eveningTab = find.byKey(const Key('adhkar_switch_evening'));
-    await tester.ensureVisible(eveningTab);
-    await tester.pump();
     await tester.tap(eveningTab);
-    await pumpUntil(find.byKey(const Key('adhkar_item_card_e23')));
+    await pumpUntil(find.byKey(const Key('adhkar_progress_card')));
+    await tester.tap(find.byKey(const Key('adhkar_main_button')));
+    await pumpUntil(find.byKey(const Key('adhkar_reader_page_e23')));
+    await tester.tap(find.byKey(const Key('adhkar_reader_close')));
+    await pumpUntil(find.byKey(const Key('adhkar_main_button')));
 
     // The page is a tab: no back arrow, and device back goes Home.
     expect(find.byType(BackButton), findsNothing);

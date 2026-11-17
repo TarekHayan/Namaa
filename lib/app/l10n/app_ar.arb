@@ -506,7 +506,7 @@
   "prayerLocationRetry": "حاول مرة أخرى",
   "prayerOpenSettings": "فتح الإعدادات",
   "prayerSettingsSave": "حفظ",
-  "adhkarTitle": "الأذكار اليومية",
+  "adhkarTitle": "الأذكار",
   "adhkarSubtitle": "أذكار الصباح والمساء من الأحاديث النبوية الصحيحة",
   "adhkarTabMorning": "أذكار الصباح",
   "adhkarTabEvening": "أذكار المساء",
@@ -518,29 +518,11 @@
   "@adhkarPercent": {
     "placeholders": {"percent": {"type": "int"}}
   },
-  "adhkarCompletedSummary": "{completed, plural, =0{لا عناصر مكتملة بعد} =1{عنصر واحد مكتمل} two{عنصران مكتملان} few{{completed} عناصر مكتملة} many{{completed} عنصرًا مكتملًا} other{{completed} عنصرًا مكتملًا}}",
-  "@adhkarCompletedSummary": {
-    "placeholders": {"completed": {"type": "int"}}
-  },
   "adhkarStartsAt": "وقتها يبدأ من {time}",
   "@adhkarStartsAt": {
     "placeholders": {"time": {"type": "String"}}
   },
   "adhkarSetupPrompt": "فعّل موقع الصلاة لتُطبَّق أوقات الأذكار",
-  "adhkarVirtueAndSource": "فضل الذكر ومصدر الحديث",
-  "adhkarVirtueLabel": "الفضل:",
-  "adhkarSourceLabel": "المصدر:",
-  "adhkarResetTooltip": "إعادة ضبط العداد",
-  "adhkarTarget": "الهدف {count} / {target}",
-  "@adhkarTarget": {
-    "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
-  },
-  "adhkarTapToCount": "انقر للعدّ",
-  "adhkarTapToCountN": "انقر للعدّ ({count})",
-  "@adhkarTapToCountN": {
-    "placeholders": {"count": {"type": "int"}}
-  },
-  "adhkarCompleted": "مكتمل",
   "adhkarCountSemantic": "عدّ، {count} من {target}",
   "@adhkarCountSemantic": {
     "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
@@ -549,7 +531,6 @@
   "@adhkarStreak": {
     "placeholders": {"days": {"type": "int"}}
   },
-  "adhkarSetComplete": "اكتملت الأذكار! +15 نقطة",
   "quranAttribution": "نص القرآن والخط: مجمع الملك فهد لطباعة المصحف الشريف، مصحف المدينة، برواية حفص — من خلال مؤسسة القرآن.",
   "myAdhkarTab": "أذكاري",
   "myAdhkarHeading": "أذكارك وأدعيتك الخاصة",
@@ -611,6 +592,52 @@
   "adhkarContentUnavailable": "تعذّر تحميل محتوى الأذكار.",
   "adhkarCountingLocked": "الأوقات غير متاحة الآن؛ العدّ متوقف حتى تعود الأوقات.",
   "adhkarOpenPrayerSetup": "إعداد موقع الصلاة",
+  "adhkarListMorning": "أذكار الصباح",
+  "adhkarListEvening": "أذكار المساء",
+  "adhkarDoneCount": "{count} مكتملة",
+  "@adhkarDoneCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarStart": "ابدأ",
+  "adhkarContinueFrom": "متابعة من الذكر {position}",
+  "@adhkarContinueFrom": {
+    "placeholders": {"position": {"type": "int"}}
+  },
+  "adhkarReadAgain": "قراءة القائمة مرة أخرى",
+  "adhkarCompleteTitle": "اكتملت الأذكار!",
+  "adhkarPoints": "+15 نقطة",
+  "adhkarListButton": "قائمة الأذكار",
+  "adhkarClose": "إغلاق",
+  "adhkarResetCount": "إعادة العدّ",
+  "adhkarVirtue": "فضل الذكر",
+  "adhkarDone": "تمّ الذكر",
+  "adhkarNext": "التالي",
+  "adhkarRepeat": "{count, plural, =1{مرة واحدة} =2{مرتان} few{{count} مرات} many{{count} مرة} other{{count} مرة}}",
+  "@adhkarRepeat": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarPosition": "{position} | {total}",
+  "@adhkarPosition": {
+    "placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "adhkarBackToAdhkar": "العودة إلى الأذكار",
+  "adhkarRetry": "إعادة المحاولة",
+  "adhkarResetTitle": "إعادة العدّ؟",
+  "adhkarResetBody": "سيعود عدّ هذا الذكر إلى الصفر.",
+  "adhkarResetConfirm": "إعادة",
+  "adhkarKeyCount": "عدّ",
+  "adhkarKeyMove": "تنقّل",
+  "adhkarPreviousItem": "الذكر السابق",
+  "adhkarNextItem": "الذكر التالي",
+  "myAdhkarMenuLabel": "خيارات",
+  "adhkarSyncToday": "اليوم {time}",
+  "@adhkarSyncToday": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "adhkarSyncYesterday": "أمس {time}",
+  "@adhkarSyncYesterday": {
+    "placeholders": {"time": {"type": "String"}}
+  },
   "qiyamTitle": "قيام الليل",
   "qiyamSubtitle": "صلاة الليل والمناجاة",
   "qiyamLastThird": "الثلث الأخير من الليل {time}",

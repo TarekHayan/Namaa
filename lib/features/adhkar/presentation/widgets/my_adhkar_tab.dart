@@ -10,15 +10,21 @@ import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
 import '../my_adhkar_cubit.dart';
 import '../my_adhkar_state.dart';
-import 'dhikr_item_card.dart' show kDhikrFontFamily;
+import 'adhkar_controls.dart';
+import 'adhkar_style.dart';
 import 'my_adhkar_forms.dart';
 import 'my_adhkar_support.dart';
 
-/// The My Adhkar tab (contracts/adhkar-qiyam-ui.md, Story 5): the user's own
-/// collection as two levels inside the Adhkar page, the group list and an
-/// opened group, with a "back to groups" control in the tab itself and no
-/// app-bar back arrow. Device back closes an opened group first; with no
-/// group open it is not handled here, so the shell returns Home.
+/// The My Adhkar tab (contracts/adhkar-qiyam-ui.md, Story 5; approved design
+/// 2026-11-17, page 2): the user's own collection as two levels inside the
+/// Adhkar page, the group list and an opened group, with a "back to groups"
+/// control in the tab itself and no app-bar back arrow.
+///
+/// Device back closes the topmost layer first: an open sheet or dialog (a
+/// route of its own, left to the navigator), then an in-place delete
+/// confirmation, then an open group; with none of these open it is not
+/// handled here, so the shell returns Home. Leaving the tab closes an open
+/// group (the Adhkar screen does that when the tab changes).
 ///
 /// Entries are two-field cards: selectable text in Amiri with the direction
 /// of the text itself, an optional selectable plain-text source (a link is
@@ -51,9 +57,14 @@ final class _MyAdhkarTabState extends State<MyAdhkarTab> {
   }
 
   Future<bool> _handleBack() async {
+    // A sheet or dialog above the page is closed by the navigator first.
+    if (ModalRoute.of(context)?.isCurrent == false) return false;
     final cubit = context.read<MyAdhkarCubit>();
+    if (_confirmGroupId != null || _confirmItemId != null) {
+      _clearConfirmations();
+      return true;
+    }
     if (cubit.state.openedGroupId == null) return false;
-    _clearConfirmations();
     unawaited(cubit.closeGroup());
     return true;
   }
@@ -71,58 +82,60 @@ final class _MyAdhkarTabState extends State<MyAdhkarTab> {
     final copy = AdhkarStrings(FoundationLocalizations.of(context));
     final cubit = context.read<MyAdhkarCubit>();
     final content = BlocBuilder<MyAdhkarCubit, MyAdhkarState>(
-      builder: (context, state) => Align(
-        alignment: AlignmentDirectional.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: kMyAdhkarMaxContentWidth),
-          child: Column(
-            key: const Key('my_adhkar_tab'),
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _HeaderCard(copy: copy),
-              const SizedBox(height: 12),
-              if (state.loadFailed)
-                _MessageCard(
-                  key: const Key('my_adhkar_load_failed'),
-                  text: copy.myAdhkarLoadFailed,
-                )
-              else if (!state.loaded)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      key: Key('my_adhkar_loading'),
-                    ),
-                  ),
-                )
-              else if (state.openedGroupId != null)
-                _OpenedGroup(
-                  copy: copy,
-                  cubit: cubit,
-                  state: state,
-                  confirmItemId: _confirmItemId,
-                  onConfirmItem: (id) => setState(() => _confirmItemId = id),
-                  onBack: _handleBack,
-                )
-              else
-                _GroupList(
-                  copy: copy,
-                  cubit: cubit,
-                  state: state,
-                  confirmGroupId: _confirmGroupId,
-                  confirmGroupCount: _confirmGroupCount,
-                  onConfirmGroup: (id, count) => setState(() {
-                    _confirmGroupId = id;
-                    _confirmGroupCount = count;
-                  }),
-                ),
+      builder: (context, state) {
+        final Widget body;
+        if (state.loadFailed) {
+          body = _MessageBlock(
+            key: const Key('my_adhkar_load_failed'),
+            text: copy.myAdhkarLoadFailed,
+          );
+        } else if (!state.loaded) {
+          body = const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(
+              child: CircularProgressIndicator(key: Key('my_adhkar_loading')),
+            ),
+          );
+        } else if (state.openedGroupId != null) {
+          body = _OpenedGroup(
+            copy: copy,
+            cubit: cubit,
+            state: state,
+            confirmItemId: _confirmItemId,
+            onConfirmItem: (id) => setState(() => _confirmItemId = id),
+            onBack: () {
+              _clearConfirmations();
+              unawaited(cubit.closeGroup());
+            },
+          );
+        } else {
+          body = _GroupList(
+            copy: copy,
+            cubit: cubit,
+            state: state,
+            confirmGroupId: _confirmGroupId,
+            confirmGroupCount: _confirmGroupCount,
+            onConfirmGroup: (id, count) => setState(() {
+              _confirmGroupId = id;
+              _confirmGroupCount = count;
+            }),
+          );
+        }
+        return Column(
+          key: const Key('my_adhkar_tab'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (state.openedGroupId == null || !state.loaded) ...[
+              _Heading(copy: copy),
+              const SizedBox(height: 16),
             ],
-          ),
-        ),
-      ),
+            body,
+          ],
+        );
+      },
     );
-    // The device back button closes an opened group first. Outside a Router
-    // (a bare MaterialApp) there is no dispatcher to listen to.
+    // Outside a Router (a bare MaterialApp) there is no dispatcher to listen
+    // to.
     if (Router.maybeOf(context) == null) return content;
     return BackButtonListener(onBackButtonPressed: _handleBack, child: content);
   }
@@ -130,56 +143,50 @@ final class _MyAdhkarTabState extends State<MyAdhkarTab> {
 
 /// The tab's heading: what the tab is, and the note that it is the user's
 /// own content, not reviewed by the app (FR-026).
-final class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({required this.copy});
+final class _Heading extends StatelessWidget {
+  const _Heading({required this.copy});
 
   final AdhkarStrings copy;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
+    final palette = AdhkarPalette.of(context);
+    return Column(
       key: const Key('my_adhkar_header'),
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(copy.myAdhkarHeading, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(
-              copy.myAdhkarNote,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          copy.myAdhkarHeading,
+          style: adhkarText(20, FontWeight.w700, palette.text, height: 1.45),
         ),
-      ),
+        const SizedBox(height: 6),
+        Text(
+          copy.myAdhkarNote,
+          style: adhkarText(14, FontWeight.w400, palette.text2, height: 1.7),
+        ),
+      ],
     );
   }
 }
 
-final class _MessageCard extends StatelessWidget {
-  const _MessageCard({super.key, required this.text});
+final class _MessageBlock extends StatelessWidget {
+  const _MessageBlock({super.key, required this.text});
 
   final String text;
 
   @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-    child: Padding(
+  Widget build(BuildContext context) {
+    final palette = AdhkarPalette.of(context);
+    return Container(
       padding: const EdgeInsets.all(20),
+      decoration: palette.card(),
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyMedium,
+        style: adhkarText(16, FontWeight.w400, palette.text2, height: 1.8),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// The group list level: Create a group (disabled at the limit, with the
@@ -206,37 +213,64 @@ final class _GroupList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final palette = AdhkarPalette.of(context);
     if (state.groups.isEmpty) {
-      return Card(
+      return Padding(
         key: const Key('my_adhkar_empty'),
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                copy.myAdhkarEmptyTitle,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
+        child: Column(
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: palette.soft,
+                border: Border.all(color: palette.border),
               ),
-              const SizedBox(height: 6),
-              Text(
-                copy.myAdhkarEmptyBody,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium,
+              child: Icon(
+                Icons.wb_sunny_outlined,
+                size: 40,
+                color: palette.accent,
               ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                key: const Key('my_adhkar_create_group'),
-                onPressed: () => _openCreate(context),
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(copy.myAdhkarCreateGroup),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              copy.myAdhkarEmptyTitle,
+              textAlign: TextAlign.center,
+              style: adhkarText(
+                20,
+                FontWeight.w800,
+                palette.text,
+                height: 1.45,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              copy.myAdhkarEmptyBody,
+              textAlign: TextAlign.center,
+              style: adhkarText(
+                16,
+                FontWeight.w400,
+                palette.text2,
+                height: 1.8,
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: AdhkarGlow(
+                enabled: true,
+                child: FilledButton.icon(
+                  key: const Key('my_adhkar_create_group'),
+                  style: adhkarPrimaryStyle(palette),
+                  onPressed: () => _openCreate(context),
+                  icon: const Icon(Icons.add, size: 20),
+                  label: Text(copy.myAdhkarCreateGroup),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -244,27 +278,28 @@ final class _GroupList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FilledButton.tonalIcon(
-          key: const Key('my_adhkar_create_group'),
-          onPressed: atLimit ? null : () => _openCreate(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(copy.myAdhkarCreateGroup),
+        AdhkarGlow(
+          enabled: !atLimit,
+          child: FilledButton.icon(
+            key: const Key('my_adhkar_create_group'),
+            style: adhkarPrimaryStyle(palette),
+            onPressed: atLimit ? null : () => _openCreate(context),
+            icon: const Icon(Icons.add, size: 20),
+            label: Text(copy.myAdhkarCreateGroup),
+          ),
         ),
         if (atLimit)
           Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              copy.myAdhkarCreateGroupDisabled,
+            padding: const EdgeInsets.only(top: 8),
+            child: AdhkarNote(
               key: const Key('my_adhkar_group_limit_reason'),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              text: copy.myAdhkarCreateGroupDisabled,
             ),
           ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         for (final summary in state.groups)
           Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: 10),
             child: confirmGroupId == summary.group.groupId
                 ? _GroupDeleteConfirmation(
                     copy: copy,
@@ -324,64 +359,68 @@ final class _GroupRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final palette = AdhkarPalette.of(context);
     final group = summary.group;
-    return Card(
+    return Material(
       key: Key('my_adhkar_group_${group.groupId}'),
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: palette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: palette.border),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => unawaited(cubit.openGroup(group.groupId)),
-        child: Padding(
-          padding: const EdgeInsetsDirectional.only(
-            start: 16,
-            top: 4,
-            bottom: 4,
-            end: 4,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        group.name,
-                        textDirection: myAdhkarTextDirection(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 68),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(18, 6, 6, 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
                           group.name,
-                          Directionality.of(context),
+                          textDirection: myAdhkarTextDirection(
+                            group.name,
+                            Directionality.of(context),
+                          ),
+                          style: adhkarText(17, FontWeight.w700, palette.text),
                         ),
-                        style: theme.textTheme.titleSmall,
                       ),
+                      Text(
+                        copy.groupEntries(summary.liveEntryCount),
+                        key: Key('my_adhkar_group_count_${group.groupId}'),
+                        style: adhkarText(14, FontWeight.w400, palette.text2),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 18, color: palette.text2),
+                AdhkarMenu<_GroupAction>(
+                  key: Key('my_adhkar_group_menu_${group.groupId}'),
+                  tooltip: copy.menuLabel,
+                  onSelected: (action) => _selected(context, action),
+                  items: [
+                    AdhkarMenuEntry(
+                      value: _GroupAction.rename,
+                      label: copy.myAdhkarRename,
+                      icon: Icons.edit_outlined,
                     ),
-                    Text(
-                      copy.groupEntries(summary.liveEntryCount),
-                      key: Key('my_adhkar_group_count_${group.groupId}'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                    AdhkarMenuEntry(
+                      value: _GroupAction.delete,
+                      label: copy.myAdhkarDelete,
+                      icon: Icons.delete_outline,
+                      destructive: true,
                     ),
                   ],
                 ),
-              ),
-              PopupMenuButton<_GroupAction>(
-                key: Key('my_adhkar_group_menu_${group.groupId}'),
-                onSelected: (action) => _selected(context, action),
-                itemBuilder: (_) => [
-                  PopupMenuItem(
-                    value: _GroupAction.rename,
-                    child: Text(copy.myAdhkarRename),
-                  ),
-                  PopupMenuItem(
-                    value: _GroupAction.delete,
-                    child: Text(copy.myAdhkarDelete),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -428,6 +467,8 @@ final class _GroupDeleteConfirmation extends StatelessWidget {
   );
 }
 
+/// The in-place delete confirmation of the design: a tinted card with the
+/// destructive and the cancel button side by side (stacked when narrow).
 final class _ConfirmationCard extends StatelessWidget {
   const _ConfirmationCard({
     super.key,
@@ -456,68 +497,73 @@ final class _ConfirmationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return Card(
-      margin: EdgeInsets.zero,
-      color: colors.errorContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: colors.onErrorContainer,
-              ),
-            ),
-            if (subtitle != null)
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
+    final palette = AdhkarPalette.of(context);
+    final confirm = FilledButton(
+      key: confirmKey,
+      style: adhkarDangerStyle(palette),
+      onPressed: busy ? null : onConfirm,
+      child: Text(confirmLabel),
+    );
+    final cancel = FilledButton(
+      key: cancelKey,
+      style: adhkarSecondaryStyle(
+        palette,
+        minHeight: 48,
+        radius: 14,
+        background: palette.surface,
+      ),
+      onPressed: busy ? null : onCancel,
+      child: Text(cancelLabel),
+    );
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: palette.card(
+        radius: 22,
+        color: palette.errorSoft,
+        borderColor: palette.error,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: adhkarText(17, FontWeight.w700, palette.text)),
+          if (subtitle != null)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                subtitle!,
+                textDirection: myAdhkarTextDirection(
                   subtitle!,
-                  textDirection: myAdhkarTextDirection(
-                    subtitle!,
-                    Directionality.of(context),
-                  ),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.onErrorContainer,
-                  ),
+                  Directionality.of(context),
                 ),
-              ),
-            const SizedBox(height: 6),
-            Text(
-              body,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colors.onErrorContainer,
+                style: adhkarText(14, FontWeight.w600, palette.text2),
               ),
             ),
-            const SizedBox(height: 12),
-            OverflowBar(
-              alignment: MainAxisAlignment.end,
-              spacing: 8,
-              overflowSpacing: 8,
-              children: [
-                TextButton(
-                  key: cancelKey,
-                  onPressed: busy ? null : onCancel,
-                  child: Text(cancelLabel),
-                ),
-                FilledButton(
-                  key: confirmKey,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.error,
-                    foregroundColor: colors.onError,
-                  ),
-                  onPressed: busy ? null : onConfirm,
-                  child: Text(confirmLabel),
-                ),
-              ],
-            ),
-          ],
-        ),
+          const SizedBox(height: 10),
+          Text(
+            body,
+            style: adhkarText(14, FontWeight.w400, palette.text, height: 1.7),
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Two buttons of at least 120 px with a 10 px gap; stacked when
+              // they do not fit.
+              if (constraints.maxWidth >= 250) {
+                return Row(
+                  children: [
+                    Expanded(child: confirm),
+                    const SizedBox(width: 10),
+                    Expanded(child: cancel),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [confirm, const SizedBox(height: 10), cancel],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -541,11 +587,11 @@ final class _OpenedGroup extends StatelessWidget {
   final MyAdhkarState state;
   final String? confirmItemId;
   final ValueChanged<String?> onConfirmItem;
-  final Future<bool> Function() onBack;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final palette = AdhkarPalette.of(context);
     final groupId = state.openedGroupId!;
     final name = state.openedGroup?.group.name ?? '';
     final atLimit = state.entryLimitReached;
@@ -554,69 +600,146 @@ final class _OpenedGroup extends StatelessWidget {
       children: [
         Align(
           alignment: AlignmentDirectional.centerStart,
-          child: TextButton.icon(
+          child: InkWell(
             key: const Key('my_adhkar_back_to_groups'),
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back, size: 18),
-            label: Text(copy.myAdhkarBackToGroups),
-          ),
-        ),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: Text(
-            name,
-            key: const Key('my_adhkar_group_title'),
-            textDirection: myAdhkarTextDirection(
-              name,
-              Directionality.of(context),
-            ),
-            style: theme.textTheme.titleLarge,
-          ),
-        ),
-        const SizedBox(height: 12),
-        FilledButton.tonalIcon(
-          key: const Key('my_adhkar_add_entry'),
-          onPressed: atLimit
-              ? null
-              : () => showMyAdhkarForm(
-                  context,
-                  (_) =>
-                      MyAdhkarEntryForm(cubit: cubit, openedGroupId: groupId),
+            onTap: onBack,
+            borderRadius: BorderRadius.circular(14),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back, size: 20, color: palette.accent),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        copy.myAdhkarBackToGroups,
+                        style: adhkarText(16, FontWeight.w700, palette.accent),
+                      ),
+                    ),
+                  ],
                 ),
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(copy.myAdhkarAdd),
-        ),
-        if (atLimit)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              copy.myAdhkarAddDisabled,
-              key: const Key('my_adhkar_add_limit_reason'),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
-        const SizedBox(height: 12),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 10,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 140),
+              child: Text(
+                name,
+                key: const Key('my_adhkar_group_title'),
+                textDirection: myAdhkarTextDirection(
+                  name,
+                  Directionality.of(context),
+                ),
+                style: adhkarText(
+                  28,
+                  FontWeight.w800,
+                  palette.text,
+                  height: 1.4,
+                ),
+              ),
+            ),
+            AdhkarGlow(
+              enabled: !atLimit,
+              child: FilledButton.icon(
+                key: const Key('my_adhkar_add_entry'),
+                style: adhkarPrimaryStyle(palette, minHeight: 48),
+                onPressed: atLimit
+                    ? null
+                    : () => showMyAdhkarForm(
+                        context,
+                        (_) => MyAdhkarEntryForm(
+                          cubit: cubit,
+                          openedGroupId: groupId,
+                        ),
+                      ),
+                icon: const Icon(Icons.add, size: 20),
+                label: Text(copy.myAdhkarAdd),
+              ),
+            ),
+          ],
+        ),
+        if (atLimit)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: AdhkarNote(
+              key: const Key('my_adhkar_add_limit_reason'),
+              text: copy.myAdhkarAddDisabled,
+            ),
+          ),
+        const SizedBox(height: 16),
         if (state.openedGroupItems.isEmpty)
-          _MessageCard(
+          Padding(
             key: const Key('my_adhkar_group_empty'),
-            text: copy.myAdhkarGroupEmpty,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
+            child: Column(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: palette.surface2,
+                    border: Border.all(color: palette.border),
+                  ),
+                  child: Icon(Icons.add, size: 32, color: palette.text2),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  copy.myAdhkarGroupEmpty,
+                  textAlign: TextAlign.center,
+                  style: adhkarText(
+                    16,
+                    FontWeight.w400,
+                    palette.text2,
+                    height: 1.8,
+                  ),
+                ),
+              ],
+            ),
           )
         else
           for (final item in state.openedGroupItems)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _EntryCard(
-                copy: copy,
-                cubit: cubit,
-                openedGroupId: groupId,
-                item: item,
-                groups: state.groups,
-                busy: state.busy,
-                confirming: confirmItemId == item.itemId,
-                onConfirm: onConfirmItem,
-              ),
+              child: confirmItemId == item.itemId
+                  ? _ConfirmationCard(
+                      key: Key(
+                        'my_adhkar_entry_delete_confirmation_${item.itemId}',
+                      ),
+                      title: copy.myAdhkarEntryDeleteTitle,
+                      body: copy.myAdhkarEntryDeleteBody,
+                      cancelKey: const Key('my_adhkar_entry_delete_cancel'),
+                      confirmKey: const Key('my_adhkar_entry_delete_confirm'),
+                      cancelLabel: copy.myAdhkarCancel,
+                      confirmLabel: copy.myAdhkarDelete,
+                      busy: state.busy,
+                      onCancel: () => onConfirmItem(null),
+                      onConfirm: () async {
+                        final result = await cubit.deleteEntry(
+                          itemId: item.itemId,
+                        );
+                        if (!result.ignored) onConfirmItem(null);
+                      },
+                    )
+                  : _EntryCard(
+                      copy: copy,
+                      cubit: cubit,
+                      openedGroupId: groupId,
+                      item: item,
+                      groups: state.groups,
+                      onDelete: () => onConfirmItem(item.itemId),
+                    ),
             ),
       ],
     );
@@ -625,11 +748,11 @@ final class _OpenedGroup extends StatelessWidget {
 
 enum _EntryAction { edit, copy, delete }
 
-/// One entry card in the catalog's card style: the text in Amiri (selectable,
-/// direction from the text), the source below it in the secondary style
-/// (selectable, its own direction, never opened), a line naming the entry's
-/// other groups, and the Edit / Copy / Delete menu. No number badge, counter,
-/// target or reset.
+/// One entry card: the overflow menu at the top corner, the text in Amiri
+/// (selectable, direction from the text), the source below it in the
+/// secondary style (selectable, its own direction, never opened), and a line
+/// naming the entry's other groups. No number badge, counter, target or
+/// reset.
 final class _EntryCard extends StatelessWidget {
   const _EntryCard({
     required this.copy,
@@ -637,9 +760,7 @@ final class _EntryCard extends StatelessWidget {
     required this.openedGroupId,
     required this.item,
     required this.groups,
-    required this.busy,
-    required this.confirming,
-    required this.onConfirm,
+    required this.onDelete,
   });
 
   final AdhkarStrings copy;
@@ -647,9 +768,7 @@ final class _EntryCard extends StatelessWidget {
   final String openedGroupId;
   final MyDhikrItem item;
   final List<MyAdhkarGroupSummary> groups;
-  final bool busy;
-  final bool confirming;
-  final ValueChanged<String?> onConfirm;
+  final VoidCallback onDelete;
 
   Future<void> _selected(BuildContext context, _EntryAction action) async {
     switch (action) {
@@ -664,6 +783,7 @@ final class _EntryCard extends StatelessWidget {
         );
       case _EntryAction.copy:
         final messenger = ScaffoldMessenger.maybeOf(context);
+        final palette = AdhkarPalette.of(context);
         await Clipboard.setData(
           ClipboardData(
             text: item.source == null
@@ -671,16 +791,16 @@ final class _EntryCard extends StatelessWidget {
                 : '${item.text}\n${item.source}',
           ),
         );
-        messenger?.showSnackBar(SnackBar(content: Text(copy.myAdhkarCopied)));
+        messenger?.hideCurrentSnackBar();
+        messenger?.showSnackBar(_copiedToast(palette, copy.myAdhkarCopied));
       case _EntryAction.delete:
-        onConfirm(item.itemId);
+        onDelete();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final palette = AdhkarPalette.of(context);
     final ambient = Directionality.of(context);
     final liveOtherNames = [
       for (final summary in groups)
@@ -689,112 +809,135 @@ final class _EntryCard extends StatelessWidget {
           summary.group.name,
     ];
     final source = item.source;
-    return Card(
+    return Container(
       key: Key('my_adhkar_entry_${item.itemId}'),
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(14, 6, 4, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SelectableText(
-                          item.text,
-                          key: Key('my_adhkar_entry_text_${item.itemId}'),
-                          textDirection: myAdhkarTextDirection(
-                            item.text,
-                            ambient,
-                          ),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontFamily: kDhikrFontFamily,
-                            height: 1.9,
-                          ),
-                        ),
-                        if (source != null) ...[
-                          const SizedBox(height: 8),
-                          SelectableText(
-                            source,
-                            key: Key('my_adhkar_entry_source_${item.itemId}'),
-                            textDirection: myAdhkarTextDirection(
-                              source,
-                              ambient,
-                            ),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                        if (liveOtherNames.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            copy.otherGroups(
-                              liveOtherNames.join(copy.listSeparator),
-                            ),
-                            key: Key(
-                              'my_adhkar_entry_other_groups_${item.itemId}',
-                            ),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+      padding: const EdgeInsetsDirectional.fromSTEB(18, 6, 6, 18),
+      decoration: palette.card(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: AdhkarMenu<_EntryAction>(
+              key: Key('my_adhkar_entry_menu_${item.itemId}'),
+              tooltip: copy.menuLabel,
+              onSelected: (action) => _selected(context, action),
+              items: [
+                AdhkarMenuEntry(
+                  value: _EntryAction.edit,
+                  label: copy.myAdhkarEdit,
+                  icon: Icons.edit_outlined,
                 ),
-                PopupMenuButton<_EntryAction>(
-                  key: Key('my_adhkar_entry_menu_${item.itemId}'),
-                  onSelected: (action) => _selected(context, action),
-                  itemBuilder: (_) => [
-                    PopupMenuItem(
-                      value: _EntryAction.edit,
-                      child: Text(copy.myAdhkarEdit),
-                    ),
-                    PopupMenuItem(
-                      value: _EntryAction.copy,
-                      child: Text(copy.myAdhkarCopy),
-                    ),
-                    PopupMenuItem(
-                      value: _EntryAction.delete,
-                      child: Text(copy.myAdhkarDelete),
-                    ),
-                  ],
+                AdhkarMenuEntry(
+                  value: _EntryAction.copy,
+                  label: copy.myAdhkarCopy,
+                  icon: Icons.copy_outlined,
+                ),
+                AdhkarMenuEntry(
+                  value: _EntryAction.delete,
+                  label: copy.myAdhkarDelete,
+                  icon: Icons.delete_outline,
+                  destructive: true,
                 ),
               ],
             ),
-            if (confirming)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(top: 12, end: 10),
-                child: _ConfirmationCard(
-                  key: Key(
-                    'my_adhkar_entry_delete_confirmation_${item.itemId}',
-                  ),
-                  title: copy.myAdhkarEntryDeleteTitle,
-                  body: copy.myAdhkarEntryDeleteBody,
-                  cancelKey: const Key('my_adhkar_entry_delete_cancel'),
-                  confirmKey: const Key('my_adhkar_entry_delete_confirm'),
-                  cancelLabel: copy.myAdhkarCancel,
-                  confirmLabel: copy.myAdhkarDelete,
-                  busy: busy,
-                  onCancel: () => onConfirm(null),
-                  onConfirm: () async {
-                    final result = await cubit.deleteEntry(itemId: item.itemId);
-                    if (!result.ignored) onConfirm(null);
-                  },
+          ),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SelectableText(
+                  item.text,
+                  key: Key('my_adhkar_entry_text_${item.itemId}'),
+                  textDirection: myAdhkarTextDirection(item.text, ambient),
+                  style: adhkarText(
+                    22,
+                    FontWeight.w400,
+                    palette.text,
+                    height: 2,
+                  ).copyWith(fontFamily: kDhikrFontFamily),
                 ),
-              ),
-          ],
-        ),
+                if (source != null) ...[
+                  const SizedBox(height: 10),
+                  SelectableText(
+                    source,
+                    key: Key('my_adhkar_entry_source_${item.itemId}'),
+                    textDirection: myAdhkarTextDirection(source, ambient),
+                    style: adhkarText(
+                      14,
+                      FontWeight.w400,
+                      palette.text2,
+                      height: 1.7,
+                    ),
+                  ),
+                ],
+                if (liveOtherNames.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.only(top: 10),
+                    decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: palette.border)),
+                    ),
+                    child: Text(
+                      copy.otherGroups(liveOtherNames.join(copy.listSeparator)),
+                      key: Key('my_adhkar_entry_other_groups_${item.itemId}'),
+                      style: adhkarText(
+                        13,
+                        FontWeight.w600,
+                        palette.accent,
+                        height: 1.7,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
+/// The «تم النسخ» toast: a pill in the text color on the page background,
+/// shown for about two seconds above the bottom bar.
+SnackBar _copiedToast(AdhkarPalette palette, String message) => SnackBar(
+  key: const Key('my_adhkar_copied_toast'),
+  behavior: SnackBarBehavior.floating,
+  backgroundColor: Colors.transparent,
+  elevation: 0,
+  padding: EdgeInsets.zero,
+  margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+  duration: const Duration(seconds: 2),
+  content: Center(
+    child: Container(
+      constraints: const BoxConstraints(minHeight: 48),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      decoration: BoxDecoration(
+        color: palette.text,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x4D000000),
+            blurRadius: 20,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_rounded, size: 20, color: palette.bg),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              message,
+              style: adhkarText(16, FontWeight.w700, palette.bg),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
+);

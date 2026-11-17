@@ -125,11 +125,11 @@ void main() {
         'group (English)', (tester) async {
       await pumpTab(tester);
       expect(find.byKey(const Key('my_adhkar_header')), findsOneWidget);
-      expect(find.text('Your own supplications and adhkar'), findsOneWidget);
+      expect(find.text('Your own adhkar and duas'), findsOneWidget);
       expect(find.textContaining('does not review it'), findsOneWidget);
       expect(find.byKey(const Key('my_adhkar_empty')), findsOneWidget);
-      expect(find.textContaining('«الفجر»'), findsOneWidget);
-      expect(find.textContaining('«أدعية الكرب»'), findsOneWidget);
+      expect(find.textContaining('“Fajr”'), findsOneWidget);
+      expect(find.textContaining('“Duas for distress”'), findsOneWidget);
       expect(find.byKey(const Key('my_adhkar_create_group')), findsOneWidget);
       expect(find.byType(AppBar), findsNothing, reason: 'no app-bar back');
     });
@@ -159,8 +159,8 @@ void main() {
           .dy;
       expect(first, lessThan(second));
       expect(find.text('group a'), findsOneWidget);
-      expect(find.text('2 entries'), findsOneWidget);
-      expect(find.text('One entry'), findsOneWidget);
+      expect(find.text('2 adhkar'), findsOneWidget);
+      expect(find.text('1 dhikr'), findsOneWidget);
       expect(find.byKey(const Key('my_adhkar_group_menu_ga')), findsOneWidget);
     });
 
@@ -199,7 +199,7 @@ void main() {
       await tapKey(tester, 'my_adhkar_group_save');
       expect(find.byKey(const Key('my_adhkar_group_form')), findsNothing);
       expect(find.text('group one'), findsOneWidget);
-      expect(find.text('No entries'), findsOneWidget);
+      expect(find.text('No adhkar'), findsOneWidget);
       expect(find.byKey(const Key('my_adhkar_empty')), findsNothing);
     });
 
@@ -235,7 +235,7 @@ void main() {
       await tapKey(tester, 'my_adhkar_group_save');
       expect(find.byKey(const Key('my_adhkar_group_form')), findsOneWidget);
       expect(
-        find.text('You have reached the limit of 100 groups.'),
+        find.text('You have reached the limit: 100 groups.'),
         findsOneWidget,
       );
     });
@@ -256,7 +256,7 @@ void main() {
       await tester.pump();
       await tapKey(tester, 'my_adhkar_group_save');
       expect(find.text('group renamed'), findsOneWidget);
-      expect(find.text('2 entries'), findsOneWidget);
+      expect(find.text('2 adhkar'), findsOneWidget);
     });
 
     testWidgets('group delete asks in the page with the count and the '
@@ -271,7 +271,7 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing, reason: 'in the page');
       expect(find.text('Delete this group?'), findsOneWidget);
       expect(
-        find.textContaining('1 entry will be deleted.'),
+        find.textContaining('One dhikr will be deleted.'),
         findsOneWidget,
         reason: 'only entry 1 is solely in group a',
       );
@@ -295,7 +295,7 @@ void main() {
       await tapKey(tester, 'my_adhkar_group_delete_confirm');
       expect(find.byKey(const Key('my_adhkar_group_ga')), findsNothing);
       expect(store.items.map((i) => i.itemId), ['i2']);
-      expect(find.text('One entry'), findsOneWidget);
+      expect(find.text('1 dhikr'), findsOneWidget);
     });
 
     testWidgets('the delete confirmation counts in Arabic', (tester) async {
@@ -322,7 +322,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('You have reached the limit of 100 groups.'),
+        find.text('You have reached the limit: 100 groups.'),
         findsOneWidget,
       );
     });
@@ -377,6 +377,47 @@ void main() {
       expect(find.text('home page'), findsOneWidget);
     });
 
+    testWidgets('device back closes a sheet, then an in-place confirmation, '
+        'then the group, then goes Home', (tester) async {
+      seedGroupWithEntries();
+      await pumpTab(tester);
+      await tapKey(tester, 'my_adhkar_group_ga');
+
+      await tapKey(tester, 'my_adhkar_add_entry');
+      expect(find.byKey(const Key('my_adhkar_entry_form')), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('my_adhkar_entry_form')), findsNothing);
+      expect(
+        find.byKey(const Key('my_adhkar_entry_i1')),
+        findsOneWidget,
+        reason: 'the sheet closed first; the group stays open',
+      );
+
+      await pickMenu(tester, 'my_adhkar_entry_menu_i2', 'Delete');
+      expect(
+        find.byKey(const Key('my_adhkar_entry_delete_confirmation_i2')),
+        findsOneWidget,
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('my_adhkar_entry_delete_confirmation_i2')),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('my_adhkar_entry_i2')), findsOneWidget);
+      expect(find.byKey(const Key('my_adhkar_entry_i1')), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('my_adhkar_entry_i1')), findsNothing);
+      expect(find.byKey(const Key('my_adhkar_group_ga')), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('home page'), findsOneWidget);
+    });
+
     testWidgets('1000 entries disable Add with the reason', (tester) async {
       seedGroupWithEntries();
       store.phantomEntries = 998;
@@ -391,7 +432,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('You have reached the limit of 1000 entries.'),
+        find.text('You have reached the limit: 1000 adhkar.'),
         findsOneWidget,
       );
     });
@@ -521,6 +562,15 @@ void main() {
       await tapKey(tester, 'my_adhkar_group_ga');
       await pickMenu(tester, 'my_adhkar_entry_menu_i1', 'Copy');
       expect(copied, 'entry text 1\nsource 1');
+      expect(
+        find.byKey(const Key('my_adhkar_copied_toast')),
+        findsOneWidget,
+        reason: 'the copy toast',
+      );
+      expect(find.text('Copied'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('my_adhkar_copied_toast')), findsNothing);
       await pickMenu(tester, 'my_adhkar_entry_menu_i2', 'Copy');
       expect(copied, 'entry text 2', reason: 'no source, no second line');
     });
@@ -536,7 +586,12 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(AlertDialog), findsNothing);
-      expect(find.textContaining('leaves all its groups'), findsOneWidget);
+      expect(find.textContaining('from all its groups'), findsOneWidget);
+      expect(
+        find.byKey(const Key('my_adhkar_entry_i2')),
+        findsNothing,
+        reason: 'the card turns into the confirmation, in place',
+      );
       await tapKey(tester, 'my_adhkar_entry_delete_cancel');
       expect(find.byKey(const Key('my_adhkar_entry_i2')), findsOneWidget);
 
@@ -691,7 +746,7 @@ void main() {
       await pumpTab(tester);
       await tapKey(tester, 'my_adhkar_group_ga');
       await pickMenu(tester, 'my_adhkar_entry_menu_i1', 'Edit');
-      expect(find.text('Edit entry'), findsOneWidget);
+      expect(find.text('Edit dhikr or dua'), findsOneWidget);
       expect(
         tester
             .widget<TextField>(find.byKey(const Key('my_adhkar_text_field')))

@@ -908,9 +908,9 @@ class _AdhkarRouteScopeState extends State<_AdhkarRouteScope> {
         widget.accountId,
       );
 
-  // The conflicts view caches its catalog lookup per instance, so one
+  // The conflicts source caches its catalog lookup per instance, so one
   // instance is kept per language instead of one per build.
-  AdhkarConflictsView? _conflictsView;
+  AdhkarConflictsSource? _conflicts;
   String? _conflictsLocale;
 
   @override
@@ -934,7 +934,7 @@ class _AdhkarRouteScopeState extends State<_AdhkarRouteScope> {
     final locale = FoundationLocalizations.of(context).localeName;
     if (_conflictsLocale != locale) {
       _conflictsLocale = locale;
-      _conflictsView = AdhkarConflictsView(
+      _conflicts = AdhkarConflictsSource(
         conflicts: _countConflicts,
         myAdhkarConflicts: _myAdhkarConflicts,
         catalog: GetIt.instance<AdhkarCatalogPort>(),
@@ -942,14 +942,20 @@ class _AdhkarRouteScopeState extends State<_AdhkarRouteScope> {
         locale: locale,
       );
     }
-    return _FeatureNavigationShell(
-      section: TodayNavigationSection.adhkar,
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider<AdhkarCubit>.value(value: _cubit),
-          BlocProvider<MyAdhkarCubit>.value(value: _myAdhkarCubit),
-        ],
-        child: AdhkarScreen(footer: _conflictsView),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AdhkarCubit>.value(value: _cubit),
+        BlocProvider<MyAdhkarCubit>.value(value: _myAdhkarCubit),
+      ],
+      // The shell wraps the Adhkar page only; the reader opens full screen
+      // above it (contracts/adhkar-qiyam-ui.md).
+      child: AdhkarScreen(
+        conflicts: _conflicts,
+        shellBuilder: (context, page) => _FeatureNavigationShell(
+          section: TodayNavigationSection.adhkar,
+          child: page,
+        ),
+        onOpenPrayerSetup: () => GoRouter.of(context).go(kPrayerRoute),
       ),
     );
   }

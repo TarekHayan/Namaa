@@ -509,10 +509,10 @@
   "prayerLocationRetry": "Try again",
   "prayerOpenSettings": "Open settings",
   "prayerSettingsSave": "Save",
-  "adhkarTitle": "Adhkar & Remembrance",
-  "adhkarSubtitle": "Authentic Morning and Evening supplications",
-  "adhkarTabMorning": "Morning Adhkar",
-  "adhkarTabEvening": "Evening Adhkar",
+  "adhkarTitle": "Adhkar",
+  "adhkarSubtitle": "Morning and evening adhkar from authentic hadith",
+  "adhkarTabMorning": "Morning",
+  "adhkarTabEvening": "Evening",
   "adhkarProgress": "{list} ({count} / {total})",
   "@adhkarProgress": {
     "placeholders": {"list": {"type": "String"}, "count": {"type": "int"}, "total": {"type": "int"}}
@@ -521,52 +521,33 @@
   "@adhkarPercent": {
     "placeholders": {"percent": {"type": "int"}}
   },
-  "adhkarCompletedSummary": "{completed, plural, =0{No completed items yet} =1{One item completed} other{{completed} items completed}}",
-  "@adhkarCompletedSummary": {
-    "placeholders": {"completed": {"type": "int"}}
-  },
-  "adhkarStartsAt": "Its time starts at {time}",
+  "adhkarStartsAt": "Starts at {time}",
   "@adhkarStartsAt": {
     "placeholders": {"time": {"type": "String"}}
   },
-  "adhkarSetupPrompt": "Set up the Prayer location so the Adhkar times apply",
-  "adhkarVirtueAndSource": "Virtue & Hadith Reference",
-  "adhkarVirtueLabel": "Virtue:",
-  "adhkarSourceLabel": "Source:",
-  "adhkarResetTooltip": "Reset Counter",
-  "adhkarTarget": "Target {count} / {target}",
-  "@adhkarTarget": {
-    "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
-  },
-  "adhkarTapToCount": "Tap to Count",
-  "adhkarTapToCountN": "Tap to Count ({count})",
-  "@adhkarTapToCountN": {
-    "placeholders": {"count": {"type": "int"}}
-  },
-  "adhkarCompleted": "Completed",
+  "adhkarSetupPrompt": "Turn on prayer location so adhkar times apply",
   "adhkarCountSemantic": "Count, {count} of {target}",
   "@adhkarCountSemantic": {
     "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
   },
-  "adhkarStreak": "Streak: {days} days",
+  "adhkarStreak": "Day streak: {days}",
   "@adhkarStreak": {
     "placeholders": {"days": {"type": "int"}}
   },
-  "adhkarSetComplete": "Set complete! +15 XP",
   "quranAttribution": "Quran text and font: King Fahd Glorious Quran Printing Complex (KFGQPC), Madinah Mushaf, Hafs — provided through the Quran Foundation.",
-  "myAdhkarTab": "My Adhkar",
-  "myAdhkarHeading": "Your own supplications and adhkar",
-  "myAdhkarNote": "Your personal collection. The app does not review it, and it has no XP or streak.",
+  "myAdhkarTab": "My adhkar",
+  "myAdhkarHeading": "Your own adhkar and duas",
+  "myAdhkarNote": "Your personal collection. The app does not review it, and it has no points or streak.",
   "myAdhkarLoadFailed": "Your collection could not be loaded.",
-  "myAdhkarCreateGroup": "Create a group",
-  "myAdhkarCreateGroupDisabled": "You have reached the limit of 100 groups.",
-  "myAdhkarGroupEntries": "{count, plural, =0{No entries} =1{One entry} other{{count} entries}}",
+  "myAdhkarCreateGroup": "Create group",
+  "myAdhkarCreateGroupDisabled": "You have reached the limit: 100 groups.",
+  "myAdhkarGroupEntries": "{count, plural, =0{No adhkar} =1{1 dhikr} other{{count} adhkar}}",
   "@myAdhkarGroupEntries": {
     "placeholders": {"count": {"type": "int"}}
   },
   "myAdhkarRename": "Rename",
   "myAdhkarDelete": "Delete",
-  "myAdhkarGroupSheetTitleCreate": "Create a group",
+  "myAdhkarGroupSheetTitleCreate": "Create group",
   "myAdhkarGroupSheetTitleRename": "Rename group",
   "myAdhkarGroupNameLabel": "Group name",
   "myAdhkarCounter": "{used} / {limit}",
@@ -575,17 +556,17 @@
   },
   "myAdhkarGroupNameInvalid": "Enter a name of 1 to 60 characters.",
   "myAdhkarGroupDeleteTitle": "Delete this group?",
-  "myAdhkarGroupDeleteBody": "{count, plural, =0{No entries will be deleted.} =1{1 entry will be deleted.} other{{count} entries will be deleted.}} Entries that are also in other groups stay there.",
+  "myAdhkarGroupDeleteBody": "{count, plural, =0{No adhkar will be deleted.} =1{One dhikr will be deleted.} other{{count} adhkar will be deleted.}} Adhkar that are also in other groups stay there.",
   "@myAdhkarGroupDeleteBody": {
     "placeholders": {"count": {"type": "int"}}
   },
   "myAdhkarCancel": "Cancel",
   "myAdhkarSave": "Save",
-  "myAdhkarEmptyTitle": "Start your own collection",
-  "myAdhkarEmptyBody": "Create groups like «الفجر», «رمضان» or «أدعية الكرب», then keep your own supplications and adhkar in them.",
+  "myAdhkarEmptyTitle": "Start your own group",
+  "myAdhkarEmptyBody": "Create groups like “Fajr”, “Ramadan” and “Duas for distress”, then save your duas and adhkar in them.",
   "myAdhkarAdd": "Add",
-  "myAdhkarAddDisabled": "You have reached the limit of 1000 entries.",
-  "myAdhkarGroupEmpty": "No entries in this group yet. Use Add to save your first one.",
+  "myAdhkarAddDisabled": "You have reached the limit: 1000 adhkar.",
+  "myAdhkarGroupEmpty": "No adhkar in this group yet. Use “Add” to save your first one.",
   "myAdhkarBackToGroups": "Back to groups",
   "myAdhkarOtherGroups": "Also in: {names}",
   "@myAdhkarOtherGroups": {
@@ -594,8 +575,8 @@
   "myAdhkarEdit": "Edit",
   "myAdhkarCopy": "Copy",
   "myAdhkarCopied": "Copied",
-  "myAdhkarEntrySheetTitleAdd": "Add an entry",
-  "myAdhkarEntrySheetTitleEdit": "Edit entry",
+  "myAdhkarEntrySheetTitleAdd": "Add a dhikr or dua",
+  "myAdhkarEntrySheetTitleEdit": "Edit dhikr or dua",
   "myAdhkarTextLabel": "Text",
   "myAdhkarTextHint": "The supplication or dhikr text",
   "myAdhkarSourceLabel": "Source (optional)",
@@ -605,15 +586,61 @@
   "myAdhkarSourceInvalid": "The source can have at most 500 characters.",
   "myAdhkarGroupSetInvalid": "Choose at least one group.",
   "myAdhkarGroupDeleted": "That group was deleted.",
-  "myAdhkarItemDeleted": "That entry was deleted.",
+  "myAdhkarItemDeleted": "That dhikr was deleted.",
   "myAdhkarGroupUnknown": "That group no longer exists.",
-  "myAdhkarItemUnknown": "That entry no longer exists.",
+  "myAdhkarItemUnknown": "That dhikr no longer exists.",
   "myAdhkarSaveFailed": "Could not save. Try again.",
-  "myAdhkarEntryDeleteTitle": "Delete this entry?",
-  "myAdhkarEntryDeleteBody": "It leaves all its groups on every device, and it does not come back.",
-  "adhkarContentUnavailable": "The Adhkar content could not be loaded.",
-  "adhkarCountingLocked": "The times are unavailable; counting is paused until they return.",
-  "adhkarOpenPrayerSetup": "Set up Prayer location",
+  "myAdhkarEntryDeleteTitle": "Delete this dhikr?",
+  "myAdhkarEntryDeleteBody": "It will be deleted from all its groups on all your devices, and cannot be restored.",
+  "adhkarContentUnavailable": "Could not load the adhkar content.",
+  "adhkarCountingLocked": "Prayer times are not available right now; counting is paused until they return.",
+  "adhkarOpenPrayerSetup": "Set up prayer location",
+  "adhkarListMorning": "Morning adhkar",
+  "adhkarListEvening": "Evening adhkar",
+  "adhkarDoneCount": "{count} complete",
+  "@adhkarDoneCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarStart": "Start",
+  "adhkarContinueFrom": "Continue from dhikr {position}",
+  "@adhkarContinueFrom": {
+    "placeholders": {"position": {"type": "int"}}
+  },
+  "adhkarReadAgain": "Read the list again",
+  "adhkarCompleteTitle": "Adhkar complete!",
+  "adhkarPoints": "+15 points",
+  "adhkarListButton": "Adhkar list",
+  "adhkarClose": "Close",
+  "adhkarResetCount": "Reset count",
+  "adhkarVirtue": "Virtue of this dhikr",
+  "adhkarDone": "Done",
+  "adhkarNext": "Next",
+  "adhkarRepeat": "{count, plural, =1{Once} =2{Twice} other{{count} times}}",
+  "@adhkarRepeat": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarPosition": "{position} | {total}",
+  "@adhkarPosition": {
+    "placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "adhkarBackToAdhkar": "Back to Adhkar",
+  "adhkarRetry": "Try again",
+  "adhkarResetTitle": "Reset this count?",
+  "adhkarResetBody": "The count for this dhikr will go back to zero.",
+  "adhkarResetConfirm": "Reset",
+  "adhkarKeyCount": "Count",
+  "adhkarKeyMove": "Move",
+  "adhkarPreviousItem": "Previous dhikr",
+  "adhkarNextItem": "Next dhikr",
+  "myAdhkarMenuLabel": "Options",
+  "adhkarSyncToday": "Today {time}",
+  "@adhkarSyncToday": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "adhkarSyncYesterday": "Yesterday {time}",
+  "@adhkarSyncYesterday": {
+    "placeholders": {"time": {"type": "String"}}
+  },
   "qiyamTitle": "Qiyam Al-Layl",
   "qiyamSubtitle": "Night prayer & intimate supplication",
   "qiyamLastThird": "Last 1/3 of Night {time}",
@@ -671,9 +698,9 @@
   "qiyamHistoryLoadMore": "Load more",
   "qiyamHistoryFailed": "Could not load the previous nights.",
   "adhkarConflicts": "Sync differences",
-  "adhkarConflictActive": "Active",
-  "adhkarConflictRetained": "Retained",
-  "adhkarConflictReadOnly": "Read-only; nothing to resolve.",
+  "adhkarConflictActive": "Active version",
+  "adhkarConflictRetained": "Saved version",
+  "adhkarConflictReadOnly": "View only; there is no action to take.",
   "adhkarConflictCount": "Count: {count}",
   "@adhkarConflictCount": {
     "placeholders": {"count": {"type": "int"}}
@@ -684,10 +711,10 @@
   "qiyamConflictReadOnly": "Read-only; nothing to resolve.",
   "adhkarConflictListMorning": "Morning adhkar",
   "adhkarConflictListEvening": "Evening adhkar",
-  "myAdhkarConflictGroup": "My Adhkar · group",
-  "myAdhkarConflictEntry": "My Adhkar · entry",
+  "myAdhkarConflictGroup": "My adhkar · Group",
+  "myAdhkarConflictEntry": "My adhkar · Dhikr",
   "myAdhkarConflictDeleted": "Deleted",
-  "adhkarConflictItem": "item {position}",
+  "adhkarConflictItem": "Dhikr {position}",
   "@adhkarConflictItem": {
     "placeholders": {"position": {"type": "int"}}
   }
