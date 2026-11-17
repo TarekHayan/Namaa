@@ -128,7 +128,7 @@ Other rules:
 | Production `Namaa Project` (ref `rngnesbyoomuywfvncoe`) | **Never** touch it (migrations, data, settings) without the owner's explicit approval in that conversation |
 
 - **Migrations.** They are numbered files in `supabase/migrations/`; the
-  latest is `0015_prayer_reports_and_rewards.sql`.
+  latest is `0017_my_adhkar.sql`.
   - Each one needs pgTAP coverage in `supabase/tests/`: account isolation,
     operation integrity, conflict and XP.
   - Pushing a migration to staging needs the owner's approval too.

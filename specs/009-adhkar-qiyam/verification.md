@@ -1023,3 +1023,68 @@ Gates (2026-11-16, Windows host):
 | Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (558 files) |
 | Analyze | `flutter analyze` | No issues found |
 | Full suite | `flutter test` | **1082 passed, 1 skipped, 0 failed** (after the flaky rerun above) |
+
+## Phase 6b part 3b — My Adhkar sync migration 0017 (T091) (2026-11-17)
+
+`supabase/migrations/0017_my_adhkar.sql`, additive on 0016: the
+`my_adhkar_groups`, `my_adhkar_items` and `my_adhkar_item_groups` tables
+(the membership join has foreign keys to the owner's entry and group),
+`my_adhkar_operation_receipts` and `my_adhkar_conflicts`, RLS and grants as
+in 0016 (owner `select` only; no client write, no anon execute), and the two
+typed RPCs `apply_my_adhkar_group_change_v1` and
+`apply_my_adhkar_item_change_v1` (`p_group_ids uuid[]`). There is no count
+table, no count RPC and no `xp_awards` write. An earlier draft of the file
+existed untracked; it was rewritten because it (a) rejected a create that
+names only deleted groups with `group_missing` instead of `group_deleted`,
+(b) validated and fingerprinted `p_group_ids` on a delete although the
+contract says a delete ignores them, (c) let an older delete lose to a newer
+live edit, which would let a locally deleted entry come back on the next
+sync, and (d) treated two deletes with different timestamps as a conflict.
+
+Rules implemented (contracts/adhkar-qiyam-sync.md, "My Adhkar"):
+
+- Idempotent per `(owner, operation_id)`; the fingerprint covers the
+  creation instant and the version descriptor (text/source/group hashes,
+  group ids sorted) and excludes the base; a reused ID with different
+  content is rejected with no side effects.
+- Lengths in code points on the trimmed text (text 1–2000, source <= 500
+  with blank stored as null, group name 1–60); `updated_at` at most two days
+  ahead; duplicate or empty `p_group_ids` on a live entry rejected; an entry
+  delete with an empty `p_group_ids` accepted (a delete ignores the set).
+- `group_missing` (retryable, nothing written) for a group the account's
+  rows do not hold; `group_deleted` (entry stored as deleted, the submitted
+  version kept as one conflict) for a create or edit naming only deleted
+  groups; `limit_reached` for the 1001st live entry and the 101st live
+  group.
+- Group delete cascade in the same transaction: entries left with no live
+  group are deleted with a strictly greater `updated_at`, the group is
+  dropped from every membership, and no per-entry receipt is written.
+- A delete is final and wins over a live version whatever the timestamps
+  (the stored version still moves forward by at least one microsecond so
+  other devices pull it); a later edit or rename of a deleted record,
+  newer or older, is kept as a conflict and never applied.
+- Newest wins between live versions; the equal-timestamp tie goes to the
+  greater byte-ordered descriptor; one stable conflict per pair whatever the
+  arrival order.
+- One owner-level advisory lock orders every My Adhkar write of an account,
+  so the limits, the cascade and the entry-to-group check cannot race.
+
+pgTAP (`my_adhkar_account_isolation_test.sql` 28,
+`my_adhkar_operation_integrity_test.sql` 32,
+`my_adhkar_conflict_integrity_test.sql` 21) covers every item of the
+contract's "My Adhkar" proof line: access control (anon, no claims, foreign
+owner, direct writes, RLS), malformed input, both limits, the cascade,
+`group_deleted` on an edit and on a create, `group_missing`, deletes that
+stay final against older and newer edits, a delete over a newer live edit,
+a rename of a deleted group, newest-wins with one stable conflict across
+both arrival orders (two owners play the two orders) and the equal-timestamp
+tie, replay and reused-ID collision, an entry delete with empty
+`p_group_ids`, and zero `xp_awards` rows.
+
+Gates (2026-11-17, Windows host, LOCAL stack only: `supabase db reset
+--local`; nothing was pushed or linked, staging and production untouched):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Local schema | `supabase db reset --local` | migrations 0001–0017 and seed applied |
+| SQL/RLS | `supabase test db` | **27 files, 418 tests, all passed** (the three My Adhkar files: 81 tests) |
