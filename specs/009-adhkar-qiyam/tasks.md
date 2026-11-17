@@ -234,7 +234,7 @@
 - [x] T027 [US1] Implement lib/features/adhkar/application/adhkar_times_port.dart and lib/features/adhkar/application/adhkar_commands.dart (`IncrementDhikr`, `ResetDhikr`).
   - **Depends**: T026.
   - **Done**: T026 passes.
-- [ ] T028 [US1] Implement lib/app/composition/prayer_adhkar_times_adapter.dart, which maps `PrayerDayBoundaries` to `AdhkarTimesPort`.
+- [x] T028 [US1] Implement lib/app/composition/prayer_adhkar_times_adapter.dart, which maps `PrayerDayBoundaries` to `AdhkarTimesPort`.
   - **Depends**: T012, T027.
   - **Done**: An adapter test in test/unit/app/composition/prayer_adhkar_times_adapter_test.dart passes for the available, setupRequired and unavailable cases.
 - [x] T029 [P] [US1] Write tests in test/unit/features/adhkar/presentation/adhkar_cubit_test.dart.

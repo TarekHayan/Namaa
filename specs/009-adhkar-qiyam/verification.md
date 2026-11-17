@@ -1385,3 +1385,18 @@ can overrule):
 | Asset vs source | the verification script (temp folder) over the repo | 48 items, byte-identical texts |
 | Asset tests | `flutter test test/unit/features/adhkar/data/asset_adhkar_catalog_test.dart test/unit/features/adhkar/data/catalog_seed_sync_test.dart` | 9 passed (the registered asset loads through `rootBundle`; 25 + 23 approved items; Quran items first; verses carry no label; the seed equals the asset) |
 | SQL/RLS | `supabase db reset --local` then `supabase test db` (local stack) | **27 files, 418 tests, all passed**; the reset database holds 48 version-1 rows and the 6 version-900 fixture rows |
+
+### T028 — Prayer boundaries to Adhkar times adapter (2026-11-17)
+
+`lib/app/composition/prayer_adhkar_times_adapter.dart` and its test
+`test/unit/app/composition/prayer_adhkar_times_adapter_test.dart` were already
+in the branch (Phase 3). Checked against the task: the test covers the three
+required outcomes and more — available (mid-day Morning on the city day; before
+Fajr the previous day is requested and its Evening counts), setupRequired
+(unrestricted on the device day), unavailable (no calendar fallback), plus a
+preferences read failure, unordered instants and a boundaries failure, all
+resolving to unavailable instead of throwing. Nothing was missing.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Adapter | `flutter test test/unit/app/composition/prayer_adhkar_times_adapter_test.dart` | **7 passed** |
