@@ -9,6 +9,7 @@ import 'adhkar_state.dart';
 import 'widgets/adhkar_header.dart';
 import 'widgets/adhkar_progress_card.dart';
 import 'widgets/dhikr_item_card.dart';
+import 'widgets/my_adhkar_tab.dart';
 
 /// The Adhkar screen (contracts/adhkar-qiyam-ui.md): the prototype's order —
 /// heading with the streak chip and the Morning/Evening switch, the progress
@@ -41,12 +42,16 @@ final class AdhkarScreen extends StatelessWidget {
     }
 
     final clock = state.clock;
+    // My Adhkar is the user's own collection: no progress card, counter,
+    // time window or locked state, and no Adhkar schedule notice.
+    final isMine = state.selectedTab == AdhkarTab.myAdhkar;
     final morning = state.selectedTab == AdhkarTab.morning;
-    final items =
-        state.catalog?.itemsOf(
-          morning ? AdhkarList.morning : AdhkarList.evening,
-        ) ??
-        const [];
+    final items = isMine
+        ? const <DhikrItem>[]
+        : state.catalog?.itemsOf(
+                morning ? AdhkarList.morning : AdhkarList.evening,
+              ) ??
+              const [];
 
     return Scaffold(
       body: SafeArea(
@@ -58,74 +63,78 @@ final class AdhkarScreen extends StatelessWidget {
               AdhkarHeader(
                 copy: copy,
                 streak: state.streak,
-                selectedMorning: morning,
-                scheduleState: clock?.scheduleState,
+                selectedTab: state.selectedTab,
+                scheduleState: isMine ? null : clock?.scheduleState,
                 onTabChanged: cubit.selectTab,
               ),
               const SizedBox(height: 12),
-              AdhkarProgressCard(
-                copy: copy,
-                locale: locale,
-                listLabel: copy.tabLabel(morning),
-                completed: morning
-                    ? state.completedOf(AdhkarList.morning)
-                    : state.completedOf(AdhkarList.evening),
-                total: morning
-                    ? state.totalOf(AdhkarList.morning)
-                    : state.totalOf(AdhkarList.evening),
-                countable: morning
-                    ? (clock?.morningCountable ?? false)
-                    : (clock?.eveningCountable ?? false),
-                startsAtUtc: clock?.nextBoundaryUtc,
-                zoneId: clock?.zoneId,
-                countingLocked: state.countingLocked,
-              ),
-              const SizedBox(height: 12),
-              if (state.celebration != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _CelebrationBanner(copy: copy),
+              if (isMine)
+                const MyAdhkarTab()
+              else ...[
+                AdhkarProgressCard(
+                  copy: copy,
+                  locale: locale,
+                  listLabel: copy.tabLabel(morning),
+                  completed: morning
+                      ? state.completedOf(AdhkarList.morning)
+                      : state.completedOf(AdhkarList.evening),
+                  total: morning
+                      ? state.totalOf(AdhkarList.morning)
+                      : state.totalOf(AdhkarList.evening),
+                  countable: morning
+                      ? (clock?.morningCountable ?? false)
+                      : (clock?.eveningCountable ?? false),
+                  startsAtUtc: clock?.nextBoundaryUtc,
+                  zoneId: clock?.zoneId,
+                  countingLocked: state.countingLocked,
                 ),
-              for (final item in items)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: DhikrItemCard(
-                    copy: copy,
-                    locale: locale,
-                    key: Key('adhkar_item_card_${item.itemId}'),
-                    itemId: item.itemId,
-                    position: item.position,
-                    target: item.target,
-                    isQuran: item.kind == DhikrKind.quran,
-                    textAr: item.textAr,
-                    virtueAr: item.virtueAr,
-                    referenceAr: item.referenceAr,
-                    surah: item.surah,
-                    ayahFrom: item.ayahFrom,
-                    ayahTo: item.ayahTo,
-                    prefaceAr: item.prefaceAr,
-                    count: state.countOf(item.itemId),
-                    status: state.itemStatus[item.itemId],
-                    countable: morning
-                        ? (clock?.morningCountable ?? false)
-                        : (clock?.eveningCountable ?? false),
-                    onCount: () =>
-                        cubit.increment(item.itemId, clock?.day ?? ''),
-                    onReset: () => cubit.reset(item.itemId, clock?.day ?? ''),
+                const SizedBox(height: 12),
+                if (state.celebration != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _CelebrationBanner(copy: copy),
                   ),
-                ),
-              if (items.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    copy.quranAttribution,
-                    key: const Key('adhkar_attribution'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                for (final item in items)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: DhikrItemCard(
+                      copy: copy,
+                      locale: locale,
+                      key: Key('adhkar_item_card_${item.itemId}'),
+                      itemId: item.itemId,
+                      position: item.position,
+                      target: item.target,
+                      isQuran: item.kind == DhikrKind.quran,
+                      textAr: item.textAr,
+                      virtueAr: item.virtueAr,
+                      referenceAr: item.referenceAr,
+                      surah: item.surah,
+                      ayahFrom: item.ayahFrom,
+                      ayahTo: item.ayahTo,
+                      prefaceAr: item.prefaceAr,
+                      count: state.countOf(item.itemId),
+                      status: state.itemStatus[item.itemId],
+                      countable: morning
+                          ? (clock?.morningCountable ?? false)
+                          : (clock?.eveningCountable ?? false),
+                      onCount: () =>
+                          cubit.increment(item.itemId, clock?.day ?? ''),
+                      onReset: () => cubit.reset(item.itemId, clock?.day ?? ''),
                     ),
                   ),
-                ),
+                if (items.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      copy.quranAttribution,
+                      key: const Key('adhkar_attribution'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
             ],
           ),
         ),

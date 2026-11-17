@@ -5,21 +5,22 @@ import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 import '../adhkar_state.dart';
 
 /// The screen heading: title and subtitle, the Adhkar streak chip, and the
-/// Morning/Evening switch (the prototype's first group). Without a schedule
-/// an inline notice offers the Prayer location setup (FR-006a).
+/// Morning/Evening/My Adhkar switch (the prototype's first group, with the
+/// third segment from FR-022). Without a schedule an inline notice offers
+/// the Prayer location setup (FR-006a).
 final class AdhkarHeader extends StatelessWidget {
   const AdhkarHeader({
     super.key,
     required this.copy,
     required this.streak,
-    required this.selectedMorning,
+    required this.selectedTab,
     required this.scheduleState,
     required this.onTabChanged,
   });
 
   final AdhkarStrings copy;
   final int streak;
-  final bool selectedMorning;
+  final AdhkarTab selectedTab;
   final AdhkarScheduleState? scheduleState;
   final ValueChanged<AdhkarTab> onTabChanged;
 
@@ -52,7 +53,7 @@ final class AdhkarHeader extends StatelessWidget {
                 _StreakChip(copy: copy, streak: streak),
                 _Switch(
                   copy: copy,
-                  selectedMorning: selectedMorning,
+                  selectedTab: selectedTab,
                   onTabChanged: onTabChanged,
                 ),
               ],
@@ -111,21 +112,21 @@ final class _StreakChip extends StatelessWidget {
 final class _Switch extends StatelessWidget {
   const _Switch({
     required this.copy,
-    required this.selectedMorning,
+    required this.selectedTab,
     required this.onTabChanged,
   });
 
   final AdhkarStrings copy;
-  final bool selectedMorning;
+  final AdhkarTab selectedTab;
   final ValueChanged<AdhkarTab> onTabChanged;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return SegmentedButton<bool>(
+    return SegmentedButton<AdhkarTab>(
       segments: [
         ButtonSegment(
-          value: true,
+          value: AdhkarTab.morning,
           icon: const Icon(Icons.wb_sunny_outlined, size: 16),
           label: Text(
             copy.tabLabel(true),
@@ -133,17 +134,24 @@ final class _Switch extends StatelessWidget {
           ),
         ),
         ButtonSegment(
-          value: false,
+          value: AdhkarTab.evening,
           icon: const Icon(Icons.dark_mode_outlined, size: 16),
           label: Text(
             copy.tabLabel(false),
             key: const Key('adhkar_switch_evening'),
           ),
         ),
+        ButtonSegment(
+          value: AdhkarTab.myAdhkar,
+          icon: const Icon(Icons.bookmark_border_outlined, size: 16),
+          label: Text(
+            copy.myAdhkarTab,
+            key: const Key('adhkar_switch_my_adhkar'),
+          ),
+        ),
       ],
-      selected: {selectedMorning},
-      onSelectionChanged: (selection) =>
-          onTabChanged(selection.first ? AdhkarTab.morning : AdhkarTab.evening),
+      selected: {selectedTab},
+      onSelectionChanged: (selection) => onTabChanged(selection.first),
       style: ButtonStyle(
         visualDensity: VisualDensity.compact,
         side: WidgetStatePropertyAll(BorderSide(color: colors.outlineVariant)),

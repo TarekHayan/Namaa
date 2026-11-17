@@ -1252,3 +1252,52 @@ Two defects in the committed data layer were found by these tests and fixed
 | Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (570 files) |
 | Analyze | `flutter analyze` (whole tree) | No issues found |
 | Focused | `flutter test test/unit/features/adhkar test/architecture` | **257 passed, 0 failed** |
+
+### T097–T098 — My Adhkar tab and conflicts (2026-11-17)
+
+The third Adhkar segment opens `MyAdhkarTab` (header note, group list oldest
+first with name and "n entries", Rename/Delete menu, create/rename form, in-page
+group delete confirmation with the count and the "entries in other groups stay"
+note, empty state with example group names, opened group with a back control in
+the tab and no app-bar arrow, Add disabled at 1000 with the reason, entry cards
+with selectable Amiri text, selectable plain-text source, the other groups and
+an Edit/Copy/Delete menu with an in-page delete confirmation, and the add/edit
+form with the group chips). Forms open as a bottom sheet below 720 px and as a
+dialog from 720 px. Device back closes an opened group first (a
+`BackButtonListener`), then is left to the shell. The text and source fields
+carry no `maxLength`: lengths count Unicode code points (Arabic diacritics
+included) with a counter and an inline error instead. No counter, target,
+time window or locked state, no URL-launching package (asserted against
+`pubspec.yaml`), and the schedule notice is hidden on this tab.
+
+`my_adhkar_tab_test.dart` (28 widget tests, in-memory store, real Cubit):
+empty state, rows, plural counts in Arabic, create/rename, name and text/source
+validation errors (including diacritics counted as code points), a rejected
+command shown inline, the delete confirmations with their counts (EN and AR),
+the 100-group and 1000-entry disabled states, the opened group, device back from
+a group (first closes it, second reaches Home), Amiri/selectable text, mixed
+Arabic/Latin direction, a link source as plain text that opens nothing, an entry
+with no source, the other-groups line, Copy to the clipboard, the add/edit forms,
+sheet versus dialog, and an AR/EN x light/dark x (320 px at 200%, 900 px) matrix
+with no overflow. `adhkar_screen_test.dart` gained the three-segment switch with
+My Adhkar usable and un-locked when the Prayer schedule is unavailable, and the
+320 px / 200% matrix with the third segment. `adhkar_conflicts_test.dart`
+gained My Adhkar group and entry conflicts (both versions, long text shortened,
+a deleted version, no resolve action, no foreign-owner data, one shared heading)
+and the date-shown-once fix for an unloaded catalog.
+
+Two small related fixes, each proven by a test first: a period change no longer
+moves the user off My Adhkar (`adhkar_cubit_test.dart`), and the count conflict
+card no longer shows the day twice when the catalog is not loaded
+(`adhkar_conflicts_test.dart`).
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (575 files) |
+| Analyze | `flutter analyze` (whole tree) | No issues found |
+| Focused | `flutter test test/widget/features/adhkar test/unit/features/adhkar/presentation test/architecture` | **128 passed, 0 failed** |
+
+The My Adhkar conflicts list is a widget parameter
+(`myAdhkarConflicts`, fed by `DriftMyAdhkarRepository.watchConflicts`);
+composing the view into a route belongs to the Adhkar route wiring (T034/T035),
+which is still open.

@@ -368,6 +368,31 @@ void main() {
     await cubit.close();
   });
 
+  test('a period change never moves the user off My Adhkar', () async {
+    final cubit = buildCubit();
+    await cubit.load();
+    cubit.selectTab(AdhkarTab.myAdhkar);
+    times.state = AdhkarClockState(
+      scheduleState: AdhkarScheduleState.available,
+      day: '2026-11-10',
+      period: AdhkarPeriod.evening,
+      nextBoundaryUtc: DateTime.utc(2026, 11, 11, 4, 29),
+      morningCountable: false,
+      eveningCountable: true,
+      fajrUtc: DateTime.utc(2026, 11, 10, 4, 30),
+      maghribUtc: DateTime.utc(2026, 11, 10, 16, 50),
+      zoneId: 'UTC',
+    );
+    await cubit.resume();
+    await drain();
+    expect(
+      cubit.state.selectedTab,
+      AdhkarTab.myAdhkar,
+      reason: 'My Adhkar has no time window; the boundary leaves it open',
+    );
+    await cubit.close();
+  });
+
   test('unrestricted mode schedules one timer to the next device midnight', () {
     times.state = unrestricted('2026-11-10');
     FakeAsync().run((async) {

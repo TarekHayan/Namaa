@@ -1,8 +1,9 @@
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 
-/// The two Adhkar tabs of the screen's switch.
-enum AdhkarTab { morning, evening }
+/// The Adhkar screen's tabs: the two reviewed lists and the user's own
+/// collection (FR-022). The switch never opens on My Adhkar by itself.
+enum AdhkarTab { morning, evening, myAdhkar }
 
 /// Per-item command feedback (contracts/adhkar-qiyam-application.md).
 enum AdhkarActionStatus { pending, saved, failed, outsidePeriod, locked }

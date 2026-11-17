@@ -197,10 +197,12 @@ final class AdhkarCubit extends Cubit<AdhkarState> {
     emit(state.copyWith(clock: resolved));
     // The period's tab is selected on first load and when the period (or the
     // day) actually changes; a plain resume inside the same period keeps the
-    // user's tab choice (Phase 3 review finding 8).
+    // user's tab choice (Phase 3 review finding 8). My Adhkar has no time
+    // window, so a boundary never moves the user off it.
     final periodChanged = _lastPeriod != resolved.period;
     final dayChanged = previousDay != resolved.day;
-    if (_lastPeriod == null || periodChanged || dayChanged) {
+    if ((_lastPeriod == null || periodChanged || dayChanged) &&
+        state.selectedTab != AdhkarTab.myAdhkar) {
       if (resolved.period == AdhkarPeriod.morning) {
         emit(state.copyWith(selectedTab: AdhkarTab.morning));
       } else if (resolved.period == AdhkarPeriod.evening) {

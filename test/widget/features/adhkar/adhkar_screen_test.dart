@@ -15,7 +15,10 @@ import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_screen.dart';
+import 'package:namma_project/features/adhkar/presentation/my_adhkar_cubit.dart';
 import 'package:namma_project/features/adhkar/presentation/widgets/dhikr_item_card.dart';
+
+import '../../../support/my_adhkar_test_support.dart';
 
 /// T032: the Adhkar screen (contracts/adhkar-qiyam-ui.md): the prototype's
 /// group order, the count button gates, the virtue toggle, the Amiri Arabic
@@ -64,6 +67,7 @@ void main() {
     Size size = const Size(800, 1200),
     double textScale = 1.0,
     required AdhkarCubit cubit,
+    MyAdhkarCubit? myAdhkarCubit,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -79,7 +83,13 @@ void main() {
         supportedLocales: FoundationLocalizations.supportedLocales,
         localizationsDelegates: FoundationLocalizations.localizationsDelegates,
         theme: ThemeData(brightness: brightness, useMaterial3: true),
-        home: BlocProvider.value(value: cubit, child: const AdhkarScreen()),
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: cubit),
+            if (myAdhkarCubit != null) BlocProvider.value(value: myAdhkarCubit),
+          ],
+          child: const AdhkarScreen(),
+        ),
       ),
     );
     unawaited(cubit.load());
@@ -261,6 +271,98 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('adhkar_celebration')), findsOneWidget);
     await cubit.close();
+  });
+
+  testWidgets('My Adhkar is the third segment: it opens the tab with no '
+      'progress card, counter or locked notice, and works when the Prayer '
+      'schedule is unavailable', (tester) async {
+    times.state = const AdhkarClockState(
+      scheduleState: AdhkarScheduleState.unavailable,
+      day: null,
+      period: null,
+      nextBoundaryUtc: null,
+      morningCountable: false,
+      eveningCountable: false,
+      fajrUtc: null,
+      maghribUtc: null,
+      zoneId: 'UTC',
+    );
+    final store = MemoryMyAdhkarStore()..addGroup('group a', id: 'ga');
+    final mine = store.cubit();
+    final cubit = buildCubit();
+    await pump(
+      tester,
+      cubit: cubit,
+      myAdhkarCubit: mine,
+      locale: const Locale('en'),
+    );
+    expect(find.byKey(const Key('adhkar_switch_morning')), findsOneWidget);
+    expect(find.byKey(const Key('adhkar_switch_evening')), findsOneWidget);
+    expect(find.byKey(const Key('adhkar_switch_my_adhkar')), findsOneWidget);
+    expect(
+      find.textContaining('counting is paused'),
+      findsWidgets,
+      reason: 'the reviewed lists are locked without a schedule',
+    );
+
+    await tester.tap(find.byKey(const Key('adhkar_switch_my_adhkar')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('my_adhkar_tab')), findsOneWidget);
+    expect(find.byKey(const Key('adhkar_progress_card')), findsNothing);
+    expect(find.byKey(const Key('adhkar_count_m1')), findsNothing);
+    expect(find.textContaining('counting is paused'), findsNothing);
+    expect(find.byKey(const Key('my_adhkar_group_ga')), findsOneWidget);
+    expect(
+      tester
+          .widget<ButtonStyleButton>(
+            find.byKey(const Key('my_adhkar_create_group')),
+          )
+          .onPressed,
+      isNotNull,
+      reason: 'My Adhkar has no locked state',
+    );
+    addTearDown(mine.close);
+    await cubit.close();
+  });
+
+  testWidgets('the three-segment switch and the My Adhkar tab fit at 320 px '
+      'and 200% in AR/EN, light/dark', (tester) async {
+    final store = MemoryMyAdhkarStore();
+    final group = store.addGroup('group a', id: 'ga');
+    store.addItem(
+      text: 'entry text 1',
+      source: 'source 1',
+      groupIds: [group.groupId],
+    );
+    for (final locale in const [Locale('ar'), Locale('en')]) {
+      for (final brightness in Brightness.values) {
+        final mine = store.cubit();
+        final cubit = buildCubit();
+        await pump(
+          tester,
+          cubit: cubit,
+          myAdhkarCubit: mine,
+          locale: locale,
+          brightness: brightness,
+          size: const Size(320, 900),
+          textScale: 2.0,
+        );
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '$locale $brightness header with three segments',
+        );
+        await tester.tap(find.byKey(const Key('adhkar_switch_my_adhkar')));
+        await tester.pumpAndSettle();
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '$locale $brightness My Adhkar tab',
+        );
+        addTearDown(mine.close);
+        await cubit.close();
+      }
+    }
   });
 
   testWidgets('AR/EN, light/dark, 320 px and 200% text scale render without '
