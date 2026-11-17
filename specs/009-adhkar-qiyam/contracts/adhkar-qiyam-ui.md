@@ -5,7 +5,7 @@ References: [spec](../spec.md) FR-018…021, prototype `AdhkarView.tsx` and `Qiy
 ## Routes and shell
 
 - **Routes.** `/adhkar` and `/qiyam` are new top-level sibling routes in `app_router.dart`. They sit behind the same account gate and preview behavior as `/prayer`.
-- **Navigation sections.** `TodayNavigationSection` gains `adhkar` and `qiyam`, and both highlight **Track** in the bottom bar and the sidebar.
+- **Navigation sections.** `TodayNavigationSection` gains `adhkar` and `qiyam`. On a phone both highlight **Track** in the bottom bar; on desktop the sidebar selects their own item, as Prayer does (approved design, 2026-11-17).
   - The screens open with `go`. There is no stacked route and no app-bar back arrow.
   - Device back returns Home.
   - Opening one from an overlay closes the overlay first.
@@ -16,27 +16,32 @@ References: [spec](../spec.md) FR-018…021, prototype `AdhkarView.tsx` and `Qiy
 
   Quran and Focus stay "coming soon".
 
-## Adhkar screen (prototype order)
+## Adhkar screen (approved design, 2026-11-17)
 
-1. **Heading.** The title and subtitle, the **Adhkar streak** chip (FR-006b), and the Morning / Evening / My Adhkar segmented switch (sun, moon and bookmark icons).
-   - The switch opens on the current period. It never opens on My Adhkar by itself.
-   - If there is no schedule, an inline notice links to the Prayer location setup.
-2. **Progress card.** "Morning (x / N)", a progress bar and the percentage.
-   - When the list is outside its time, a notice reads: "Its time starts at {time}".
-3. **Item cards,** one per catalog item, in order:
-   - the number badge;
-   - the "Virtue and source" toggle, which expands the Arabic virtue and reference (labels in the app language);
-   - the reset button, with a tooltip;
-   - the Arabic text in Amiri, in both app languages (no translation in v1). A Quran item shows its preface line (the isti'adha) apart from the verses, the verses in a font that renders the Uthmani script, and its surah and verse numbers;
-   - the count/target ("Target 2 / 3");
-   - the large count button: "Tap to count (n)", then "Completed".
-     - Its semantic label is "Count, 2 of 3".
-     - It is disabled when the item is complete or the list is not countable.
-4. **Completed set.** A celebration toast and the XP feedback. A second award is never shown.
+The owner approved a Claude Design canvas for the whole section on 2026-11-17 ("Namaa Adhkar reader", pages 1 and 2). It replaces the prototype's list of item cards. The canvas is the reference for layout, sizes, colors and states; its HTML sources are kept locally (not in git). The app uses its real fonts (Thmanyah Sans, Amiri, KFGQPC Uthmanic Hafs) where the canvas fell back to web fonts, and Quran verse-end markers come from the KFGQPC font inside the catalog text, not from drawn circles.
+
+1. **Adhkar page.**
+   - The title «الأذكار», the subtitle, and the Morning / Evening / My Adhkar tabs. The tabs open on the current period, never on My Adhkar by themselves; switching tabs changes only the content below.
+   - For Morning and Evening: a progress card with a ring and percentage, "Morning (x / N)", the time-window line, the streak row, and the main button: «ابدأ», «متابعة من الذكر n» (the first item not done), or, when the list is done today, the finished state with «قراءة القائمة مرة أخرى» (opens item 1).
+   - With no Prayer schedule, the setup notice and the «إعداد موقع الصلاة» button; the reader still opens, locked.
+   - A compact «اختلافات المزامنة» row at the bottom, only when conflicts exist.
+2. **Reader** (one item per page, opened from the main button; full screen inside `/adhkar`, no shell).
+   - Top bar: the list button (opens the list sheet), the list title, and a close (×) button that returns to the Adhkar page on the same tab. A thin progress bar for the whole list under it.
+   - The page: the optional preface line (accent), the text (Quran font for Quran items, Amiri otherwise; the text area scrolls while the counter stays fixed), the reference line (accent), and a collapsible «فضل الذكر» when the item has a virtue.
+   - Under a divider: the repetition chip («ثلاث مرات») and the position «n | N».
+   - The bottom bar: the large round count button with its progress ring, the reset button (with a confirmation dialog), and an empty slot reserved for a later audio button.
+   - Each tap counts once, up to the target. At the target the number becomes a check and a «تمّ الذكر · التالي» bar shows for about 600 ms, then the page slides to the next item (the next page enters from the left in Arabic and from the right in English). The last item opens the completion state («اكتملت الأذكار!», «+15 نقطة», «العودة إلى الأذكار»).
+   - Swipe moves between items at any time, both ways, stopping at the first and last item. Counts are kept per item.
+   - The list sheet shows every item with its first words, its count and a done mark; tapping a row jumps to it.
+   - Locked (outside the window, or no schedule): the text stays readable and swipe works; the count and reset buttons are disabled, a lock replaces the number, and a banner gives the reason (with the setup button for the no-schedule case). It unlocks by itself when the window opens.
+   - Content unavailable: the error state with a retry button.
+   - Desktop (wide): a centered column of at most 720 px, round previous/next buttons beside it, Space or Enter counts, and the arrow keys move (in Arabic the left arrow goes to the next item).
+   - Semantic label of the count button: "Count, 2 of 3". A second award is never shown.
+3. **Device back** closes the topmost layer first (reset dialog, list sheet, reader, then the sync page), then goes Home.
 
 ## My Adhkar tab (Story 5)
 
-A personal collection with two levels inside the Adhkar page: the **group list** and an opened **group**. Opening a group replaces the list in place, with a "back to groups" control in the tab itself (no app-bar back arrow; device back returns to the group list first, then Home).
+A personal collection with two levels inside the Adhkar page: the **group list** and an opened **group**. Its look follows the approved design (2026-11-17, canvas page 2); the behavior below is unchanged. Leaving the tab closes an open group. Device back closes an open sheet, then an in-place confirmation, then the group, then goes Home. Opening a group replaces the list in place, with a "back to groups" control in the tab itself (no app-bar back arrow; device back returns to the group list first, then Home).
 
 1. **Header line.** "Your own supplications and adhkar" with a short note that they are not part of the reviewed lists.
 2. **Group list.**
@@ -50,7 +55,7 @@ A personal collection with two levels inside the Adhkar page: the **group list**
    - the text in Amiri, selectable, with `TextDirection` taken from the text itself so mixed Arabic and Latin text stays readable;
    - the source, when present, below it in the secondary style, selectable, with its own direction (a link is plain text and is never opened);
    - when the entry is in other groups too, a small line with their names;
-   - an overflow menu with **Edit**, **Copy** (the text, plus the source on a new line when present) and **Delete**. Delete asks for confirmation in the page itself and says the entry leaves all its groups.
+   - an overflow menu with **Edit**, **Copy** (the text, plus the source on a new line when present) and **Delete**. Delete turns the card into a confirmation in place and says the entry leaves all its groups. Copy shows a «تم النسخ» toast.
    - No number badge, no counter, no target, no reset and no celebration.
 6. **Add / edit sheet.** A bottom sheet on phone and a dialog on desktop, with two fields, the text (multi-line, counter to 2000) and the source (optional, counter to 500, hint "a book, a scholar or a link"), and the group choice (chips of the live groups, multi-select, the opened group preselected). Save is disabled until the text is valid and at least one group is selected. Errors are inline and localized.
 7. **No locked state.** My Adhkar has no time window, so it stays fully usable when the Prayer schedule is unavailable.
@@ -72,7 +77,7 @@ A personal collection with two levels inside the Adhkar page: the **group list**
 
 ## Conflicts
 
-When either domain has retained conflict records for the owner, a compact "Sync differences" row opens a read-only list, styled like Prayer's conflict view, with both versions and their times. No resolution actions are offered. This matches 008.
+When either domain has retained conflict records for the owner, a compact "Sync differences" row on the Adhkar page opens a read-only page inside `/adhkar` (approved design, 2026-11-17): each entry has its title («أذكار الصباح · الذكر 8», «أذكاري · مجموعة», «أذكاري · ذكر») and both versions, stacked on phone and side by side on desktop, each with its time and value (a count, a group name, or a dhikr's text cut to three lines, or «محذوف»), and the footer «للعرض فقط؛ لا يوجد إجراء.». No resolution actions are offered. Device back returns to the Adhkar page.
 
 ## Accessibility and layout
 

@@ -592,6 +592,29 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 
 ---
 
+## Phase 6c: Adhkar section redesign (owner, 2026-11-17)
+
+**Goal**: The whole Adhkar section matches the Claude Design canvas the owner approved on 2026-11-17 (contracts/adhkar-qiyam-ui.md, "Adhkar screen (approved design, 2026-11-17)"): Morning and Evening are read one item per page in a reader with auto-advance, and the Adhkar page, «أذكاري» and the sync differences take the new look. Behavior, storage, sync and XP are unchanged.
+
+**Independent test**: On a phone, open Adhkar, start Morning, count an item to its target and see the auto slide, swipe back, jump from the list sheet, close the reader; open «أذكاري», create a group, add, copy and delete an entry; open the sync differences page.
+
+- [ ] T103 [US1] Build the Adhkar page in the new design: the title and tabs, the Morning/Evening progress card with ring, the time-window line, the streak row, the main button («ابدأ», «متابعة من الذكر n», the finished state with «قراءة القائمة مرة أخرى»), the setup notice, and the sync differences row. Widget tests: AR/EN, light/dark, 320 px, 200% text, each state.
+  - **Depends**: T035.
+  - **Done**: The tests pass with no overflow; the old list of item cards is no longer shown.
+- [ ] T104 [US1] Build the reader inside `/adhkar` (contract item 2): one item per page, the count button with its ring, the done bar and the auto slide (about 600 ms hold), swipe both ways, the list sheet and jump, the reset dialog, the locked banners, the completion state, the error state, the wide layout with previous/next buttons and Space/Enter/arrow keys, and device back. It uses the existing `AdhkarCubit` commands; no new storage. Widget tests for each interaction, both directions, and no second award.
+  - **Depends**: T103.
+  - **Done**: The tests pass, `dhikr_item_card.dart` is removed if nothing else uses it, and the existing Adhkar cubit tests still pass.
+- [ ] T105 [US5] Restyle «أذكاري» to the canvas (group list, empty and limit states, row and entry menus, opened group, sheets and dialogs, in-place delete confirmations, copy toast) without changing its behavior; leaving the tab closes an open group. Update test/widget/features/adhkar/my_adhkar_tab_test.dart.
+  - **Depends**: T103.
+  - **Done**: The tests pass, including device back order and 320 px at 200% text.
+- [ ] T106 [US4] Turn the sync differences into the read-only page inside `/adhkar` from the canvas (stacked on phone, side by side on desktop, text cut to three lines, «محذوف», the footer), opened from the row on the Adhkar page. Update test/widget/features/adhkar/adhkar_conflicts_test.dart and the router test for device back.
+  - **Depends**: T103.
+  - **Done**: The tests pass and show no foreign-owner data.
+
+**Checkpoint 6c**: `flutter analyze` and the full `flutter test` pass, and the owner checks the section on the phone (CPH2481) and on Windows.
+
+---
+
 ## Phase 7: Polish, verification and handoff
 
 - [x] T068 [P] Add test/architecture/adhkar_qiyam_boundaries_test.dart.
