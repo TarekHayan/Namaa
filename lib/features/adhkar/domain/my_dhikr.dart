@@ -314,3 +314,34 @@ final class MyAdhkarGroup {
   @override
   int get hashCode => Object.hash(accountId, groupId, updatedAt);
 }
+
+/// One retained My Adhkar conflict's evidence (read-only, both versions,
+/// no resolve action of any kind — FR-027). The decoded fields are the raw
+/// wire objects; the UI renders them shortened and never shows internal
+/// ids.
+final class MyAdhkarConflictEvidence {
+  const MyAdhkarConflictEvidence({
+    required this.id,
+    required this.entityType,
+    required this.entityId,
+    required this.active,
+    required this.retained,
+    required this.detectedAt,
+  });
+
+  final String id;
+
+  /// 'group' or 'item', exactly as migration 0017 records it.
+  final String entityType;
+  final String entityId;
+  final Map<String, dynamic> active;
+  final Map<String, dynamic> retained;
+  final DateTime detectedAt;
+
+  @override
+  bool operator ==(Object other) =>
+      other is MyAdhkarConflictEvidence && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+}

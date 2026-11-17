@@ -51,9 +51,12 @@ import 'package:namma_project/features/adhkar/application/adhkar_sync_service.da
 import 'package:namma_project/features/adhkar/data/adhkar_inbound_synchronizer.dart';
 import 'package:namma_project/features/adhkar/data/adhkar_reconciler.dart';
 import 'package:namma_project/features/adhkar/data/drift_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_gateway.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_reader.dart';
 import 'package:namma_project/features/adhkar/data/supabase_adhkar_sync_adapter.dart';
+import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_gateway.dart';
+import 'package:namma_project/features/adhkar/data/supabase_my_adhkar_sync_adapter.dart';
 import 'package:namma_project/features/foundation/application/foundation_use_cases.dart';
 import 'package:namma_project/features/foundation/application/locale_preferences.dart';
 import 'package:namma_project/features/foundation/application/theme_preferences.dart';
@@ -314,6 +317,15 @@ Future<void> configureDependencies({
         gateway: qiyamGateway,
         repository: qiyamRepository,
       );
+      final myAdhkarRepository = DriftMyAdhkarRepository(database);
+      getIt.registerLazySingleton<DriftMyAdhkarRepository>(
+        () => myAdhkarRepository,
+      );
+      final myAdhkarGateway = SupabaseMyAdhkarGatewayImpl(cloud.client);
+      final myAdhkarAdapter = SupabaseMyAdhkarSyncAdapter(
+        gateway: myAdhkarGateway,
+        repository: myAdhkarRepository,
+      );
       getIt.registerLazySingleton<SupabaseTaskGateway>(() => taskGateway);
       getIt.registerLazySingleton<SupabaseHabitGateway>(() => habitGateway);
       getIt.registerLazySingleton<SupabaseMapGateway>(() => mapGateway);
@@ -328,6 +340,7 @@ Future<void> configureDependencies({
           prayerAdapter: prayerAdapter,
           adhkarAdapter: adhkarAdapter,
           qiyamAdapter: qiyamAdapter,
+          myAdhkarAdapter: myAdhkarAdapter,
         ),
       );
       final taskReader = SupabaseTaskReader(

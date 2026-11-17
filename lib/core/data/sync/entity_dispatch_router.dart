@@ -17,6 +17,8 @@ const String kMindMapSideLinkEntityType = 'mind_map_side_link';
 const String kPrayerReportEntityType = 'prayer_report';
 const String kAdhkarItemEntityType = 'adhkar_item';
 const String kQiyamNightEntityType = 'qiyam_night';
+const String kMyAdhkarGroupEntityType = 'my_adhkar_group';
+const String kMyAdhkarItemEntityType = 'my_adhkar_item';
 const String _unsupportedEntityMessageKey = 'foundation.cloud.recoverable';
 
 /// Routes each durable outbox entity to the adapter that owns its remote
@@ -34,6 +36,7 @@ final class EntityDispatchRouter implements CloudSyncPort {
     CloudSyncPort? prayerAdapter,
     CloudSyncPort? adhkarAdapter,
     CloudSyncPort? qiyamAdapter,
+    CloudSyncPort? myAdhkarAdapter,
   }) : _adapters = {
          kFoundationRecordEntityType: foundationAdapter,
          kTaskEntityType: taskAdapter,
@@ -46,6 +49,8 @@ final class EntityDispatchRouter implements CloudSyncPort {
          kPrayerReportEntityType: ?prayerAdapter,
          kAdhkarItemEntityType: ?adhkarAdapter,
          kQiyamNightEntityType: ?qiyamAdapter,
+         kMyAdhkarGroupEntityType: ?myAdhkarAdapter,
+         kMyAdhkarItemEntityType: ?myAdhkarAdapter,
        };
 
   final Map<String, CloudSyncPort> _adapters;

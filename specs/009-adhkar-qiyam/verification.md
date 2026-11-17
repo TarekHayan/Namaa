@@ -1088,3 +1088,49 @@ Gates (2026-11-17, Windows host, LOCAL stack only: `supabase db reset
 | --- | --- | --- |
 | Local schema | `supabase db reset --local` | migrations 0001–0017 and seed applied |
 | SQL/RLS | `supabase test db` | **27 files, 418 tests, all passed** (the three My Adhkar files: 81 tests) |
+
+## Phase 6b part 3c — My Adhkar outbound sync (T092–T093) (2026-11-17)
+
+`supabase_my_adhkar_gateway.dart` (the two typed RPCs plus the single-row
+fetches for the remote-version lookup; the argument maps live in
+`MyAdhkarRpcParams` so they are testable without a network),
+`supabase_my_adhkar_sync_adapter.dart` (the dispatcher for both entity
+types) and `my_adhkar_remote_models.dart` (receipt, active/retained and
+conflict parsing with owner, operation and record identity checks), plus
+the local finalization in `drift_my_adhkar_repository.dart`
+(`finalizeGroupReceipt`, `finalizeItemReceipt`, read-only conflict evidence
+and `watchConflicts`). `my_adhkar_group` and `my_adhkar_item` are registered
+in `EntityDispatchRouter` through composition. No ordering code was added:
+the sync engine already dispatches pending changes in `created_at` order
+(`DriftLocalStore.readPendingChanges`), and the test below proves the order
+across both entity types.
+
+Behavior pinned by `supabase_my_adhkar_sync_adapter_test.dart` (23 tests):
+the exact RPC arguments for a group, an entry with its sorted `p_group_ids`
+and a delete (empty set, no owner, XP, count or day key); receipt parsing of
+a server-shaped outcome including `group_deleted` and a kept conflict, and
+rejection of a foreign owner or a mismatched identity; finalization in one
+repository transaction before `DispatchAcknowledged` (acknowledged version =
+the server's active version); a kept membership keeps its local `added_at`;
+the server dropping a deleted group from the set is applied locally;
+`group_deleted` applied locally as the entry's deletion with the conflict
+evidence kept read-only; `group_missing` and any other failure leave the
+operation pending (recoverable) with no local write; a receipt that cannot
+be settled keeps no evidence; an owner change before finalization fails; an
+old response never overwrites newer local work (entry and group); both
+entity types reach the adapter through the real router; and through the
+real `SynchronizationCoordinator` the dispatch order is group create, entry
+create, entry edit, group delete (the cascade queues no entry operation),
+while a `group_missing` entry stays pending without blocking the rest.
+The existing router tests are unchanged.
+
+Gates (2026-11-17, Windows host). The working tree also holds uncommitted
+presentation drafts for T096–T097 (cubit, tab and their tests) that a later
+task owns, so format and analyze were run on every directory this part
+touches:
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib/features/adhkar/{data,application,domain} lib/core/data/sync lib/app/composition test/unit/features/adhkar/{data,application}` | clean (60 files) |
+| Analyze | `dart analyze` on the same directories | No issues found |
+| Focused suites | `flutter test test/unit/features/adhkar test/unit/core/data/sync test/architecture` | **232 passed** |

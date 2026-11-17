@@ -5,7 +5,9 @@ import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/domain/results/app_result.dart';
+import 'package:namma_project/core/domain/values/version_source.dart';
 import 'package:namma_project/features/adhkar/application/my_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/data/my_adhkar_remote_models.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
 /// The Drift My Adhkar store (data-model.md "My Adhkar", reshaped
@@ -671,6 +673,246 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
     }
   }
 
+  // -- Receipt finalization --------------------------------------------------
+
+  /// Settles one acknowledged group receipt locally in one transaction
+  /// (contracts/adhkar-qiyam-sync.md): the conflict evidence is upserted by
+  /// its stable id, and the server's active version is applied only when no
+  /// newer local work exists (the canReplace/newerAck guards mirror the
+  /// Adhkar store).
+  Future<AppResult<void>> finalizeGroupReceipt({
+    required String accountId,
+    required String groupId,
+    required DateTime outboundVersion,
+    required MyAdhkarDispatchReceipt receipt,
+  }) async {
+    try {
+      final active = receipt.group;
+      if (active == null ||
+          receipt.entityType != 'group' ||
+          active.accountId != accountId ||
+          active.groupId != groupId) {
+        throw const FormatException('Foreign My Adhkar group receipt');
+      }
+      await _database.transaction(() async {
+        final read = await readGroupFresh(
+          accountId: accountId,
+          groupId: groupId,
+        );
+        if (read.failureOrNull != null) {
+          throw StateError('My Adhkar local read failed');
+        }
+        final current = read.valueOrNull;
+        if (current == null) {
+          throw StateError('My Adhkar receipt has no local group');
+        }
+        if (receipt.conflict case final conflict?) {
+          await _upsertConflict(conflict, accountId);
+        }
+        final canReplace = current.updatedAt == outboundVersion;
+        final newerAck =
+            current.lastAcknowledgedUpdatedAt != null &&
+            current.lastAcknowledgedUpdatedAt!.isAfter(active.updatedAt);
+        if (canReplace && !newerAck) {
+          await (_database.update(_database.myAdhkarGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.groupId.equals(groupId),
+              ))
+              .write(
+                MyAdhkarGroupsCompanion(
+                  name: Value(active.name),
+                  updatedAt: Value(active.updatedAt.toIso8601String()),
+                  lastAcknowledgedUpdatedAt: Value(
+                    active.updatedAt.toIso8601String(),
+                  ),
+                  deletedAt: Value(active.deletedAt?.toIso8601String()),
+                ),
+              );
+        } else if (!newerAck) {
+          await (_database.update(_database.myAdhkarGroups)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.groupId.equals(groupId),
+              ))
+              .write(
+                MyAdhkarGroupsCompanion(
+                  lastAcknowledgedUpdatedAt: Value(
+                    active.updatedAt.toIso8601String(),
+                  ),
+                ),
+              );
+        }
+      });
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.group.save_failed'));
+    }
+  }
+
+  /// Settles one acknowledged entry receipt locally in one transaction:
+  /// the conflict evidence is upserted, and the server's active version —
+  /// with its group set — is applied only when no newer local work exists.
+  Future<AppResult<void>> finalizeItemReceipt({
+    required String accountId,
+    required String itemId,
+    required DateTime outboundVersion,
+    required MyAdhkarDispatchReceipt receipt,
+  }) async {
+    try {
+      final active = receipt.item;
+      if (active == null ||
+          receipt.entityType != 'item' ||
+          active.accountId != accountId ||
+          active.itemId != itemId) {
+        throw const FormatException('Foreign My Adhkar item receipt');
+      }
+      await _database.transaction(() async {
+        final read = await readFresh(accountId: accountId, itemId: itemId);
+        if (read.failureOrNull != null) {
+          throw StateError('My Adhkar local read failed');
+        }
+        final current = read.valueOrNull;
+        if (current == null) {
+          throw StateError('My Adhkar receipt has no local entry');
+        }
+        if (receipt.conflict case final conflict?) {
+          await _upsertConflict(conflict, accountId);
+        }
+        final canReplace = current.updatedAt == outboundVersion;
+        final newerAck =
+            current.lastAcknowledgedUpdatedAt != null &&
+            current.lastAcknowledgedUpdatedAt!.isAfter(active.updatedAt);
+        if (canReplace && !newerAck) {
+          await (_database.update(_database.myAdhkarItems)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.itemId.equals(itemId),
+              ))
+              .write(
+                MyAdhkarItemsCompanion(
+                  content: Value(active.text),
+                  source: Value(active.source),
+                  updatedAt: Value(active.updatedAt.toIso8601String()),
+                  lastAcknowledgedUpdatedAt: Value(
+                    active.updatedAt.toIso8601String(),
+                  ),
+                  deletedAt: Value(active.deletedAt?.toIso8601String()),
+                ),
+              );
+          if (active.isDeleted) {
+            await (_database.delete(_database.myAdhkarItemGroups)..where(
+                  (table) =>
+                      table.accountId.equals(accountId) &
+                      table.itemId.equals(itemId),
+                ))
+                .go();
+          } else {
+            await _syncMemberships(
+              accountId: accountId,
+              itemId: itemId,
+              groupIds: active.groupIds,
+              newAddedAt: active.updatedAt,
+            );
+          }
+        } else if (!newerAck) {
+          await (_database.update(_database.myAdhkarItems)..where(
+                (table) =>
+                    table.accountId.equals(accountId) &
+                    table.itemId.equals(itemId),
+              ))
+              .write(
+                MyAdhkarItemsCompanion(
+                  lastAcknowledgedUpdatedAt: Value(
+                    active.updatedAt.toIso8601String(),
+                  ),
+                ),
+              );
+        }
+      });
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.item.save_failed'));
+    }
+  }
+
+  /// Upserts one remote conflict's evidence by its stable id; repeated
+  /// detection reuses the row (read-only evidence, never a resolution).
+  Future<AppResult<void>> applyRemoteConflict(
+    MyAdhkarRemoteConflict conflict, {
+    required String accountId,
+  }) async {
+    try {
+      await _upsertConflict(conflict, accountId);
+      return const AppResult.success(null);
+    } catch (error) {
+      return AppResult.failure(_failure(error, 'my_adhkar.item.store_failed'));
+    }
+  }
+
+  /// Inserts the evidence once (`INSERT OR IGNORE` on the stable id) and
+  /// throws on any failure, so a caller inside a transaction rolls back
+  /// instead of acknowledging without the evidence.
+  Future<void> _upsertConflict(
+    MyAdhkarRemoteConflict conflict,
+    String accountId,
+  ) async {
+    DateTime versionOf(Map<String, dynamic> record) {
+      final value = record['updated_at'];
+      return value is String
+          ? DateTime.parse(value).toUtc()
+          : conflict.detectedAt;
+    }
+
+    await _database
+        .into(_database.conflictRecords)
+        .insert(
+          ConflictRecordsCompanion.insert(
+            conflictId: conflict.id,
+            accountId: accountId,
+            entityType: 'my_adhkar_${conflict.entityType}',
+            entityId: conflict.entityId,
+            activeSource: VersionSource.remote,
+            activeTimestamp: versionOf(conflict.active),
+            activePayload: jsonEncode(conflict.active),
+            retainedSource: VersionSource.remote,
+            retainedTimestamp: versionOf(conflict.retained),
+            retainedPayload: jsonEncode(conflict.retained),
+            detectedAt: conflict.detectedAt,
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+  }
+
+  /// The read-only My Adhkar conflict evidence, newest first, for the
+  /// Adhkar "Sync differences" list (T098).
+  Stream<List<MyAdhkarConflictEvidence>> watchConflicts(String accountId) =>
+      (_database.select(_database.conflictRecords)
+            ..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.entityType.isIn(['my_adhkar_group', 'my_adhkar_item']),
+            )
+            ..orderBy([(table) => OrderingTerm.desc(table.detectedAt)]))
+          .watch()
+          .map(
+            (rows) => List<MyAdhkarConflictEvidence>.unmodifiable(
+              rows.map(
+                (row) => MyAdhkarConflictEvidence(
+                  id: row.conflictId,
+                  entityType: row.entityType == 'my_adhkar_group'
+                      ? 'group'
+                      : 'item',
+                  entityId: row.entityId,
+                  active: jsonDecode(row.activePayload) as Map<String, dynamic>,
+                  retained:
+                      jsonDecode(row.retainedPayload) as Map<String, dynamic>,
+                  detectedAt: row.detectedAt.toUtc(),
+                ),
+              ),
+            ),
+          );
+
   // -- Shared helpers --------------------------------------------------------
 
   Future<void> _requireNewOperation(String operationId) async {
@@ -680,6 +922,55 @@ final class DriftMyAdhkarRepository implements MyAdhkarRepository {
             .getSingleOrNull();
     if (existing != null) {
       throw StateError('Duplicate my_adhkar operation');
+    }
+  }
+
+  /// Makes the stored membership rows equal [groupIds]: a kept group keeps
+  /// its local `added_at` (the entry's order inside that group), a removed
+  /// group's row goes, and a new group gets `newAddedAt` (or the server's
+  /// own `added_at` for it when [serverAddedAt] carries one).
+  Future<void> _syncMemberships({
+    required String accountId,
+    required String itemId,
+    required List<String> groupIds,
+    required DateTime newAddedAt,
+    Map<String, DateTime> serverAddedAt = const {},
+  }) async {
+    final current =
+        await (_database.select(_database.myAdhkarItemGroups)..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.itemId.equals(itemId),
+            ))
+            .get();
+    final target = groupIds.toSet();
+    final present = <String>{};
+    for (final row in current) {
+      if (target.contains(row.groupId)) {
+        present.add(row.groupId);
+      } else {
+        await (_database.delete(_database.myAdhkarItemGroups)..where(
+              (table) =>
+                  table.accountId.equals(accountId) &
+                  table.itemId.equals(itemId) &
+                  table.groupId.equals(row.groupId),
+            ))
+            .go();
+      }
+    }
+    for (final groupId in target.difference(present)) {
+      await _database
+          .into(_database.myAdhkarItemGroups)
+          .insert(
+            MyAdhkarItemGroupsCompanion.insert(
+              accountId: accountId,
+              itemId: itemId,
+              groupId: groupId,
+              addedAt: (serverAddedAt[groupId] ?? newAddedAt)
+                  .toUtc()
+                  .toIso8601String(),
+            ),
+          );
     }
   }
 
