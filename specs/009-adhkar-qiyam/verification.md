@@ -1400,3 +1400,38 @@ resolving to unavailable instead of throwing. Nothing was missing.
 | Gate | Command | Result |
 | --- | --- | --- |
 | Adapter | `flutter test test/unit/app/composition/prayer_adhkar_times_adapter_test.dart` | **7 passed** |
+
+### T034 — Adhkar composition and preview owner (2026-11-17)
+
+`configure_dependencies.dart` now registers, for every non-safe-fail
+environment: the catalog (`AssetAdhkarCatalog` over the bundled asset), the
+system clock (`SystemAdhkarClock`, new), the two UUID identities
+(`UuidAdhkarIdentity` now implements `AdhkarIdentityPort`), the Prayer day
+boundaries reader, `PrayerAdhkarTimesAdapter` as `AdhkarTimesPort`, the Drift
+unit of work as `AdhkarCountCommitPort`, `AdhkarCommands` and `MyAdhkarCommands`
+(per-owner factories), `AdhkarCubit` and `MyAdhkarCubit` (per-owner factories),
+and the My Adhkar repository (moved out of the non-preview branch, so the
+preview has it too). The unconfigured (safe-fail) root registers none of them,
+so `/adhkar` stays unavailable there.
+
+Preview (`adhkar_preview_adapters.dart`): `kAdhkarPreviewAccountId`
+(`...0009`), `AdhkarPreviewSession`, and `AdhkarPreviewTimes`, which asks the
+schedule of the preview Prayer owner so the Morning and Evening windows follow
+the Prayer location the owner saved on the Prayer screen (counts stay under the
+Adhkar preview owner). Both command classes gained `queueForSync` (default
+true; the preview passes false), so a preview count or My Adhkar edit is stored
+locally and queues nothing.
+
+Known limits recorded here: the preview Adhkar owner's set award is stored in
+the local ledger, but Today's preview XP reads only the Tasks and Prayer
+owners, so it does not show on Home in a preview run (T057 owns the Home
+values). The My Adhkar conflicts stream is composed into the Adhkar "Sync
+differences" view where the view is composed, in the route scope (T035).
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| DI | `flutter test test/unit/app/composition/configure_dependencies_test.dart` | **11 passed** (the new test loads the real catalog through the preview graph: 25 Morning and 23 Evening items, counts one item, finds one stored row and no pending change, opens My Adhkar) |
+| Preview adapters | `flutter test test/unit/app/composition/adhkar_preview_adapters_test.dart test/unit/features/adhkar/data/system_adhkar_clock_test.dart` | 3 passed |
+| Commands | `flutter test test/unit/features/adhkar/application` | all passed (new: a preview owner's commit and My Adhkar writes queue nothing) |
+| Focused | `flutter test test/architecture test/unit/features/adhkar test/unit/app` | **306 passed, 0 failed** |
+| Analyze | `flutter analyze lib test` | No issues found |

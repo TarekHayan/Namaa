@@ -272,7 +272,7 @@
 - [x] T033 [US1] Implement lib/features/adhkar/presentation/adhkar_screen.dart, plus widgets/adhkar_header.dart, adhkar_progress_card.dart and dhikr_item_card.dart.
   - **Depends**: T032.
   - **Done**: T032 passes. It uses the shared components and theme colors, with no new UI kit.
-- [ ] T034 [US1] Register the Adhkar catalog, repository, commands, adapter and Cubit in lib/app/composition/configure_dependencies.dart, and preview owners in lib/app/composition/adhkar_preview_adapters.dart.
+- [x] T034 [US1] Register the Adhkar catalog, repository, commands, adapter and Cubit in lib/app/composition/configure_dependencies.dart, and preview owners in lib/app/composition/adhkar_preview_adapters.dart.
   - **Depends**: T028, T033.
   - **Done**: Debug preview counts locally with no upload, and the existing DI tests pass.
 - [ ] T035 [US1] Add the `/adhkar` route in lib/app/routing/app_router.dart and the `adhkar` section in lib/features/today/presentation/widgets/today_navigation_sidebar.dart and today_navigation_shell.dart, highlighting Track.

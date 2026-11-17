@@ -68,6 +68,26 @@ void main() {
     expect(request.setAwardSourceId, 'set:2026-11-10:morning');
   });
 
+  test('a commit queues for sync unless the owner is a local-only preview '
+      'owner', () async {
+    await commands.increment(capturedDay: '2026-11-10', itemId: 'm1');
+    expect(repository.requests.single.queueForSync, isTrue);
+
+    final preview = AdhkarCommands(
+      ownerId: 'preview-owner',
+      times: times,
+      catalog: catalog,
+      repository: repository,
+      commits: repository,
+      clock: clock,
+      identity: const FakeIdentity(),
+      queueForSync: false,
+    );
+    await preview.increment(capturedDay: '2026-11-10', itemId: 'm1');
+    expect(repository.requests.last.accountId, 'preview-owner');
+    expect(repository.requests.last.queueForSync, isFalse);
+  });
+
   test('an increment below the full set does not complete it', () async {
     final outcome = await commands.increment(
       capturedDay: '2026-11-10',

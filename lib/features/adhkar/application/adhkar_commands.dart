@@ -81,13 +81,15 @@ final class AdhkarCommands implements AdhkarCommandRunner {
     required AdhkarCountCommitPort commits,
     required AdhkarClockPort clock,
     required AdhkarIdentityPort identity,
+    bool queueForSync = true,
   }) : _ownerId = ownerId,
        _times = times,
        _catalog = catalog,
        _repository = repository,
        _commits = commits,
        _clock = clock,
-       _identity = identity {
+       _identity = identity,
+       _queueForSync = queueForSync {
     if (ownerId.trim().isEmpty) throw ArgumentError('Owner is required');
   }
 
@@ -98,6 +100,10 @@ final class AdhkarCommands implements AdhkarCommandRunner {
   final AdhkarCountCommitPort _commits;
   final AdhkarClockPort _clock;
   final AdhkarIdentityPort _identity;
+
+  /// False for the local-only debug preview owner: the commit then queues
+  /// no outbox entry, so nothing can ever upload (as Prayer's preview).
+  final bool _queueForSync;
 
   @override
   Future<AppResult<AdhkarCommandOutcome>> increment({
@@ -289,7 +295,7 @@ final class AdhkarCommands implements AdhkarCommandRunner {
         operationId: _nextOperationId(),
         expectedCurrentVersion: prior?.updatedAt,
         acknowledgedBase: prior?.lastAcknowledgedUpdatedAt,
-        queueForSync: true,
+        queueForSync: _queueForSync,
         listItems: listItems,
         setAwardSourceId: _identity.setAwardSourceId(
           guard.day,

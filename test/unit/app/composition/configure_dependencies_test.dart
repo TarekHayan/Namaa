@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:namma_project/app/composition/adhkar_preview_adapters.dart';
 import 'package:namma_project/app/composition/configure_dependencies.dart';
 import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
@@ -10,11 +11,16 @@ import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
+import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/platform/platform_capability_reporter.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_state.dart';
+import 'package:namma_project/features/adhkar/presentation/my_adhkar_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
@@ -254,6 +260,65 @@ void main() {
         );
       },
     );
+
+    test('Adhkar preview counts locally with the real catalog and uploads '
+        'nothing', () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'namaa_adhkar_preview_',
+      );
+      final dbPath = <String>[
+        tempDir.path,
+        'foundation_encrypted.db',
+      ].join(Platform.pathSeparator);
+      addTearDown(() async {
+        await getIt.reset();
+        await tempDir.delete(recursive: true);
+      });
+      await configureDependencies(
+        environment: FoundationEnvironment.tasksPreview,
+        secureStoreOverride: InMemorySecureKeyValueStore(),
+        databasePathOverride: dbPath,
+      );
+      expect(getIt<AdhkarPreviewSession>(), isNotNull);
+      expect(
+        (await getIt<AdhkarPreviewSession>().obtainSyncContext())
+            .valueOrNull
+            ?.accountId,
+        kAdhkarPreviewAccountId,
+      );
+
+      final cubit = getIt<AdhkarCubit>(param1: kAdhkarPreviewAccountId);
+      addTearDown(cubit.close);
+      await cubit.load();
+      final catalog = cubit.state.catalog!;
+      expect(catalog.itemsOf(AdhkarList.morning), hasLength(25));
+      expect(catalog.itemsOf(AdhkarList.evening), hasLength(23));
+      // No Prayer location is saved for the preview, so counting is
+      // unrestricted on the device day.
+      expect(cubit.state.clock?.morningCountable, isTrue);
+
+      final first = catalog.itemsOf(AdhkarList.morning).first;
+      await cubit.increment(first.itemId, cubit.state.clock!.day!);
+      expect(cubit.state.countOf(first.itemId), 1);
+      expect(cubit.state.itemStatus[first.itemId], AdhkarActionStatus.saved);
+
+      final database = getIt<FoundationDatabase>();
+      expect(
+        await database.rawScalar('SELECT count(*) FROM adhkar_item_counts'),
+        1,
+        reason: 'the count is stored locally',
+      );
+      expect(
+        await database.rawScalar('SELECT count(*) FROM pending_changes'),
+        0,
+        reason: 'a preview count queues nothing for upload',
+      );
+
+      final mine = getIt<MyAdhkarCubit>(param1: kAdhkarPreviewAccountId);
+      addTearDown(mine.close);
+      await mine.load();
+      expect(mine.state.loadFailed, isFalse);
+    });
 
     test('default launch resolves real Foundation adapters', () async {
       final tempDir = await Directory.systemTemp.createTemp(

@@ -77,6 +77,45 @@ void main() {
   Future<int> xpRows() async =>
       (await db.rawScalar('SELECT count(*) FROM xp_awards')) as int;
 
+  test(
+    'a preview owner stores locally and queues nothing for upload',
+    () async {
+      Future<int> pending() async =>
+          (await db.rawScalar('SELECT count(*) FROM pending_changes')) as int;
+
+      await seedGroup('queued group');
+      expect(await pending(), 1, reason: 'a real owner queues the create');
+
+      final preview = MyAdhkarCommands(
+        ownerId: 'preview-owner',
+        clock: clock,
+        repository: repository,
+        identity: const UuidMyAdhkarIdentity(),
+        queueForSync: false,
+      );
+      final created =
+          (await preview.createGroup(name: 'local only group')).valueOrNull
+              as MyAdhkarGroupCreated;
+      final added =
+          (await preview.add(
+                draft: MyDhikrDraft(
+                  text: 'test dhikr',
+                  groupIds: [created.groupId],
+                ),
+              )).valueOrNull
+              as MyAdhkarAdded;
+      expect(added.itemId, isNotEmpty);
+      expect(
+        (await repository.liveEntryCount(
+          accountId: 'preview-owner',
+        )).valueOrNull,
+        1,
+        reason: 'the data is stored locally',
+      );
+      expect(await pending(), 1, reason: 'the preview owner queued nothing');
+    },
+  );
+
   test('createGroup stores the trimmed name with a fresh UUIDv4 id', () async {
     final outcome =
         (await commands.createGroup(name: '  test group  ')).valueOrNull

@@ -114,10 +114,12 @@ final class MyAdhkarCommands implements MyAdhkarCommandRunner {
     required AdhkarClockPort clock,
     required MyAdhkarRepository repository,
     required MyAdhkarIdentityPort identity,
+    bool queueForSync = true,
   }) : _ownerId = ownerId,
        _clock = clock,
        _repository = repository,
-       _identity = identity {
+       _identity = identity,
+       _queueForSync = queueForSync {
     if (ownerId.trim().isEmpty) throw ArgumentError('Owner is required');
   }
 
@@ -125,6 +127,10 @@ final class MyAdhkarCommands implements MyAdhkarCommandRunner {
   final AdhkarClockPort _clock;
   final MyAdhkarRepository _repository;
   final MyAdhkarIdentityPort _identity;
+
+  /// False for the local-only debug preview owner: no outbox entry is
+  /// queued, so nothing can ever upload (as Prayer's preview).
+  final bool _queueForSync;
 
   // -- Groups ---------------------------------------------------------------
 
@@ -159,7 +165,7 @@ final class MyAdhkarCommands implements MyAdhkarCommandRunner {
           deletedAt: null,
         ),
         operationId: _nextOperationId(),
-        queueForSync: true,
+        queueForSync: _queueForSync,
       );
       if (insert.failureOrNull case final failure?) {
         return AppResult<MyAdhkarCommandOutcome>.failure(failure);
@@ -202,7 +208,7 @@ final class MyAdhkarCommands implements MyAdhkarCommandRunner {
         prior.copyWith(name: name.trim(), updatedAt: version),
         priorUpdatedAt: prior.updatedAt,
         operationId: _nextOperationId(),
-        queueForSync: true,
+        queueForSync: _queueForSync,
       );
       if (rename.failureOrNull case final failure?) {
         return AppResult<MyAdhkarCommandOutcome>.failure(failure);
@@ -238,7 +244,7 @@ final class MyAdhkarCommands implements MyAdhkarCommandRunner {
         groupId: groupId,
         deletedAt: now,
         operationId: _nextOperationId(),
-        queueForSync: true,
+        queueForSync: _queueForSync,
       );
       if (cascade.failureOrNull case final failure?) {
         return AppResult<MyAdhkarCommandOutcome>.failure(failure);
@@ -311,7 +317,7 @@ final class MyAdhkarCommands implements MyAdhkarCommandRunner {
           deletedAt: null,
         ),
         operationId: _nextOperationId(),
-        queueForSync: true,
+        queueForSync: _queueForSync,
       );
       if (insert.failureOrNull case final failure?) {
         return AppResult<MyAdhkarCommandOutcome>.failure(failure);
@@ -367,7 +373,7 @@ final class MyAdhkarCommands implements MyAdhkarCommandRunner {
         ),
         priorUpdatedAt: prior.updatedAt,
         operationId: _nextOperationId(),
-        queueForSync: true,
+        queueForSync: _queueForSync,
       );
       if (update.failureOrNull case final failure?) {
         return AppResult<MyAdhkarCommandOutcome>.failure(failure);
@@ -405,7 +411,7 @@ final class MyAdhkarCommands implements MyAdhkarCommandRunner {
         itemId: itemId,
         deletedAt: now,
         operationId: _nextOperationId(),
-        queueForSync: true,
+        queueForSync: _queueForSync,
       );
       if (tombstone.failureOrNull case final failure?) {
         return AppResult<MyAdhkarCommandOutcome>.failure(failure);
