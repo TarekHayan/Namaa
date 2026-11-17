@@ -8,8 +8,10 @@ values('00000000-0000-0000-0000-000000000000',
   '86666666-6666-4666-8666-666666666666','authenticated','authenticated',
   'adhkar-xp@example.com','x',now(),now());
 
--- The migration ships no catalog seed (T006 gates it behind the owner's
--- content approval); this test seeds its own fixture rows.
+-- Migration 0016 seeds the real v1 catalog (T006). These tests pin server
+-- invariants against their own small fixture, so they replace the seeded
+-- rows inside this transaction (rolled back at the end).
+delete from public.adhkar_catalog_items where catalog_version = 1;
 insert into public.adhkar_catalog_items(catalog_version,item_id,list,position,target)
 values
   (1,'m1','morning',1,1),

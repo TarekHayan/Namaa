@@ -27,14 +27,64 @@ create table public.adhkar_catalog_items (
   unique (catalog_version,list,position)
 );
 
--- The catalog seed is NOT shipped by this migration. It is generated in the
--- same change that ships the owner-approved asset
--- assets/religious/adhkar_catalog_v1.json (tasks.md T006, gated by the
--- owner's content approval T073), so the server can never award set
--- completion or accept counts for items the client does not ship. Until
--- then the table stays empty and the pgTAP tests seed their own fixture
--- rows inside their transactions; a Dart test pins the asset and the seed
--- together (test/unit/features/adhkar/data/catalog_seed_sync_test.dart).
+-- The v1 catalog seed (spec 009 T006): IDs, lists, positions and targets of the
+-- owner-approved items, generated from assets/religious/adhkar_catalog_v1.json
+-- (never text), so the server can never award set completion or accept counts
+-- for items the client does not ship. A Dart test pins the asset and this seed
+-- together (test/unit/features/adhkar/data/catalog_seed_sync_test.dart). The
+-- pgTAP tests replace these rows with their own fixture inside their own
+-- transactions.
+
+insert into public.adhkar_catalog_items(catalog_version,item_id,list,position,target)
+values
+  (1,'m25','morning',1,1),
+  (1,'m11','morning',2,3),
+  (1,'m12','morning',3,3),
+  (1,'m13','morning',4,3),
+  (1,'m1','morning',5,1),
+  (1,'m3','morning',6,1),
+  (1,'m2','morning',7,1),
+  (1,'m14','morning',8,4),
+  (1,'m15','morning',9,1),
+  (1,'m16','morning',10,3),
+  (1,'m7','morning',11,7),
+  (1,'m17','morning',12,1),
+  (1,'m18','morning',13,1),
+  (1,'m4','morning',14,3),
+  (1,'m5','morning',15,3),
+  (1,'m19','morning',16,1),
+  (1,'m20','morning',17,1),
+  (1,'m21','morning',18,1),
+  (1,'m8','morning',19,100),
+  (1,'m9','morning',20,10),
+  (1,'m24','morning',21,100),
+  (1,'m6','morning',22,3),
+  (1,'m22','morning',23,1),
+  (1,'m10','morning',24,100),
+  (1,'m23','morning',25,10),
+  (1,'e23','evening',1,1),
+  (1,'e10','evening',2,1),
+  (1,'e11','evening',3,3),
+  (1,'e12','evening',4,3),
+  (1,'e13','evening',5,3),
+  (1,'e1','evening',6,1),
+  (1,'e3','evening',7,1),
+  (1,'e2','evening',8,1),
+  (1,'e14','evening',9,4),
+  (1,'e15','evening',10,1),
+  (1,'e16','evening',11,3),
+  (1,'e7','evening',12,7),
+  (1,'e17','evening',13,1),
+  (1,'e18','evening',14,1),
+  (1,'e5','evening',15,3),
+  (1,'e6','evening',16,3),
+  (1,'e19','evening',17,1),
+  (1,'e20','evening',18,1),
+  (1,'e21','evening',19,1),
+  (1,'e8','evening',20,100),
+  (1,'e22','evening',21,10),
+  (1,'e4','evening',22,3),
+  (1,'e9','evening',23,10);
 
 -- ---------------------------------------------------------------------------
 -- Records

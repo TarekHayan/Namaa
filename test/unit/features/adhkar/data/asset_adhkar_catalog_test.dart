@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/features/adhkar/data/asset_adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
@@ -11,6 +12,7 @@ import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 /// assets/religious/adhkar_catalog_v1.json. The loader never throws on a
 /// malformed document: it reports the recoverable content-unavailable state.
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   final fixture = File('test/fixtures/adhkar_qiyam/catalog_fixture.json');
 
   Future<String> loadFixture(String path) async => fixture.readAsString();
@@ -90,5 +92,99 @@ void main() {
     );
     expect(catalog.version, 1);
     expect(catalog.qiyamSupplications.single.id, 's1');
+  });
+
+  group('the shipped asset (T006)', () {
+    const assetPath = 'assets/religious/adhkar_catalog_v1.json';
+
+    // Structure only: the real religious text is never copied into a test.
+    test(
+      'is registered in pubspec and loads with every item approved',
+      () async {
+        final port = AssetAdhkarCatalog(
+          load: rootBundle.loadString,
+          assetPath: assetPath,
+        );
+        final catalog = (await port.snapshot('owner')).valueOrNull!;
+        expect(catalog.version, 1);
+        expect(catalog.attribution.trim(), isNotEmpty);
+
+        // The loader drops unapproved items, so the raw count proves that all
+        // of the shipped items carry the owner's approval (content-sources.md).
+        final raw =
+            jsonDecode(await rootBundle.loadString(assetPath))
+                as Map<String, dynamic>;
+        final rawItems = (raw['items'] as List).cast<Map<String, dynamic>>();
+        expect(rawItems.length, catalog.items.length);
+        expect(rawItems.every((i) => i['approved'] == true), isTrue);
+
+        expect(catalog.itemsOf(AdhkarList.morning), hasLength(25));
+        expect(catalog.itemsOf(AdhkarList.evening), hasLength(23));
+      },
+    );
+
+    test('lists are contiguous, with the Quran items first', () async {
+      final port = AssetAdhkarCatalog(
+        load: rootBundle.loadString,
+        assetPath: assetPath,
+      );
+      final catalog = (await port.snapshot('owner')).valueOrNull!;
+      for (final list in AdhkarList.values) {
+        final items = catalog.itemsOf(list);
+        expect(items.map((i) => i.position), [
+          for (var n = 1; n <= items.length; n++) n,
+        ]);
+        final kinds = items.map((i) => i.kind).toList();
+        final firstDhikr = kinds.indexOf(DhikrKind.dhikr);
+        expect(
+          kinds.skip(firstDhikr).every((k) => k == DhikrKind.dhikr),
+          isTrue,
+          reason: '${list.name}: Quran items come first (owner decision P1)',
+        );
+      }
+      expect(
+        catalog
+            .itemsOf(AdhkarList.morning)
+            .where((i) => i.kind == DhikrKind.quran),
+        hasLength(4),
+      );
+      expect(
+        catalog
+            .itemsOf(AdhkarList.evening)
+            .where((i) => i.kind == DhikrKind.quran),
+        hasLength(5),
+      );
+    });
+
+    test('Quran items carry verses only, with their surah and range', () async {
+      final port = AssetAdhkarCatalog(
+        load: rootBundle.loadString,
+        assetPath: assetPath,
+      );
+      final catalog = (await port.snapshot('owner')).valueOrNull!;
+      final verseEnd = RegExp(r'[٠-٩]+$');
+      for (final item in catalog.items.where(
+        (i) => i.kind == DhikrKind.quran,
+      )) {
+        expect(item.surah, isNotNull, reason: item.itemId);
+        expect(item.ayahFrom, lessThanOrEqualTo(item.ayahTo!));
+        expect(
+          item.textAr.contains(':'),
+          isFalse,
+          reason: '${item.itemId}: the label is not part of the verse text',
+        );
+        expect(
+          verseEnd.hasMatch(item.textAr),
+          isTrue,
+          reason: '${item.itemId}: ends with its verse-end marker',
+        );
+      }
+      // The isti'adha preface: Ayat al-Kursi (both lists) and the end of
+      // al-Baqara (owner decision P2); no other item has one.
+      expect(
+        catalog.items.where((i) => i.prefaceAr != null).map((i) => i.itemId),
+        unorderedEquals(['m25', 'e23', 'e10']),
+      );
+    });
   });
 }

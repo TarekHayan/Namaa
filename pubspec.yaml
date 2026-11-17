@@ -100,6 +100,8 @@ flutter:
 
   assets:
     - assets/images/namaa_icon.png
+    # Reviewed adhkar catalog (009 T006); texts come from content-sources.md.
+    - assets/religious/adhkar_catalog_v1.json
 
   fonts:
     - family: ThmanyahSans

@@ -6,8 +6,8 @@ import 'package:namma_project/features/adhkar/application/adhkar_catalog_port.da
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 
 /// Loads the reviewed Adhkar catalog from the bundled document
-/// (assets/religious/adhkar_catalog_v1.json once T006 ships; the tests run
-/// it against the review fixture). The document is read once and the
+/// (assets/religious/adhkar_catalog_v1.json; most tests run it against the
+/// placeholder fixture instead). The document is read once and the
 /// validated snapshot is cached per version; a malformed or invalid
 /// document never throws — it reports the recoverable "content unavailable"
 /// state (data-model.md).
