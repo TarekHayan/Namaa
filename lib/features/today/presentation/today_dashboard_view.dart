@@ -57,6 +57,7 @@ class TodayDashboardView extends StatelessWidget {
     required this.onHabits,
     required this.onMindMaps,
     this.onPrayer,
+    this.onAdhkar,
     required this.onPreferences,
     required this.onRetryTasks,
     required this.onRetryHabits,
@@ -77,6 +78,7 @@ class TodayDashboardView extends StatelessWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback? onPrayer;
+  final VoidCallback? onAdhkar;
   final VoidCallback onPreferences;
   final VoidCallback onRetryTasks;
   final VoidCallback onRetryHabits;
@@ -165,6 +167,7 @@ class TodayDashboardView extends StatelessWidget {
             onHabits: onHabits,
             onMindMaps: onMindMaps,
             onPrayer: onPrayer,
+            onAdhkar: onAdhkar,
             onPreferences: onPreferences,
             xpAmount: state.xp.value?.amount,
             child: Scaffold(
@@ -251,6 +254,7 @@ class TodayDashboardView extends StatelessWidget {
                                       TodayQuickHubs(
                                         colors: colors,
                                         onPrayer: onPrayer,
+                                        onAdhkar: onAdhkar,
                                       ),
                                       const SizedBox(height: 20),
 

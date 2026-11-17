@@ -17,6 +17,8 @@ import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/platform/platform_capability_reporter.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_conflict_reader.dart';
+import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_state.dart';
@@ -280,6 +282,8 @@ void main() {
         databasePathOverride: dbPath,
       );
       expect(getIt<AdhkarPreviewSession>(), isNotNull);
+      expect(getIt<AdhkarConflictReader>(), isNotNull);
+      expect(getIt<DriftMyAdhkarRepository>(), isNotNull);
       expect(
         (await getIt<AdhkarPreviewSession>().obtainSyncContext())
             .valueOrNull

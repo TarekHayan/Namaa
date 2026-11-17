@@ -486,6 +486,7 @@
   "prayerSourceApi": "المواقيت: جدول AlAdhan السنوي المحفوظ على هذا الجهاز",
   "prayerSourceLocal": "المواقيت: حساب محلي احتياطي؛ تأكد من مسجد منطقتك",
   "prayerSignInRequired": "افتح مواقيت الصلاة بعد تسجيل الدخول.",
+  "adhkarSignInRequired": "افتح الأذكار بعد تسجيل الدخول.",
   "prayerStatusOnTime": "في وقتها",
   "prayerStatusLate": "أُديت متأخرًا",
   "prayerStatusMissed": "فاتتني",

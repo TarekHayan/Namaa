@@ -52,6 +52,7 @@ import 'package:namma_project/core/platform/secure_credential_vault.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_catalog_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_clock_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_commands.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_conflict_reader.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_identity_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_inbound_sync_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_repository.dart';
@@ -244,6 +245,7 @@ Future<void> configureDependencies({
     final adhkarRepository = DriftAdhkarRepository(database);
     getIt.registerLazySingleton<AdhkarRepository>(() => adhkarRepository);
     getIt.registerLazySingleton<DriftAdhkarRepository>(() => adhkarRepository);
+    getIt.registerLazySingleton<AdhkarConflictReader>(() => adhkarRepository);
     final qiyamRepository = DriftQiyamRepository(database);
     getIt.registerLazySingleton<QiyamRepository>(() => qiyamRepository);
     getIt.registerLazySingleton<DriftQiyamRepository>(() => qiyamRepository);

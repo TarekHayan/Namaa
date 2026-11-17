@@ -25,6 +25,7 @@ class TodayScreen extends StatefulWidget {
     required this.onHabits,
     required this.onMindMaps,
     this.onPrayer,
+    this.onAdhkar,
     required this.onPreferences,
     this.onNewTask,
     this.onNewHabit,
@@ -38,6 +39,7 @@ class TodayScreen extends StatefulWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback? onPrayer;
+  final VoidCallback? onAdhkar;
   final VoidCallback onPreferences;
   final VoidCallback? onNewTask;
   final VoidCallback? onNewHabit;
@@ -93,6 +95,7 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
         onHabits: widget.onHabits,
         onMindMaps: widget.onMindMaps,
         onPrayer: widget.onPrayer,
+        onAdhkar: widget.onAdhkar,
         onPreferences: widget.onPreferences,
         onNewTask: widget.onNewTask,
         onNewHabit: widget.onNewHabit,

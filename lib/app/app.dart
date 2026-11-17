@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:namma_project/app/composition/adhkar_preview_adapters.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
@@ -25,7 +26,16 @@ import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
 import 'package:namma_project/app/widgets/app_status_view.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_catalog_port.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_conflict_reader.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_sync_service.dart';
+import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_conflict_evidence.dart';
+import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_conflicts_view.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_screen.dart';
+import 'package:namma_project/features/adhkar/presentation/my_adhkar_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
@@ -331,6 +341,10 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
     final prayerAvailable =
         getIt.isRegistered<PrayerCubit>() &&
         getIt.isRegistered<CloudSessionPort>();
+    final adhkarAvailable =
+        getIt.isRegistered<AdhkarCubit>() &&
+        getIt.isRegistered<MyAdhkarCubit>() &&
+        getIt.isRegistered<CloudSessionPort>();
     _router = FoundationAppRouter(
       rootBuilder: (_) => widget.home,
       cloudSession: tasksAvailable ? getIt<CloudSessionPort>() : null,
@@ -362,6 +376,17 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
           : null,
       prayerBuilder: prayerAvailable
           ? (_, accountId) => _PrayerRouteScope(
+              key: ValueKey(accountId),
+              accountId: accountId,
+            )
+          : null,
+      adhkarSession: adhkarAvailable
+          ? (getIt.isRegistered<AdhkarPreviewSession>()
+                ? getIt<AdhkarPreviewSession>()
+                : getIt<CloudSessionPort>())
+          : null,
+      adhkarBuilder: adhkarAvailable
+          ? (_, accountId) => _AdhkarRouteScope(
               key: ValueKey(accountId),
               accountId: accountId,
             )
@@ -657,6 +682,9 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
       onHabits: () => GoRouter.of(context).go(kHabitsRoute),
       onMindMaps: () => GoRouter.of(context).go(kMindMapsRoute),
       onPrayer: () => GoRouter.of(context).go(kPrayerRoute),
+      onAdhkar: GetIt.instance.isRegistered<AdhkarCubit>()
+          ? () => GoRouter.of(context).go(kAdhkarRoute)
+          : null,
       onPreferences: () => showAppPreferencesSheet(context),
       onNewTask: () =>
           GoRouter.of(context).go(kTasksRoute, extra: OwnerEntryIntent.newTask),
@@ -790,6 +818,13 @@ class _FeatureNavigationShell extends StatelessWidget {
       onPrayer: () {
         if (section != TodayNavigationSection.prayer) router.go(kPrayerRoute);
       },
+      onAdhkar: GetIt.instance.isRegistered<AdhkarCubit>()
+          ? () {
+              if (section != TodayNavigationSection.adhkar) {
+                router.go(kAdhkarRoute);
+              }
+            }
+          : null,
       onPreferences: () => showAppPreferencesSheet(context),
       child: child,
     );
@@ -845,6 +880,79 @@ class _PrayerRouteScopeState extends State<_PrayerRouteScope> {
       conflicts: _conflicts,
     ),
   );
+}
+
+class _AdhkarRouteScope extends StatefulWidget {
+  const _AdhkarRouteScope({super.key, required this.accountId});
+  final String accountId;
+
+  @override
+  State<_AdhkarRouteScope> createState() => _AdhkarRouteScopeState();
+}
+
+/// One route visit owns the Adhkar and My Adhkar Cubits for one owner and
+/// closes them on leave. The Adhkar domain's own sync starts here too; a
+/// failure there never blocks the screen, which counts locally first.
+class _AdhkarRouteScopeState extends State<_AdhkarRouteScope> {
+  late final AdhkarCubit _cubit = GetIt.instance<AdhkarCubit>(
+    param1: widget.accountId,
+  );
+  late final MyAdhkarCubit _myAdhkarCubit = GetIt.instance<MyAdhkarCubit>(
+    param1: widget.accountId,
+  );
+  // One Drift watch per route scope; rebuilding must not resubscribe.
+  late final Stream<List<AdhkarConflictEvidence>> _countConflicts =
+      GetIt.instance<AdhkarConflictReader>().watchConflicts(widget.accountId);
+  late final Stream<List<MyAdhkarConflictEvidence>> _myAdhkarConflicts =
+      GetIt.instance<DriftMyAdhkarRepository>().watchConflicts(
+        widget.accountId,
+      );
+
+  // The conflicts view caches its catalog lookup per instance, so one
+  // instance is kept per language instead of one per build.
+  AdhkarConflictsView? _conflictsView;
+  String? _conflictsLocale;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_cubit.load());
+    if (GetIt.instance.isRegistered<AdhkarSyncService>()) {
+      unawaited(GetIt.instance<AdhkarSyncService>().synchronize());
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    unawaited(_myAdhkarCubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = FoundationLocalizations.of(context).localeName;
+    if (_conflictsLocale != locale) {
+      _conflictsLocale = locale;
+      _conflictsView = AdhkarConflictsView(
+        conflicts: _countConflicts,
+        myAdhkarConflicts: _myAdhkarConflicts,
+        catalog: GetIt.instance<AdhkarCatalogPort>(),
+        ownerId: widget.accountId,
+        locale: locale,
+      );
+    }
+    return _FeatureNavigationShell(
+      section: TodayNavigationSection.adhkar,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AdhkarCubit>.value(value: _cubit),
+          BlocProvider<MyAdhkarCubit>.value(value: _myAdhkarCubit),
+        ],
+        child: AdhkarScreen(footer: _conflictsView),
+      ),
+    );
+  }
 }
 
 class _StartupShell extends StatelessWidget {

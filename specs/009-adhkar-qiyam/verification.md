@@ -1435,3 +1435,37 @@ differences" view where the view is composed, in the route scope (T035).
 | Commands | `flutter test test/unit/features/adhkar/application` | all passed (new: a preview owner's commit and My Adhkar writes queue nothing) |
 | Focused | `flutter test test/architecture test/unit/features/adhkar test/unit/app` | **306 passed, 0 failed** |
 | Analyze | `flutter analyze lib test` | No issues found |
+
+### T035 — `/adhkar` route, shell section and entry points (2026-11-17)
+
+- `app_router.dart`: `kAdhkarRoute = '/adhkar'`, a top-level sibling like
+  `/prayer`, behind the same account gate and preview session
+  (`adhkarSession` and `adhkarBuilder`, with loading and signed-out keys and the
+  new ARB string `adhkarSignInRequired` in Arabic and English).
+- `app.dart`: `_AdhkarRouteScope` owns one `AdhkarCubit` and one `MyAdhkarCubit`
+  per owner (created on enter, closed on leave), loads the Adhkar Cubit, starts
+  the Adhkar domain sync when it is registered, and composes the read-only
+  "Sync differences" view (`AdhkarConflictsView`) with the owner's count
+  conflicts and, new in this task, the owner's My Adhkar conflicts stream
+  (`DriftMyAdhkarRepository.watchConflicts`), passed to `AdhkarScreen` through
+  its new optional `footer`. The route and the entries exist only when the
+  Adhkar graph is registered.
+- `TodayNavigationSection.adhkar` highlights Track in the phone bottom bar (as
+  Prayer does); on the desktop sidebar the Adhkar item itself is selected, as
+  Prayer's item is. Leaving an overlay (Track, Finance, preview) still closes it
+  first, and the section has no back arrow; device back goes Home through the
+  shell's `PopScope`, and inside «أذكاري» an opened group is closed first by the
+  existing `BackButtonListener`.
+- Entry points, all optional callbacks that default to the previous "coming
+  soon" behavior: the Track hub's Adhkar tile, the sidebar's Adhkar item and the
+  Home quick hub's Adhkar tile now open `/adhkar` (`go`, never stacked). Qiyam,
+  Quran and Focus stay "coming soon". The live subtitles on the Track tile and
+  the Home focus/reflection values stay with T057.
+- A real wiring bug was found by the end-to-end test below and fixed in the same
+  change: `AdhkarConflictReader` was not registered in `configure_dependencies.dart`.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Router and back handling | `flutter test test/widget/app/app_router_test.dart` | **12 passed** (7 new: `go` opens the page for the preview owner, no back arrow, Track highlighted, device back closes an opened group then goes Home, device back goes Home, leaving a Track overlay closes it first, device back from an overlay, signed-out boundary) |
+| Entry points | `flutter test test/widget/features/today/adhkar_entry_points_test.dart` | **8 passed** (Home hub, Track tile, sidebar item and bottom bar highlight, each wired and unwired) |
+| End to end, preview graph | `flutter test test/widget/app/adhkar_app_flow_test.dart` | **1 passed** (real encrypted database, real asset: Home Adhkar hub opens `/adhkar`; the first Morning card is Ayat al-Kursi with its preface, surah line and the Quran font; the attribution line shows; one tap counts and reaches the target; the Evening tab shows its own Quran items first; device back returns Home) |

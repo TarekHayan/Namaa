@@ -275,7 +275,7 @@
 - [x] T034 [US1] Register the Adhkar catalog, repository, commands, adapter and Cubit in lib/app/composition/configure_dependencies.dart, and preview owners in lib/app/composition/adhkar_preview_adapters.dart.
   - **Depends**: T028, T033.
   - **Done**: Debug preview counts locally with no upload, and the existing DI tests pass.
-- [ ] T035 [US1] Add the `/adhkar` route in lib/app/routing/app_router.dart and the `adhkar` section in lib/features/today/presentation/widgets/today_navigation_sidebar.dart and today_navigation_shell.dart, highlighting Track.
+- [x] T035 [US1] Add the `/adhkar` route in lib/app/routing/app_router.dart and the `adhkar` section in lib/features/today/presentation/widgets/today_navigation_sidebar.dart and today_navigation_shell.dart, highlighting Track.
   - **Depends**: T034.
   - **Done**: A widget test in test/widget/app/app_router_test.dart checks:
     - the route opens with `go`;

@@ -2,8 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 
 class PrayerTrackHub extends StatelessWidget {
-  const PrayerTrackHub({super.key, required this.onPrayer});
+  const PrayerTrackHub({super.key, required this.onPrayer, this.onAdhkar});
   final VoidCallback onPrayer;
+
+  /// Opens the real Adhkar screen; null keeps the tile "coming soon".
+  final VoidCallback? onAdhkar;
+
+  /// The tile's action: Prayer (0) and, once wired, Adhkar (3) open their
+  /// screens; the rest stay "coming soon".
+  VoidCallback? _open(int index) => switch (index) {
+    0 => onPrayer,
+    3 => onAdhkar,
+    _ => null,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +45,13 @@ class PrayerTrackHub extends StatelessWidget {
                     key: Key('prayer_track_$i'),
                     leading: Icon(entries[i].$2),
                     title: Text(entries[i].$1),
-                    subtitle: i == 0 ? null : Text(copy.dashboardComingSoon),
-                    trailing: i == 0
-                        ? const Icon(Icons.chevron_right)
-                        : const Icon(Icons.lock_clock_outlined),
-                    onTap: i == 0 ? onPrayer : null,
+                    subtitle: _open(i) == null
+                        ? Text(copy.dashboardComingSoon)
+                        : null,
+                    trailing: _open(i) == null
+                        ? const Icon(Icons.lock_clock_outlined)
+                        : const Icon(Icons.chevron_right),
+                    onTap: _open(i),
                   ),
                 ),
             ],

@@ -17,11 +17,15 @@ class TodayQuickHubs extends StatelessWidget {
     required this.colors,
     this.onOpenHub,
     this.onPrayer,
+    this.onAdhkar,
   });
 
   final AppColors colors;
   final void Function(DashboardPreviewFeature feature)? onOpenHub;
   final VoidCallback? onPrayer;
+
+  /// Opens the real Adhkar screen; null keeps the "coming soon" preview.
+  final VoidCallback? onAdhkar;
 
   void _navigateToHub(
     BuildContext context,
@@ -30,6 +34,10 @@ class TodayQuickHubs extends StatelessWidget {
   ) {
     if (feature == DashboardPreviewFeature.prayer && onPrayer != null) {
       onPrayer!();
+      return;
+    }
+    if (feature == DashboardPreviewFeature.adhkar && onAdhkar != null) {
+      onAdhkar!();
       return;
     }
     if (onOpenHub != null) {

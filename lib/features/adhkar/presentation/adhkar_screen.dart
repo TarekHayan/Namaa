@@ -17,7 +17,12 @@ import 'widgets/my_adhkar_tab.dart';
 /// notice; an unavailable schedule keeps the lists visible with counting
 /// locked (owner decision, 2026-11-10).
 final class AdhkarScreen extends StatelessWidget {
-  const AdhkarScreen({super.key});
+  const AdhkarScreen({super.key, this.footer});
+
+  /// Shown at the end of the page whatever the tab: the owner's read-only
+  /// "Sync differences" list, composed by the route (contracts/
+  /// adhkar-qiyam-ui.md, Conflicts). Null shows nothing.
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +140,7 @@ final class AdhkarScreen extends StatelessWidget {
                     ),
                   ),
               ],
+              if (footer != null) ...[const SizedBox(height: 16), footer!],
             ],
           ),
         ),

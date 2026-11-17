@@ -489,6 +489,7 @@
   "prayerSourceApi": "Times: AlAdhan API annual timetable (saved on this device)",
   "prayerSourceLocal": "Times: local calculation fallback; confirm with your local mosque",
   "prayerSignInRequired": "Open Prayer after signing in.",
+  "adhkarSignInRequired": "Open Adhkar after signing in.",
   "prayerStatusOnTime": "On time",
   "prayerStatusLate": "Completed late",
   "prayerStatusMissed": "Missed",

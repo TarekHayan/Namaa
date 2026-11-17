@@ -30,6 +30,7 @@ enum TodayNavigationSection {
   habits,
   mindMaps,
   prayer,
+  adhkar,
   track,
   finance,
   preview,
@@ -45,6 +46,7 @@ class TodayNavigationSidebar extends StatelessWidget {
     required this.onHabits,
     required this.onMindMaps,
     this.onPrayer,
+    this.onAdhkar,
     this.onTrack,
     required this.onPreferences,
     this.onHome,
@@ -58,6 +60,9 @@ class TodayNavigationSidebar extends StatelessWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback? onPrayer;
+
+  /// Opens the real Adhkar screen; null keeps the "coming soon" preview.
+  final VoidCallback? onAdhkar;
   final VoidCallback? onTrack;
   final VoidCallback onPreferences;
   final VoidCallback? onHome;
@@ -241,12 +246,15 @@ class TodayNavigationSidebar extends StatelessWidget {
                     key: kTodaySidebarAdhkarKey,
                     icon: Icons.wb_sunny_outlined,
                     label: copy.dashboardComingSoonAdhkarTitle,
-                    onTap: () => _openPreview(
-                      context,
-                      copy.dashboardComingSoonAdhkarTitle,
-                      DashboardPreviewFeature.adhkar,
-                    ),
-                    comingSoon: true,
+                    selected: section == TodayNavigationSection.adhkar,
+                    onTap:
+                        onAdhkar ??
+                        () => _openPreview(
+                          context,
+                          copy.dashboardComingSoonAdhkarTitle,
+                          DashboardPreviewFeature.adhkar,
+                        ),
+                    comingSoon: onAdhkar == null,
                   ),
                   _item(
                     context,
