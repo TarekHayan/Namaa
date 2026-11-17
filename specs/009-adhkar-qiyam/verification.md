@@ -1485,3 +1485,65 @@ Windows run. The preview flow is proven by the widget test over the real
 encrypted database and the real asset, but the Quran font rendering on a real
 screen, the item layouts and the owner's visual approval of the Quran text as
 rendered are the owner's checks.
+
+## Phase 6c: the Adhkar section in the approved design (2026-11-18)
+
+T103 to T106 build the section from the owner-approved Claude Design canvas
+(2026-11-17). Behavior, storage, sync and XP are unchanged: the reader and the
+page use the existing `AdhkarCubit` and its commands, and «أذكاري» keeps its
+Cubit and commands.
+
+### T103 Adhkar page, T104 reader, T105 «أذكاري», T106 sync page
+
+- **T103.** `adhkar_screen.dart` is now the page (title, subtitle and the
+  three tabs; the progress card with its ring; the time-window line; the
+  setup notice with «إعداد موقع الصلاة» through the new `onOpenPrayerSetup`
+  callback, which the route wires to `/prayer`; the streak row; the main
+  button «ابدأ» / «متابعة من الذكر n» / the finished state with «قراءة القائمة
+  مرة أخرى»). The old item cards are gone: `dhikr_item_card.dart`,
+  `adhkar_header.dart` and `adhkar_progress_card.dart` are deleted. The colors
+  come from the Emerald `AppColors` tokens (`adhkar_style.dart`).
+- **T104.** The reader is a full-screen layer inside `/adhkar` (no new route):
+  the route composes the shell around the page only, and the reader covers it.
+  One `PageView` page per item; the count button with its ring; the done bar,
+  about 600 ms of hold and a 250 ms slide; swipe both ways; the list sheet and
+  jump; the reset dialog; the time and setup banners; the completion state; the
+  error state with retry; the wide layout (a column of at most 720 px, round
+  previous/next buttons, keyboard hints, Space/Enter and the arrow keys that
+  follow the screen direction); and an empty 52 px slot for a later audio
+  button. The completion state shows «+15 نقطة» only when the completing
+  command reported the completed set, so reading again never shows a second
+  award. The Quran text is one `Text` in the KFGQPC font (the verse-end markers
+  are in the text).
+- **T105.** «أذكاري» is restyled (group rows and menus, empty and limit
+  states, the opened group, the sheets and dialogs, in-place delete
+  confirmations that replace the row or card, the copy toast). Behavior is
+  unchanged, with two additions from the contract: leaving the tab closes an
+  open group, and device back closes a sheet, then an in-place confirmation,
+  then the group.
+- **T106.** The sync differences are a read-only page inside `/adhkar`, opened
+  from a row on the Morning and Evening tabs (shown only when conflicts exist);
+  stacked on a phone, side by side on a wide window; the dhikr text is cut to
+  three lines; «محذوف»; the footer. Device back returns to the Adhkar page.
+- **Strings.** New copy is in `app_ar.arb` and `app_en.arb`, edited line by
+  line; the English strings follow the canvas (the canvas notes call them its
+  own translation).
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Page | `flutter test test/widget/features/adhkar/adhkar_screen_test.dart` | all passed (structure, each main-button state, time line, setup notice, My Adhkar tab and leaving it, content error with retry, and the AR/EN light/dark matrix at 320 px and 200% text and wide) |
+| Reader | `flutter test test/widget/features/adhkar/adhkar_reader_test.dart` | all passed (count, done bar, slide in English and in Arabic, swipe, jump, reset, locked, completion with no second award, error, wide keyboard, device back order, and the matrix) |
+| My Adhkar | `flutter test test/widget/features/adhkar/my_adhkar_tab_test.dart` | all passed (including device back order and the copy toast) |
+| Sync page | `flutter test test/widget/features/adhkar/adhkar_conflicts_test.dart` | all passed (both versions, times, three-line cut, deleted, foreign owner, stacked and side by side, the row, device back) |
+| App flow | `flutter test test/widget/app/adhkar_app_flow_test.dart` | passed (the real preview graph and asset: the page, the reader at Ayat al-Kursi in the Quran font, one tap counts, the slide, device back closes the reader) |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (586 files) |
+| Analyze | `flutter analyze` | No issues found |
+| Full suite | `flutter test` | **1275 passed, 1 skipped, 0 failed** |
+| Windows compile | `flutter build windows --debug` | Built `build/windows/x64/runner/Debug/namma_project.exe` |
+amma_project.exe` |
+
+Not verified here: a run on the Android phone (CPH2481) and a hand-driven
+Windows run; the real-font look of the Quran text and the section on a real
+screen (the widget tests use the placeholder catalog and the test fonts); and
+the owner's visual approval of the built screens against the canvas.
+
