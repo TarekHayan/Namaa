@@ -1469,3 +1469,19 @@ differences" view where the view is composed, in the route scope (T035).
 | Router and back handling | `flutter test test/widget/app/app_router_test.dart` | **12 passed** (7 new: `go` opens the page for the preview owner, no back arrow, Track highlighted, device back closes an opened group then goes Home, device back goes Home, leaving a Track overlay closes it first, device back from an overlay, signed-out boundary) |
 | Entry points | `flutter test test/widget/features/today/adhkar_entry_points_test.dart` | **8 passed** (Home hub, Track tile, sidebar item and bottom bar highlight, each wired and unwired) |
 | End to end, preview graph | `flutter test test/widget/app/adhkar_app_flow_test.dart` | **1 passed** (real encrypted database, real asset: Home Adhkar hub opens `/adhkar`; the first Morning card is Ayat al-Kursi with its preface, surah line and the Quran font; the attribution line shows; one tap counts and reaches the target; the Evening tab shows its own Quran items first; device back returns Home) |
+
+### Gates after T006, T028, T034 and T035 (2026-11-17)
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (581 files) |
+| Analyze | `flutter analyze` (whole tree) | No issues found |
+| Full suite | `flutter test` | **1222 passed, 1 skipped, 0 failed** |
+| SQL/RLS | `supabase test db` (local stack, freshly reset, migration 0016 now seeds the v1 catalog) | **27 files, 418 tests, all passed** |
+| Windows compile | `flutter build windows --debug` | Built `build\windows\x64\runner\Debug\namma_project.exe` |
+
+Not verified here: a run on the Android phone (CPH2481) and a hand-driven
+Windows run. The preview flow is proven by the widget test over the real
+encrypted database and the real asset, but the Quran font rendering on a real
+screen, the item layouts and the owner's visual approval of the Quran text as
+rendered are the owner's checks.
