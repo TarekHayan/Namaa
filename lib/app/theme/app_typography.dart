@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show Bidi;
 
 import 'app_colors.dart';
 
@@ -45,6 +46,31 @@ abstract final class AppTypography {
       labelMedium: style(12, FontWeight.w700, height: 1.2),
       labelSmall: style(11, FontWeight.w700, height: 1.2),
     );
+  }
+
+  /// A style at an exact design size: only the size, weight, color and line
+  /// height. The font family comes from the theme, and the user's text scale
+  /// still applies through the ambient `MediaQuery`. Unlike the text theme it
+  /// does not follow the width breakpoints.
+  static TextStyle fixed(
+    double size,
+    FontWeight weight,
+    Color color, {
+    double height = 1.5,
+  }) => TextStyle(
+    fontSize: size,
+    fontWeight: weight,
+    color: color,
+    height: height,
+  );
+
+  /// The text direction of user-entered text, taken from its first strong
+  /// character, so mixed Arabic and Latin text keeps a readable direction.
+  /// Text with no strong character keeps [fallback].
+  static TextDirection directionFor(String text, TextDirection fallback) {
+    if (Bidi.startsWithRtl(text)) return TextDirection.rtl;
+    if (Bidi.startsWithLtr(text)) return TextDirection.ltr;
+    return fallback;
   }
 
   static TextStyle style(BuildContext context, AppTextRole role) {
