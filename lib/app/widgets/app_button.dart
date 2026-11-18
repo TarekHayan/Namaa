@@ -48,8 +48,7 @@ class AppButtonTuning {
   /// The label weight, instead of the variant's.
   final FontWeight? fontWeight;
 
-  /// Draws the label like ordinary text: the surrounding font and this line
-  /// height. Without it the label has no explicit font or line height.
+  /// The label line height, instead of the font's own.
   final double? labelHeight;
 }
 
@@ -294,6 +293,7 @@ class AppButton extends StatelessWidget {
         foreground = colors.accentStrong;
         outline = null;
     }
+    final font = DefaultTextStyle.of(context).style;
     final weight =
         tuning?.fontWeight ??
         (variant == AppButtonVariant.secondary
@@ -316,13 +316,15 @@ class AppButton extends StatelessWidget {
         ),
       ),
       textStyle: WidgetStatePropertyAll(
-        tuning?.labelHeight == null
-            ? TextStyle(fontSize: 16, fontWeight: weight)
-            : DefaultTextStyle.of(context).style.copyWith(
-                fontSize: 16,
-                fontWeight: weight,
-                height: tuning!.labelHeight,
-              ),
+        TextStyle(
+          // A button label does not inherit the theme font by itself, so
+          // carry it through from the surrounding text style.
+          fontFamily: font.fontFamily,
+          fontFamilyFallback: font.fontFamilyFallback,
+          fontSize: 16,
+          fontWeight: weight,
+          height: tuning?.labelHeight,
+        ),
       ),
     );
     final Widget button;

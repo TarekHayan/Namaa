@@ -226,20 +226,14 @@ void main() {
       });
     }
 
-    testWidgets('stretch fills the width and centers the label', (
-      tester,
-    ) async {
+    testWidgets('a minimum height keeps the label centered and the pill '
+        'hugging its content', (tester) async {
       await pumpShared(
         tester,
         const Column(
           children: [
             AppPill(key: Key('shrink'), label: 'x'),
-            AppPill(
-              key: Key('stretch'),
-              label: 'x',
-              stretch: true,
-              minHeight: 44,
-            ),
+            AppPill(key: Key('tall'), label: 'x', minHeight: 44),
           ],
         ),
       );
@@ -247,11 +241,14 @@ void main() {
         tester.getSize(find.byKey(const Key('shrink'))).width,
         lessThan(100),
       );
-      expect(tester.getSize(find.byKey(const Key('stretch'))).width, 400);
       expect(
-        tester.getSize(find.byKey(const Key('stretch'))).height,
-        greaterThanOrEqualTo(44),
+        tester.getSize(find.byKey(const Key('tall'))).width,
+        lessThan(100),
       );
+      expect(tester.getSize(find.byKey(const Key('tall'))).height, 44);
+      final pill = tester.getRect(find.byKey(const Key('tall')));
+      final text = tester.getRect(find.text('x').last);
+      expect(text.center.dy, closeTo(pill.center.dy, 0.5));
     });
   });
 

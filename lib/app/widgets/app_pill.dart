@@ -29,7 +29,6 @@ class AppPill extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
     this.minHeight,
     this.hairline = false,
-    this.stretch = false,
     this.icon,
     this.maxLines,
     this.labelKey,
@@ -43,9 +42,6 @@ class AppPill extends StatelessWidget {
 
   /// Adds a hairline border to an accent pill.
   final bool hairline;
-
-  /// Fills the available width and centers the label.
-  final bool stretch;
 
   /// A leading icon, drawn in the tone's accent.
   final IconData? icon;
@@ -101,13 +97,16 @@ class AppPill extends StatelessWidget {
           ? null
           : BoxConstraints(minHeight: minHeight!),
       padding: padding,
-      alignment: stretch ? Alignment.center : null,
       decoration: BoxDecoration(
         color: fill,
         borderRadius: BorderRadius.circular(999),
         border: outline == null ? null : Border.all(color: outline),
       ),
-      child: content,
+      // With a minimum height the label stays centered and the pill still
+      // hugs its content.
+      child: minHeight == null
+          ? content
+          : Center(widthFactor: 1, child: content),
     );
   }
 }

@@ -252,7 +252,6 @@ void main() {
           .textStyle!
           .resolve({})!;
       expect(style('plain').height, isNull);
-      expect(style('plain').fontFamily, isNull);
       expect(style('plain').fontSize, 16);
       expect(style('tuned').height, 1.4);
       expect(
@@ -260,7 +259,6 @@ void main() {
         DefaultTextStyle.of(
           tester.element(find.byKey(const Key('tuned'))),
         ).style.fontFamily,
-        reason: 'a label with a line height is drawn like ordinary text',
       );
       EdgeInsetsGeometry padding(String key) =>
           tester.widget<FilledButton>(_inner(key)).style!.padding!.resolve({})!;
@@ -310,6 +308,38 @@ void main() {
       expect(find.bySemanticsLabel('Custom'), findsOneWidget);
       expect(find.bySemanticsLabel('Label'), findsNothing);
       semantics.dispose();
+    });
+
+    testWidgets('every label uses the theme font', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            fontFamily: 'ThemeFont',
+            fontFamilyFallback: const ['FallbackFont'],
+          ),
+          home: Scaffold(
+            body: Column(
+              children: [
+                _refined('plain'),
+                _refined(
+                  'tuned',
+                  tuning: const AppButtonTuning(labelHeight: 1.4),
+                ),
+                _refined('trailing', trailingIcon: Icons.arrow_forward),
+              ],
+            ),
+          ),
+        ),
+      );
+      for (final key in ['plain', 'tuned', 'trailing']) {
+        final style = tester
+            .widget<FilledButton>(_inner(key))
+            .style!
+            .textStyle!
+            .resolve({})!;
+        expect(style.fontFamily, 'ThemeFont', reason: key);
+        expect(style.fontFamilyFallback, ['FallbackFont'], reason: key);
+      }
     });
 
     testWidgets('icons, expanded layout and taps', (tester) async {

@@ -655,7 +655,6 @@ final class _CompleteView extends StatelessWidget {
                       ),
                       if (showPoints) ...[
                         const SizedBox(height: 20),
-                        // Fills the width, as the approved page does.
                         AppPill(
                           key: const Key('adhkar_reader_points'),
                           label: copy.points,
@@ -663,7 +662,6 @@ final class _CompleteView extends StatelessWidget {
                           fontSize: 16,
                           minHeight: 44,
                           padding: const EdgeInsets.symmetric(horizontal: 20),
-                          stretch: true,
                         ),
                       ],
                     ],
