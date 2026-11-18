@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 
+import '../../domain/today_adhkar_qiyam_reference.dart';
+import '../../domain/today_section.dart';
 import '../dashboard_presentation.dart';
+import '../today_adhkar_qiyam_display.dart';
 import '../today_dashboard_view.dart';
 import '../today_state.dart';
 import '../today_strings.dart';
@@ -22,6 +25,8 @@ class TodayProgressHero extends StatelessWidget {
     this.onOpenHabits,
     this.onOpenTasks,
     this.onOpenPrayer,
+    this.onOpenAdhkar,
+    this.onOpenQiyam,
     this.onRetryTasks,
     this.onRetryHabits,
     this.onRetryXp,
@@ -34,6 +39,8 @@ class TodayProgressHero extends StatelessWidget {
   final VoidCallback? onOpenHabits;
   final VoidCallback? onOpenTasks;
   final VoidCallback? onOpenPrayer;
+  final VoidCallback? onOpenAdhkar;
+  final VoidCallback? onOpenQiyam;
   final VoidCallback? onRetryTasks;
   final VoidCallback? onRetryHabits;
   final VoidCallback? onRetryXp;
@@ -152,6 +159,9 @@ class TodayProgressHero extends StatelessWidget {
               ? '!'
               : '${pres.tasksCompleted}/${pres.tasksTotal}');
 
+    final adhkar = _adhkarTile(copy);
+    final qiyam = _qiyamTile(copy);
+
     return Wrap(
       spacing: gap,
       runSpacing: gap,
@@ -184,15 +194,14 @@ class TodayProgressHero extends StatelessWidget {
               '${copy.dashboardSampleValue}: ${copy.dashboardQuran} 75%',
           sampleLabel: copy.dashboardSampleBadge,
         ),
-        // 4. Adhkar (Sample)
+        // 4. Adhkar (live: the current period's list, as the screen shows)
         _metricTile(
           width: width,
-          title: copy.dashboardAdhkarTitle,
-          value: '${preview.adhkarCompleted.value ?? 19}',
+          title: adhkar.title,
+          value: adhkar.value,
           isHighlight: false,
-          semanticsLabel:
-              '${copy.dashboardSampleValue}: ${copy.dashboardAdhkarTitle} ${preview.adhkarCompleted.value ?? 19}',
-          sampleLabel: copy.dashboardSampleBadge,
+          semanticsLabel: '${adhkar.title}: ${adhkar.value}',
+          onTap: onOpenAdhkar,
         ),
         // 5. Focus (Sample)
         _metricTile(
@@ -204,18 +213,78 @@ class TodayProgressHero extends StatelessWidget {
               '${copy.dashboardSampleValue}: ${copy.dashboardFocus} ${preview.focusMinutes.value ?? 50}m',
           sampleLabel: copy.dashboardSampleBadge,
         ),
-        // 6. Qiyam (Sample)
+        // 6. Qiyam (live: tonight's answer, as the screen shows)
         _metricTile(
           width: width,
           title: copy.dashboardAdhkarQiyam,
-          value: '✓',
-          isHighlight: true,
-          semanticsLabel:
-              '${copy.dashboardSampleValue}: ${copy.dashboardAdhkarQiyam} ✓',
-          sampleLabel: copy.dashboardSampleBadge,
+          value: qiyam.value,
+          isHighlight: qiyam.highlight,
+          semanticsLabel: '${copy.dashboardAdhkarQiyam}: ${qiyam.semantic}',
+          onTap: onOpenQiyam,
         ),
       ],
     );
+  }
+
+  /// The Adhkar tile from the independent Adhkar/Qiyam source: the current
+  /// period's list as "x/N" (Morning when no period applies), "--/--" while
+  /// loading and "!" when the source or a read failed; "—" when no prayer
+  /// schedule exists or no source is wired.
+  ({String title, String value}) _adhkarTile(FoundationLocalizations copy) {
+    final section = state.adhkarQiyam;
+    final live = section?.value;
+    final evening = live?.period == TodayAdhkarPeriod.evening;
+    final title = live == null
+        ? copy.dashboardAdhkarTitle
+        : (evening ? copy.adhkarTabEvening : copy.adhkarTabMorning);
+    if (section == null) return (title: title, value: '—');
+    if (section.status == TodaySectionStatus.loading) {
+      return (title: title, value: '--/--');
+    }
+    if (live == null || live.adhkarLoadFailed) {
+      return (title: title, value: '!');
+    }
+    if (!todayAdhkarReadable(live)) return (title: title, value: '—');
+    return (
+      title: title,
+      value: evening
+          ? todayRatio(live.eveningCompleted, live.eveningTotal)
+          : todayRatio(live.morningCompleted, live.morningTotal),
+    );
+  }
+
+  /// The Qiyam tile: "✓" for a Yes and "✗" for a No recorded tonight, "—"
+  /// for an unanswered or locked night, "--" while loading, "!" on failure.
+  ({String value, String semantic, bool highlight}) _qiyamTile(
+    FoundationLocalizations copy,
+  ) {
+    final section = state.adhkarQiyam;
+    final live = section?.value;
+    if (section == null) return (value: '—', semantic: '—', highlight: false);
+    if (section.status == TodaySectionStatus.loading) {
+      return (value: '--', semantic: '--', highlight: false);
+    }
+    if (live == null || live.qiyamLoadFailed) {
+      return (value: '!', semantic: '!', highlight: false);
+    }
+    return switch (live.tonight) {
+      TodayQiyamTonight.yes => (
+        value: '✓',
+        semantic: copy.qiyamSegYes,
+        highlight: true,
+      ),
+      TodayQiyamTonight.no => (
+        value: '✗',
+        semantic: copy.qiyamDetailNo,
+        highlight: false,
+      ),
+      TodayQiyamTonight.unanswered => (
+        value: '—',
+        semantic: copy.qiyamHistoryNotRecorded,
+        highlight: false,
+      ),
+      TodayQiyamTonight.locked => (value: '—', semantic: '—', highlight: false),
+    };
   }
 
   Widget _buildGauge(

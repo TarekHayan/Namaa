@@ -143,6 +143,67 @@ void main() {
     },
   );
 
+  test('Qiyam reads its own owner when one is given (a debug preview) and '
+      'the Adhkar side keeps the first', () async {
+    qiyamRepository.seedNight = nightRecord(true);
+    final reference = await port
+        .watch('owner', qiyamOwnerId: 'qiyam-owner')
+        .first;
+    expect(reference.ownerId, 'owner');
+    expect(nightPort.ownersResolved, ['qiyam-owner']);
+    expect(qiyamRepository.readOwners, ['qiyam-owner']);
+  });
+
+  test('carries the same last-third instant and zone the Qiyam screen shows, '
+      'and none when the night is unavailable', () async {
+    final reference = await firstReference();
+    expect(reference.lastThirdUtc, nightState.lastThirdUtc);
+    expect(reference.qiyamZoneId, 'Africa/Cairo');
+
+    nightPort.state = QiyamNightState(
+      scheduleState: QiyamScheduleState.unavailable,
+      nightDate: null,
+      lastThirdUtc: null,
+      editable: false,
+      nextBoundaryUtc: null,
+      zoneId: null,
+      zoneOffsetMinutes: null,
+    );
+    final locked = await firstReference();
+    expect(locked.lastThirdUtc, isNull);
+    expect(locked.qiyamZoneId, isNull);
+  });
+
+  test('re-resolves the day and the night at the next boundary, so an open '
+      'Home never keeps a finished period', () async {
+    // The boundary is a hair after "now": the adapter waits for it (plus a
+    // second) and resolves again.
+    times.state = AppResult.success(
+      AdhkarClockState(
+        scheduleState: AdhkarScheduleState.available,
+        day: '2026-11-12',
+        period: AdhkarPeriod.morning,
+        nextBoundaryUtc: now.add(const Duration(milliseconds: 1)),
+        morningCountable: true,
+        eveningCountable: false,
+        fajrUtc: DateTime.utc(2026, 11, 12, 4, 30),
+        maghribUtc: DateTime.utc(2026, 11, 12, 16, 50),
+        zoneId: 'Africa/Cairo',
+      ),
+    );
+    final emissions = <TodayAdhkarQiyamReference>[];
+    final subscription = port.watch('owner').listen(emissions.add);
+    await pump();
+    expect(times.resolveCount, 1);
+    await Future<void>.delayed(const Duration(milliseconds: 1300));
+    expect(times.resolveCount, greaterThanOrEqualTo(2));
+    expect(emissions.length, greaterThanOrEqualTo(2));
+    await subscription.cancel();
+    final after = times.resolveCount;
+    await Future<void>.delayed(const Duration(milliseconds: 1300));
+    expect(times.resolveCount, after, reason: 'cancel stops the timer');
+  });
+
   test('the x/N values equal the Adhkar screen for the same catalog '
       'and counts (SC-006)', () async {
     adhkarRepository
@@ -356,24 +417,32 @@ final class FakeAdhkarTimesPort implements AdhkarTimesPort {
   FakeAdhkarTimesPort(this.state);
 
   AppResult<AdhkarClockState> state;
+  int resolveCount = 0;
 
   @override
   Future<AppResult<AdhkarClockState>> resolve(
     String ownerId,
     DateTime nowUtc,
-  ) async => state;
+  ) async {
+    resolveCount++;
+    return state;
+  }
 }
 
 final class FakeQiyamNightPort implements QiyamNightPort {
   FakeQiyamNightPort(this.state);
 
   QiyamNightState state;
+  final ownersResolved = <String>[];
 
   @override
   Future<AppResult<QiyamNightState>> resolve({
     required String ownerId,
     required DateTime nowUtc,
-  }) async => AppResult.success(state);
+  }) async {
+    ownersResolved.add(ownerId);
+    return AppResult.success(state);
+  }
 }
 
 final class FakeCatalog implements AdhkarCatalogPort {
@@ -575,6 +644,7 @@ final class FakeAdhkarRepository implements AdhkarRepository {
 final class FakeQiyamRepository implements QiyamRepository {
   final _controller = StreamController<QiyamNightRecord?>.broadcast();
   final watchedNights = <String>[];
+  final readOwners = <String>[];
   QiyamNightRecord? seedNight;
   int streakToReturn = 0;
   bool recordFails = false;
@@ -599,6 +669,7 @@ final class FakeQiyamRepository implements QiyamRepository {
     required String accountId,
     required String nightDate,
   }) async {
+    readOwners.add(accountId);
     if (recordFails) return AppResult.failure(_storeFailure());
     return AppResult.success(
       seedNight?.nightDate == nightDate ? seedNight : null,

@@ -10,6 +10,8 @@ final class TodayScope {
     required this.taskOwnerId,
     required this.habitOwnerId,
     required this.prayerOwnerId,
+    required this.adhkarOwnerId,
+    required this.qiyamOwnerId,
     required this.xpOwnerId,
     required this.generation,
   }) {
@@ -18,25 +20,35 @@ final class TodayScope {
         taskOwnerId.trim().isEmpty ||
         habitOwnerId.trim().isEmpty ||
         prayerOwnerId.trim().isEmpty ||
+        adhkarOwnerId.trim().isEmpty ||
+        qiyamOwnerId.trim().isEmpty ||
         xpOwnerId.trim().isEmpty) {
       throw ArgumentError('Today scope requires valid identity and generation');
     }
     if (xpOwnerId != taskOwnerId ||
         (mode == TodayScopeMode.account &&
-            (habitOwnerId != taskOwnerId || prayerOwnerId != taskOwnerId)) ||
+            (habitOwnerId != taskOwnerId ||
+                prayerOwnerId != taskOwnerId ||
+                adhkarOwnerId != taskOwnerId ||
+                qiyamOwnerId != taskOwnerId)) ||
         (mode == TodayScopeMode.preview &&
             (habitOwnerId == taskOwnerId ||
                 prayerOwnerId == taskOwnerId ||
-                prayerOwnerId == habitOwnerId))) {
+                prayerOwnerId == habitOwnerId ||
+                adhkarOwnerId == taskOwnerId ||
+                qiyamOwnerId == taskOwnerId ||
+                adhkarOwnerId == qiyamOwnerId))) {
       throw ArgumentError('Today owner bindings do not match the scope mode');
     }
   }
 
-  /// Composition supplies the three distinct preview identities.
+  /// Composition supplies the distinct preview identities.
   factory TodayScope.preview({
     required String taskOwnerId,
     required String habitOwnerId,
     String? prayerOwnerId,
+    String? adhkarOwnerId,
+    String? qiyamOwnerId,
     required int generation,
   }) {
     if (taskOwnerId == habitOwnerId) {
@@ -50,6 +62,8 @@ final class TodayScope {
       taskOwnerId: taskOwnerId,
       habitOwnerId: habitOwnerId,
       prayerOwnerId: resolvedPrayerOwnerId,
+      adhkarOwnerId: adhkarOwnerId ?? '$taskOwnerId:adhkar-preview',
+      qiyamOwnerId: qiyamOwnerId ?? '$taskOwnerId:qiyam-preview',
       xpOwnerId: taskOwnerId,
       generation: generation,
     );
@@ -65,6 +79,8 @@ final class TodayScope {
     taskOwnerId: accountId,
     habitOwnerId: accountId,
     prayerOwnerId: accountId,
+    adhkarOwnerId: accountId,
+    qiyamOwnerId: accountId,
     xpOwnerId: accountId,
     generation: generation,
   );
@@ -74,6 +90,8 @@ final class TodayScope {
   final String taskOwnerId;
   final String habitOwnerId;
   final String prayerOwnerId;
+  final String adhkarOwnerId;
+  final String qiyamOwnerId;
   final String xpOwnerId;
   final int generation;
 

@@ -375,6 +375,8 @@
   "dashboardAdhkarMorning": "أذكار الصباح",
   "dashboardAdhkarEvening": "أذكار المساء",
   "dashboardAdhkarQiyam": "الوتر والقيام",
+  "dashboardTrackAdhkarSubtitle": "الصباح {morning} · المساء {evening}",
+  "dashboardTrackQiyamRecorded": "تم التسجيل",
   "dashboardReflectionTitle": "إشراقة اليوم",
   "dashboardReflectionQuote": "«أحب الأعمال إلى الله أدومها وإن قل»",
   "dashboardReflectionAction": "تدوين خاطرة",

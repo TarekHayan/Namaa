@@ -60,6 +60,7 @@ import 'package:namma_project/features/adhkar/application/adhkar_conflict_reader
 import 'package:namma_project/features/adhkar/application/adhkar_identity_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_inbound_sync_port.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_streak_service.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_sync_service.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_times_port.dart';
 import 'package:namma_project/features/adhkar/application/my_adhkar_commands.dart';
@@ -179,11 +180,13 @@ import 'package:namma_project/features/tasks/data/task_payload_codec.dart';
 import 'package:namma_project/features/tasks/data/task_reconciler.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/today/application/today_actions.dart';
+import 'package:namma_project/features/today/application/today_adhkar_qiyam_port.dart';
 import 'package:namma_project/features/today/application/today_calendar_port.dart';
 import 'package:namma_project/features/today/application/today_habits_port.dart';
 import 'package:namma_project/features/today/application/today_prayer_port.dart';
 import 'package:namma_project/features/today/application/today_tasks_port.dart';
 import 'package:namma_project/features/today/application/today_xp_port.dart';
+import 'package:namma_project/features/today/data/adhkar_qiyam_today_adapter.dart';
 import 'package:namma_project/features/today/data/habits_today_adapter.dart';
 import 'package:namma_project/features/today/data/prayer_today_adapter.dart';
 import 'package:namma_project/features/today/data/system_today_calendar.dart';
@@ -680,6 +683,21 @@ Future<void> configureDependencies({
     getIt.registerLazySingleton<TodayPrayerPort>(
       () => PrayerTodayAdapter(getIt<PrayerContextService>()),
     );
+    getIt.registerLazySingleton<TodayAdhkarQiyamPort>(
+      () => AdhkarQiyamTodayAdapter(
+        times: getIt<AdhkarTimesPort>(),
+        clock: getIt<AdhkarClockPort>(),
+        catalog: getIt<AdhkarCatalogPort>(),
+        adhkarRepository: getIt<AdhkarRepository>(),
+        adhkarStreaks: AdhkarStreakService(
+          repository: getIt<AdhkarRepository>(),
+          catalog: getIt<AdhkarCatalogPort>(),
+        ),
+        nightPort: getIt<QiyamNightPort>(),
+        qiyamClock: getIt<QiyamClockPort>(),
+        qiyamRepository: getIt<QiyamRepository>(),
+      ),
+    );
     getIt.registerLazySingleton<TodayCalendarPort>(SystemTodayCalendar.new);
     getIt.registerLazySingleton<TodayActions>(
       () => TodayActions(
@@ -700,6 +718,7 @@ Future<void> configureDependencies({
         habits: getIt<TodayHabitsPort>(),
         xp: getIt<TodayXpPort>(),
         prayer: getIt<TodayPrayerPort>(),
+        adhkarQiyam: getIt<TodayAdhkarQiyamPort>(),
         actions: getIt<TodayActions>(),
       ),
     );

@@ -26,6 +26,8 @@ final class TodayAdhkarQiyamReference {
     required this.tonight,
     required this.adhkarStreak,
     required this.qiyamStreak,
+    this.lastThirdUtc,
+    this.qiyamZoneId,
   });
 
   final String ownerId;
@@ -61,4 +63,10 @@ final class TodayAdhkarQiyamReference {
   /// fabricated 0.
   final int? adhkarStreak;
   final int? qiyamStreak;
+
+  /// The start of tonight's last third and the zone to show it in, the same
+  /// values the Qiyam screen shows; null when the schedule cannot produce
+  /// them (setup needed or unavailable).
+  final DateTime? lastThirdUtc;
+  final String? qiyamZoneId;
 }

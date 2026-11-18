@@ -3,6 +3,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../domain/today_adhkar_qiyam_reference.dart';
 import 'today_cubit.dart';
 import 'today_dashboard_view.dart';
 import 'today_state.dart';
@@ -32,6 +33,7 @@ class TodayScreen extends StatefulWidget {
     this.onNewHabit,
     this.onTaskMatrix,
     this.onTaskOverdue,
+    this.watchAdhkarQiyam,
   });
 
   final TodayCubit cubit;
@@ -47,6 +49,7 @@ class TodayScreen extends StatefulWidget {
   final VoidCallback? onNewHabit;
   final VoidCallback? onTaskMatrix;
   final VoidCallback? onTaskOverdue;
+  final Stream<TodayAdhkarQiyamReference> Function()? watchAdhkarQiyam;
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
@@ -108,6 +111,8 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
         onRetryHabits: widget.cubit.retryHabits,
         onRetryXp: widget.cubit.retryXp,
         onRetryPrayer: widget.cubit.retryPrayer,
+        onRetryAdhkarQiyam: widget.cubit.retryAdhkarQiyam,
+        watchAdhkarQiyam: widget.watchAdhkarQiyam,
         onSetTaskCompleted: widget.cubit.setTaskCompleted,
         onSetHabitCompleted: widget.cubit.setHabitCompleted,
       ),

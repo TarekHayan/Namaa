@@ -6,11 +6,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 
 import '../application/today_actions.dart';
+import '../application/today_adhkar_qiyam_port.dart';
 import '../application/today_calendar_port.dart';
 import '../application/today_habits_port.dart';
 import '../application/today_prayer_port.dart';
 import '../application/today_tasks_port.dart';
 import '../application/today_xp_port.dart';
+import '../domain/today_adhkar_qiyam_reference.dart';
 import '../domain/today_calendar.dart';
 import '../domain/today_models.dart';
 import '../domain/today_prayer_reference.dart';
@@ -27,6 +29,7 @@ class TodayCubit extends Cubit<TodayState> {
     required TodayHabitsPort habits,
     required TodayXpPort xp,
     TodayPrayerPort? prayer,
+    TodayAdhkarQiyamPort? adhkarQiyam,
     TodayActions? actions,
     Duration initialDeadline = const Duration(seconds: 10),
     Duration foregroundInterval = const Duration(seconds: 30),
@@ -36,6 +39,7 @@ class TodayCubit extends Cubit<TodayState> {
        _habits = habits,
        _xp = xp,
        _prayer = prayer,
+       _adhkarQiyam = adhkarQiyam,
        _actions = actions ?? TodayActions(tasks: tasks, habits: habits),
        _deadline = initialDeadline,
        _foregroundInterval = foregroundInterval,
@@ -45,6 +49,7 @@ class TodayCubit extends Cubit<TodayState> {
            scope,
            calendar.sample(projectionRevision: 0),
            prayerEnabled: prayer != null,
+           adhkarQiyamEnabled: adhkarQiyam != null,
          ),
        ) {
     if (initialDeadline <= Duration.zero ||
@@ -61,6 +66,7 @@ class TodayCubit extends Cubit<TodayState> {
   final TodayHabitsPort _habits;
   final TodayXpPort _xp;
   final TodayPrayerPort? _prayer;
+  final TodayAdhkarQiyamPort? _adhkarQiyam;
   final TodayActions _actions;
   final Duration _deadline;
   final Duration _foregroundInterval;
@@ -70,10 +76,12 @@ class TodayCubit extends Cubit<TodayState> {
   StreamSubscription<TodayHabitReadSnapshot>? _habitSub;
   StreamSubscription<List<TodayAwardReference>>? _xpSub;
   StreamSubscription<TodayPrayerReference>? _prayerSub;
+  StreamSubscription<TodayAdhkarQiyamReference>? _adhkarQiyamSub;
   Timer? _taskTimer;
   Timer? _habitTimer;
   Timer? _xpTimer;
   Timer? _prayerTimer;
+  Timer? _adhkarQiyamTimer;
   TodayTaskReadSnapshot? _taskSnapshot;
   TodayHabitReadSnapshot? _habitSnapshot;
   List<TodayAwardReference>? _awards;
@@ -83,6 +91,7 @@ class TodayCubit extends Cubit<TodayState> {
   int _habitAttempt = 0;
   int _xpAttempt = 0;
   int _prayerAttempt = 0;
+  int _adhkarQiyamAttempt = 0;
   TodayCalendar? _taskConfirmedAt;
   TodayCalendar? _habitConfirmedAt;
   TodayCalendar? _xpConfirmedAt;
@@ -110,19 +119,23 @@ class TodayCubit extends Cubit<TodayState> {
     _habitAttempt++;
     _xpAttempt++;
     _prayerAttempt++;
+    _adhkarQiyamAttempt++;
     pauseForeground();
     _taskTimer?.cancel();
     _habitTimer?.cancel();
     _xpTimer?.cancel();
     _prayerTimer?.cancel();
+    _adhkarQiyamTimer?.cancel();
     unawaited(_taskSub?.cancel());
     unawaited(_habitSub?.cancel());
     unawaited(_xpSub?.cancel());
     unawaited(_prayerSub?.cancel());
+    unawaited(_adhkarQiyamSub?.cancel());
     _taskSub = null;
     _habitSub = null;
     _xpSub = null;
     _prayerSub = null;
+    _adhkarQiyamSub = null;
     _taskSnapshot = null;
     _habitSnapshot = null;
     _awards = null;
@@ -134,6 +147,7 @@ class TodayCubit extends Cubit<TodayState> {
         state.scope,
         _calendar.sample(projectionRevision: 0),
         prayerEnabled: _prayer != null,
+        adhkarQiyamEnabled: _adhkarQiyam != null,
       ),
     );
   }
@@ -143,6 +157,7 @@ class TodayCubit extends Cubit<TodayState> {
     _subscribeHabits();
     _subscribeXp();
     if (_prayer != null) _subscribePrayer();
+    if (_adhkarQiyam != null) _subscribeAdhkarQiyam();
   }
 
   AppFailure _failure() => AppFailure.recoverable(
@@ -196,6 +211,15 @@ class TodayCubit extends Cubit<TodayState> {
     unawaited(_prayerSub?.cancel());
     _prayerSub = null;
     emit(state.copyWith(prayer: TodaySection.unavailable(_failure())));
+  }
+
+  void _failAdhkarQiyam(int epoch, int attempt) {
+    if (isClosed || epoch != _epoch || attempt != _adhkarQiyamAttempt) return;
+    _adhkarQiyamAttempt++;
+    _adhkarQiyamTimer?.cancel();
+    unawaited(_adhkarQiyamSub?.cancel());
+    _adhkarQiyamSub = null;
+    emit(state.copyWith(adhkarQiyam: TodaySection.unavailable(_failure())));
   }
 
   void _subscribeTasks() {
@@ -341,6 +365,52 @@ class TodayCubit extends Cubit<TodayState> {
     }
   }
 
+  /// Adhkar and Qiyam are one independent source: a slow, failed or closed
+  /// source only marks its own section unavailable, with its own deadline
+  /// and retry, and never touches Tasks, Habits, XP or Prayer.
+  void _subscribeAdhkarQiyam() {
+    final source = _adhkarQiyam;
+    if (source == null) return;
+    final epoch = _epoch;
+    final attempt = ++_adhkarQiyamAttempt;
+    var received = false;
+    _adhkarQiyamTimer?.cancel();
+    unawaited(_adhkarQiyamSub?.cancel());
+    _adhkarQiyamTimer = Timer(_deadline, () {
+      if (!received) _failAdhkarQiyam(epoch, attempt);
+    });
+    try {
+      _adhkarQiyamSub = source
+          .watch(
+            state.scope.adhkarOwnerId,
+            qiyamOwnerId: state.scope.qiyamOwnerId,
+          )
+          .listen(
+            (value) {
+              if (isClosed ||
+                  epoch != _epoch ||
+                  attempt != _adhkarQiyamAttempt ||
+                  value.ownerId != state.scope.adhkarOwnerId) {
+                return;
+              }
+              received = true;
+              _adhkarQiyamTimer?.cancel();
+              emit(
+                state.copyWith(
+                  adhkarQiyam: value.scheduleUnavailable
+                      ? TodaySection.empty(value)
+                      : TodaySection.available(value),
+                ),
+              );
+            },
+            onError: (_, _) => _failAdhkarQiyam(epoch, attempt),
+            onDone: () => _failAdhkarQiyam(epoch, attempt),
+          );
+    } catch (_) {
+      _failAdhkarQiyam(epoch, attempt);
+    }
+  }
+
   void _projectTasks({bool preserveStale = false}) {
     try {
       final value = TodayProjection.tasks(
@@ -474,6 +544,7 @@ class TodayCubit extends Cubit<TodayState> {
         scope,
         _calendar.sample(projectionRevision: 0),
         prayerEnabled: _prayer != null,
+        adhkarQiyamEnabled: _adhkarQiyam != null,
       ),
     );
     _subscribeAll();
@@ -702,6 +773,13 @@ class TodayCubit extends Cubit<TodayState> {
     }
   }
 
+  void retryAdhkarQiyam() {
+    if (_adhkarQiyam != null && !isClosed) {
+      emit(state.copyWith(adhkarQiyam: TodaySection.loading()));
+      _subscribeAdhkarQiyam();
+    }
+  }
+
   @override
   Future<void> close() async {
     _epoch++;
@@ -710,16 +788,19 @@ class TodayCubit extends Cubit<TodayState> {
     _habitAttempt++;
     _xpAttempt++;
     _prayerAttempt++;
+    _adhkarQiyamAttempt++;
     pauseForeground();
     _taskTimer?.cancel();
     _habitTimer?.cancel();
     _xpTimer?.cancel();
     _prayerTimer?.cancel();
+    _adhkarQiyamTimer?.cancel();
     await Future.wait([
       _taskSub?.cancel() ?? Future<void>.value(),
       _habitSub?.cancel() ?? Future<void>.value(),
       _xpSub?.cancel() ?? Future<void>.value(),
       _prayerSub?.cancel() ?? Future<void>.value(),
+      _adhkarQiyamSub?.cancel() ?? Future<void>.value(),
     ]);
     await super.close();
   }

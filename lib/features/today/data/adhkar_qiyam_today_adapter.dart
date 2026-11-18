@@ -51,11 +51,16 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
   final QiyamRepository _qiyam;
 
   @override
-  Stream<TodayAdhkarQiyamReference> watch(String ownerId) {
-    // One time sample per subscription: Today's dashboard re-subscribes on
-    // resume, and a change of day or night arrives through T058's wiring.
-    // The counts and record watches only signal changes; every rebuild
-    // reads fresh values so an emission never carries a stale snapshot.
+  Stream<TodayAdhkarQiyamReference> watch(
+    String ownerId, {
+    String? qiyamOwnerId,
+  }) {
+    final nightOwner = qiyamOwnerId ?? ownerId;
+    // The day and night are resolved once per subscription and again at the
+    // next Fajr/Maghrib boundary, so an open Home never keeps showing a
+    // finished period. The counts and record watches only signal changes;
+    // every rebuild reads fresh values so an emission never carries a stale
+    // snapshot.
     AdhkarClockState? clockState;
     AppResult<QiyamNightState>? nightState;
 
@@ -71,54 +76,94 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
       try {
         while (true) {
           rebuildQueued = false;
-          final reference = await _build(ownerId, clockState, nightState!);
+          final reference = await _build(
+            ownerId,
+            nightOwner,
+            clockState,
+            nightState!,
+          );
+          if (out.isClosed) return;
           out.add(reference);
           if (!rebuildQueued) return;
         }
+      } catch (error, stack) {
+        if (!out.isClosed) out.addError(error, stack);
       } finally {
         rebuildQueued = false;
       }
     }
 
     final subscriptions = <StreamSubscription<void>>[];
+    Timer? boundaryTimer;
     late final StreamController<TodayAdhkarQiyamReference> controller;
-    controller = StreamController<TodayAdhkarQiyamReference>(
-      onListen: () async {
+    Future<void> resolve() async {
+      boundaryTimer?.cancel();
+      for (final subscription in subscriptions) {
+        await subscription.cancel();
+      }
+      subscriptions.clear();
+      try {
         clockState = (await _times.resolve(
           ownerId,
           _clock.nowUtc(),
         )).valueOrNull;
         nightState = await _nightPort.resolve(
-          ownerId: ownerId,
+          ownerId: nightOwner,
           nowUtc: _qiyamClock.nowUtc(),
         );
-        final resolvedClock = clockState;
-        final adhkarAvailable =
-            resolvedClock != null &&
-            resolvedClock.scheduleState != AdhkarScheduleState.unavailable;
-        final night = nightState?.valueOrNull;
-        final qiyamAvailable =
-            night != null &&
-            night.scheduleState != QiyamScheduleState.unavailable;
-        final adhkarDay = adhkarAvailable ? resolvedClock.day : null;
-        final nightDate = qiyamAvailable ? night.nightDate : null;
-        if (adhkarDay != null) {
-          subscriptions.add(
-            _adhkar
-                .watchDay(accountId: ownerId, adhkarDay: adhkarDay)
-                .listen((_) => unawaited(scheduleRebuild(controller))),
-          );
+      } catch (error, stack) {
+        if (!controller.isClosed) controller.addError(error, stack);
+        return;
+      }
+      if (controller.isClosed) return;
+      final resolvedClock = clockState;
+      final adhkarAvailable =
+          resolvedClock != null &&
+          resolvedClock.scheduleState != AdhkarScheduleState.unavailable;
+      final night = nightState?.valueOrNull;
+      final qiyamAvailable =
+          night != null &&
+          night.scheduleState != QiyamScheduleState.unavailable;
+      final adhkarDay = adhkarAvailable ? resolvedClock.day : null;
+      final nightDate = qiyamAvailable ? night.nightDate : null;
+      if (adhkarDay != null) {
+        subscriptions.add(
+          _adhkar
+              .watchDay(accountId: ownerId, adhkarDay: adhkarDay)
+              .listen((_) => unawaited(scheduleRebuild(controller))),
+        );
+      }
+      if (nightDate != null) {
+        subscriptions.add(
+          _qiyam
+              .watchNight(accountId: nightOwner, nightDate: nightDate)
+              .listen((_) => unawaited(scheduleRebuild(controller))),
+        );
+      }
+      // The earliest boundary after now re-resolves the day and the night.
+      final now = _clock.nowUtc();
+      DateTime? next;
+      for (final candidate in [
+        if (adhkarAvailable) resolvedClock.nextBoundaryUtc,
+        if (qiyamAvailable) night.nextBoundaryUtc,
+      ]) {
+        if (candidate != null &&
+            candidate.isAfter(now) &&
+            (next == null || candidate.isBefore(next))) {
+          next = candidate;
         }
-        if (nightDate != null) {
-          subscriptions.add(
-            _qiyam
-                .watchNight(accountId: ownerId, nightDate: nightDate)
-                .listen((_) => unawaited(scheduleRebuild(controller))),
-          );
-        }
-        await scheduleRebuild(controller);
-      },
+      }
+      if (next != null) {
+        final delay = next.difference(now) + const Duration(seconds: 1);
+        boundaryTimer = Timer(delay, () => unawaited(resolve()));
+      }
+      await scheduleRebuild(controller);
+    }
+
+    controller = StreamController<TodayAdhkarQiyamReference>(
+      onListen: () => unawaited(resolve()),
       onCancel: () async {
+        boundaryTimer?.cancel();
         for (final subscription in subscriptions) {
           await subscription.cancel();
         }
@@ -130,6 +175,7 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
 
   Future<TodayAdhkarQiyamReference> _build(
     String ownerId,
+    String nightOwner,
     AdhkarClockState? clockState,
     AppResult<QiyamNightState> nightState,
   ) async {
@@ -200,7 +246,7 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
     int? qiyamStreak;
     if (qiyamAvailable && night.nightDate != null) {
       final recordResult = await _qiyam.readFresh(
-        accountId: ownerId,
+        accountId: nightOwner,
         nightDate: night.nightDate!,
       );
       final record = recordResult.valueOrNull;
@@ -212,7 +258,7 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
             : (record.performed ? TodayQiyamTonight.yes : TodayQiyamTonight.no);
       }
       final streakResult = await _qiyam.streak(
-        accountId: ownerId,
+        accountId: nightOwner,
         currentNight: night.nightDate!,
       );
       qiyamStreak = streakResult.valueOrNull;
@@ -234,6 +280,8 @@ final class AdhkarQiyamTodayAdapter implements TodayAdhkarQiyamPort {
       tonight: tonight,
       adhkarStreak: adhkarStreak,
       qiyamStreak: qiyamStreak,
+      lastThirdUtc: qiyamAvailable ? night.lastThirdUtc : null,
+      qiyamZoneId: qiyamAvailable ? night.zoneId : null,
     );
   }
 

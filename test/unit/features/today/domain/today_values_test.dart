@@ -10,10 +10,44 @@ void main() {
     expect(scope.taskOwnerId, scope.habitOwnerId);
     expect(scope.taskOwnerId, scope.xpOwnerId);
     expect(scope.scopeKey, 'account:account-a');
+    expect(scope.adhkarOwnerId, 'account-a');
+    expect(scope.qiyamOwnerId, 'account-a');
     expect(
       () => TodayScope.preview(
         taskOwnerId: 'same',
         habitOwnerId: 'same',
+        generation: 0,
+      ),
+      throwsArgumentError,
+    );
+  });
+
+  test('a preview scope keeps the Adhkar and Qiyam owners closed and '
+      'distinct', () {
+    final scope = TodayScope.preview(
+      taskOwnerId: 'tasks',
+      habitOwnerId: 'habits',
+      adhkarOwnerId: 'adhkar',
+      qiyamOwnerId: 'qiyam',
+      generation: 0,
+    );
+    expect(scope.adhkarOwnerId, 'adhkar');
+    expect(scope.qiyamOwnerId, 'qiyam');
+    expect(
+      () => TodayScope.preview(
+        taskOwnerId: 'tasks',
+        habitOwnerId: 'habits',
+        adhkarOwnerId: 'tasks',
+        generation: 0,
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      () => TodayScope.preview(
+        taskOwnerId: 'tasks',
+        habitOwnerId: 'habits',
+        adhkarOwnerId: 'same',
+        qiyamOwnerId: 'same',
         generation: 0,
       ),
       throwsArgumentError,

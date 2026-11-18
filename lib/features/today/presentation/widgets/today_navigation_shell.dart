@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 
+import '../../domain/today_adhkar_qiyam_reference.dart';
 import '../dashboard_preview_data.dart';
 import 'prayer_track_hub.dart';
 import 'today_bottom_navigation.dart';
@@ -24,6 +25,7 @@ class TodayNavigationShell extends StatelessWidget {
     required this.child,
     this.onHome,
     this.xpAmount,
+    this.watchAdhkarQiyam,
   });
 
   final AppColors colors;
@@ -37,6 +39,10 @@ class TodayNavigationShell extends StatelessWidget {
   final VoidCallback onPreferences;
   final VoidCallback? onHome;
   final int? xpAmount;
+
+  /// Starts the live Adhkar/Qiyam values for the Track hub's tile subtitles;
+  /// null leaves the tiles without subtitles.
+  final Stream<TodayAdhkarQiyamReference> Function()? watchAdhkarQiyam;
   final Widget child;
 
   /// Opens a preview inside the surrounding navigation frame when available.
@@ -120,6 +126,7 @@ class TodayNavigationShell extends StatelessWidget {
         onQiyam: onQiyam,
         onPreferences: onPreferences,
         xpAmount: xpAmount,
+        watchAdhkarQiyam: watchAdhkarQiyam,
         child: child,
       );
 
@@ -159,6 +166,7 @@ class TodayNavigationShell extends StatelessWidget {
             builder: (trackContext) => overlayShell(
               TodayNavigationSection.track,
               PrayerTrackHub(
+                watchAdhkarQiyam: watchAdhkarQiyam,
                 onPrayer: () {
                   Navigator.of(trackContext).pop();
                   onPrayer!();

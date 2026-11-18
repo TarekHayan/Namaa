@@ -2,6 +2,7 @@ library;
 
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 
+import '../domain/today_adhkar_qiyam_reference.dart';
 import '../domain/today_calendar.dart';
 import '../domain/today_prayer_reference.dart';
 import '../domain/today_projection.dart';
@@ -29,6 +30,7 @@ final class TodayState {
     required this.habits,
     required this.xp,
     this.prayer,
+    this.adhkarQiyam,
     this.taskActions = const {},
     this.habitActions = const {},
   });
@@ -37,6 +39,7 @@ final class TodayState {
     TodayScope scope,
     TodayCalendar calendar, {
     bool prayerEnabled = false,
+    bool adhkarQiyamEnabled = false,
   }) => TodayState(
     scope: scope,
     calendar: calendar,
@@ -44,6 +47,7 @@ final class TodayState {
     habits: TodaySection.loading(),
     xp: TodaySection.loading(),
     prayer: prayerEnabled ? TodaySection.loading() : null,
+    adhkarQiyam: adhkarQiyamEnabled ? TodaySection.loading() : null,
   );
 
   final TodayScope scope;
@@ -52,6 +56,10 @@ final class TodayState {
   final TodaySection<TodayHabitSummary> habits;
   final TodaySection<TodayXpSummary> xp;
   final TodaySection<TodayPrayerReference>? prayer;
+
+  /// Adhkar and Qiyam progress, an independent source like Prayer; null when
+  /// no source is wired (the Home shows no value for it then).
+  final TodaySection<TodayAdhkarQiyamReference>? adhkarQiyam;
   final Map<String, TodayActionFeedback> taskActions;
   final Map<String, TodayActionFeedback> habitActions;
 
@@ -61,6 +69,7 @@ final class TodayState {
     TodaySection<TodayHabitSummary>? habits,
     TodaySection<TodayXpSummary>? xp,
     TodaySection<TodayPrayerReference>? prayer,
+    TodaySection<TodayAdhkarQiyamReference>? adhkarQiyam,
     Map<String, TodayActionFeedback>? taskActions,
     Map<String, TodayActionFeedback>? habitActions,
   }) => TodayState(
@@ -70,6 +79,7 @@ final class TodayState {
     habits: habits ?? this.habits,
     xp: xp ?? this.xp,
     prayer: prayer ?? this.prayer,
+    adhkarQiyam: adhkarQiyam ?? this.adhkarQiyam,
     taskActions: taskActions ?? this.taskActions,
     habitActions: habitActions ?? this.habitActions,
   );

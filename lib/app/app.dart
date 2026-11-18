@@ -60,6 +60,8 @@ import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
 import 'package:namma_project/features/qiyam/presentation/qiyam_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
+import 'package:namma_project/features/today/application/today_adhkar_qiyam_port.dart';
+import 'package:namma_project/features/today/domain/today_adhkar_qiyam_reference.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
@@ -711,8 +713,41 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
       onNewHabit: () => GoRouter.of(
         context,
       ).go(kHabitsRoute, extra: OwnerEntryIntent.newHabit),
+      watchAdhkarQiyam: _trackAdhkarQiyam(),
     ),
   );
+}
+
+/// The live Adhkar/Qiyam values behind the Track hub's tile subtitles. Each
+/// call resolves the two owners the Adhkar and Qiyam screens use (the real
+/// account, or each domain's own closed preview owner) and watches the
+/// Today port, so the hub shows exactly what those screens show. Null when
+/// the port is not registered.
+Stream<TodayAdhkarQiyamReference> Function()? _trackAdhkarQiyam() {
+  final getIt = GetIt.instance;
+  if (!getIt.isRegistered<TodayAdhkarQiyamPort>() ||
+      !getIt.isRegistered<CloudSessionPort>()) {
+    return null;
+  }
+  return () async* {
+    final CloudSessionPort adhkarSession =
+        getIt.isRegistered<AdhkarPreviewSession>()
+        ? getIt<AdhkarPreviewSession>()
+        : getIt<CloudSessionPort>();
+    final CloudSessionPort qiyamSession =
+        getIt.isRegistered<QiyamPreviewSession>()
+        ? getIt<QiyamPreviewSession>()
+        : getIt<CloudSessionPort>();
+    final adhkarOwner =
+        (await adhkarSession.obtainSyncContext()).valueOrNull?.accountId;
+    final qiyamOwner =
+        (await qiyamSession.obtainSyncContext()).valueOrNull?.accountId;
+    if (adhkarOwner == null || qiyamOwner == null) return;
+    yield* getIt<TodayAdhkarQiyamPort>().watch(
+      adhkarOwner,
+      qiyamOwnerId: qiyamOwner,
+    );
+  };
 }
 
 /// Owns the feature Cubit for one authenticated Tasks route visit. The Cubit
@@ -853,6 +888,7 @@ class _FeatureNavigationShell extends StatelessWidget {
             }
           : null,
       onPreferences: () => showAppPreferencesSheet(context),
+      watchAdhkarQiyam: _trackAdhkarQiyam(),
       child: child,
     );
   }

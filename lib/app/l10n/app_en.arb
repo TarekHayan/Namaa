@@ -375,6 +375,11 @@
   "dashboardAdhkarMorning": "Morning Adhkar",
   "dashboardAdhkarEvening": "Evening Adhkar",
   "dashboardAdhkarQiyam": "Qiyam & Witr",
+  "dashboardTrackAdhkarSubtitle": "Morning {morning} · Evening {evening}",
+  "@dashboardTrackAdhkarSubtitle": {
+    "placeholders": {"morning": {"type": "String"}, "evening": {"type": "String"}}
+  },
+  "dashboardTrackQiyamRecorded": "Recorded",
   "dashboardReflectionTitle": "Daily Reflection",
   "dashboardReflectionQuote": "«The most beloved deeds to Allah are those done regularly, even if small.»",
   "dashboardReflectionAction": "Write reflection",
