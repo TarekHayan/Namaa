@@ -86,6 +86,11 @@ Other rules:
   failures/results, local DB, cloud and sync code. A feature never reaches
   into another feature's storage or UI. Cross-feature effects such as XP and
   Today go through explicit application services.
+- **Shared UI.** Generic widgets (cards, pills, sheets, menus, buttons, toasts,
+  progress) live in `lib/app/widgets/` with an `App` prefix and take their look
+  from the `AppColors` tokens, so a redesign changes them in one place. A
+  feature keeps only what is specific to it. See `docs/design/app_components.md`
+  before writing a new one.
 - **Dependency injection.** It is manual GetIt registration in
   `lib/app/composition/configure_dependencies.dart`, with no injectable
   codegen. Debug "preview" adapters live next to it.

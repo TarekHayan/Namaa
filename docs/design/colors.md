@@ -25,6 +25,28 @@ documents both modes and the semantic information colors.
 | Error | `#DC2626` | `#EF4444` |
 | Information | `#2563EB` | `#3B82F6` |
 
+### Design tokens added with the Adhkar design
+
+These come from the approved 2026-11 design and are read through
+`AppColors.of(context)` by the shared components in `lib/app/widgets/`.
+
+| Role | Light | Dark |
+| --- | --- | --- |
+| Accent for text, icons and filled actions (`accentStrong`) | `#047857` | `#10B981` |
+| Text and icons on it (`onAccentStrong`) | `#FFFFFF` | `#050805` |
+| Progress ring track (`track`) | primary at 16% | primary at 20% |
+| Soft warning fill (`warningSoft`) | warning at 12% | warning at 14% |
+| Soft error fill (`errorSoft`) | error at 8% | error at 14% |
+| Error text on a surface (`errorText`) | `#B91C1C` | `#F87171` |
+| Text and icons on a filled error (`onError`) | `#FFFFFF` | `#050805` |
+| Scrim behind sheets and dialogs (`scrim`) | `#0D1410` at 42% | black at 66% |
+| Glow color (`glow`) | primary at 12% | primary at 14% |
+
+`cardShadow` is the soft glow around raised cards, sheets and floating
+controls; `buttonShadow` is the stronger glow under a filled accent button.
+Both differ between the two modes (an offset blur in light, a ring plus blur
+in dark), so they are tokens and not computed in features.
+
 ## Flutter reference for future screens
 
 All values are stored as immutable tokens in `lib/app/theme/app_colors.dart`:
@@ -37,5 +59,6 @@ existing appearance. The UI is integrated one screen at a time.
 
 When building a screen, choose text/background pairs with sufficient contrast;
 the prototype's translucent muted/border colors are not substitutes for readable
-body text or visible interactive outlines. Glow and navigation alpha values are
-reference tokens, without adding blur or glow effects.
+body text or visible interactive outlines. The older `cardGlow` and navigation alpha
+values are reference tokens; the shadow tokens above are the ones the shared
+components draw.
