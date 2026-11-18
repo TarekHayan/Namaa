@@ -31,6 +31,7 @@ enum TodayNavigationSection {
   mindMaps,
   prayer,
   adhkar,
+  qiyam,
   track,
   finance,
   preview,
@@ -47,6 +48,7 @@ class TodayNavigationSidebar extends StatelessWidget {
     required this.onMindMaps,
     this.onPrayer,
     this.onAdhkar,
+    this.onQiyam,
     this.onTrack,
     required this.onPreferences,
     this.onHome,
@@ -63,6 +65,9 @@ class TodayNavigationSidebar extends StatelessWidget {
 
   /// Opens the real Adhkar screen; null keeps the "coming soon" preview.
   final VoidCallback? onAdhkar;
+
+  /// Opens the real Qiyam screen; null keeps the "coming soon" preview.
+  final VoidCallback? onQiyam;
   final VoidCallback? onTrack;
   final VoidCallback onPreferences;
   final VoidCallback? onHome;
@@ -261,12 +266,15 @@ class TodayNavigationSidebar extends StatelessWidget {
                     key: kTodaySidebarQiyamKey,
                     icon: Icons.nightlight_round,
                     label: copy.dashboardComingSoonQiyamTitle,
-                    onTap: () => _openPreview(
-                      context,
-                      copy.dashboardComingSoonQiyamTitle,
-                      DashboardPreviewFeature.qiyam,
-                    ),
-                    comingSoon: true,
+                    selected: section == TodayNavigationSection.qiyam,
+                    onTap:
+                        onQiyam ??
+                        () => _openPreview(
+                          context,
+                          copy.dashboardComingSoonQiyamTitle,
+                          DashboardPreviewFeature.qiyam,
+                        ),
+                    comingSoon: onQiyam == null,
                   ),
                   _item(
                     context,

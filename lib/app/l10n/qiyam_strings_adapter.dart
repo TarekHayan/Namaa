@@ -43,14 +43,42 @@ final class QiyamStrings {
   String get historyNotRecorded => copy.qiyamHistoryNotRecorded;
   String get historyLoadMore => copy.qiyamHistoryLoadMore;
   String get historyFailed => copy.qiyamHistoryFailed;
+  String get retry => copy.retry;
+  String get detailsNotKept => copy.qiyamNightNotPerformedDetails;
+  String get noteTooLong => copy.qiyamNightNoteTooLong;
+  String get invalidTime => copy.qiyamNightInvalidTime;
+  String get invalidRakahs => copy.qiyamNightInvalidRakahs;
+  String get segYes => copy.qiyamSegYes;
+  String get noCalm => copy.qiyamNoCalm;
+  String get detailsTitle => copy.qiyamDetailsTitle;
+  String get showAll => copy.qiyamShowAll;
+  String get showLess => copy.qiyamShowLess;
+  String get pickTime => copy.qiyamPickTime;
+  String get nightDetailsTitle => copy.qiyamNightDetailsTitle;
+  String get detailStatus => copy.qiyamDetailStatus;
+  String get detailWitr => copy.qiyamDetailWitr;
+  String get detailPrayed => copy.qiyamDetailPrayed;
+  String get detailNo => copy.qiyamDetailNo;
+  String get close => copy.qiyamClose;
+  String get noNote => copy.qiyamNoNote;
+  String get conflictBack => copy.qiyamConflictBack;
+  String get conflictTonight => copy.qiyamConflictTonight;
+  String conflictNight(String date) => copy.qiyamConflictNight(date);
+  String get conflictActive => copy.qiyamConflictActive;
+  String get conflictRetained => copy.qiyamConflictRetained;
+  String get conflictReadOnly => copy.qiyamConflictReadOnly;
+  String get conflicts => copy.qiyamConflicts;
+  String conflictAnswerYes(int count, {required bool witr}) => witr
+      ? copy.qiyamConflictAnswerYesWitr(count)
+      : copy.qiyamConflictAnswerYes(count);
+  String today(String time) => copy.adhkarSyncToday(time);
+  String yesterday(String time) => copy.adhkarSyncYesterday(time);
 
-  /// The localized copy for a command failure's message key; unknown keys
-  /// fall back to the generic save-failed copy.
-  String failure(String messageKey) => switch (messageKey) {
-    'qiyam.night.invalid_rakahs' => copy.qiyamNightInvalidRakahs,
-    'qiyam.night.invalid_time' => copy.qiyamNightInvalidTime,
-    'qiyam.night.note_too_long' => copy.qiyamNightNoteTooLong,
-    'qiyam.night.not_performed_details' => copy.qiyamNightNotPerformedDetails,
-    _ => copy.qiyamSaveFailed,
+  /// The name shown above a supplication, by its catalog id; null for an id
+  /// with no name (the card then shows only the text).
+  String? supplicationName(String id) => switch (id) {
+    's1' => copy.qiyamSupplicationWitr,
+    's2' => copy.qiyamSupplicationQunut,
+    _ => null,
   };
 }

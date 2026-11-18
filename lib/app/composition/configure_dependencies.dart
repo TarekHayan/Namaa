@@ -24,10 +24,13 @@ import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/composition/adhkar_preview_adapters.dart';
+import 'package:namma_project/app/composition/adhkar_qiyam_supplications_adapter.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/prayer_adhkar_times_adapter.dart';
 import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
 import 'package:namma_project/app/composition/prayer_preview_xp_adapter.dart';
+import 'package:namma_project/app/composition/prayer_qiyam_night_adapter.dart';
+import 'package:namma_project/app/composition/qiyam_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
@@ -41,6 +44,7 @@ import 'package:namma_project/core/data/local/adhkar_unit_of_work.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
 import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/local/prayer_report_unit_of_work.dart';
+import 'package:namma_project/core/data/local/qiyam_unit_of_work.dart';
 import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/data/sync/synchronization_coordinator.dart';
@@ -143,15 +147,24 @@ import 'package:namma_project/features/prayer/data/supabase_prayer_sync_adapter.
 import 'package:namma_project/features/prayer/data/uuid_prayer_report_identity.dart';
 import 'package:namma_project/features/prayer/data/zoned_prayer_clock.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_clock_port.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_conflict_reader.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_identity_port.dart';
 import 'package:namma_project/features/qiyam/application/qiyam_inbound_sync_port.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_night_port.dart';
 import 'package:namma_project/features/qiyam/application/qiyam_repository.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_supplications_port.dart';
 import 'package:namma_project/features/qiyam/application/qiyam_sync_service.dart';
+import 'package:namma_project/features/qiyam/application/save_qiyam_night.dart';
 import 'package:namma_project/features/qiyam/data/drift_qiyam_repository.dart';
 import 'package:namma_project/features/qiyam/data/qiyam_inbound_synchronizer.dart';
 import 'package:namma_project/features/qiyam/data/qiyam_reconciler.dart';
 import 'package:namma_project/features/qiyam/data/supabase_qiyam_gateway.dart';
 import 'package:namma_project/features/qiyam/data/supabase_qiyam_reader.dart';
 import 'package:namma_project/features/qiyam/data/supabase_qiyam_sync_adapter.dart';
+import 'package:namma_project/features/qiyam/data/system_qiyam_clock.dart';
+import 'package:namma_project/features/qiyam/data/uuid_qiyam_identity.dart';
+import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
@@ -240,8 +253,8 @@ Future<void> configureDependencies({
     getIt.registerLazySingleton<PrayerRepository>(() => prayerRepository);
     getIt.registerLazySingleton<DriftPrayerRepository>(() => prayerRepository);
     // Adhkar/Qiyam stores (schema v10/v11). The Adhkar graph is registered
-    // below with the Prayer schedule it depends on (T034); the Qiyam Cubit
-    // stays unregistered until its own wiring task (T049).
+    // below with the Prayer schedule it depends on (T034); the Qiyam graph
+    // is registered with it too (T049).
     final adhkarRepository = DriftAdhkarRepository(database);
     getIt.registerLazySingleton<AdhkarRepository>(() => adhkarRepository);
     getIt.registerLazySingleton<DriftAdhkarRepository>(() => adhkarRepository);
@@ -249,6 +262,7 @@ Future<void> configureDependencies({
     final qiyamRepository = DriftQiyamRepository(database);
     getIt.registerLazySingleton<QiyamRepository>(() => qiyamRepository);
     getIt.registerLazySingleton<DriftQiyamRepository>(() => qiyamRepository);
+    getIt.registerLazySingleton<QiyamConflictReader>(() => qiyamRepository);
     final myAdhkarRepository = DriftMyAdhkarRepository(database);
     getIt.registerLazySingleton<MyAdhkarRepository>(() => myAdhkarRepository);
     getIt.registerLazySingleton<DriftMyAdhkarRepository>(
@@ -320,6 +334,9 @@ Future<void> configureDependencies({
       );
       getIt.registerLazySingleton<AdhkarPreviewSession>(
         () => const AdhkarPreviewSession(),
+      );
+      getIt.registerLazySingleton<QiyamPreviewSession>(
+        () => const QiyamPreviewSession(),
       );
     }
     if (preview) {
@@ -594,6 +611,51 @@ Future<void> configureDependencies({
         ownerId: ownerId,
         repository: getIt<MyAdhkarRepository>(),
         commands: getIt<MyAdhkarCommands>(param1: ownerId),
+      ),
+    );
+    // Qiyam (T049). A debug preview records locally under its own owner and
+    // queues nothing for upload; its night follows the preview Prayer
+    // location.
+    getIt.registerLazySingleton<QiyamClockPort>(SystemQiyamClock.new);
+    getIt.registerLazySingleton<QiyamIdentityPort>(UuidQiyamIdentity.new);
+    getIt.registerLazySingleton<QiyamNightPort>(() {
+      final prayerNights = PrayerQiyamNightAdapter(
+        boundaries: getIt<PrayerDayBoundariesPort>(),
+        preferences: getIt<PrayerPreferencesPort>(),
+        clock: getIt<PrayerClockPort>(),
+      );
+      return preview ? QiyamPreviewNightPort(prayerNights) : prayerNights;
+    });
+    getIt.registerLazySingleton<QiyamSupplicationsPort>(
+      () =>
+          AdhkarQiyamSupplicationsAdapter(catalog: getIt<AdhkarCatalogPort>()),
+    );
+    getIt.registerLazySingleton<QiyamNightCommitPort>(
+      () => DriftQiyamUnitOfWork(
+        database: database,
+        repository: getIt<QiyamRepository>(),
+        awards: getIt<SharedAwardLedgerPort>(),
+      ),
+    );
+    getIt.registerFactoryParam<QiyamCommandRunner, String, void>(
+      (ownerId, _) => SaveQiyamNight(
+        ownerId: ownerId,
+        nightPort: getIt<QiyamNightPort>(),
+        repository: getIt<QiyamRepository>(),
+        commits: getIt<QiyamNightCommitPort>(),
+        clock: getIt<QiyamClockPort>(),
+        identity: getIt<QiyamIdentityPort>(),
+        queueForSync: !preview,
+      ),
+    );
+    getIt.registerFactoryParam<QiyamCubit, String, void>(
+      (ownerId, _) => QiyamCubit(
+        ownerId: ownerId,
+        nightPort: getIt<QiyamNightPort>(),
+        repository: getIt<QiyamRepository>(),
+        supplications: getIt<QiyamSupplicationsPort>(),
+        commands: getIt<QiyamCommandRunner>(param1: ownerId),
+        clock: getIt<QiyamClockPort>(),
       ),
     );
     getIt.registerLazySingleton<TodayTasksPort>(

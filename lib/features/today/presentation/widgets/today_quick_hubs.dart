@@ -18,6 +18,7 @@ class TodayQuickHubs extends StatelessWidget {
     this.onOpenHub,
     this.onPrayer,
     this.onAdhkar,
+    this.onQiyam,
   });
 
   final AppColors colors;
@@ -26,6 +27,9 @@ class TodayQuickHubs extends StatelessWidget {
 
   /// Opens the real Adhkar screen; null keeps the "coming soon" preview.
   final VoidCallback? onAdhkar;
+
+  /// Opens the real Qiyam screen; null keeps the "coming soon" preview.
+  final VoidCallback? onQiyam;
 
   void _navigateToHub(
     BuildContext context,
@@ -38,6 +42,10 @@ class TodayQuickHubs extends StatelessWidget {
     }
     if (feature == DashboardPreviewFeature.adhkar && onAdhkar != null) {
       onAdhkar!();
+      return;
+    }
+    if (feature == DashboardPreviewFeature.qiyam && onQiyam != null) {
+      onQiyam!();
       return;
     }
     if (onOpenHub != null) {

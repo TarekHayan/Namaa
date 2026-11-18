@@ -2,17 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 
 class PrayerTrackHub extends StatelessWidget {
-  const PrayerTrackHub({super.key, required this.onPrayer, this.onAdhkar});
+  const PrayerTrackHub({
+    super.key,
+    required this.onPrayer,
+    this.onAdhkar,
+    this.onQiyam,
+  });
   final VoidCallback onPrayer;
 
   /// Opens the real Adhkar screen; null keeps the tile "coming soon".
   final VoidCallback? onAdhkar;
 
-  /// The tile's action: Prayer (0) and, once wired, Adhkar (3) open their
-  /// screens; the rest stay "coming soon".
+  /// Opens the real Qiyam screen; null keeps the tile "coming soon".
+  final VoidCallback? onQiyam;
+
+  /// The tile's action: Prayer (0) and, once wired, Adhkar (3) and Qiyam (4)
+  /// open their screens; the rest stay "coming soon".
   VoidCallback? _open(int index) => switch (index) {
     0 => onPrayer,
     3 => onAdhkar,
+    4 => onQiyam,
     _ => null,
   };
 

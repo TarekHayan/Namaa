@@ -1,24 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/qiyam_strings_adapter.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_typography.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_card.dart';
+import 'package:namma_project/app/widgets/app_segmented_control.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_night.dart';
-import 'package:namma_project/features/qiyam/domain/qiyam_night_record.dart';
 import 'package:namma_project/features/qiyam/presentation/qiyam_state.dart';
 
-/// The tracker card (the prototype's second group): "Did you pray Qiyam
-/// tonight?", the best-time note and the Yes/No buttons. Yes opens the
-/// details form — the rak'ah chips (default 4), the start and end times, the
-/// Witr checkbox (default on) and the note field with its 500 counter. The
-/// tracker is read-only while the schedule is unavailable, and the per-
-/// command feedback shows under the form.
+import 'qiyam_details_form.dart';
+
+/// The tonight tracker (approved design, 2026-11-18).
+///
+/// Unanswered: the question, the best-time note, and the two answers — a tap
+/// saves at once, there is no Save button. Answered: the two answers become a
+/// two-option switch that stays available all night (no confirmation); "Not
+/// yet" is calm — no blame and no red — and "Yes" opens the optional details
+/// form. The first "Yes" of a night shows the +30 points moment, which stays
+/// until the page is left. Both answers are disabled while recording is
+/// paused (a saved schedule is unavailable).
 final class QiyamTrackerCard extends StatelessWidget {
   const QiyamTrackerCard({
     super.key,
     required this.copy,
     required this.night,
-    required this.record,
     required this.form,
     required this.status,
     required this.failureMessageKey,
+    required this.celebration,
     required this.onYes,
     required this.onNo,
     required this.onRakahs,
@@ -29,10 +38,12 @@ final class QiyamTrackerCard extends StatelessWidget {
 
   final QiyamStrings copy;
   final QiyamNightState? night;
-  final QiyamNightRecord? record;
   final QiyamForm? form;
   final QiyamActionStatus? status;
   final String? failureMessageKey;
+
+  /// True once tonight's first "Yes" earned the points.
+  final bool celebration;
   final VoidCallback onYes;
   final VoidCallback onNo;
   final ValueChanged<int> onRakahs;
@@ -42,196 +53,248 @@ final class QiyamTrackerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = AppColors.of(context);
     final locked = night?.editable != true;
     final form = this.form;
-    return Card(
-      key: const Key('qiyam_tracker_card'),
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Text(
-              copy.didYouPray,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              copy.bestTime,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
+    final Widget body;
+    if (form == null) {
+      body = _Unanswered(copy: copy, locked: locked, onYes: onYes, onNo: onNo);
+    } else {
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (celebration && form.performed) ...[
+            _PointsMoment(copy: copy),
             const SizedBox(height: 16),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                FilledButton(
-                  key: const Key('qiyam_yes'),
-                  onPressed: locked ? null : onYes,
-                  child: Text(copy.yesXp),
+          ],
+          AppSegmentedControl(
+            key: const Key('qiyam_answer_switch'),
+            selectedIndex: form.performed ? 0 : 1,
+            onChanged: (index) {
+              if (locked) return;
+              if (index == 0 && !form.performed) onYes();
+              if (index == 1 && form.performed) onNo();
+            },
+            segments: [
+              AppSegment(key: const Key('qiyam_seg_yes'), label: copy.segYes),
+              AppSegment(key: const Key('qiyam_seg_no'), label: copy.no),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Icon(
+                  Icons.info_outline,
+                  size: 18,
+                  color: colors.textSecondary,
                 ),
-                FilledButton.tonal(
-                  key: const Key('qiyam_no'),
-                  onPressed: locked ? null : onNo,
-                  child: Text(copy.no),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  copy.detailsNotKept,
+                  key: const Key('qiyam_no_kept_note'),
+                  style: AppTypography.fixed(
+                    14,
+                    FontWeight.w400,
+                    colors.textSecondary,
+                    height: 1.6,
+                  ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          if (!form.performed) ...[
+            const SizedBox(height: 16),
+            _CalmNo(copy: copy),
+          ] else ...[
+            const SizedBox(height: 16),
+            Divider(height: 1, color: colors.border),
+            const SizedBox(height: 16),
+            QiyamDetailsForm(
+              key: ValueKey('qiyam_details_${night?.nightDate}'),
+              copy: copy,
+              form: form,
+              status: status,
+              failureMessageKey: failureMessageKey,
+              onRakahs: onRakahs,
+              onWitr: onWitr,
+              onTimes: onTimes,
+              onNote: onNote,
             ),
-            if (locked) ...[
-              const SizedBox(height: 12),
-              Text(
-                copy.recordingLocked,
-                key: const Key('qiyam_locked_notice'),
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.error),
+          ],
+        ],
+      );
+    }
+    return AppCard(
+      key: const Key('qiyam_tracker_card'),
+      radius: 16,
+      padding: const EdgeInsets.all(20),
+      child: body,
+    );
+  }
+}
+
+final class _Unanswered extends StatelessWidget {
+  const _Unanswered({
+    required this.copy,
+    required this.locked,
+    required this.onYes,
+    required this.onNo,
+  });
+
+  final QiyamStrings copy;
+  final bool locked;
+  final VoidCallback onYes;
+  final VoidCallback onNo;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          copy.didYouPray,
+          style: AppTypography.fixed(
+            20,
+            FontWeight.w600,
+            colors.textPrimary,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          copy.bestTime,
+          style: AppTypography.fixed(
+            14,
+            FontWeight.w400,
+            colors.textSecondary,
+            height: 1.7,
+          ),
+        ),
+        const SizedBox(height: 16),
+        AppButton(
+          key: const Key('qiyam_yes'),
+          label: copy.yesXp,
+          onPressed: locked ? null : onYes,
+          look: AppButtonLook.refined,
+          size: AppButtonSize.small,
+          expanded: true,
+        ),
+        const SizedBox(height: 8),
+        Opacity(
+          opacity: locked ? 0.6 : 1,
+          child: AppButton(
+            key: const Key('qiyam_no'),
+            label: copy.no,
+            onPressed: locked ? null : onNo,
+            look: AppButtonLook.refined,
+            variant: AppButtonVariant.secondary,
+            size: AppButtonSize.small,
+            expanded: true,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The one-time "Qiyam complete! +30 points" moment.
+final class _PointsMoment extends StatelessWidget {
+  const _PointsMoment({required this.copy});
+
+  final QiyamStrings copy;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Semantics(
+      liveRegion: true,
+      child: AppCard(
+        key: const Key('qiyam_celebration'),
+        tone: AppCardTone.accent,
+        radius: 12,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.accentStrong,
+                boxShadow: colors.buttonShadow,
               ),
-            ],
-            if (form != null && form.performed) ...[
-              const SizedBox(height: 20),
-              Text(
-                copy.rakahsLabel,
-                style: Theme.of(context).textTheme.labelLarge,
+              child: Icon(
+                Icons.check_rounded,
+                size: 22,
+                color: colors.onAccentStrong,
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                children: [
-                  for (final rakahs in QiyamNightDraft.allowedRakahs)
-                    ChoiceChip(
-                      key: Key('qiyam_rakah_chip_$rakahs'),
-                      label: Text(copy.rakahsCount(rakahs)),
-                      selected: form.rakahs == rakahs,
-                      onSelected: (_) => onRakahs(rakahs),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      key: const Key('qiyam_start_time'),
-                      initialValue: form.startTime ?? '',
-                      keyboardType: TextInputType.number,
-                      maxLength: 5,
-                      decoration: InputDecoration(
-                        labelText: copy.startTime,
-                        border: const OutlineInputBorder(),
-                        counterText: '',
-                      ),
-                      onChanged: (value) => onTimes(value, form.endTime),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      key: const Key('qiyam_end_time'),
-                      initialValue: form.endTime ?? '',
-                      keyboardType: TextInputType.number,
-                      maxLength: 5,
-                      decoration: InputDecoration(
-                        labelText: copy.endTime,
-                        border: const OutlineInputBorder(),
-                        counterText: '',
-                      ),
-                      onChanged: (value) => onTimes(form.startTime, value),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Checkbox(
-                    key: const Key('qiyam_witr'),
-                    value: form.witr,
-                    onChanged: (_) => onWitr(),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(child: Text(copy.witr)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                key: const Key('qiyam_note'),
-                initialValue: form.note ?? '',
-                maxLength: 500,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: copy.notesLabel,
-                  hintText: copy.notesPlaceholder,
-                  border: const OutlineInputBorder(),
-                  counter: _NoteCounter(
-                    copy: copy,
-                    length: form.note?.length ?? 0,
-                  ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                copy.xpEarned,
+                style: AppTypography.fixed(
+                  20,
+                  FontWeight.w700,
+                  colors.textPrimary,
+                  height: 1.4,
                 ),
-                onChanged: onNote,
               ),
-            ],
-            if (form != null && !form.performed) ...[
-              const SizedBox(height: 12),
-              Text(
-                copy.readOnly,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-              ),
-            ],
-            if (status != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _statusCopy(),
-                key: const Key('qiyam_status'),
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: status == QiyamActionStatus.failed
-                      ? colors.error
-                      : colors.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ],
         ),
       ),
     );
   }
-
-  String _statusCopy() => switch (status) {
-    QiyamActionStatus.pending => copy.saving,
-    QiyamActionStatus.saved => copy.saved,
-    QiyamActionStatus.failed => copy.failure(failureMessageKey ?? ''),
-    QiyamActionStatus.locked => copy.recordingLocked,
-    QiyamActionStatus.nightChanged => copy.nightChanged,
-    null => '',
-  };
 }
 
-final class _NoteCounter extends StatelessWidget {
-  const _NoteCounter({required this.copy, required this.length});
+/// The calm "Not yet" state: a moon, and the reminder that tonight's answer
+/// can still change.
+final class _CalmNo extends StatelessWidget {
+  const _CalmNo({required this.copy});
 
   final QiyamStrings copy;
-  final int length;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      copy.noteCounter(length),
-      key: const Key('qiyam_note_counter'),
-      style: Theme.of(
-        context,
-      ).textTheme.labelSmall?.copyWith(color: Theme.of(context).disabledColor),
+    final colors = AppColors.of(context);
+    return Row(
+      key: const Key('qiyam_calm_no'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: colors.surfaceSecondary,
+            border: Border.all(color: colors.border),
+          ),
+          child: Icon(
+            Icons.dark_mode_outlined,
+            size: 22,
+            color: colors.accentStrong,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            copy.noCalm,
+            style: AppTypography.fixed(
+              16,
+              FontWeight.w400,
+              colors.textPrimary,
+              height: 1.7,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

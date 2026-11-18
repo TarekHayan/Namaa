@@ -17,7 +17,7 @@ import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
 import 'package:namma_project/features/qiyam/presentation/qiyam_state.dart';
 
 /// T044: the QiyamCubit (contracts/adhkar-qiyam-application.md): the Yes
-/// defaults (4 rak'ahs, Witr on), the note debounced by 400 ms and flushed
+/// defaults (4 rak'ahs, Witr on), the note debounced by one second and flushed
 /// when the screen is left, a refresh at Maghrib and on resume, the
 /// stale-generation guard, and a celebration only on the first Yes.
 Future<void> drain() async {
@@ -119,7 +119,8 @@ void main() {
     },
   );
 
-  test('the first Yes celebrates and a later Yes does not', () async {
+  test('the first Yes raises the points moment and it stays until the night '
+      'rolls over; no later save raises or clears it', () async {
     final cubit = buildCubit();
     await cubit.load();
     await drain();
@@ -127,12 +128,143 @@ void main() {
     await cubit.answerYes();
     await drain();
     expect(cubit.state.celebration, isTrue);
+    // Edits, a No and a second Yes (Yes -> No -> Yes) keep it as it is: one
+    // award, no new moment, nothing cleared by a later command.
     commands.outcome = const QiyamNightSaved(firstPerformed: false);
+    await cubit.selectRakahs(8);
+    await drain();
+    expect(cubit.state.celebration, isTrue);
+    await cubit.answerNo();
+    await drain();
+    expect(cubit.state.celebration, isTrue);
     await cubit.answerYes();
+    await drain();
+    expect(cubit.state.celebration, isTrue);
+    // A failed save does not clear it either.
+    commands.failure = AppFailure.recoverable(
+      category: AppFailureCategory.persistence,
+      messageKey: 'qiyam.night.store_failed',
+      occurredAt: now,
+    );
+    await cubit.selectRakahs(4);
+    await drain();
+    expect(cubit.state.celebration, isTrue);
+    commands.failure = null;
+    // The next night starts without it.
+    nightPort.state = availableState('2026-11-12');
+    await cubit.resume();
     await drain();
     expect(cubit.state.celebration, isFalse);
     await cubit.close();
   });
+
+  test(
+    'a later Yes on a night whose award exists never raises the moment',
+    () async {
+      repository.emit(record('2026-11-11'));
+      final cubit = buildCubit();
+      await cubit.load();
+      await drain();
+      expect(
+        cubit.state.celebration,
+        isFalse,
+        reason: 'opened with a saved Yes',
+      );
+      commands.outcome = const QiyamNightSaved(firstPerformed: false);
+      await cubit.selectRakahs(8);
+      await drain();
+      expect(cubit.state.celebration, isFalse);
+      await cubit.close();
+    },
+  );
+
+  test('a night that rolls over while the screen is open says so and '
+      'starts unanswered', () async {
+    final cubit = buildCubit();
+    await cubit.load();
+    await drain();
+    expect(cubit.state.actionStatus, isNull, reason: 'the first load is quiet');
+    commands.outcome = const QiyamNightSaved(firstPerformed: false);
+    await cubit.answerYes();
+    await drain();
+    nightPort.state = availableState('2026-11-12');
+    await cubit.resume();
+    await drain();
+    expect(cubit.state.night?.nightDate, '2026-11-12');
+    expect(cubit.state.actionStatus, QiyamActionStatus.nightChanged);
+    expect(cubit.state.form, isNull);
+    expect(cubit.state.record, isNull);
+    await cubit.close();
+  });
+
+  test('a complete pair of times saves at once, a half-typed one waits for '
+      'the debounce', () {
+    FakeAsync().run((async) {
+      repository.emit(record('2026-11-11'));
+      final cubit = buildCubit();
+      cubit.load();
+      async.flushMicrotasks();
+      async.elapse(const Duration(milliseconds: 1));
+      async.flushMicrotasks();
+      commands.outcome = const QiyamNightSaved(firstPerformed: false);
+      cubit.updateTimes('02:4', '02:00');
+      async.flushMicrotasks();
+      expect(commands.drafts, isEmpty, reason: 'half typed: not saved yet');
+      async.elapse(const Duration(milliseconds: 999));
+      async.flushMicrotasks();
+      expect(commands.drafts, isEmpty);
+      async.elapse(const Duration(milliseconds: 1));
+      async.flushMicrotasks();
+      expect(commands.drafts, hasLength(1));
+      expect(commands.drafts.single.startTime, '02:4');
+      cubit.updateTimes('02:41', '03:35');
+      async.flushMicrotasks();
+      expect(commands.drafts, hasLength(2), reason: 'complete: saved at once');
+      expect(commands.drafts.last.startTime, '02:41');
+      expect(commands.drafts.last.endTime, '03:35');
+      // An emptied field is valid too and saves at once.
+      cubit.updateTimes('', '03:35');
+      async.flushMicrotasks();
+      expect(commands.drafts, hasLength(3));
+      expect(commands.drafts.last.startTime, isNull);
+      cubit.close();
+    });
+  });
+
+  test(
+    'saves run one after another: a quick Yes, No, Yes never overlaps',
+    () async {
+      final cubit = buildCubit();
+      await cubit.load();
+      await drain();
+      commands.outcome = const QiyamNightSaved(firstPerformed: false);
+      final first = Completer<void>();
+      final second = Completer<void>();
+      commands.gates
+        ..add(first)
+        ..add(second);
+      final yes = cubit.answerYes();
+      final no = cubit.answerNo();
+      final yesAgain = cubit.answerYes();
+      await drain();
+      expect(
+        commands.drafts,
+        hasLength(1),
+        reason: 'the others wait their turn',
+      );
+      first.complete();
+      await drain();
+      expect(commands.drafts, hasLength(2));
+      second.complete();
+      await Future.wait([yes, no, yesAgain]);
+      await drain();
+      expect(commands.drafts.map((d) => d.performed), [true, false, true]);
+      expect(commands.maxRunning, 1, reason: 'never two saves at once');
+      expect(cubit.state.form?.performed, isTrue);
+      expect(cubit.state.actionStatus, QiyamActionStatus.saved);
+      await cubit.close();
+    },
+  );
 
   test('No saves the cleared draft with no details', () async {
     final cubit = buildCubit();
@@ -177,7 +309,7 @@ void main() {
     await cubit.close();
   });
 
-  test('the note is debounced by 400 ms and flushed when leaving', () {
+  test('the note is debounced by one second and flushed when leaving', () {
     FakeAsync().run((async) {
       repository.emit(record('2026-11-11'));
       final cubit = buildCubit();
@@ -189,7 +321,7 @@ void main() {
       expect(loaded, isTrue);
       commands.outcome = const QiyamNightSaved(firstPerformed: false);
       cubit.updateNote('a quiet night');
-      async.elapse(const Duration(milliseconds: 399));
+      async.elapse(const Duration(milliseconds: 999));
       async.flushMicrotasks();
       expect(commands.drafts, isEmpty, reason: 'not yet debounced');
       async.elapse(const Duration(milliseconds: 1));
@@ -819,6 +951,12 @@ final class FakeCommands implements QiyamCommandRunner {
   final drafts = <QiyamNightDraft>[];
   final capturedNights = <String>[];
 
+  /// When set, each execution waits for the next completer in this list
+  /// (and records that it started), to look at overlapping saves.
+  final gates = <Completer<void>>[];
+  int running = 0;
+  int maxRunning = 0;
+
   @override
   Future<AppResult<QiyamCommandOutcome>> execute({
     required String capturedNight,
@@ -826,6 +964,13 @@ final class FakeCommands implements QiyamCommandRunner {
   }) async {
     capturedNights.add(capturedNight);
     drafts.add(draft);
+    running++;
+    if (running > maxRunning) maxRunning = running;
+    try {
+      if (gates.isNotEmpty) await gates.removeAt(0).future;
+    } finally {
+      running--;
+    }
     final failure = this.failure;
     if (failure != null) return AppResult.failure(failure);
     return AppResult.success(outcome! as QiyamCommandOutcome);

@@ -96,8 +96,10 @@ final class QiyamState {
   /// The latest command's feedback; cleared on the next command.
   final QiyamActionStatus? actionStatus;
 
-  /// One-shot: true only on the transition into the first `performed = true`
-  /// save of the night (the +30 XP celebration).
+  /// True from the first `performed = true` save of the night (the +30
+  /// points moment) until the night rolls over: later saves never raise it
+  /// again and never clear it, so the screen can keep it until the user
+  /// leaves.
   final bool celebration;
 
   /// The message key of the latest validation or persistence failure.

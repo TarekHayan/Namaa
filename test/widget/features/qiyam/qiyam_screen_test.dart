@@ -2,441 +2,1034 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:namma_project/app/l10n/generated/app_localizations.dart';
-import 'package:namma_project/core/domain/failures/app_failure.dart';
-import 'package:namma_project/core/domain/results/app_result.dart';
-import 'package:namma_project/features/qiyam/application/qiyam_clock_port.dart';
-import 'package:namma_project/features/qiyam/application/qiyam_night_port.dart';
-import 'package:namma_project/features/qiyam/application/qiyam_repository.dart';
-import 'package:namma_project/features/qiyam/application/qiyam_supplications_port.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/widgets/app_pill.dart';
+import 'package:namma_project/app/widgets/app_sheets.dart';
+import 'package:namma_project/app/widgets/app_time_field.dart';
 import 'package:namma_project/features/qiyam/application/save_qiyam_night.dart';
-import 'package:namma_project/features/qiyam/domain/qiyam_night.dart';
-import 'package:namma_project/features/qiyam/domain/qiyam_night_record.dart';
-import 'package:namma_project/features/qiyam/domain/qiyam_supplication.dart';
-import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
-import 'package:namma_project/features/qiyam/presentation/qiyam_screen.dart';
 
-/// T047: the Qiyam screen (contracts/adhkar-qiyam-ui.md): the prototype's
-/// order (heading, tracker and form, supplications), the Yes form with its
-/// rak'ah chips, times that cross midnight, the 500-character counter,
-/// read-only nights, the supplications in Amiri with their sources,
-/// keyboard and semantics, and the AR/EN light/dark 320 px 200% matrix.
-/// The supplication content is the placeholder fixture (T006 pending);
-/// real religious text never lives in code or tests.
+import '../../../support/qiyam_test_support.dart';
+
+/// T107: the Qiyam screen in the approved design (contracts/
+/// adhkar-qiyam-ui.md, "Qiyam screen (approved design, 2026-11-18)"): the
+/// heading chips, the tonight tracker with its answered switch, the one-time
+/// points badge, the autosaved details form, the collapsible supplications,
+/// the states, and the AR/EN, light/dark, 320 px at 200% matrix. The
+/// supplication content is placeholder text (real religious text never lives
+/// in code or tests).
 void main() {
-  final now = DateTime.utc(2026, 11, 11, 3);
+  late QiyamHarness h;
 
-  late FakeClock clock;
-  late FakeNightPort nightPort;
-  late FakeRepository repository;
-  late FakeSupplications supplications;
-  late RecordingCommands commands;
+  setUp(() => h = QiyamHarness());
 
-  QiyamNightState availableState([String nightDate = '2026-11-11']) =>
-      QiyamNightState(
-        scheduleState: QiyamScheduleState.available,
-        nightDate: nightDate,
-        lastThirdUtc: DateTime.utc(2026, 11, 11, 1, 40),
-        editable: true,
-        nextBoundaryUtc: DateTime.utc(2026, 11, 11, 16, 50),
-        zoneId: 'UTC',
-        zoneOffsetMinutes: 0,
-      );
+  Finder key(String value) => find.byKey(Key(value));
 
-  setUp(() {
-    clock = FakeClock(now);
-    nightPort = FakeNightPort(availableState());
-    repository = FakeRepository();
-    supplications = FakeSupplications();
-    commands = RecordingCommands();
-  });
-
-  QiyamCubit buildCubit() => QiyamCubit(
-    ownerId: 'owner',
-    nightPort: nightPort,
-    repository: repository,
-    supplications: supplications,
-    commands: commands,
-    clock: clock,
-  );
-
-  Future<void> pump(
-    WidgetTester tester, {
-    Locale locale = const Locale('ar'),
-    Brightness brightness = Brightness.light,
-    Size size = const Size(800, 1200),
-    double textScale = 1.0,
-    required QiyamCubit cubit,
-  }) async {
-    tester.view.physicalSize = size;
-    tester.view.devicePixelRatio = 1.0;
-    tester.platformDispatcher.localeTestValue = locale;
-    tester.platformDispatcher.textScaleFactorTestValue = textScale;
-    addTearDown(() {
-      tester.view.reset();
-      tester.platformDispatcher.clearAllTestValues();
-    });
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: locale,
-        supportedLocales: FoundationLocalizations.supportedLocales,
-        localizationsDelegates: FoundationLocalizations.localizationsDelegates,
-        theme: ThemeData(brightness: brightness, useMaterial3: true),
-        home: BlocProvider.value(value: cubit, child: const QiyamScreen()),
-      ),
-    );
-    unawaited(cubit.load());
+  Future<void> tapKey(WidgetTester tester, String value) async {
+    final finder = key(value);
+    await tester.ensureVisible(finder);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.tap(finder);
+    await tester.pump();
     await tester.pump();
   }
 
-  testWidgets('the prototype order: heading, tracker and form, then the '
-      'supplications', (tester) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit);
-    final headerY = tester.getTopLeft(find.byKey(const Key('qiyam_header'))).dy;
-    final trackerY = tester
-        .getTopLeft(find.byKey(const Key('qiyam_tracker_card')))
-        .dy;
-    final supplicationsY = tester
-        .getTopLeft(find.byKey(const Key('qiyam_supplications_card')))
-        .dy;
-    expect(headerY, lessThan(trackerY));
-    expect(trackerY, lessThan(supplicationsY));
-    expect(tester.takeException(), isNull);
-    await cubit.close();
-  });
+  Future<void> answerYes(
+    WidgetTester tester, {
+    bool firstPerformed = true,
+  }) async {
+    h.commands.outcome = QiyamNightSaved(firstPerformed: firstPerformed);
+    await tapKey(tester, 'qiyam_yes');
+  }
 
-  testWidgets('the heading shows the last third chip time', (tester) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit, locale: const Locale('en'));
-    expect(find.textContaining('01:40'), findsOneWidget);
-    expect(find.byKey(const Key('qiyam_last_third_chip')), findsOneWidget);
-    await cubit.close();
-  });
-
-  testWidgets('Yes opens the details form with the defaults (4 rak\'ahs, '
-      'Witr on) and saves them', (tester) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit);
-    expect(find.byKey(const Key('qiyam_rakah_chip_4')), findsNothing);
-    commands.outcome = const QiyamNightSaved(firstPerformed: true);
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    expect(find.byKey(const Key('qiyam_rakah_chip_2')), findsOneWidget);
-    expect(find.byKey(const Key('qiyam_rakah_chip_4')), findsOneWidget);
-    expect(find.byKey(const Key('qiyam_rakah_chip_8')), findsOneWidget);
-    expect(find.byKey(const Key('qiyam_rakah_chip_11')), findsOneWidget);
-    final defaultChip = tester.widget<ChoiceChip>(
-      find.byKey(const Key('qiyam_rakah_chip_4')),
-    );
-    expect(defaultChip.selected, isTrue);
-    expect(find.byKey(const Key('qiyam_witr')), findsOneWidget);
-    expect(
-      tester.widget<Checkbox>(find.byKey(const Key('qiyam_witr'))).value,
-      isTrue,
-    );
-    final draft = commands.drafts.single;
-    expect(draft.performed, isTrue);
-    expect(draft.rakahs, 4);
-    expect(draft.witr, isTrue);
-    await cubit.close();
-  });
-
-  testWidgets('selecting a rak\'ah chip saves immediately', (tester) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit);
-    commands.outcome = const QiyamNightSaved(firstPerformed: true);
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    commands.outcome = const QiyamNightSaved(firstPerformed: false);
-    await tester.tap(find.byKey(const Key('qiyam_rakah_chip_8')));
-    await tester.pump();
-    expect(commands.drafts.last.rakahs, 8);
-    await cubit.close();
-  });
-
-  testWidgets('times that cross midnight are accepted and saved', (
-    tester,
-  ) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit);
-    commands.outcome = const QiyamNightSaved(firstPerformed: true);
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    commands.outcome = const QiyamNightSaved(firstPerformed: false);
-    await tester.enterText(find.byKey(const Key('qiyam_start_time')), '23:00');
-    await tester.enterText(find.byKey(const Key('qiyam_end_time')), '01:00');
-    await tester.pump();
-    // The times share the note's debounce; they are saved when it fires.
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump();
-    final draft = commands.drafts.last;
-    expect(draft.startTime, '23:00');
-    expect(
-      draft.endTime,
-      '01:00',
-      reason:
-          'an end before the start means '
-          'the prayer crossed midnight and is accepted',
-    );
-    await cubit.close();
-  });
-
-  testWidgets('the note field shows the 500-character counter', (tester) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit, locale: const Locale('en'));
-    commands.outcome = const QiyamNightSaved(firstPerformed: true);
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    await tester.enterText(find.byKey(const Key('qiyam_note')), 'abc');
-    await tester.pump();
-    expect(find.byKey(const Key('qiyam_note_counter')), findsOneWidget);
-    expect(find.textContaining('3'), findsWidgets);
-    // The 500-character cap blocks a longer note.
-    await tester.enterText(find.byKey(const Key('qiyam_note')), 'a' * 505);
-    await tester.pump();
-    expect(find.textContaining('500'), findsWidgets);
-    await cubit.close();
-  });
-
-  testWidgets('the tracker is read-only when the night is not current', (
-    tester,
-  ) async {
-    nightPort.state = QiyamNightState(
-      scheduleState: QiyamScheduleState.unavailable,
-      nightDate: null,
-      lastThirdUtc: null,
-      editable: false,
-      nextBoundaryUtc: null,
-      zoneId: null,
-      zoneOffsetMinutes: null,
-    );
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit);
-    expect(
-      tester.widget<FilledButton>(find.byKey(const Key('qiyam_yes'))).onPressed,
-      isNull,
-    );
-    expect(
-      tester.widget<FilledButton>(find.byKey(const Key('qiyam_no'))).onPressed,
-      isNull,
-    );
-    expect(find.byKey(const Key('qiyam_locked_notice')), findsOneWidget);
-    expect(commands.drafts, isEmpty);
-    await cubit.close();
-  });
-
-  testWidgets('the supplications render in Amiri with their sources', (
-    tester,
-  ) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit);
-    expect(find.text('test supplication s1'), findsOneWidget);
-    final arabic = tester.widget<Text>(find.text('test supplication s1'));
-    expect(arabic.style?.fontFamily, 'Amiri');
-    expect(find.text('test source s1'), findsOneWidget);
-    expect(find.text('test supplication s2'), findsOneWidget);
-    await cubit.close();
-  });
-
-  testWidgets('the celebration appears only on the first Yes', (tester) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit);
-    expect(find.byKey(const Key('qiyam_celebration')), findsNothing);
-    commands.outcome = const QiyamNightSaved(firstPerformed: true);
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    expect(find.byKey(const Key('qiyam_celebration')), findsOneWidget);
-    commands.outcome = const QiyamNightSaved(firstPerformed: false);
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    expect(find.byKey(const Key('qiyam_celebration')), findsNothing);
-    await cubit.close();
-  });
-
-  testWidgets('a validation failure shows its message and a saved flash '
-      'follows a good save', (tester) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit, locale: const Locale('en'));
-    commands.outcome = const QiyamNightSaved(firstPerformed: true);
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    expect(find.byKey(const Key('qiyam_status')), findsOneWidget);
-    commands.failure = AppFailure.recoverable(
-      category: AppFailureCategory.validation,
-      messageKey: 'qiyam.night.invalid_time',
-      occurredAt: now,
-    );
-    commands.outcome = null;
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    expect(find.byKey(const Key('qiyam_status')), findsOneWidget);
-    expect(find.textContaining('valid 24-hour time'), findsOneWidget);
-    await cubit.close();
-  });
-
-  testWidgets('the keyboard reaches the note and the Yes button keeps tap '
-      'semantics', (tester) async {
-    final cubit = buildCubit();
-    await pump(tester, cubit: cubit);
-    commands.outcome = const QiyamNightSaved(firstPerformed: true);
-    await tester.tap(find.byKey(const Key('qiyam_yes')));
-    await tester.pump();
-    final note = find.byKey(const Key('qiyam_note'));
-    await tester.ensureVisible(note);
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.tap(note);
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
-    await tester.pump();
-    expect(
-      tester
-          .state<EditableTextState>(find.byType(EditableText).first)
-          .widget
-          .controller,
-      isNotNull,
-    );
-    final semantics = tester.getSemantics(find.byKey(const Key('qiyam_yes')));
-    expect(
-      semantics.label,
-      contains('نعم'),
-      reason: 'the Yes button is announced to screen readers',
-    );
-    await cubit.close();
-  });
-
-  testWidgets('AR/EN, light/dark, 320 px and 200% text scale render without '
-      'overflow', (tester) async {
-    for (final locale in const [Locale('ar'), Locale('en')]) {
-      for (final brightness in Brightness.values) {
-        final cubit = buildCubit();
-        await pump(
-          tester,
-          cubit: cubit,
-          locale: locale,
-          brightness: brightness,
-          size: const Size(320, 900),
-          textScale: 2.0,
+  group('the page', () {
+    qiyamTestWidgets(
+      'the order: heading, tracker, supplications, then history',
+      (tester) async {
+        h.repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+        await h.pump(tester, h.buildCubit());
+        double top(String k) => tester.getTopLeft(key(k)).dy;
+        expect(top('qiyam_header'), lessThan(top('qiyam_tracker_card')));
+        expect(
+          top('qiyam_tracker_card'),
+          lessThan(top('qiyam_supplications_card')),
         );
         expect(
-          tester.takeException(),
-          isNull,
-          reason: '$locale $brightness at 320 px, 200%',
+          top('qiyam_supplications_card'),
+          lessThan(top('qiyam_history_section')),
         );
-        await cubit.close();
+      },
+    );
+
+    qiyamTestWidgets('the heading shows the title, subtitle and last third', (
+      tester,
+    ) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      expect(find.text('Night prayer'), findsOneWidget);
+      expect(
+        find.text('Prayer of the night and quiet supplication'),
+        findsOneWidget,
+      );
+      expect(find.text('Last third of the night 01:40'), findsOneWidget);
+      expect(key('qiyam_open_prayer_setup'), findsNothing);
+    });
+
+    qiyamTestWidgets('the Arabic heading', (tester) async {
+      await h.pump(tester, h.buildCubit());
+      expect(find.text('قيام الليل'), findsOneWidget);
+      expect(find.text('صلاة الليل والمناجاة'), findsOneWidget);
+      expect(
+        tester.widget<AppPill>(key('qiyam_last_third_chip')).label,
+        startsWith('الثلث الأخير من الليل'),
+      );
+    });
+
+    qiyamTestWidgets(
+      'the streak chip shows the streak; a failed read shows the '
+      'failure and never 0',
+      (tester) async {
+        h.repository.streakToReturn = 5;
+        await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+        expect(find.text('Qiyam streak: 5'), findsOneWidget);
+        expect(key('qiyam_streak_failed'), findsNothing);
+
+        final failing = QiyamHarness()..repository.failStreak = true;
+        await failing.pump(
+          tester,
+          failing.buildCubit(),
+          locale: const Locale('en'),
+        );
+        expect(key('qiyam_streak_chip'), findsNothing);
+        expect(find.text('Could not load the Qiyam streak.'), findsOneWidget);
+        expect(find.textContaining('streak: 0'), findsNothing);
+      },
+    );
+
+    qiyamTestWidgets(
+      'no saved location: the chip says so with the setup button '
+      'and recording still works',
+      (tester) async {
+        h = QiyamHarness(night: qiyamSetupRequired());
+        var setups = 0;
+        await h.pump(
+          tester,
+          h.buildCubit(),
+          locale: const Locale('en'),
+          onOpenPrayerSetup: () => setups++,
+        );
+        expect(
+          find.text('Cannot work out the last third of the night right now'),
+          findsOneWidget,
+        );
+        expect(key('qiyam_locked_notice'), findsNothing);
+        await tapKey(tester, 'qiyam_open_prayer_setup');
+        expect(setups, 1);
+        await answerYes(tester);
+        expect(
+          h.commands.drafts,
+          hasLength(1),
+          reason: 'the night rule applies',
+        );
+      },
+    );
+
+    qiyamTestWidgets('a saved schedule that is unavailable pauses recording with '
+        'the reason and the setup button', (tester) async {
+      h = QiyamHarness(night: kQiyamUnavailable);
+      var setups = 0;
+      await h.pump(
+        tester,
+        h.buildCubit(),
+        locale: const Locale('en'),
+        onOpenPrayerSetup: () => setups++,
+      );
+      expect(
+        find.text(
+          'Times are not available right now; recording is paused until they return.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.descendant(
+                of: key('qiyam_yes'),
+                matching: find.byType(FilledButton),
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.descendant(
+                of: key('qiyam_no'),
+                matching: find.byType(FilledButton),
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+      await tapKey(tester, 'qiyam_open_prayer_setup');
+      expect(setups, 1);
+      await tester.tap(key('qiyam_yes'), warnIfMissed: false);
+      expect(h.commands.drafts, isEmpty);
+    });
+
+    qiyamTestWidgets(
+      'while the night loads only the title shows, with no flash '
+      'of the paused state',
+      (tester) async {
+        h.nightPort.gate = Completer<void>();
+        await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+        expect(find.text('Night prayer'), findsOneWidget);
+        expect(key('qiyam_locked_notice'), findsNothing);
+        expect(key('qiyam_tracker_card'), findsNothing);
+        expect(key('qiyam_last_third_chip'), findsNothing);
+        expect(find.byType(CircularProgressIndicator), findsWidgets);
+        h.nightPort.gate!.complete();
+        await tester.pump();
+        await tester.pump();
+        await tester.pump();
+        expect(key('qiyam_tracker_card'), findsOneWidget);
+      },
+    );
+  });
+
+  group('tonight', () {
+    qiyamTestWidgets('unanswered: the question, the best-time note and two '
+        'answers, with no Save button', (tester) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      expect(find.text('Did you pray Qiyam tonight?'), findsOneWidget);
+      expect(
+        find.text(
+          'The best time for Qiyam is the last third of the night, before Fajr.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Yes, praise be to God (+30 points)'), findsOneWidget);
+      expect(find.text('Not yet'), findsOneWidget);
+      expect(find.textContaining('Save'), findsNothing);
+      expect(key('qiyam_rakah_chip_4'), findsNothing);
+    });
+
+    qiyamTestWidgets(
+      'Yes saves at once, shows the points badge and the details '
+      'with the defaults',
+      (tester) async {
+        await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+        await answerYes(tester);
+        final draft = h.commands.drafts.single;
+        expect(draft.performed, isTrue);
+        expect(draft.rakahs, 4);
+        expect(draft.witr, isTrue);
+        expect(find.text('Qiyam complete! +30 points'), findsOneWidget);
+        // The two answers became the switch.
+        expect(key('qiyam_yes'), findsNothing);
+        expect(key('qiyam_answer_switch'), findsOneWidget);
+        expect(find.text('Details (optional)'), findsOneWidget);
+        for (final n in [2, 4, 8, 11]) {
+          expect(key('qiyam_rakah_chip_$n'), findsOneWidget);
+        }
+        final handle = tester.ensureSemantics();
+        expect(
+          tester.getSemantics(key('qiyam_rakah_chip_4')).label,
+          contains('4'),
+        );
+        handle.dispose();
+        expect(tester.widget<Switch>(key('qiyam_witr')).value, isTrue);
+        expect(find.text('Saved'), findsOneWidget);
+      },
+    );
+
+    qiyamTestWidgets('the status says Saving… while the save runs', (
+      tester,
+    ) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      h.commands.gate = Completer<void>();
+      await tapKey(tester, 'qiyam_yes');
+      expect(find.text('Saving…'), findsOneWidget);
+      h.commands.gate!.complete();
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Saving…'), findsNothing);
+      expect(find.text('Saved'), findsOneWidget);
+    });
+
+    qiyamTestWidgets('Not yet is calm: no red, the can-change note, no details', (
+      tester,
+    ) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      await tapKey(tester, 'qiyam_no');
+      final draft = h.commands.drafts.single;
+      expect(draft.performed, isFalse);
+      expect(draft.rakahs, isNull);
+      expect(
+        find.text(
+          'There is still time; you can change your answer to “Yes” at any point tonight.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Details are not kept with the answer “Not yet”.'),
+        findsOneWidget,
+      );
+      expect(key('qiyam_rakah_chip_4'), findsNothing);
+      expect(key('qiyam_celebration'), findsNothing);
+      expect(find.textContaining('missed'), findsNothing);
+      // No error color anywhere on the calm state.
+      final errors = AppColors.light.error;
+      final reds = tester
+          .widgetList<Icon>(find.byType(Icon))
+          .where(
+            (icon) =>
+                icon.color == errors || icon.color == AppColors.light.errorText,
+          );
+      expect(reds, isEmpty);
+    });
+
+    qiyamTestWidgets(
+      'the answers switch freely all night, with no confirmation',
+      (tester) async {
+        await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+        await answerYes(tester);
+        h.commands.outcome = const QiyamNightSaved(firstPerformed: false);
+        await tapKey(tester, 'qiyam_seg_no');
+        expect(h.commands.drafts.last.performed, isFalse);
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(find.byType(Dialog), findsNothing);
+        expect(key('qiyam_rakah_chip_4'), findsNothing);
+        await tapKey(tester, 'qiyam_seg_yes');
+        expect(h.commands.drafts.last.performed, isTrue);
+        expect(h.commands.drafts, hasLength(3));
+        expect(key('qiyam_rakah_chip_4'), findsOneWidget);
+        // Choosing the answer that is already chosen saves nothing.
+        await tapKey(tester, 'qiyam_seg_yes');
+        expect(h.commands.drafts, hasLength(3));
+      },
+    );
+
+    qiyamTestWidgets('Yes -> No -> Yes shows the points badge once and never a '
+        'second award', (tester) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      await answerYes(tester);
+      expect(find.text('Qiyam complete! +30 points'), findsOneWidget);
+      h.commands.outcome = const QiyamNightSaved(firstPerformed: false);
+      await tapKey(tester, 'qiyam_seg_no');
+      expect(find.text('Qiyam complete! +30 points'), findsNothing);
+      await tapKey(tester, 'qiyam_seg_yes');
+      // The badge is the one earned this visit — it comes back with the Yes,
+      // it is not a second award: no save reported one.
+      expect(find.text('Qiyam complete! +30 points'), findsOneWidget);
+      expect(
+        h.commands.drafts.where((d) => d.performed).length,
+        2,
+        reason: 'two Yes saves, one first-performed outcome',
+      );
+    });
+
+    qiyamTestWidgets(
+      'the badge stays through edits until the page is left, and '
+      'never shows for a night opened with a saved Yes',
+      (tester) async {
+        await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+        await answerYes(tester);
+        h.commands.outcome = const QiyamNightSaved(firstPerformed: false);
+        await tapKey(tester, 'qiyam_rakah_chip_8');
+        await tapKey(tester, 'qiyam_witr');
+        expect(key('qiyam_celebration'), findsOneWidget);
+
+        // Opening the page later with the Yes already saved: the form shows at
+        // once, with no badge.
+        final reopened = QiyamHarness()
+          ..repository.current = qiyamRecord('2026-11-11', rakahs: 8);
+        await reopened.pump(
+          tester,
+          reopened.buildCubit(),
+          locale: const Locale('en'),
+        );
+        expect(key('qiyam_celebration'), findsNothing);
+        expect(key('qiyam_rakah_chip_8'), findsOneWidget);
+        expect(find.text('Details (optional)'), findsOneWidget);
+      },
+    );
+
+    qiyamTestWidgets('the night turning while the page is open says so and the '
+        'new night is unanswered', (tester) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      await answerYes(tester);
+      expect(key('qiyam_answer_switch'), findsOneWidget);
+      h.nightPort.state = qiyamAvailable('2026-11-12');
+      h.commands.outcome = const QiyamNightChanged();
+      await tapKey(tester, 'qiyam_rakah_chip_8');
+      await tester.pump();
+      expect(
+        find.text('The night has changed; record the current night.'),
+        findsOneWidget,
+      );
+      expect(key('qiyam_yes'), findsOneWidget, reason: 'unanswered again');
+      expect(key('qiyam_celebration'), findsNothing);
+    });
+
+    qiyamTestWidgets('the keyboard reaches Yes and Enter answers it', (
+      tester,
+    ) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      bool focusIsWithin(String keyValue) {
+        final focus = FocusManager.instance.primaryFocus?.context;
+        if (focus == null) return false;
+        var inside = false;
+        focus.visitAncestorElements((element) {
+          if (element.widget.key == Key(keyValue)) {
+            inside = true;
+            return false;
+          }
+          return true;
+        });
+        return inside;
+      }
+
+      for (var i = 0; i < 15 && !focusIsWithin('qiyam_yes'); i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+      }
+      expect(focusIsWithin('qiyam_yes'), isTrue, reason: 'Tab reaches Yes');
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      await tester.pump();
+      expect(h.commands.drafts, hasLength(1));
+      expect(h.commands.drafts.single.performed, isTrue);
+    });
+
+    qiyamTestWidgets('the Yes button is announced to screen readers', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      expect(
+        find.bySemanticsLabel(RegExp('Yes, praise be to God')),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+  });
+
+  group('details', () {
+    Future<void> openDetails(
+      WidgetTester tester, {
+      Locale locale = const Locale('en'),
+    }) async {
+      await h.pump(tester, h.buildCubit(), locale: locale);
+      await answerYes(tester);
+      h.commands.outcome = const QiyamNightSaved(firstPerformed: false);
+    }
+
+    qiyamTestWidgets('a rak\'ah chip and the Witr switch save at once', (
+      tester,
+    ) async {
+      await openDetails(tester);
+      await tapKey(tester, 'qiyam_rakah_chip_8');
+      expect(h.commands.drafts.last.rakahs, 8);
+      await tapKey(tester, 'qiyam_witr');
+      expect(h.commands.drafts.last.witr, isFalse);
+      expect(h.commands.drafts.last.rakahs, 8);
+    });
+
+    qiyamTestWidgets(
+      'a complete time saves at once; the end may cross midnight',
+      (tester) async {
+        await openDetails(tester);
+        await tester.enterText(key('qiyam_start_time'), '23:00');
+        await tester.pump();
+        await tester.pump();
+        expect(h.commands.drafts.last.startTime, '23:00');
+        await tester.enterText(key('qiyam_end_time'), '01:00');
+        await tester.pump();
+        await tester.pump();
+        expect(h.commands.drafts.last.endTime, '01:00');
+        expect(h.commands.drafts.last.startTime, '23:00');
+      },
+    );
+
+    qiyamTestWidgets(
+      'the note saves about a second after typing stops and shows '
+      'its counter',
+      (tester) async {
+        await openDetails(tester);
+        final before = h.commands.drafts.length;
+        await tester.enterText(key('qiyam_note'), 'abc');
+        await tester.pump();
+        expect(find.text('3 / 500'), findsOneWidget);
+        await tester.pump(const Duration(milliseconds: 900));
+        expect(h.commands.drafts.length, before, reason: 'still waiting');
+        await tester.enterText(key('qiyam_note'), 'abcd');
+        await tester.pump(const Duration(milliseconds: 900));
+        expect(h.commands.drafts.length, before, reason: 'typing restarts it');
+        await QiyamHarness.settle(tester);
+        expect(h.commands.drafts.length, before + 1);
+        expect(h.commands.drafts.last.note, 'abcd');
+      },
+    );
+
+    qiyamTestWidgets('an invalid time is not saved and its message shows under '
+        'the field, only the wrong field in error', (tester) async {
+      await openDetails(tester);
+      h.commands.failure = qiyamValidationFailure('qiyam.night.invalid_time');
+      await tester.enterText(key('qiyam_start_time'), '2:41');
+      await QiyamHarness.settle(tester);
+      expect(
+        find.text('Enter a valid 24-hour time, like 02:41.'),
+        findsOneWidget,
+      );
+      expect(find.text('Could not save. Try again.'), findsNothing);
+      final fields = tester.widgetList<AppTimeField>(find.byType(AppTimeField));
+      expect(fields.map((f) => f.invalid), [true, false]);
+      // Fixing it saves and clears the message.
+      h.commands.failure = null;
+      await tester.enterText(key('qiyam_start_time'), '02:41');
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.text('Enter a valid 24-hour time, like 02:41.'),
+        findsNothing,
+      );
+      expect(h.commands.drafts.last.startTime, '02:41');
+    });
+
+    qiyamTestWidgets('a rejected rakah count shows its message under the '
+        'chips', (tester) async {
+      await openDetails(tester);
+      h.commands.failure = qiyamValidationFailure('qiyam.night.invalid_rakahs');
+      await tapKey(tester, 'qiyam_rakah_chip_8');
+      expect(
+        find.text('Choose a whole number of rak’ahs (2, 4, 8 or 11).'),
+        findsOneWidget,
+      );
+      expect(find.text('Could not save. Try again.'), findsNothing);
+    });
+
+    qiyamTestWidgets('a note over 500 characters shows the counter and the '
+        'message at once, and is not saved', (tester) async {
+      await openDetails(tester);
+      h.commands.failure = qiyamValidationFailure('qiyam.night.note_too_long');
+      await tester.enterText(key('qiyam_note'), 'a' * 505);
+      await tester.pump();
+      expect(find.text('505 / 500'), findsOneWidget);
+      expect(
+        find.text('The note is longer than 500 characters.'),
+        findsOneWidget,
+      );
+      await QiyamHarness.settle(tester);
+      expect(
+        find.text('The note is longer than 500 characters.'),
+        findsOneWidget,
+        reason: 'one message, not two',
+      );
+    });
+
+    qiyamTestWidgets(
+      'a failed save says so, keeps what was typed, and the next '
+      'change retries',
+      (tester) async {
+        await openDetails(tester);
+        h.commands.failure = qiyamPersistenceFailure();
+        await tester.enterText(key('qiyam_note'), 'kept text');
+        await QiyamHarness.settle(tester);
+        expect(find.text('Could not save. Try again.'), findsOneWidget);
+        expect(
+          tester.widget<TextField>(key('qiyam_note')).controller!.text,
+          'kept text',
+        );
+        h.commands.failure = null;
+        await tester.enterText(key('qiyam_note'), 'kept text more');
+        await QiyamHarness.settle(tester);
+        expect(find.text('Could not save. Try again.'), findsNothing);
+        expect(find.text('Saved'), findsOneWidget);
+        expect(h.commands.drafts.last.note, 'kept text more');
+      },
+    );
+
+    qiyamTestWidgets('the time picker button fills the field and saves', (
+      tester,
+    ) async {
+      await openDetails(tester);
+      await tester.ensureVisible(key('qiyam_start_picker'));
+      await tester.pump();
+      await tester.tap(key('qiyam_start_picker'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TimePickerDialog), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      final text = tester
+          .widget<TextField>(key('qiyam_start_time'))
+          .controller!
+          .text;
+      expect(RegExp(r'^\d{2}:\d{2}$').hasMatch(text), isTrue);
+      expect(h.commands.drafts.last.startTime, text);
+    });
+
+    qiyamTestWidgets('opening with a saved record shows its values', (
+      tester,
+    ) async {
+      h.repository.current = qiyamRecord(
+        '2026-11-11',
+        rakahs: 11,
+        witr: false,
+        startTime: '02:41',
+        endTime: '03:35',
+        note: 'a saved note',
+      );
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      expect(tester.widget<Switch>(key('qiyam_witr')).value, isFalse);
+      expect(
+        tester.widget<TextField>(key('qiyam_start_time')).controller!.text,
+        '02:41',
+      );
+      expect(
+        tester.widget<TextField>(key('qiyam_end_time')).controller!.text,
+        '03:35',
+      );
+      expect(
+        tester.widget<TextField>(key('qiyam_note')).controller!.text,
+        'a saved note',
+      );
+      expect(find.text('11'), findsOneWidget);
+    });
+  });
+
+  group('supplications', () {
+    qiyamTestWidgets('each is collapsed to four lines with Show all, then Show '
+        'less', (tester) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      expect(
+        find.text('Transmitted supplications for prostration and Qunut'),
+        findsOneWidget,
+      );
+      expect(find.text('Witr supplication'), findsOneWidget);
+      expect(find.text('Qunut'), findsOneWidget);
+      expect(find.text('Show all'), findsNWidgets(2));
+      Text text(String id) =>
+          tester.widget<Text>(key('qiyam_supplication_$id'));
+      expect(text('s1').maxLines, 4);
+      expect(text('s1').style?.fontFamily, 'Amiri');
+      await tapKey(tester, 'qiyam_supplication_toggle_s1');
+      expect(text('s1').maxLines, isNull);
+      expect(text('s2').maxLines, 4, reason: 'each opens on its own');
+      expect(find.text('Show less'), findsOneWidget);
+      await tapKey(tester, 'qiyam_supplication_toggle_s1');
+      expect(text('s1').maxLines, 4);
+      expect(find.text('test source s1'), findsOneWidget);
+    });
+
+    qiyamTestWidgets('the text is selectable and keeps its right-to-left '
+        'direction', (tester) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      expect(
+        find.descendant(
+          of: key('qiyam_supplications_card'),
+          matching: find.byType(SelectionArea),
+        ),
+        findsOneWidget,
+      );
+      final direction = tester
+          .widget<Directionality>(
+            find
+                .ancestor(
+                  of: key('qiyam_supplication_s1'),
+                  matching: find.byType(Directionality),
+                )
+                .first,
+          )
+          .textDirection;
+      expect(direction, TextDirection.rtl);
+    });
+  });
+
+  group('history', () {
+    void seed(int count) {
+      var day = DateTime.utc(2026, 11, 10);
+      for (var i = 0; i < count; i++) {
+        final nightKey =
+            '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+        h.repository.seeded[nightKey] = qiyamRecord(
+          nightKey,
+          performed: i.isEven,
+          rakahs: i % 4 == 0 ? 2 : 4,
+          witr: i % 3 == 0,
+        );
+        day = day.subtract(const Duration(days: 1));
+      }
+    }
+
+    qiyamTestWidgets(
+      '30 nights a page; Load more appends the next page without '
+      'moving the list',
+      (tester) async {
+        seed(35);
+        await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+        expect(find.text('Previous nights'), findsOneWidget);
+        expect(
+          find.byWidgetPredicate(
+            (w) => w.key is Key && '${w.key}'.contains('qiyam_history_row_'),
+          ),
+          findsNWidgets(30),
+        );
+        expect(h.repository.pageLimits, everyElement(30));
+        await tester.ensureVisible(key('qiyam_load_more'));
+        await tester.pump();
+        final firstRow = tester.getTopLeft(key('qiyam_history_row_2026-11-10'));
+        await tester.tap(key('qiyam_load_more'));
+        await tester.pump();
+        await tester.pump();
+        expect(
+          tester.getTopLeft(key('qiyam_history_row_2026-11-10')),
+          firstRow,
+          reason: 'the page does not jump',
+        );
+        expect(
+          find.byWidgetPredicate(
+            (w) => w.key is Key && '${w.key}'.contains('qiyam_history_row_'),
+            skipOffstage: false,
+          ),
+          findsNWidgets(35),
+        );
+        expect(key('qiyam_load_more'), findsNothing);
+      },
+    );
+
+    qiyamTestWidgets('each night reads in its four forms and "missed" never '
+        'appears', (tester) async {
+      h.repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+      h.repository.seeded['2026-11-09'] = qiyamRecord(
+        '2026-11-09',
+        rakahs: 2,
+        witr: false,
+      );
+      h.repository.seeded['2026-11-08'] = qiyamRecord(
+        '2026-11-08',
+        performed: false,
+      );
+      h.repository.seeded['2026-11-06'] = qiyamRecord('2026-11-06');
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      expect(find.text('Prayed · 4 rak’ahs · with Witr'), findsWidgets);
+      expect(find.text('Prayed · 2 rak’ahs'), findsOneWidget);
+      expect(find.text('Did not pray'), findsOneWidget);
+      expect(find.text('Not recorded'), findsOneWidget);
+      expect(find.textContaining('issed'), findsNothing);
+      // Newest first.
+      expect(
+        tester.getTopLeft(key('qiyam_history_row_2026-11-10')).dy,
+        lessThan(tester.getTopLeft(key('qiyam_history_row_2026-11-09')).dy),
+      );
+    });
+
+    qiyamTestWidgets('the Arabic forms', (tester) async {
+      h.repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+      h.repository.seeded['2026-11-09'] = qiyamRecord(
+        '2026-11-09',
+        rakahs: 2,
+        witr: false,
+      );
+      h.repository.seeded['2026-11-08'] = qiyamRecord(
+        '2026-11-08',
+        performed: false,
+      );
+      await h.pump(tester, h.buildCubit());
+      expect(find.text('صلى · 4 ركعات · بالوتر'), findsOneWidget);
+      expect(find.text('صلى · ركعتان'), findsOneWidget);
+      expect(find.text('لم يصلِّ'), findsOneWidget);
+      expect(find.textContaining('فات'), findsNothing);
+    });
+
+    qiyamTestWidgets(
+      'an error shows its message with Try again, never an empty '
+      'history',
+      (tester) async {
+        h.repository.failHistory = true;
+        await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+        expect(find.text('Could not load previous nights.'), findsOneWidget);
+        expect(key('qiyam_history_failed'), findsOneWidget);
+        h.repository.failHistory = false;
+        h.repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+        await tapKey(tester, 'qiyam_history_retry');
+        expect(key('qiyam_history_failed'), findsNothing);
+        expect(key('qiyam_history_row_2026-11-10'), findsOneWidget);
+      },
+    );
+
+    qiyamTestWidgets('nothing recorded yet: the section stays out of the way', (
+      tester,
+    ) async {
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      expect(find.text('Previous nights'), findsNothing);
+      expect(key('qiyam_load_more'), findsNothing);
+    });
+
+    qiyamTestWidgets('tapping a night opens read-only details in a sheet on a '
+        'phone', (tester) async {
+      h.repository.seeded['2026-11-10'] = qiyamRecord(
+        '2026-11-10',
+        startTime: '02:41',
+        endTime: '03:35',
+        note: 'a private note',
+      );
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      await tapKey(tester, 'qiyam_history_row_2026-11-10');
+      await tester.pumpAndSettle();
+      expect(key('qiyam_night_details'), findsOneWidget);
+      expect(find.byType(AppSheetHandle), findsOneWidget);
+      expect(find.text('Night details'), findsOneWidget);
+      expect(find.text('Status'), findsOneWidget);
+      expect(find.text('Prayed'), findsOneWidget);
+      expect(find.text('02:41'), findsOneWidget);
+      expect(find.text('03:35'), findsOneWidget);
+      expect(find.text('a private note'), findsOneWidget);
+      expect(find.text('This night’s record is view only.'), findsOneWidget);
+      // Read-only: no field in the sheet, and Close is the only action.
+      expect(
+        find.descendant(
+          of: key('qiyam_night_details'),
+          matching: find.byType(TextField),
+        ),
+        findsNothing,
+      );
+      await tester.tap(key('qiyam_night_details_close'));
+      await tester.pumpAndSettle();
+      expect(key('qiyam_night_details'), findsNothing);
+    });
+
+    qiyamTestWidgets('on a wide window the details open in a dialog', (
+      tester,
+    ) async {
+      h.repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+      await h.pump(
+        tester,
+        h.buildCubit(),
+        locale: const Locale('en'),
+        size: const Size(1280, 900),
+      );
+      await tapKey(tester, 'qiyam_history_row_2026-11-10');
+      await tester.pumpAndSettle();
+      expect(key('qiyam_night_details'), findsOneWidget);
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.byType(AppSheetHandle), findsNothing);
+    });
+
+    qiyamTestWidgets('a No night and an unrecorded night open with only their '
+        'status', (tester) async {
+      h.repository.seeded['2026-11-10'] = qiyamRecord(
+        '2026-11-10',
+        performed: false,
+      );
+      h.repository.seeded['2026-11-08'] = qiyamRecord('2026-11-08');
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      await tapKey(tester, 'qiyam_history_row_2026-11-10');
+      await tester.pumpAndSettle();
+      expect(find.text('Did not pray'), findsWidgets);
+      expect(find.text('Witr'), findsNothing);
+      await tester.tap(key('qiyam_night_details_close'));
+      await tester.pumpAndSettle();
+      await tapKey(tester, 'qiyam_history_row_2026-11-09');
+      await tester.pumpAndSettle();
+      expect(find.text('Not recorded'), findsWidgets);
+      expect(find.text('Number of rak’ahs'), findsNothing);
+    });
+
+    qiyamTestWidgets('device back closes the night details first', (
+      tester,
+    ) async {
+      h.repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+      await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
+      await tapKey(tester, 'qiyam_history_row_2026-11-10');
+      await tester.pumpAndSettle();
+      expect(key('qiyam_night_details'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(key('qiyam_night_details'), findsNothing);
+      expect(key('qiyam_header'), findsOneWidget, reason: 'still on the page');
+    });
+  });
+
+  group('layout', () {
+    qiyamTestWidgets('from 1024 px the history sits in a 360 px side column, '
+        'below that it follows the supplications', (tester) async {
+      h.repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+      await h.pump(
+        tester,
+        h.buildCubit(),
+        locale: const Locale('en'),
+        size: const Size(1280, 900),
+      );
+      expect(
+        tester.getTopLeft(key('qiyam_history_section')).dy,
+        tester.getTopLeft(key('qiyam_header')).dy,
+        reason: 'a side column beside the main one',
+      );
+      expect(tester.getSize(key('qiyam_history_section')).width, 360);
+
+      final narrow = QiyamHarness()
+        ..repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+      await narrow.pump(
+        tester,
+        narrow.buildCubit(),
+        locale: const Locale('en'),
+        size: const Size(1000, 900),
+      );
+      expect(
+        tester.getTopLeft(key('qiyam_history_section')).dy,
+        greaterThan(tester.getTopLeft(key('qiyam_supplications_card')).dy),
+      );
+    });
+
+    qiyamTestWidgets('right to left puts the side column on the left, left to '
+        'right on the right', (tester) async {
+      h.repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+      await h.pump(tester, h.buildCubit(), size: const Size(1280, 900));
+      final rtlHistory = tester.getCenter(key('qiyam_history_section')).dx;
+      final rtlMain = tester.getCenter(key('qiyam_tracker_card')).dx;
+      expect(rtlHistory, lessThan(rtlMain));
+
+      final ltr = QiyamHarness()
+        ..repository.seeded['2026-11-10'] = qiyamRecord('2026-11-10');
+      await ltr.pump(
+        tester,
+        ltr.buildCubit(),
+        locale: const Locale('en'),
+        size: const Size(1280, 900),
+      );
+      expect(
+        tester.getCenter(key('qiyam_history_section')).dx,
+        greaterThan(tester.getCenter(key('qiyam_tracker_card')).dx),
+      );
+    });
+  });
+
+  group('every state at AR/EN, light/dark, 320 px and 200% text', () {
+    final states = <String, Future<void> Function(WidgetTester, QiyamHarness)>{
+      'unanswered': (tester, h) async {},
+      'yes with details': (tester, h) async {
+        h.commands.outcome = const QiyamNightSaved(firstPerformed: true);
+        await _tapVisible(tester, const Key('qiyam_yes'));
+        await tester.pump();
+        await tester.pump();
+      },
+      'yes with a long note and times': (tester, h) async {
+        h.repository.current = qiyamRecord(
+          '2026-11-11',
+          rakahs: 11,
+          startTime: '02:41',
+          endTime: '03:35',
+          note: 'long ' * 40,
+        );
+      },
+      'no': (tester, h) async {
+        await _tapVisible(tester, const Key('qiyam_no'));
+        await tester.pump();
+        await tester.pump();
+      },
+      'paused': (tester, h) async {},
+      'no saved location': (tester, h) async {},
+      'save failed': (tester, h) async {
+        h.commands.outcome = const QiyamNightSaved(firstPerformed: false);
+        await _tapVisible(tester, const Key('qiyam_yes'));
+        await tester.pump();
+        await tester.pump();
+        h.commands.failure = qiyamPersistenceFailure();
+        await _tapVisible(tester, const Key('qiyam_rakah_chip_8'));
+        await tester.pump();
+        await tester.pump();
+      },
+      'validation errors': (tester, h) async {
+        h.commands.outcome = const QiyamNightSaved(firstPerformed: false);
+        await _tapVisible(tester, const Key('qiyam_yes'));
+        await tester.pump();
+        await tester.pump();
+        h.commands.failure = qiyamValidationFailure('qiyam.night.invalid_time');
+        await tester.enterText(
+          find.byKey(const Key('qiyam_start_time')),
+          '2:41',
+        );
+        await tester.enterText(find.byKey(const Key('qiyam_note')), 'a' * 512);
+        await tester.pump(const Duration(milliseconds: 1100));
+        await tester.pump();
+      },
+      'night changed': (tester, h) async {
+        h.commands.outcome = const QiyamNightChanged();
+        h.nightPort.state = qiyamAvailable('2026-11-12');
+        await _tapVisible(tester, const Key('qiyam_yes'));
+        await tester.pump();
+        await tester.pump();
+      },
+      'streak failed and history error': (tester, h) async {},
+      'history with a night open': (tester, h) async {
+        await tester.ensureVisible(
+          find.byKey(const Key('qiyam_history_row_2026-11-10')),
+        );
+        await tester.pump();
+        await _tapVisible(tester, const Key('qiyam_history_row_2026-11-10'));
+        await tester.pumpAndSettle();
+      },
+      'supplications open': (tester, h) async {
+        for (final id in ['s1', 's2']) {
+          final toggle = find.byKey(Key('qiyam_supplication_toggle_$id'));
+          await tester.ensureVisible(toggle);
+          await tester.pump();
+          await tester.tap(toggle);
+          await tester.pump();
+        }
+      },
+    };
+
+    for (final locale in const [Locale('ar'), Locale('en')]) {
+      for (final brightness in Brightness.values) {
+        for (final entry in states.entries) {
+          qiyamTestWidgets('${entry.key} - $locale $brightness', (
+            tester,
+          ) async {
+            final harness = switch (entry.key) {
+              'paused' => QiyamHarness(night: kQiyamUnavailable),
+              'no saved location' => QiyamHarness(night: qiyamSetupRequired()),
+              _ => QiyamHarness(),
+            };
+            harness.repository.seeded['2026-11-10'] = qiyamRecord(
+              '2026-11-10',
+              note: 'a note',
+            );
+            harness.repository.seeded['2026-11-09'] = qiyamRecord(
+              '2026-11-09',
+              performed: false,
+            );
+            if (entry.key == 'streak failed and history error') {
+              harness.repository
+                ..failStreak = true
+                ..failHistory = true;
+            }
+            await harness.pump(
+              tester,
+              harness.buildCubit(),
+              locale: locale,
+              brightness: brightness,
+              size: const Size(320, 900),
+              textScale: 2.0,
+              onOpenPrayerSetup: () {},
+            );
+            await entry.value(tester, harness);
+            expect(tester.takeException(), isNull);
+          });
+        }
       }
     }
   });
 }
 
-final class FakeClock implements QiyamClockPort {
-  FakeClock(this._now);
-
-  final DateTime _now;
-
-  @override
-  DateTime nowUtc() => _now;
-}
-
-final class FakeNightPort implements QiyamNightPort {
-  FakeNightPort(this.state);
-
-  QiyamNightState state;
-
-  @override
-  Future<AppResult<QiyamNightState>> resolve({
-    required String ownerId,
-    required DateTime nowUtc,
-  }) async => AppResult.success(state);
-}
-
-final class FakeRepository implements QiyamRepository {
-  QiyamNightRecord? current;
-  int streakToReturn = 0;
-  List<QiyamNightRecord> historyPage = const [];
-  bool historyHasMore = false;
-
-  @override
-  Future<AppResult<QiyamNightRecord?>> readFresh({
-    required String accountId,
-    required String nightDate,
-  }) async => AppResult.success(current);
-
-  @override
-  Stream<QiyamNightRecord?> watchNight({
-    required String accountId,
-    required String nightDate,
-  }) => const Stream.empty();
-
-  @override
-  Future<AppResult<int>> streak({
-    required String accountId,
-    required String currentNight,
-  }) async => AppResult.success(streakToReturn);
-
-  @override
-  Future<AppResult<QiyamHistoryPage>> history({
-    required String accountId,
-    required String before,
-    int limit = 30,
-  }) async => AppResult.success(
-    QiyamHistoryPage(records: historyPage, hasMore: historyHasMore),
-  );
-
-  @override
-  Future<AppResult<void>> writeNight(
-    QiyamNightRecord record, {
-    required String operationId,
-    required bool queueForSync,
-    required bool hadPrior,
-  }) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<AppResult<T>> runInTransaction<T>(
-    Future<AppResult<T>> Function() action,
-  ) {
-    throw UnimplementedError();
-  }
-}
-
-final class FakeSupplications implements QiyamSupplicationsPort {
-  @override
-  Future<AppResult<List<QiyamSupplication>>> supplications(
-    String ownerId,
-  ) async => AppResult.success([
-    QiyamSupplication(
-      id: 's1',
-      textAr: 'test supplication s1',
-      sourceAr: 'test source s1',
-    ),
-    QiyamSupplication(
-      id: 's2',
-      textAr: 'test supplication s2',
-      sourceAr: 'test source s2',
-    ),
-  ]);
-}
-
-final class RecordingCommands implements QiyamCommandRunner {
-  Object? outcome;
-  AppFailure? failure;
-  final drafts = <QiyamNightDraft>[];
-
-  @override
-  Future<AppResult<QiyamCommandOutcome>> execute({
-    required String capturedNight,
-    required QiyamNightDraft draft,
-  }) async {
-    drafts.add(draft);
-    final failure = this.failure;
-    if (failure != null) return AppResult.failure(failure);
-    return AppResult.success(outcome! as QiyamCommandOutcome);
-  }
+/// Scrolls [key] into view, then taps it (the narrow, enlarged-text layouts
+/// are longer than the screen).
+Future<void> _tapVisible(WidgetTester tester, Key key) async {
+  final finder = find.byKey(key);
+  await tester.ensureVisible(finder);
+  await tester.pump();
+  await tester.tap(finder);
+  await tester.pump();
+  await tester.pump();
 }

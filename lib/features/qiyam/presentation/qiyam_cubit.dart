@@ -13,11 +13,13 @@ import 'qiyam_state.dart';
 /// The Qiyam screen state holder (contracts/adhkar-qiyam-application.md):
 /// it loads the night, the record and the editable form, schedules ONE
 /// timer for the next night boundary (plus a refresh on resume), saves
-/// edits through the command with the note (and times) debounced by
-/// 400 ms, and reports per-command feedback. The +30 XP celebration is
-/// one-shot per night: only the first `performed = true` save fires it.
-/// Nothing is emitted after close, and a night resolution from an earlier
-/// generation never overwrites a newer one.
+/// edits through the command — the note, and a time that is not yet a
+/// complete `HH:mm`, are debounced by one second so half-typed values are
+/// not committed — and reports per-command feedback. The +30 points moment
+/// is one-shot per night: only the first `performed = true` save fires it,
+/// and it stays on the state until the night rolls over. Nothing is emitted
+/// after close, and a night resolution from an earlier generation never
+/// overwrites a newer one.
 final class QiyamCubit extends Cubit<QiyamState> {
   QiyamCubit({
     required String ownerId,
@@ -34,7 +36,7 @@ final class QiyamCubit extends Cubit<QiyamState> {
        _clock = clock,
        super(const QiyamState());
 
-  static const Duration _noteDebounce = Duration(milliseconds: 400);
+  static const Duration _noteDebounce = Duration(seconds: 1);
 
   final String _ownerId;
   final QiyamNightPort _nightPort;
@@ -108,12 +110,19 @@ final class QiyamCubit extends Cubit<QiyamState> {
     await _runSave(_with(form, witr: !form.witr));
   }
 
-  /// Time edits share the note's debounce so half-typed values are not
-  /// committed (and rejected) mid-entry.
+  /// A pair of complete times (or an emptied field) saves at once, as the
+  /// platform picker produces them; a half-typed value shares the note's
+  /// debounce so it is not committed (and rejected) mid-entry.
   void updateTimes(String? startTime, String? endTime) {
     final form = state.form;
     if (form == null || !form.performed) return;
-    _scheduleSave(_with(form, startTime: startTime, endTime: endTime));
+    final next = _with(form, startTime: startTime, endTime: endTime);
+    if (QiyamNightDraft.isValidTime(_clean(next.startTime)) &&
+        QiyamNightDraft.isValidTime(_clean(next.endTime))) {
+      unawaited(_runSave(next));
+    } else {
+      _scheduleSave(next);
+    }
   }
 
   void updateNote(String text) {
@@ -199,7 +208,19 @@ final class QiyamCubit extends Cubit<QiyamState> {
     await _runSave(form);
   }
 
-  Future<void> _runSave(QiyamForm form) async {
+  /// Saves run one after another: the command reads the stored version and
+  /// commits against it, so two overlapping saves (a quick Yes, No, Yes)
+  /// would make the second one stale.
+  Future<void> _saveQueue = Future<void>.value();
+
+  Future<void> _runSave(QiyamForm form) {
+    final run = _saveQueue.then((_) => _commitSave(form));
+    _saveQueue = run.then<void>((_) {}, onError: (_) {});
+    return run;
+  }
+
+  Future<void> _commitSave(QiyamForm form) async {
+    if (_disposed) return;
     final capturedNight = state.night?.nightDate;
     if (capturedNight == null) return;
     // Whether this save moves the STORED record into or out of "performed"
@@ -217,7 +238,6 @@ final class QiyamCubit extends Cubit<QiyamState> {
       state.copyWith(
         form: form,
         actionStatus: QiyamActionStatus.pending,
-        clearCelebration: true,
         clearFailureMessageKey: true,
       ),
     );
@@ -231,7 +251,6 @@ final class QiyamCubit extends Cubit<QiyamState> {
         state.copyWith(
           actionStatus: QiyamActionStatus.failed,
           failureMessageKey: failure.messageKey,
-          clearCelebration: true,
         ),
       );
       return;
@@ -241,7 +260,6 @@ final class QiyamCubit extends Cubit<QiyamState> {
       emit(
         state.copyWith(
           actionStatus: QiyamActionStatus.nightChanged,
-          clearCelebration: true,
           clearFailureMessageKey: true,
         ),
       );
@@ -252,7 +270,6 @@ final class QiyamCubit extends Cubit<QiyamState> {
       emit(
         state.copyWith(
           actionStatus: QiyamActionStatus.locked,
-          clearCelebration: true,
           clearFailureMessageKey: true,
         ),
       );
@@ -263,7 +280,6 @@ final class QiyamCubit extends Cubit<QiyamState> {
       state.copyWith(
         actionStatus: QiyamActionStatus.saved,
         celebration: saved.firstPerformed,
-        clearCelebration: !saved.firstPerformed,
         clearFailureMessageKey: true,
       ),
     );
@@ -356,7 +372,13 @@ final class QiyamCubit extends Cubit<QiyamState> {
       _formNight = null;
       unawaited(_recordSubscription?.cancel());
       _recordSubscription = null;
-      emit(state.copyWith(clearRecord: true, clearForm: true));
+      emit(
+        state.copyWith(
+          clearRecord: true,
+          clearForm: true,
+          clearCelebration: true,
+        ),
+      );
       return;
     }
     if (nightDate != _watchedNight) {
@@ -372,7 +394,18 @@ final class QiyamCubit extends Cubit<QiyamState> {
     if (previousNightDate != nightDate) {
       // The night rolled over: the form and the row belong to the old night.
       _formNight = null;
-      emit(state.copyWith(clearForm: true, clearRecord: true));
+      emit(
+        state.copyWith(
+          clearForm: true,
+          clearRecord: true,
+          clearCelebration: true,
+          clearFailureMessageKey: true,
+          // A night that rolled over while the screen was open says so.
+          actionStatus: previousNightDate == null
+              ? null
+              : QiyamActionStatus.nightChanged,
+        ),
+      );
       // The streak and the first history page are derived for the current
       // night; refresh them when it changes — never on plain edits.
       await _refreshStreak();

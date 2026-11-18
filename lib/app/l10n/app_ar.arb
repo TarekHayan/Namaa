@@ -487,6 +487,7 @@
   "prayerSourceLocal": "المواقيت: حساب محلي احتياطي؛ تأكد من مسجد منطقتك",
   "prayerSignInRequired": "افتح مواقيت الصلاة بعد تسجيل الدخول.",
   "adhkarSignInRequired": "افتح الأذكار بعد تسجيل الدخول.",
+  "qiyamSignInRequired": "افتح قيام الليل بعد تسجيل الدخول.",
   "prayerStatusOnTime": "في وقتها",
   "prayerStatusLate": "أُديت متأخرًا",
   "prayerStatusMissed": "فاتتني",
@@ -694,6 +695,35 @@
   "qiyamHistoryNotRecorded": "غير مسجَّل",
   "qiyamHistoryLoadMore": "تحميل المزيد",
   "qiyamHistoryFailed": "تعذّر تحميل الليالي السابقة.",
+  "qiyamSegYes": "نعم",
+  "qiyamNoCalm": "ما زال الوقت متاحًا؛ يمكنك تغيير إجابتك إلى «نعم» في أي وقت الليلة.",
+  "qiyamDetailsTitle": "التفاصيل (اختيارية)",
+  "qiyamSupplicationWitr": "دعاء الوتر",
+  "qiyamSupplicationQunut": "القنوت",
+  "qiyamShowAll": "عرض الكل",
+  "qiyamShowLess": "عرض أقل",
+  "qiyamPickTime": "اختيار الوقت",
+  "qiyamNightDetailsTitle": "تفاصيل الليلة",
+  "qiyamDetailStatus": "الحالة",
+  "qiyamDetailWitr": "الوتر",
+  "qiyamDetailPrayed": "صلى",
+  "qiyamDetailNo": "لا",
+  "qiyamClose": "إغلاق",
+  "qiyamNoNote": "بلا ملاحظة",
+  "qiyamConflictBack": "العودة إلى القيام",
+  "qiyamConflictTonight": "قيام الليل · الليلة",
+  "qiyamConflictNight": "قيام الليل · {date}",
+  "@qiyamConflictNight": {
+    "placeholders": {"date": {"type": "String"}}
+  },
+  "qiyamConflictAnswerYes": "نعم · {count, plural, two{ركعتان} other{{count} ركعات}}",
+  "@qiyamConflictAnswerYes": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamConflictAnswerYesWitr": "نعم · {count, plural, two{ركعتان} other{{count} ركعات}} · بالوتر",
+  "@qiyamConflictAnswerYesWitr": {
+    "placeholders": {"count": {"type": "int"}}
+  },
   "adhkarConflicts": "اختلافات المزامنة",
   "adhkarConflictActive": "النسخة النشطة",
   "adhkarConflictRetained": "النسخة المحفوظة",

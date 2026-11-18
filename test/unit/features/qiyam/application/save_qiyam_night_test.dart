@@ -83,6 +83,24 @@ void main() {
     },
   );
 
+  test('the debug preview queues nothing for upload', () async {
+    final preview = SaveQiyamNight(
+      ownerId: 'owner',
+      nightPort: nightPort,
+      repository: repository,
+      commits: repository,
+      clock: clock,
+      identity: const FakeIdentity(),
+      queueForSync: false,
+    );
+    final outcome = await preview.execute(
+      capturedNight: '2026-11-11',
+      draft: performedDraft,
+    );
+    expect(outcome.valueOrNull, isA<QiyamNightSaved>());
+    expect(repository.requests.single.queueForSync, isFalse);
+  });
+
   test('an already-awarded Yes maps to firstPerformed false', () async {
     repository.commitOutcome = const QiyamSaveOutcome(
       wroteRecord: true,

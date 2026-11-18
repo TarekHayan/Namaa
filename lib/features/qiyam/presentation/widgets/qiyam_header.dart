@@ -1,180 +1,173 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:namma_project/app/l10n/qiyam_strings_adapter.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_typography.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_pill.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_night.dart';
 import 'package:timezone/data/latest_all.dart' as timezone_data;
 import 'package:timezone/timezone.dart' as tz;
 
-/// The heading (the prototype's first group): the title and subtitle, the
-/// chip with the last third of the night — or the unavailable reason with
-/// the Prayer-setup link — and the Qiyam streak chip. A failed streak read
-/// shows the failure notice instead of the chip, never a streak of 0.
+/// The heading (approved design, 2026-11-18): the title and subtitle, then
+/// the chip with the last third of the night — or the unavailable reason with
+/// the Prayer-setup button — and the Qiyam streak chip. A failed streak read
+/// shows the failure chip instead of the streak, never a streak of 0.
 final class QiyamHeader extends StatelessWidget {
   const QiyamHeader({
     super.key,
     required this.copy,
     required this.night,
     required this.locale,
-    required this.locked,
     this.streak,
     this.streakFailed = false,
+    this.onOpenPrayerSetup,
   });
 
   final QiyamStrings copy;
+
+  /// The resolved night; null while the first load runs (only the title
+  /// shows then).
   final QiyamNightState? night;
   final String locale;
-  final bool locked;
 
-  /// The derived streak; the chip is hidden until the first successful
-  /// read (and when the schedule is unavailable, where there is no night).
+  /// The derived streak; the chip is hidden until the first successful read.
   final int? streak;
   final bool streakFailed;
 
+  /// Opens the Prayer location setup; null hides the setup button.
+  final VoidCallback? onOpenPrayerSetup;
+
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final lastThird = night?.lastThirdUtc;
-    final zoneId = night?.zoneId;
+    final colors = AppColors.of(context);
+    final resolved = night;
+    final lastThird = resolved?.lastThirdUtc;
+    final zoneId = resolved?.zoneId;
+    final available = lastThird != null && zoneId != null;
     return Column(
       key: const Key('qiyam_header'),
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Icon(Icons.nightlight_round, color: colors.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                copy.title,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+        Semantics(
+          header: true,
+          child: Text(
+            copy.title,
+            style: AppTypography.fixed(
+              24,
+              FontWeight.w700,
+              colors.textPrimary,
+              height: 1.35,
             ),
-          ],
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           copy.subtitle,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            _LastThirdChip(
-              copy: copy,
-              lastThirdUtc: lastThird,
-              zoneId: zoneId,
-              locale: locale,
-              locked: locked,
-            ),
-            if (streak != null) _StreakChip(copy: copy, nights: streak!),
-          ],
-        ),
-        if (streakFailed) ...[
-          const SizedBox(height: 8),
-          Text(
-            copy.streakFailed,
-            key: const Key('qiyam_streak_failed'),
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: colors.error),
+          style: AppTypography.fixed(
+            14,
+            FontWeight.w400,
+            colors.textSecondary,
+            height: 1.6,
           ),
+        ),
+        if (resolved != null) ...[
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (available)
+                AppPill(
+                  key: const Key('qiyam_last_third_chip'),
+                  label: copy.lastThird(
+                    formatQiyamTime(lastThird, zoneId, locale),
+                  ),
+                  icon: Icons.dark_mode_outlined,
+                  fontSize: 14,
+                  hairline: true,
+                  minHeight: 32,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                )
+              else
+                AppPill(
+                  key: const Key('qiyam_last_third_chip'),
+                  label: copy.lastThirdUnavailable,
+                  tone: AppPillTone.warning,
+                  icon: Icons.error_outline,
+                  fontSize: 14,
+                  radius: 16,
+                  minHeight: 32,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                ),
+              if (streakFailed)
+                AppPill(
+                  key: const Key('qiyam_streak_failed'),
+                  label: copy.streakFailed,
+                  tone: AppPillTone.error,
+                  icon: Icons.error_outline,
+                  fontSize: 14,
+                  radius: 16,
+                  minHeight: 32,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                )
+              else if (streak != null)
+                AppPill(
+                  key: const Key('qiyam_streak_chip'),
+                  label: copy.streak(streak!),
+                  tone: AppPillTone.neutral,
+                  icon: Icons.local_fire_department_outlined,
+                  iconColor: colors.warning,
+                  fontSize: 14,
+                  minHeight: 32,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                ),
+            ],
+          ),
+          if (!available && onOpenPrayerSetup != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: AppButton(
+                key: const Key('qiyam_open_prayer_setup'),
+                label: copy.openPrayerSetup,
+                onPressed: onOpenPrayerSetup,
+                look: AppButtonLook.refined,
+                variant: AppButtonVariant.outline,
+                size: AppButtonSize.small,
+                color: colors.warning,
+              ),
+            ),
+          ],
         ],
       ],
     );
   }
 }
 
-final class _StreakChip extends StatelessWidget {
-  const _StreakChip({required this.copy, required this.nights});
-
-  final QiyamStrings copy;
-  final int nights;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Container(
-      key: const Key('qiyam_streak_chip'),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        copy.streak(nights),
-        style: Theme.of(
-          context,
-        ).textTheme.labelMedium?.copyWith(color: colors.primary),
-      ),
-    );
+/// Formats [instantUtc] in the location's zone as `HH:mm`. Composition
+/// initializes the IANA database at startup; this helper loads it itself when
+/// rendered without composition (widget tests), like the Prayer adapter does.
+String formatQiyamTime(DateTime instantUtc, String zoneId, String locale) {
+  if (tz.timeZoneDatabase.locations.isEmpty) {
+    timezone_data.initializeTimeZones();
   }
-}
-
-final class _LastThirdChip extends StatelessWidget {
-  const _LastThirdChip({
-    required this.copy,
-    required this.lastThirdUtc,
-    required this.zoneId,
-    required this.locale,
-    required this.locked,
-  });
-
-  final QiyamStrings copy;
-  final DateTime? lastThirdUtc;
-  final String? zoneId;
-  final String locale;
-  final bool locked;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final available = lastThirdUtc != null && zoneId != null;
-    return Container(
-      key: const Key('qiyam_last_third_chip'),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: colors.primaryContainer,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.schedule, size: 16, color: colors.primary),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              available
-                  ? copy.lastThird(_formatTime(lastThirdUtc!, zoneId!, locale))
-                  : copy.lastThirdUnavailable,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: colors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Formats the chip instant in the location's zone (HH:mm). Composition
-  /// initializes the IANA database at startup; this helper loads it itself
-  /// when rendered without composition (widget tests), like the Prayer
-  /// adapter does.
-  static String _formatTime(DateTime instantUtc, String zoneId, String locale) {
-    if (tz.timeZoneDatabase.locations.isEmpty) {
-      timezone_data.initializeTimeZones();
-    }
-    try {
-      final cityTime = tz.TZDateTime.from(instantUtc, tz.getLocation(zoneId));
-      return DateFormat.Hm(locale).format(cityTime);
-    } catch (_) {
-      return DateFormat.Hm(locale).format(instantUtc.toUtc());
-    }
+  try {
+    final cityTime = tz.TZDateTime.from(instantUtc, tz.getLocation(zoneId));
+    return DateFormat.Hm(locale).format(cityTime);
+  } catch (_) {
+    return DateFormat.Hm(locale).format(instantUtc.toUtc());
   }
 }

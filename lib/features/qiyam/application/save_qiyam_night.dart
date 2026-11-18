@@ -56,12 +56,14 @@ final class SaveQiyamNight implements QiyamCommandRunner {
     required QiyamNightCommitPort commits,
     required QiyamClockPort clock,
     required QiyamIdentityPort identity,
+    bool queueForSync = true,
   }) : _ownerId = ownerId,
        _nightPort = nightPort,
        _repository = repository,
        _commits = commits,
        _clock = clock,
-       _identity = identity {
+       _identity = identity,
+       _queueForSync = queueForSync {
     if (ownerId.trim().isEmpty) throw ArgumentError('Owner is required');
   }
 
@@ -71,6 +73,10 @@ final class SaveQiyamNight implements QiyamCommandRunner {
   final QiyamNightCommitPort _commits;
   final QiyamClockPort _clock;
   final QiyamIdentityPort _identity;
+
+  /// False only in the debug preview: the record and award stay local and
+  /// nothing is queued for upload (as Adhkar's preview).
+  final bool _queueForSync;
 
   @override
   Future<AppResult<QiyamCommandOutcome>> execute({
@@ -135,7 +141,7 @@ final class SaveQiyamNight implements QiyamCommandRunner {
         operationId: _nextOperationId(),
         expectedCurrentVersion: prior?.updatedAt,
         acknowledgedBase: prior?.lastAcknowledgedUpdatedAt,
-        queueForSync: true,
+        queueForSync: _queueForSync,
       ),
     );
     if (committed.failureOrNull case final failure?) {

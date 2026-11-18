@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/composition/adhkar_preview_adapters.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
+import 'package:namma_project/app/composition/qiyam_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/habits_strings_adapter.dart';
@@ -52,7 +53,11 @@ import 'package:namma_project/features/prayer/application/prayer_sync_service.da
 import 'package:namma_project/features/prayer/domain/prayer_conflict_evidence.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_screen.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_conflict_reader.dart';
 import 'package:namma_project/features/qiyam/application/qiyam_sync_service.dart';
+import 'package:namma_project/features/qiyam/domain/qiyam_conflict_evidence.dart';
+import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
+import 'package:namma_project/features/qiyam/presentation/qiyam_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
@@ -345,6 +350,9 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
         getIt.isRegistered<AdhkarCubit>() &&
         getIt.isRegistered<MyAdhkarCubit>() &&
         getIt.isRegistered<CloudSessionPort>();
+    final qiyamAvailable =
+        getIt.isRegistered<QiyamCubit>() &&
+        getIt.isRegistered<CloudSessionPort>();
     _router = FoundationAppRouter(
       rootBuilder: (_) => widget.home,
       cloudSession: tasksAvailable ? getIt<CloudSessionPort>() : null,
@@ -390,6 +398,15 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
               key: ValueKey(accountId),
               accountId: accountId,
             )
+          : null,
+      qiyamSession: qiyamAvailable
+          ? (getIt.isRegistered<QiyamPreviewSession>()
+                ? getIt<QiyamPreviewSession>()
+                : getIt<CloudSessionPort>())
+          : null,
+      qiyamBuilder: qiyamAvailable
+          ? (_, accountId) =>
+                _QiyamRouteScope(key: ValueKey(accountId), accountId: accountId)
           : null,
     );
   }
@@ -685,6 +702,9 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
       onAdhkar: GetIt.instance.isRegistered<AdhkarCubit>()
           ? () => GoRouter.of(context).go(kAdhkarRoute)
           : null,
+      onQiyam: GetIt.instance.isRegistered<QiyamCubit>()
+          ? () => GoRouter.of(context).go(kQiyamRoute)
+          : null,
       onPreferences: () => showAppPreferencesSheet(context),
       onNewTask: () =>
           GoRouter.of(context).go(kTasksRoute, extra: OwnerEntryIntent.newTask),
@@ -825,6 +845,13 @@ class _FeatureNavigationShell extends StatelessWidget {
               }
             }
           : null,
+      onQiyam: GetIt.instance.isRegistered<QiyamCubit>()
+          ? () {
+              if (section != TodayNavigationSection.qiyam) {
+                router.go(kQiyamRoute);
+              }
+            }
+          : null,
       onPreferences: () => showAppPreferencesSheet(context),
       child: child,
     );
@@ -959,6 +986,55 @@ class _AdhkarRouteScopeState extends State<_AdhkarRouteScope> {
       ),
     );
   }
+}
+
+class _QiyamRouteScope extends StatefulWidget {
+  const _QiyamRouteScope({super.key, required this.accountId});
+  final String accountId;
+
+  @override
+  State<_QiyamRouteScope> createState() => _QiyamRouteScopeState();
+}
+
+/// One route visit owns the Qiyam Cubit for one owner and closes it on leave
+/// (a note still waiting for its autosave is saved first). The Qiyam
+/// domain's own sync starts here too; a failure there never blocks the
+/// screen, which records locally first.
+class _QiyamRouteScopeState extends State<_QiyamRouteScope> {
+  late final QiyamCubit _cubit = GetIt.instance<QiyamCubit>(
+    param1: widget.accountId,
+  );
+  // One Drift watch per route scope; rebuilding must not resubscribe.
+  late final Stream<List<QiyamConflictEvidence>> _conflicts =
+      GetIt.instance<QiyamConflictReader>().watchConflicts(widget.accountId);
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_cubit.load());
+    if (GetIt.instance.isRegistered<QiyamSyncService>()) {
+      unawaited(GetIt.instance<QiyamSyncService>().synchronize());
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => BlocProvider<QiyamCubit>.value(
+    value: _cubit,
+    child: QiyamScreen(
+      conflicts: _conflicts,
+      shellBuilder: (context, page) => _FeatureNavigationShell(
+        section: TodayNavigationSection.qiyam,
+        child: page,
+      ),
+      onOpenPrayerSetup: () => GoRouter.of(context).go(kPrayerRoute),
+    ),
+  );
 }
 
 class _StartupShell extends StatelessWidget {

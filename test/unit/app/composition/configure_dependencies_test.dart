@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:namma_project/app/composition/adhkar_preview_adapters.dart';
 import 'package:namma_project/app/composition/configure_dependencies.dart';
 import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
+import 'package:namma_project/app/composition/qiyam_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
@@ -32,6 +33,8 @@ import 'package:namma_project/features/mind_maps/application/map_repository.dart
 import 'package:namma_project/features/mind_maps/data/drift_map_repository.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_state.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_conflict_reader.dart';
+import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
@@ -322,6 +325,66 @@ void main() {
       addTearDown(mine.close);
       await mine.load();
       expect(mine.state.loadFailed, isFalse);
+    });
+
+    test('Qiyam preview records locally with the real supplications and '
+        'uploads nothing', () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'namaa_qiyam_preview_',
+      );
+      final dbPath = <String>[
+        tempDir.path,
+        'foundation_encrypted.db',
+      ].join(Platform.pathSeparator);
+      addTearDown(() async {
+        await getIt.reset();
+        await tempDir.delete(recursive: true);
+      });
+      await configureDependencies(
+        environment: FoundationEnvironment.tasksPreview,
+        secureStoreOverride: InMemorySecureKeyValueStore(),
+        databasePathOverride: dbPath,
+      );
+      expect(getIt<QiyamPreviewSession>(), isNotNull);
+      expect(getIt<QiyamConflictReader>(), isNotNull);
+      expect(
+        (await getIt<QiyamPreviewSession>().obtainSyncContext())
+            .valueOrNull
+            ?.accountId,
+        kQiyamPreviewAccountId,
+      );
+
+      final cubit = getIt<QiyamCubit>(param1: kQiyamPreviewAccountId);
+      addTearDown(cubit.close);
+      await cubit.load();
+      // The reviewed catalog ships the Witr supplication and the Qunut.
+      expect(cubit.state.supplications.map((s) => s.id), ['s1', 's2']);
+      // No Prayer location is saved for the preview, so the night follows
+      // the device rule and recording works.
+      expect(cubit.state.night?.editable, isTrue);
+
+      await cubit.answerYes();
+      expect(cubit.state.form?.performed, isTrue);
+      expect(cubit.state.actionStatus, isNotNull);
+
+      final database = getIt<FoundationDatabase>();
+      expect(
+        await database.rawScalar('SELECT count(*) FROM qiyam_nights'),
+        1,
+        reason: 'the record is stored locally',
+      );
+      expect(
+        await database.rawScalar(
+          "SELECT count(*) FROM xp_awards WHERE source = 'qiyam_done'",
+        ),
+        1,
+        reason: 'the one award is stored locally',
+      );
+      expect(
+        await database.rawScalar('SELECT count(*) FROM pending_changes'),
+        0,
+        reason: 'a preview record queues nothing for upload',
+      );
     });
 
     test('default launch resolves real Foundation adapters', () async {

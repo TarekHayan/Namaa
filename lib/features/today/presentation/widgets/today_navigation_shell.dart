@@ -19,6 +19,7 @@ class TodayNavigationShell extends StatelessWidget {
     required this.onMindMaps,
     this.onPrayer,
     this.onAdhkar,
+    this.onQiyam,
     required this.onPreferences,
     required this.child,
     this.onHome,
@@ -32,6 +33,7 @@ class TodayNavigationShell extends StatelessWidget {
   final VoidCallback onMindMaps;
   final VoidCallback? onPrayer;
   final VoidCallback? onAdhkar;
+  final VoidCallback? onQiyam;
   final VoidCallback onPreferences;
   final VoidCallback? onHome;
   final int? xpAmount;
@@ -90,6 +92,7 @@ class TodayNavigationShell extends StatelessWidget {
       final mindMaps = leave(onMindMaps);
       final prayer = onPrayer == null ? null : leave(onPrayer!);
       final adhkar = onAdhkar == null ? null : leave(onAdhkar!);
+      final qiyam = onQiyam == null ? null : leave(onQiyam!);
 
       void open(BuildContext source, Route<void> route) {
         final navigator = Navigator.of(source);
@@ -114,6 +117,7 @@ class TodayNavigationShell extends StatelessWidget {
         onMindMaps: onMindMaps,
         onPrayer: onPrayer,
         onAdhkar: onAdhkar,
+        onQiyam: onQiyam,
         onPreferences: onPreferences,
         xpAmount: xpAmount,
         child: child,
@@ -165,6 +169,12 @@ class TodayNavigationShell extends StatelessWidget {
                         Navigator.of(trackContext).pop();
                         onAdhkar!();
                       },
+                onQiyam: onQiyam == null
+                    ? null
+                    : () {
+                        Navigator.of(trackContext).pop();
+                        onQiyam!();
+                      },
               ),
             ),
           ),
@@ -186,6 +196,7 @@ class TodayNavigationShell extends StatelessWidget {
                 onMindMaps: mindMaps,
                 onPrayer: prayer,
                 onAdhkar: adhkar,
+                onQiyam: qiyam,
                 onTrack: onPrayer == null ? null : openTrack,
                 onPreferences: onPreferences,
                 onPreview: openPreview,
@@ -206,6 +217,7 @@ class TodayNavigationShell extends StatelessWidget {
               TodayNavigationSection.tasks => 1,
               TodayNavigationSection.prayer ||
               TodayNavigationSection.adhkar ||
+              TodayNavigationSection.qiyam ||
               TodayNavigationSection.track => 2,
               TodayNavigationSection.finance => 3,
               TodayNavigationSection.habits ||

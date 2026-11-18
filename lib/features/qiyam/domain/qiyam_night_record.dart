@@ -48,7 +48,7 @@ final class QiyamNightDraft {
       if (rakahs == null || !allowedRakahs.contains(rakahs)) {
         violations.add(QiyamDraftViolation.rakahs);
       }
-      if (!_validTime(startTime) || !_validTime(endTime)) {
+      if (!isValidTime(startTime) || !isValidTime(endTime)) {
         violations.add(QiyamDraftViolation.time);
       }
       if (note != null && note!.length > maxNoteLength) {
@@ -67,7 +67,8 @@ final class QiyamNightDraft {
   /// The "No" draft: performed false with every detail cleared.
   static const QiyamNightDraft notPerformed = QiyamNightDraft(performed: false);
 
-  static bool _validTime(String? value) =>
+  /// Whether [value] is absent or a 24-hour `HH:mm` time.
+  static bool isValidTime(String? value) =>
       value == null || RegExp(r'^([01]\d|2[0-3]):[0-5]\d$').hasMatch(value);
 }
 
