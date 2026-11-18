@@ -1760,3 +1760,8 @@ The Windows integration run is skipped on purpose: the owner's `flutter run`
 session holds the exe, and the coordinator runs it once that app is closed.
 
 Follow-up gates: `dart format --output=none --set-exit-if-changed lib test integration_test` clean (635 files); `flutter analyze` No issues found; `flutter test test/widget/features/qiyam test/unit/features/qiyam test/widget/app test/unit/app test/architecture` **553 passed, 0 failed**. The full suite was not rerun after the follow-up.
+
+Coordinator re-run on 2026-11-18 at edf910b, after the owner's app was closed:
+`flutter test` **1621 passed, 1 skipped, 0 failed**; `flutter analyze` No
+issues found; `flutter test integration_test/adhkar_qiyam_flow_test.dart -d windows`
+**passed** (2 tests: the Qiyam night journey and the Adhkar Morning journey).
