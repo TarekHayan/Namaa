@@ -1787,3 +1787,7 @@ CI failed `integration_test/adhkar_qiyam_offline_sync_test.dart` on Windows, mac
 - Local stack, Windows: `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows --dart-define=NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=…` passed (2 tests).
 - Staging (`namaa_satging`), Windows, with the staging values from `.secrets/namaa-staging.env` and `NAMAA_SUPABASE_ENV=non-production`: passed twice in a row (2 tests each, about 4 and 3 minutes), so reruns do not collide.
 - The iOS today (`AuthRetryableFetchException` from staging auth, right after the project was restored) and iOS tasks (canceled) failures were infrastructure; they rerun with the new head.
+
+## Route test on the iOS simulator (2026-11-18, PR #12 at fcef813)
+
+`iOS simulator (prayer)` failed `integration_test/adhkar_qiyam_localized_route_test.dart`, variant "ar touch desktop": `timed out waiting for a widget (present: [today_screen, today_sidebar_track])`. The sidebar's `ListView` builds lazily, and on the iOS simulator the Adhkar item sat below its visible part, so it was never built. The test now scrolls the sidebar until the item is visible before it activates it. Checks on Windows: the route test passed (6 variants); with the desktop height temporarily set to 480 px to force the scroll path, both desktop variants passed; the height was then restored to 900 px.

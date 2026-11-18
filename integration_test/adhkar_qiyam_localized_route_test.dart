@@ -358,11 +358,31 @@ void main() {
       expect(await count('SELECT count(*) FROM qiyam_nights'), 1);
       await deviceBackToHome(find.byKey(const Key('qiyam_header')));
 
-      // 7. A wide layout also opens both from the sidebar.
+      // 7. A wide layout also opens both from the sidebar. The sidebar's
+      // list builds lazily, so an item below its visible part (the iOS
+      // simulator's taller rows) is scrolled into the list first.
+      Future<void> revealInSidebar(Key key) async {
+        final item = find.byKey(key);
+        if (item.evaluate().isNotEmpty) return;
+        await tester.scrollUntilVisible(
+          item,
+          120,
+          scrollable: find
+              .descendant(
+                of: find.byKey(kTodaySidebarKey),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+          duration: const Duration(milliseconds: 40),
+        );
+      }
+
       if (variant.wide) {
+        await revealInSidebar(kTodaySidebarAdhkarKey);
         await activate(find.byKey(kTodaySidebarAdhkarKey));
         await pumpUntil(find.byKey(const Key('adhkar_progress_card')));
         await deviceBackToHome(find.byKey(const Key('adhkar_header')));
+        await revealInSidebar(kTodaySidebarQiyamKey);
         await activate(find.byKey(kTodaySidebarQiyamKey));
         await pumpUntil(find.byKey(const Key('qiyam_header')));
         await deviceBackToHome(find.byKey(const Key('qiyam_header')));
