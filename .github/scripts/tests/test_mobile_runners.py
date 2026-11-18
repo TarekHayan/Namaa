@@ -269,7 +269,8 @@ class TodaySuiteSelectionTest(unittest.TestCase):
         today = group_runner.split("  today)", 1)[1].split("    ;;", 1)[0]
         for suite in ("today-dashboard", "today-sync"):
             self.assertIn(suite, today)
-        self.assertIn('tasks-*|habits-*|mind-maps-*|today-*|prayer-*)', group_runner)
+        self.assertIn(
+            'tasks-*|habits-*|mind-maps-*|today-*|prayer-*|adhkar-qiyam-*)', group_runner)
         self.assertIn('run-ios-integration.py "$result_bundle"', group_runner)
         self.assertIn('CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-', group_runner)
         self.assertIn('stabilizeNativeIosSemantics(binding)', group_runner)
@@ -289,6 +290,31 @@ class PrayerSuiteRegistrationTest(unittest.TestCase):
             self.assertTrue((ROOT / file).is_file(), file)
             self.assertEqual(android_group.count(file), 1, file)
             self.assertEqual(ios_group.count(f"prayer-{suite}"), 1, suite)
+
+    def test_android_and_ios_register_every_adhkar_qiyam_entry_once(self):
+        android = (ROOT / ".github/scripts/run-android-integration.sh").read_text()
+        ios = (ROOT / ".github/scripts/run-ios-integration-group.sh").read_text()
+        android_group = android.split("  prayer)", 1)[1].split("    ;;", 1)[0]
+        ios_group = ios.split("  prayer)", 1)[1].split("    ;;", 1)[0]
+        for suite in ("flow", "offline-sync", "localized-route"):
+            file = f"integration_test/adhkar_qiyam_{suite.replace('-', '_')}_test.dart"
+            self.assertTrue((ROOT / file).is_file(), file)
+            self.assertEqual(android_group.count(file), 1, file)
+            self.assertEqual(ios_group.count(f"adhkar-qiyam-{suite}"), 1, suite)
+            # The iOS suite name maps back to the same file.
+            self.assertEqual(f"adhkar_qiyam_{suite.replace('-', '_')}", file[len("integration_test/"):-len("_test.dart")])
+
+    def test_ios_gives_the_hosted_adhkar_qiyam_sync_the_prayer_sync_treatment(self):
+        ios = (ROOT / ".github/scripts/run-ios-integration-group.sh").read_text()
+        # The hosted two-device sync runs against the non-production staging
+        # environment with the longer XCTest allowance, like Prayer's.
+        self.assertIn(
+            'if [[ "$suite" == prayer-offline-sync || '
+            '"$suite" == adhkar-qiyam-offline-sync ]]; then',
+            ios,
+        )
+        self.assertIn("--dart-define=NAMAA_SUPABASE_ENV=non-production", ios)
+        self.assertIn("test_allowance=600", ios)
 
     def test_unknown_android_suite_fails_before_running(self):
         bash = r"C:\Program Files\Git\bin\bash.exe" if os.name == "nt" else shutil.which("bash")

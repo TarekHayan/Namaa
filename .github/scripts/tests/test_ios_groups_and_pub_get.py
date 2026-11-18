@@ -54,6 +54,48 @@ class IosGroupRegistrationTest(unittest.TestCase):
         self.assertNotIn("\npush:", workflow)
 
 
+    def test_adhkar_qiyam_files_are_in_every_desktop_gate(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        desktop_jobs = {
+            name: workflow.split(f"\n  {name}:\n", 1)[1].split(f"\n  {next_name}:\n", 1)[0]
+            for name, next_name in (("linux", "windows"), ("windows", "macos"),
+                                    ("macos", "ios"))
+        }
+        for suite in ("flow", "offline_sync", "localized_route"):
+            for name, job in desktop_jobs.items():
+                self.assertEqual(
+                    job.count(f"integration_test/adhkar_qiyam_{suite}_test.dart"),
+                    # The hosted sync file is named once in the list and once in
+                    # the per-file staging condition on Windows and macOS.
+                    2 if suite == "offline_sync" and name != "linux" else 1,
+                    f"{name} {suite}",
+                )
+        self.assertIn("'specs/009-adhkar-qiyam/**'", workflow)
+        self.assertNotIn("\npush:", workflow)
+
+    def test_hosted_adhkar_qiyam_sync_runs_on_non_production_staging(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        windows = workflow.split("\n  windows:\n", 1)[1].split("\n  macos:\n", 1)[0]
+        macos = workflow.split("\n  macos:\n", 1)[1].split("\n  ios:\n", 1)[0]
+        self.assertIn(
+            "$test -eq 'integration_test/adhkar_qiyam_offline_sync_test.dart'", windows)
+        self.assertIn(
+            '"$test_file" == integration_test/adhkar_qiyam_offline_sync_test.dart', macos)
+        for job in (windows, macos):
+            self.assertIn("NAMAA_SUPABASE_ENV=non-production", job)
+
+    def test_the_five_target_gate_still_depends_on_every_job(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        gate = workflow.split("  foundation-gate:", 1)[1]
+        needs = gate.split("needs:", 1)[1].split("runs-on:", 1)[0]
+        for job in ("quality", "database-security", "android", "linux", "windows",
+                    "macos", "ios"):
+            self.assertIn(f"- {job}\n", needs)
+        for result in ("QUALITY_RESULT", "DATABASE_RESULT", "ANDROID_RESULT",
+                       "LINUX_RESULT", "WINDOWS_RESULT", "MACOS_RESULT", "IOS_RESULT"):
+            self.assertIn(f'"${result}"', gate)
+
+
 class PubGetRetryTest(unittest.TestCase):
     def run_main(self, side_effect):
         with (
@@ -164,14 +206,38 @@ exit 0
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual([c for c in calls if c.startswith("test ")], ["test today_dashboard"])
 
-    def test_prayer_group_runs_all_four_entries(self):
+    def test_prayer_group_runs_all_its_entries_in_order(self):
         result, calls = self.run_group("prayer")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(
             [c for c in calls if c.startswith("test ")],
             ["test prayer_schedule", "test prayer_reports", "test prayer_offline_sync",
-             "test prayer_localized_route"],
+             "test prayer_localized_route", "test adhkar_qiyam_flow",
+             "test adhkar_qiyam_offline_sync", "test adhkar_qiyam_localized_route"],
         )
+
+    def test_prayer_group_counts_seven_files(self):
+        result, calls = self.run_group("prayer")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("all 7 files passed", result.stdout)
+
+    def test_adhkar_qiyam_focused_selection_and_failure_reporting(self):
+        result, calls = self.run_group("prayer", suites="adhkar-qiyam-flow")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual([c for c in calls if c.startswith("test ")],
+                         ["test adhkar_qiyam_flow"])
+        # A failing file is reported by name and never retried or hidden.
+        result, calls = self.run_group(
+            "prayer", suites="adhkar-qiyam-flow,adhkar-qiyam-localized-route",
+            fail_test=("adhkar_qiyam_flow",))
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(
+            [c for c in calls if c.startswith("test ")],
+            ["test adhkar_qiyam_flow", "test adhkar_qiyam_localized_route"])
+        self.assertIn("1 of 2 files failed: adhkar-qiyam-flow", result.stderr)
+        result, calls = self.run_group("prayer", suites="adhkar-qiyam-typo")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(calls, [])
 
     def test_prayer_focused_selection_and_unknown_suite(self):
         result, calls = self.run_group("prayer", suites="prayer-reports")

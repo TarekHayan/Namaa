@@ -30,7 +30,8 @@ case "${IOS_GROUP:-}" in
     suites=(today-dashboard today-sync)
     ;;
   prayer)
-    suites=(prayer-schedule prayer-reports prayer-offline-sync prayer-localized-route)
+    suites=(prayer-schedule prayer-reports prayer-offline-sync prayer-localized-route
+      adhkar-qiyam-flow adhkar-qiyam-offline-sync adhkar-qiyam-localized-route)
     ;;
   *)
     echo "Unknown iOS integration group: ${IOS_GROUP:-<unset>}" >&2
@@ -75,7 +76,7 @@ suite_file() {
     migration|offline|platform|sync|staging-supabase)
       echo "integration_test/foundation_${1//-/_}_test.dart"
       ;;
-    tasks-*|habits-*|mind-maps-*|today-*|prayer-*)
+    tasks-*|habits-*|mind-maps-*|today-*|prayer-*|adhkar-qiyam-*)
       echo "integration_test/${1//-/_}_test.dart"
       ;;
     *) echo "Unknown iOS integration suite: $1" >&2; return 2 ;;
@@ -136,10 +137,11 @@ for suite in "${suites[@]}"; do
   echo "::group::iOS $IOS_GROUP / $suite ($test_file)"
   suite_defines=("${staging_defines[@]}")
   # XCTest's per-test allowance also covers app launch. The hosted two-device
-  # Prayer sync makes many round trips to staging and takes 3.5-4 minutes on
-  # every desktop target, so 300 s leaves it no margin on a slow simulator.
+  # Prayer and Adhkar/Qiyam syncs make many round trips to staging (Prayer
+  # takes 3.5-4 minutes on every desktop target), so 300 s leaves them no
+  # margin on a slow simulator.
   test_allowance=300
-  if [[ "$suite" == prayer-offline-sync ]]; then
+  if [[ "$suite" == prayer-offline-sync || "$suite" == adhkar-qiyam-offline-sync ]]; then
     suite_defines+=(--dart-define=NAMAA_SUPABASE_ENV=non-production)
     test_allowance=600
   fi

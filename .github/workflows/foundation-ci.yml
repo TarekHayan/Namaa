@@ -48,6 +48,7 @@ on:
       - 'specs/005-mind-maps/**'
       - 'specs/006-today-dashboard/**'
       - 'specs/008-prayer-experience/**'
+      - 'specs/009-adhkar-qiyam/**'
       - 'supabase/**'
       - 'test/**'
       - 'test_driver/**'
@@ -299,6 +300,9 @@ jobs:
               integration_test/prayer_reports_test.dart
               integration_test/prayer_offline_sync_test.dart
               integration_test/prayer_localized_route_test.dart
+              integration_test/adhkar_qiyam_flow_test.dart
+              integration_test/adhkar_qiyam_offline_sync_test.dart
+              integration_test/adhkar_qiyam_localized_route_test.dart
             )
             for test_file in "${tests[@]}"; do
               flutter test --no-pub \
@@ -398,11 +402,15 @@ jobs:
             'integration_test/prayer_schedule_test.dart',
             'integration_test/prayer_reports_test.dart',
             'integration_test/prayer_offline_sync_test.dart',
-            'integration_test/prayer_localized_route_test.dart'
+            'integration_test/prayer_localized_route_test.dart',
+            'integration_test/adhkar_qiyam_flow_test.dart',
+            'integration_test/adhkar_qiyam_offline_sync_test.dart',
+            'integration_test/adhkar_qiyam_localized_route_test.dart'
           )
           foreach ($test in $tests) {
             $testDefines = @()
-            if ($test -eq 'integration_test/prayer_offline_sync_test.dart') {
+            if ($test -eq 'integration_test/prayer_offline_sync_test.dart' -or
+                $test -eq 'integration_test/adhkar_qiyam_offline_sync_test.dart') {
               $testDefines = @(
                 '--dart-define=NAMAA_SUPABASE_ENV=non-production',
                 "--dart-define=NAMAA_SUPABASE_URL=$env:NAMAA_STAGING_SUPABASE_URL",
@@ -518,9 +526,13 @@ jobs:
             integration_test/prayer_reports_test.dart
             integration_test/prayer_offline_sync_test.dart
             integration_test/prayer_localized_route_test.dart
+            integration_test/adhkar_qiyam_flow_test.dart
+            integration_test/adhkar_qiyam_offline_sync_test.dart
+            integration_test/adhkar_qiyam_localized_route_test.dart
           )
           for test_file in "${tests[@]}"; do
-            if [[ "$test_file" == integration_test/prayer_offline_sync_test.dart ]]; then
+            if [[ "$test_file" == integration_test/prayer_offline_sync_test.dart ||
+                  "$test_file" == integration_test/adhkar_qiyam_offline_sync_test.dart ]]; then
               flutter test --no-pub \
                 --dart-define=NAMAA_SUPABASE_ENV=non-production \
                 --dart-define="NAMAA_SUPABASE_URL=$NAMAA_STAGING_SUPABASE_URL" \
