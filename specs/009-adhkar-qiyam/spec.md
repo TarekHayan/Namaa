@@ -45,6 +45,10 @@
 
 **Scope note**: Phase 4 of `namaa_plan.md` covers Prayer, Quran (Reader, Wird, Audio, Memorization, Bookmarks/History), Dhikr and Qiyam. Prayer shipped in 008. On 2026-11-09 the product owner chose to build **Morning/Evening Adhkar and Qiyam** next, as one feature. Quran follows in separate later specs.
 
+### Session 2026-11-18
+
+- Q: Do the Adhkar and Qiyam screens keep the prototype's structure? → A: No. Both are redesigned in Claude Design first and built from the approved canvas (Adhkar on 2026-11-17, Qiyam on 2026-11-18). The rules, data and sync are unchanged (FR-020).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Recite the Morning and Evening Adhkar with a counter (Priority: P1)
@@ -262,10 +266,9 @@ My Adhkar is the user's own content. It is never presented as reviewed or source
   - Records MUST be isolated per account.
 - **FR-018**: Home's Adhkar card and the Track hub MUST show live Morning, Evening and tonight's Qiyam progress, and MUST open the real screens. Navigation MUST follow the existing tab model: no stacked pages, no app-bar back arrow, and device back returns Home.
 - **FR-019**: All user-facing UI text MUST be localized in Arabic and English, with correct RTL layout. Adhkar and supplication Arabic text MUST display in the app's Arabic display font, and Quran verses in a font that renders the Uthmani script correctly.
-- **FR-020**: The screens MUST keep the prototype's structure.
-  - **Adhkar:** a heading with a Morning/Evening switch, then a progress card, then the item cards (number, virtue toggle, reset, text, count/target, count button).
-  - **Qiyam:** a heading with the last-third time, then the Yes/No tracker with the details form, then the supplications card.
-  - The streak and history (Story 3) are added in the prototype's visual language.
+- **FR-020**: The Adhkar and Qiyam screens MUST follow the Claude Design canvas the owner approved on 2026-11-17 and 2026-11-18 (contracts/adhkar-qiyam-ui.md), which replaces the prototype's structure (owner decision, 2026-11-18).
+  - **Adhkar:** the Adhkar page (tabs, progress, main button), a one-item-per-page reader with auto-advance, «أذكاري», and a sync-differences page.
+  - **Qiyam:** a heading with the last-third time and the streak, the tonight tracker (answer, then the autosaved details form), the supplications card, and the history.
 - **FR-021**: The screens MUST be usable by touch and keyboard, expose meaningful screen-reader labels (for example "Count, 2 of 3"), and adapt to phone and desktop widths in light and dark themes.
 
 **My Adhkar**

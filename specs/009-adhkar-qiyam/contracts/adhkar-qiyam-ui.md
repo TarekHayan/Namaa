@@ -60,20 +60,22 @@ A personal collection with two levels inside the Adhkar page: the **group list**
 6. **Add / edit sheet.** A bottom sheet on phone and a dialog on desktop, with two fields, the text (multi-line, counter to 2000) and the source (optional, counter to 500, hint "a book, a scholar or a link"), and the group choice (chips of the live groups, multi-select, the opened group preselected). Save is disabled until the text is valid and at least one group is selected. Errors are inline and localized.
 7. **No locked state.** My Adhkar has no time window, so it stays fully usable when the Prayer schedule is unavailable.
 
-## Qiyam screen (prototype order)
+## Qiyam screen (approved design, 2026-11-18)
 
-1. **Heading.** The title and subtitle, a chip with the last third of the night (or the unavailable reason with a Prayer-setup link), and the **Qiyam streak** chip.
-2. **Tracker card.** "Did you pray Qiyam tonight?", the "Best time" note, and the **Yes (+30 XP)** and **No** buttons.
-   - When the answer is Yes, the details form shows:
-     - the rak'ah chips 2/4/8/11, default 4;
-     - the start and end time pickers;
-     - the Witr checkbox, default on;
-     - the note field (500 characters, with a counter).
-   - The tracker is read-only when the night is not the current one, which only happens if it is reopened after Maghrib from a stale state.
-3. **Supplications card.** The two supplications from the catalog, in Amiri, each with its source.
-4. **History section** (added in the prototype's style).
-   - Past nights, newest first, 30 per page. Each shows "Prayed · 4 rak'ahs · Witr" or "Not recorded" (for no row), or "Did not pray" (for an explicit No).
-   - It is read-only, and never uses the word "missed".
+The owner approved the Qiyam page of the same Claude Design canvas on 2026-11-18 (page 4). It is the reference for layout, sizes and states, and it reuses the Adhkar section's shared components. The canvas draws the new navigation shell; until the navigation redesign lands, the screen sits in the current shell.
+
+1. **Heading.** The title «قيام الليل» and subtitle, a chip with the last third of the night (or «تعذّر حساب الثلث الأخير من الليل الآن» with a Prayer-setup button), and the **Qiyam streak** chip («تعذّر تحميل سلسلة القيام.» when it fails).
+2. **Tonight tracker.**
+   - Unanswered: «هل صليت قيام الليل الليلة؟», the best-time note, the primary «نعم، الحمد لله (+30 نقطة)» and the secondary «لم أقم بعد». A tap saves at once; there is no Save button.
+   - Answered: the two choices become a two-option switch («نعم» / «لم أقم بعد») that stays available all night; switching has no confirmation. «لم أقم بعد» is calm (no blame, no red), with the note that the user can still change to «نعم» tonight, and «لا تُحفظ التفاصيل مع إجابة «لم أقم بعد».».
+   - The first «نعم» of a night shows «اكتمل قيام الليل! +30 نقطة» once; it stays until the user leaves the page and never shows again for that night.
+   - After «نعم», the optional details («التفاصيل (اختيارية)»): rak'ah chips 2/4/8/11 (default 4), start and end time fields (typed 24-hour, or the platform time picker from the clock icon; the end may cross midnight), the Witr switch (default on), and the note (500, with a counter). Each change autosaves; the note saves about 1 second after typing stops. The status «جارٍ الحفظ…» / «تم الحفظ» sits by the details title; a failure shows «تعذّر الحفظ؛ حاول مرة أخرى.», keeps the typed values and retries on the next change. Invalid values are not saved and show their message under the field.
+   - Recording is paused only when a saved schedule is unavailable («الأوقات غير متاحة الآن؛ التسجيل متوقف حتى تعود الأوقات.», both choices disabled, with the setup button). Without any saved location the night rule of FR-011 applies and recording works.
+   - If Maghrib passes while the page is open: «لقد تبدّلت الليلة؛ سجّل الليلة الحالية.» and the new night loads unanswered.
+3. **Supplications card** «أدعية مأثورة في السجود والقنوت»: the Witr supplication and the Qunut from the catalog, in Amiri, selectable, each with its source; each is collapsed to 4 lines with «عرض الكل» / «عرض أقل».
+4. **History** «الليالي السابقة»: newest first, 30 per page with «تحميل المزيد» (no scroll jump). Each night reads «صلى · 4 ركعات · بالوتر», «صلى · ركعتان», «لم يصلِّ» or «غير مسجَّل», never "missed". Tapping a night opens its read-only details (status, rak'ahs, Witr, times, note) in a sheet on phone and a dialog on desktop. The error state has a retry. On desktop (≥ 1024 px) the history sits in a 360 px side column.
+5. **Sync differences.** The same read-only page as Adhkar, inside `/qiyam`, for tonight's record.
+6. **Device back** closes the night details first, then leaves the page (Home). No confirmation, since everything autosaves.
 
 ## Conflicts
 
