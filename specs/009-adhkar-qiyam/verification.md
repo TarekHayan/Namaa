@@ -1610,3 +1610,109 @@ approval of the built screen against the canvas; iOS and macOS runs. The Track
 hub tile subtitles of the contract ("Last third 02:41" / "Recorded") are not
 built (the Adhkar tile has none either). The integration file holds only the
 Qiyam part; the Adhkar part is T036.
+
+## Home and Track live values, Adhkar flow, localized routes, CI registration — T057, T058, T036, T067, T069, T070 (2026-11-18)
+
+Windows host, local Supabase stack running. Nothing was pushed, no workflow was
+started, no hosted (staging or production) call was made.
+
+- **T057 — live values.** Home and the Track hub show the
+  `TodayAdhkarQiyamPort` values, the same numbers the Adhkar and Qiyam screens
+  show.
+  - *Progress hero.* The Adhkar tile shows the current period's list as
+    `x/N` (Morning when no period applies, Evening in the evening); the Qiyam
+    tile shows `✓` for a Yes, `✗` for a No, `—` for an unanswered or locked
+    night. Both open their screens. While the source loads they show
+    `--/--` and `--`; a failed source or a failed read shows `!`; no schedule
+    shows `—`. Never `0/0` as progress.
+  - *Track hub.* The tiles are active with live subtitles: "Morning 3/10 ·
+    Evening 0/9" (Arabic: «الصباح … · المساء …») and, for tonight, the
+    Qiyam screen's own line "Last third of the night 02:41" (until the night is
+    answered) or "Recorded" (a Yes or a No). The hub owns its subscription
+    (`PrayerTrackHub.watchAdhkarQiyam`, started by the shell from
+    `app.dart`); a slow or failed source leaves the subtitle out and never
+    blocks a tile. Quran and Focus stay "coming soon".
+  - *Focus/reflection card.* `TodayFocusReflectionCard` shows the live rows
+    ("Morning Adhkar 3/10", "Evening Adhkar 0/9", "Qiyam & Witr ✓") that open
+    the real screens, and the sample badge moved onto the two blocks that are
+    still samples (the Pomodoro block and the reflection quote) via the shared
+    `AppPill`. The widget is not placed on the current Home (it was not
+    before); no layout changed.
+  - *Provenance.* The timeline's "Morning Adhkar" checkpoint, the Quran tile,
+    Focus minutes, the ring gauge and the counters keep their "Sample" label.
+  - *Port.* `watch(ownerId, {qiyamOwnerId})` gained the optional Qiyam owner
+    (a debug preview owns Adhkar and Qiyam under two different closed
+    owners); the reference carries `lastThirdUtc` and `qiyamZoneId`; the
+    adapter re-resolves the day and the night at the next Fajr or Maghrib
+    boundary (and cancels its timer on cancel), so an open Home never keeps a
+    finished period.
+  - New strings: `dashboardTrackAdhkarSubtitle`, `dashboardTrackQiyamRecorded`
+    (both ARB files, edited line by line).
+- **T058 — Home composition.** `TodayScope` carries `adhkarOwnerId` and
+  `qiyamOwnerId` (the account, or the two closed preview owners);
+  `TodayState.adhkarQiyam` is a `TodaySection` like Prayer; `TodayCubit`
+  subscribes with its own deadline, epoch/attempt guard, retry
+  (`retryAdhkarQiyam`), identity-change clearing and suspend/close handling.
+  `TodayAdhkarQiyamPort` is registered in `configure_dependencies.dart` and
+  passed to the cubit.
+- **T036 — Adhkar flow** (`integration_test/adhkar_qiyam_flow_test.dart`, the
+  Qiyam test is unchanged). One real encrypted store, a fake clock and a fixed
+  Prayer schedule, the placeholder fixture catalog: 03:00 is before Fajr, so
+  the running Adhkar day is Wednesday's Evening and a Morning tap writes
+  nothing (outside-period notice); after Fajr the new day opens Morning;
+  m1/m2/m3/m4 are counted, the set completes on the last tap with one
+  celebration and one `adhkar_set_done` award; a tap at target, a reset and a
+  recount never award again; a restart restores every count with no
+  celebration; after Maghrib Evening opens, Morning refuses counting but a
+  reset is allowed; Evening completes with its own award (two in total); the
+  next Fajr opens a fresh day and a command captured for the old day writes
+  nothing; the screen after a restart shows "Morning adhkar (3 / 4)" and
+  "Continue from dhikr 2".
+- **T067 — localized routes**
+  (`integration_test/adhkar_qiyam_localized_route_test.dart`). The real
+  debug-preview graph (`FoundationApp`, real encrypted store and catalog, no
+  network), six variants: Arabic and English, touch and keyboard, phone and
+  desktop. Home → Adhkar (hub), one count in the reader, device back; Home →
+  Qiyam, Yes, device back; Track hub → Adhkar and → Qiyam (desktop also the
+  sidebar items). Checks: the language and direction of the variant; no back
+  arrow on any route; the device back returns Home; the Home Adhkar tile
+  equals the Adhkar page's "(x / N)" before and after the count; the Track
+  subtitle equals it too; the Home Qiyam tile and the Track subtitle follow
+  the answer saved on the Qiyam page; one local count, one night, nothing
+  queued for upload; Quran and Focus stay "coming soon".
+  - *Finding fixed on the way.* In the reader, Space/Enter on a focused button
+    (close, list, reset) counted instead of activating the button, because the
+    reader's key handler consumed the key. The reader now counts only while
+    its own focus node has the focus (`adhkar_reader.dart`); a widget test
+    (`Enter on a focused button activates that button instead of counting`)
+    fails without the fix.
+- **T069 / T070 — CI registration** (spec 008's pattern). The three files are
+  in the Android `prayer` suite and the iOS `prayer` group as suites
+  `adhkar-qiyam-flow`, `adhkar-qiyam-offline-sync`,
+  `adhkar-qiyam-localized-route` (the iOS file mapping gets the
+  `adhkar-qiyam-*` pattern); in the Linux, Windows and macOS lists; and
+  `'specs/009-adhkar-qiyam/**'` is in the `pull_request` paths. The hosted
+  two-device sync file gets what Prayer's gets: on Windows, macOS and iOS it
+  runs against non-production staging with the staging secrets
+  (`NAMAA_SUPABASE_ENV=non-production`) and, on iOS, the 600 s XCTest
+  allowance; Linux and Android use the local stack like Prayer's. Its
+  fixtures are per run (random past days, run-tagged operation IDs, a new
+  test user per local run). No retry was added anywhere; the iOS runner still
+  runs every file and names every failing file. The five-target gate still
+  needs every job (a CI script test checks it). The hosted runs themselves
+  have NOT been run (no push, no dispatch).
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (634 files) |
+| Analyze | `flutter analyze` | No issues found |
+| Full suite | `flutter test` | **1591 passed, 1 skipped, 0 failed** |
+| CI scripts | `python -m unittest discover -s .github/scripts/tests -p "test_*.py"` | Ran 67 tests, OK |
+| T036 + T050 | `flutter test integration_test/adhkar_qiyam_flow_test.dart -d windows` | passed (2 tests) |
+| T067 | `flutter test integration_test/adhkar_qiyam_localized_route_test.dart -d windows` | passed (6 variants: ar/en × touch/keyboard on a phone, plus ar touch and en keyboard on desktop) |
+| T066 | `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows --dart-define=NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=<local stack key>` | passed (2 tests) against the local Supabase stack (Docker, already running) |
+| Windows compile | `flutter build windows --debug` | Built `build/windows/x64/runner/Debug/namma_project.exe` |
+
+Not verified here: the hosted Android, iOS, macOS, Linux and Windows CI runs;
+a run on the Android phone (CPH2481) and a hand-driven Windows run; the owner's
+visual check of the Home tiles and the Track hub subtitles.

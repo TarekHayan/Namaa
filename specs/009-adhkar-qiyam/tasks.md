@@ -282,7 +282,7 @@
     - there is no back arrow;
     - device back goes Home;
     - leaving an overlay first closes it.
-- [ ] T036 [US1] Write integration_test/adhkar_qiyam_flow_test.dart (Adhkar part): a Morning journey with a fake clock across Fajr and Maghrib, restart persistence, and one award.
+- [x] T036 [US1] Write integration_test/adhkar_qiyam_flow_test.dart (Adhkar part): a Morning journey with a fake clock across Fajr and Maghrib, restart persistence, and one award.
   - **Depends**: T035.
   - **Done**: It passes on Windows locally (`flutter test integration_test/adhkar_qiyam_flow_test.dart -d windows`).
 
@@ -427,13 +427,13 @@
 - [x] T056 [US4] Implement lib/features/today/application/today_adhkar_qiyam_port.dart, lib/features/today/domain/today_adhkar_qiyam_reference.dart and lib/features/today/data/adhkar_qiyam_today_adapter.dart.
   - **Depends**: T055.
   - **Done**: T055 passes.
-- [ ] T057 [US4] Replace the sample Adhkar/Qiyam values in lib/features/today/presentation/widgets/today_focus_reflection_card.dart and today_progress_hero.dart with the port's values. Activate the Adhkar and Qiyam tiles in prayer_track_hub.dart and today_quick_hubs.dart.
+- [x] T057 [US4] Replace the sample Adhkar/Qiyam values in lib/features/today/presentation/widgets/today_focus_reflection_card.dart and today_progress_hero.dart with the port's values. Activate the Adhkar and Qiyam tiles in prayer_track_hub.dart and today_quick_hubs.dart.
   - **Depends**: T056, T049.
   - **Done**:
     - The widget tests in test/widget/features/today/ are updated: the values equal the screens, and tapping opens the real routes.
     - Quran and Focus stay "coming soon".
     - Any remaining sample value keeps its provenance label.
-- [ ] T058 [US4] Update the Home dashboard composition in lib/features/today/presentation/today_dashboard_view.dart and its Cubit wiring to watch `TodayAdhkarQiyamPort`, with the independent source-recovery pattern.
+- [x] T058 [US4] Update the Home dashboard composition in lib/features/today/presentation/today_dashboard_view.dart and its Cubit wiring to watch `TodayAdhkarQiyamPort`, with the independent source-recovery pattern.
   - **Depends**: T057.
   - **Done**: A slow or failed Adhkar source never blocks the other Home sections. The existing Today tests pass.
 
@@ -479,7 +479,7 @@
   - owner B isolated.
   - **Depends**: T064, T065.
   - **Done**: It passes on Windows against the local stack.
-- [ ] T067 [US4] Write integration_test/adhkar_qiyam_localized_route_test.dart:
+- [x] T067 [US4] Write integration_test/adhkar_qiyam_localized_route_test.dart:
   - Track to Adhkar and Qiyam, and Home to both, in AR/EN with touch and keyboard;
   - no back arrow, and device back goes Home;
   - the Home values equal the screens.
@@ -628,10 +628,10 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
     - Neither imports Prayer data; they use only `PrayerDayBoundaries` through composition.
     - Today reaches them only through application ports.
     - The client secret scan still passes.
-- [ ] T069 [P] Add the three integration files to the `prayer` suite in .github/scripts/run-android-integration.sh and to the `prayer` group in .github/scripts/run-ios-integration-group.sh as suites `adhkar-qiyam-flow`, `adhkar-qiyam-offline-sync` and `adhkar-qiyam-localized-route`.
+- [x] T069 [P] Add the three integration files to the `prayer` suite in .github/scripts/run-android-integration.sh and to the `prayer` group in .github/scripts/run-ios-integration-group.sh as suites `adhkar-qiyam-flow`, `adhkar-qiyam-offline-sync` and `adhkar-qiyam-localized-route`.
   - **Depends**: T066, T067.
   - **Done**: The tests in .github/scripts/tests/test_mobile_runners.py and test_ios_groups_and_pub_get.py are extended and pass.
-- [ ] T070 Add the three files to the Linux, Windows and macOS lists in .github/workflows/foundation-ci.yml, and add `'specs/009-adhkar-qiyam/**'` to the `pull_request` paths.
+- [x] T070 Add the three files to the Linux, Windows and macOS lists in .github/workflows/foundation-ci.yml, and add `'specs/009-adhkar-qiyam/**'` to the `pull_request` paths.
   - **Depends**: T069.
   - **Done**: The CI script tests pass, and the five-target gate still depends on every job.
 - [x] T071 [P] Run the format, analyze and full `flutter test` commands and `supabase test db`, and record the exact commands and results in verification.md.
