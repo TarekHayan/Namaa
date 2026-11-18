@@ -1779,3 +1779,11 @@ auto-paused; the owner restored it from the dashboard first.
 4. **After.** `supabase migration list --linked` shows 0016 and 0017 both locally and remotely.
 
 The hosted offline-sync entry (`integration_test/adhkar_qiyam_offline_sync_test.dart` against staging) runs in CI on the PR; its result is recorded with T078.
+
+## Hosted sync test fix (2026-11-18, PR #12 run 44303600476)
+
+CI failed `integration_test/adhkar_qiyam_offline_sync_test.dart` on Windows, macOS and iOS (prayer group) for two reasons: staging has only the migrations, so the local catalog fixture (version 900) is missing there; and the shared staging accounts made owner-wide counts include other platforms' concurrent runs (macOS saw 3 conflicts where 0 were expected). The test now uses catalog version 1 (IDs and targets read from `adhkar_catalog_items`) on hosted runs and version 900 locally, completes the whole morning set, and scopes every count, conflict and award assertion to this run's records.
+
+- Local stack, Windows: `flutter test integration_test/adhkar_qiyam_offline_sync_test.dart -d windows --dart-define=NAMAA_LOCAL_SUPABASE_PUBLISHABLE_KEY=…` passed (2 tests).
+- Staging (`namaa_satging`), Windows, with the staging values from `.secrets/namaa-staging.env` and `NAMAA_SUPABASE_ENV=non-production`: passed twice in a row (2 tests each, about 4 and 3 minutes), so reruns do not collide.
+- The iOS today (`AuthRetryableFetchException` from staging auth, right after the project was restored) and iOS tasks (canceled) failures were infrastructure; they rerun with the new head.

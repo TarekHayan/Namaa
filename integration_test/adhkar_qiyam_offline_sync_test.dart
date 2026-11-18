@@ -42,14 +42,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../test/support/foundation_test_support.dart';
 import '../test/support/test_environment.dart';
 
-/// T066: two encrypted stores against the LOCAL Supabase stack — receipts,
-/// one visible conflict, one award per set and per night, a lost ACK with a
-/// restart, duplicate inbound passes and owner isolation. The local catalog
-/// fixture (catalog version 900, IDs and targets only, no text) comes from
-/// `supabase/seed.sql` after `supabase db reset`; the pgTAP tests own
-/// version 1 and seed it inside their own transactions, so the two never
-/// collide. Hosted runs use the isolated staging credentials and never
-/// touch production.
+/// T066: two encrypted stores against the LOCAL Supabase stack or the isolated
+/// staging project — receipts, one visible conflict, one award per set and per
+/// night, a lost ACK with a restart, duplicate inbound passes and owner
+/// isolation. The local catalog fixture (catalog version 900, IDs and targets
+/// only, no text) comes from `supabase/seed.sql` after `supabase db reset`;
+/// the pgTAP tests own version 1 and seed it inside their own transactions, so
+/// the two never collide. Staging has only the migrations, so a hosted run
+/// uses the real catalog version 1 (IDs, positions and targets read from
+/// `adhkar_catalog_items`; no text exists server-side).
+///
+/// Hosted runs share two accounts across every platform and run (AGENTS.md
+/// section 8), so every fixture is run-tagged and every count, conflict and
+/// award assertion addresses only the records this run created, never an
+/// owner-wide total. Hosted runs never touch production.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -209,18 +215,53 @@ void main() {
       ),
     );
 
-    // The local catalog fixture (version 900) must exist for the RPCs; it
-    // comes from supabase/seed.sql after `supabase db reset`.
-    final catalog = await clients[0]
+    // The catalog the RPCs validate against. The local stack uses the
+    // fixture (version 900) from supabase/seed.sql after `supabase db reset`;
+    // a hosted run uses the real catalog version 1 that migration 0016 seeds
+    // (IDs, positions and targets only).
+    final catalogVersion = local ? 900 : 1;
+    final catalogRows = await clients[0]
         .from('adhkar_catalog_items')
         .select()
-        .eq('catalog_version', 900);
-    if (catalog.isEmpty) {
+        .eq('catalog_version', catalogVersion)
+        .eq('list', 'morning')
+        .order('position');
+    if (catalogRows.isEmpty) {
       fail(
-        'Local catalog fixture missing: run `supabase db reset` so '
-        'supabase/seed.sql provides catalog version 900.',
+        local
+            ? 'Local catalog fixture missing: run `supabase db reset` so '
+                  'supabase/seed.sql provides catalog version 900.'
+            : 'Hosted catalog version 1 missing: apply migration 0016 '
+                  '(adhkar_catalog_items) to the staging project.',
       );
     }
+    final morningList = [
+      for (final row in catalogRows)
+        AdhkarListItem(
+          itemId: row['item_id'] as String,
+          target: row['target'] as int,
+        ),
+    ];
+    AdhkarListItem catalogItemWithTarget(int target) {
+      for (final item in morningList) {
+        if (item.target == target) return item;
+      }
+      fail(
+        'Catalog version $catalogVersion has no morning item with target '
+        '$target.',
+      );
+    }
+
+    // Roles the scenario needs: a target-10 item that diverges and finally
+    // completes the set, a target-1 item for the isolation case, and every
+    // other morning item, which is completed from the two devices so the set
+    // is whole.
+    final bigItem = catalogItemWithTarget(10);
+    final singleItem = catalogItemWithTarget(1);
+    final fillerItems = [
+      for (final item in morningList)
+        if (item.itemId != bigItem.itemId) item,
+    ];
 
     // The test is rerunnable on every stack: a random past day (the server
     // rejects a day more than two days ahead) and a run-tagged operation ID,
@@ -247,7 +288,6 @@ void main() {
 
     final identity = const UuidAdhkarIdentity();
     final qiyamIdentity = const UuidQiyamIdentity();
-    const catalogVersion = 900;
     final setSourceId = identity.setAwardSourceId(day, 'morning');
 
     Future<OutboundChange> pending(int device, String operationId) async {
@@ -322,18 +362,14 @@ void main() {
       itemId: itemId,
       recordId: identity.itemRecordId(day, itemId),
       catalogVersion: catalogVersion,
-      list: itemId.startsWith('m') ? 'morning' : 'evening',
+      list: 'morning',
       newCount: count,
       updatedAt: at,
       operationId: operationId,
       expectedCurrentVersion: expectedCurrentVersion,
       acknowledgedBase: acknowledgedBase,
       queueForSync: true,
-      listItems: const [
-        AdhkarListItem(itemId: 'm1', target: 1),
-        AdhkarListItem(itemId: 'm2', target: 3),
-        AdhkarListItem(itemId: 'm3', target: 10),
-      ],
+      listItems: morningList,
       setAwardSourceId: setSourceId,
     );
 
@@ -362,11 +398,16 @@ void main() {
       queueForSync: true,
     );
 
+    // Awards of THIS run only: the set and night award source IDs derive
+    // from the run's random day, so a shared account's other awards (other
+    // platforms, earlier runs) never enter the count.
+    final runAwardSourceIds = [setSourceId, qiyamIdentity.nightRecordId(night)];
     Future<int> awardCount(String forOwner) async {
       final rows = await clients[0]
           .from('xp_awards')
           .select()
-          .eq('owner', forOwner);
+          .eq('owner', forOwner)
+          .inFilter('source_id', runAwardSourceIds);
       return rows.length;
     }
 
@@ -374,53 +415,69 @@ void main() {
     // Case 2: the same item on both stores diverges into ONE visible
     // conflict with a stable id.
     // --------------------------------------------------------------------
+    final bigId = bigItem.itemId;
+    final bigRecordId = identity.itemRecordId(day, bigId);
     expect(
       (await adhkarWork[0].commit(
         adhkarCommit(
-          itemId: 'm3',
+          itemId: bigId,
           count: 5,
           at: at(30),
-          operationId: op('adhkar-m3-a'),
+          operationId: op('adhkar-big-a'),
         ),
       )).failureOrNull,
       isNull,
     );
-    await dispatchAdhkar(0, await pending(0, op('adhkar-m3-a')));
+    await dispatchAdhkar(0, await pending(0, op('adhkar-big-a')));
     expect(
       (await adhkarWork[1].commit(
         adhkarCommit(
-          itemId: 'm3',
+          itemId: bigId,
           count: 7,
           at: at(60),
-          operationId: op('adhkar-m3-b'),
+          operationId: op('adhkar-big-b'),
         ),
       )).failureOrNull,
       isNull,
     );
-    await dispatchAdhkar(1, await pending(1, op('adhkar-m3-b')));
+    await dispatchAdhkar(1, await pending(1, op('adhkar-big-b')));
+    // Only this run's record: the shared account's other conflicts (other
+    // platforms, earlier runs) are not counted.
     final conflictsA = await clients[0]
         .from('adhkar_conflicts')
         .select()
         .eq('owner', owner)
-        .eq('item_id', 'm3');
+        .eq('record_id', bigRecordId);
     expect(conflictsA, hasLength(1), reason: 'one stable conflict');
     expect((conflictsA.single as Map)['conflict_id'], isNotEmpty);
 
-    // The inbound pass imports the conflict evidence once; a duplicate pass
-    // imports nothing more (case 5: duplicate inbound records).
+    // The inbound pass imports this run's conflict evidence once; a duplicate
+    // pass imports nothing more (case 5: duplicate inbound records). The pass
+    // summaries count every conflict of the owner, so the assertions read the
+    // local rows of this run's record instead.
+    Future<Object?> localRunConflicts(int device, String recordId) =>
+        dbs[device].rawScalar(
+          'SELECT count(*) FROM conflict_records WHERE account_id = '
+          "'$owner' AND entity_id = '$recordId'",
+        );
+    expect(
+      await localRunConflicts(0, bigRecordId),
+      0,
+      reason: 'the conflict is server-side until the inbound pass',
+    );
     final firstPass = await adhkarInbound0.receive(
       accountId: owner,
       isCurrentScope: () => true,
     );
-    expect(firstPass.valueOrNull!.importedConflicts, 1);
+    expect(firstPass.failureOrNull, isNull);
+    expect(await localRunConflicts(0, bigRecordId), 1);
     final duplicatePass = await adhkarInbound0.receive(
       accountId: owner,
       isCurrentScope: () => true,
     );
-    // The summary counts every conflict the pass applied (as Prayer does);
-    // the upsert by stable id is proven by the row count staying at one.
+    // The upsert by stable id is proven by the row count staying at one.
     expect(duplicatePass.failureOrNull, isNull);
-    expect(await dbs[0].rawScalar('SELECT count(*) FROM conflict_records'), 1);
+    expect(await localRunConflicts(0, bigRecordId), 1);
 
     // --------------------------------------------------------------------
     // Case 1: different items from the two devices complete the set, and
@@ -431,65 +488,67 @@ void main() {
       0,
       reason: 'no award before the set completes',
     );
+    // Every other item of the morning list is completed from the two devices
+    // in turn (the local fixture has two such items, the real catalog has
+    // more), so only the diverged item is left to complete the set.
+    for (var i = 0; i < fillerItems.length; i++) {
+      final device = i % 2;
+      final filler = fillerItems[i];
+      final fillerOp = op('adhkar-${filler.itemId}-fill');
+      expect(
+        (await adhkarWork[device].commit(
+          adhkarCommit(
+            itemId: filler.itemId,
+            count: filler.target,
+            at: at(90 + i),
+            operationId: fillerOp,
+          ),
+        )).failureOrNull,
+        isNull,
+        reason: filler.itemId,
+      );
+      await dispatchAdhkar(device, await pending(device, fillerOp));
+    }
     expect(
-      (await adhkarWork[0].commit(
-        adhkarCommit(
-          itemId: 'm1',
-          count: 1,
-          at: at(90),
-          operationId: op('adhkar-m1-a'),
-        ),
-      )).failureOrNull,
-      isNull,
+      await awardCount(owner),
+      0,
+      reason: 'no award while the diverged item is incomplete',
     );
-    await dispatchAdhkar(0, await pending(0, op('adhkar-m1-a')));
-    expect(
-      (await adhkarWork[1].commit(
-        adhkarCommit(
-          itemId: 'm2',
-          count: 3,
-          at: at(120),
-          operationId: op('adhkar-m2-b'),
-        ),
-      )).failureOrNull,
-      isNull,
-    );
-    await dispatchAdhkar(1, await pending(1, op('adhkar-m2-b')));
-    // Device A pulls the server version for m3 (its base is stale), then
-    // completes the set at the target.
-    final m3Base = await SupabaseAdhkarGatewayImpl(clients[0]).fetchCount(
-      expectedAccountId: owner,
-      recordId: identity.itemRecordId(day, 'm3'),
-    );
-    expect(m3Base, isNotNull);
+    // Device A pulls the server version for the diverged item (its base is
+    // stale), then completes the set at the target.
+    final bigBase = await SupabaseAdhkarGatewayImpl(
+      clients[0],
+    ).fetchCount(expectedAccountId: owner, recordId: bigRecordId);
+    expect(bigBase, isNotNull);
     // The inbound pass already imported that version on device A, so the
     // command's preconditions are the local row's current and acknowledged
     // versions (the same values the Cubit passes).
-    final m3Local = (await adhkarStores[0].readFresh(
+    final bigLocal = (await adhkarStores[0].readFresh(
       accountId: owner,
       adhkarDay: day,
-      itemId: 'm3',
+      itemId: bigId,
     )).valueOrNull;
-    expect(m3Local?.updatedAt, m3Base!.updatedAt);
+    expect(bigLocal?.updatedAt, bigBase!.updatedAt);
     expect(
       (await adhkarWork[0].commit(
         adhkarCommit(
-          itemId: 'm3',
-          count: 10,
+          itemId: bigId,
+          count: bigItem.target,
           at: at(150),
-          operationId: op('adhkar-m3-final'),
-          expectedCurrentVersion: m3Local!.updatedAt,
-          acknowledgedBase: m3Local.lastAcknowledgedUpdatedAt,
+          operationId: op('adhkar-big-final'),
+          expectedCurrentVersion: bigLocal!.updatedAt,
+          acknowledgedBase: bigLocal.lastAcknowledgedUpdatedAt,
         ),
       )).failureOrNull,
       isNull,
     );
-    await dispatchAdhkar(0, await pending(0, op('adhkar-m3-final')));
+    await dispatchAdhkar(0, await pending(0, op('adhkar-big-final')));
     final setAwards = await clients[0]
         .from('xp_awards')
         .select()
         .eq('owner', owner)
-        .eq('source', 'adhkar_set_done');
+        .eq('source', 'adhkar_set_done')
+        .eq('source_id', setSourceId);
     expect(setAwards, hasLength(1), reason: 'one award for the whole set');
     expect((setAwards.single as Map)['source_id'], setSourceId);
 
@@ -498,13 +557,20 @@ void main() {
       accountId: owner,
       isCurrentScope: () => true,
     );
-    expect(settlePass.valueOrNull!.importedAwards, 1);
+    // The pass summary counts every award of the owner, so the settled award
+    // is asserted on this run's source ID.
+    expect(settlePass.failureOrNull, isNull);
     final localAward = await DriftAwardLedger(dbs[0]).readSharedAward(
       accountId: owner,
       source: kAdhkarSetDoneAwardSource,
       sourceId: setSourceId,
     );
     expect(localAward.valueOrNull, isNotNull);
+    expect(
+      localAward.valueOrNull!.amount,
+      (setAwards.single as Map)['amount'],
+      reason: 'the canonical server award settled the local replica',
+    );
 
     // --------------------------------------------------------------------
     // Case 3: Qiyam Yes -> No -> Yes gives exactly one 30 XP award.
@@ -552,7 +618,8 @@ void main() {
         .from('xp_awards')
         .select()
         .eq('owner', owner)
-        .eq('source', 'qiyam_done');
+        .eq('source', 'qiyam_done')
+        .eq('source_id', qiyamIdentity.nightRecordId(night));
     expect(nightAwards, hasLength(1), reason: 'Yes -> No -> Yes, one award');
     expect(
       (nightAwards.single as Map)['source_id'],
@@ -640,11 +707,20 @@ void main() {
     )).valueOrNull;
     expect(localNight?.performed, activeNight!.performed);
     expect(localNight?.updatedAt, activeNight.updatedAt);
+    // The pass summary counts every night of the owner (other platforms and
+    // earlier runs share the account), so the duplicate pass is proven on this
+    // run's night: it stays exactly as the first pass left it.
     final duplicateNightPass = await qiyamPull.receive(
       accountId: owner,
       isCurrentScope: () => true,
     );
-    expect(duplicateNightPass.valueOrNull!.importedNights, 0);
+    expect(duplicateNightPass.failureOrNull, isNull);
+    final localNightAfter = (await qiyamStores[1].readFresh(
+      accountId: owner,
+      nightDate: night,
+    )).valueOrNull;
+    expect(localNightAfter?.performed, localNight?.performed);
+    expect(localNightAfter?.updatedAt, localNight?.updatedAt);
 
     // --------------------------------------------------------------------
     // Case 6: owner B is isolated — its rows never appear in owner A's
@@ -653,21 +729,17 @@ void main() {
     final ownerBRequest = AdhkarCommitRequest(
       accountId: ownerB,
       adhkarDay: day,
-      itemId: 'm1',
-      recordId: identity.itemRecordId(day, 'm1'),
+      itemId: singleItem.itemId,
+      recordId: identity.itemRecordId(day, singleItem.itemId),
       catalogVersion: catalogVersion,
       list: 'morning',
-      newCount: 1,
+      newCount: singleItem.target,
       updatedAt: at(240),
       operationId: op('adhkar-b-1'),
       expectedCurrentVersion: null,
       acknowledgedBase: null,
       queueForSync: true,
-      listItems: const [
-        AdhkarListItem(itemId: 'm1', target: 1),
-        AdhkarListItem(itemId: 'm2', target: 3),
-        AdhkarListItem(itemId: 'm3', target: 10),
-      ],
+      listItems: morningList,
       setAwardSourceId: identity.setAwardSourceId(day, 'morning'),
     );
     expect(
@@ -703,16 +775,40 @@ void main() {
     expect(ownerBResult.failureOrNull, isNull);
 
     // Owner A's inbound snapshot carries nothing of owner B's, and every
-    // row the server returns to A carries A as the owner.
+    // row the server returns to A carries A as the owner. The pass summary
+    // counts every row of the owner, so the isolation is asserted on this
+    // run's day: owner B wrote the same record ID with a different version,
+    // and owner A's local row keeps its own version.
     final ownerAAfter = await adhkarInbound0.receive(
       accountId: owner,
       isCurrentScope: () => true,
     );
-    expect(ownerAAfter.valueOrNull!.importedCounts, 0);
+    expect(ownerAAfter.failureOrNull, isNull);
+    final singleOfA = (await adhkarStores[0].readFresh(
+      accountId: owner,
+      adhkarDay: day,
+      itemId: singleItem.itemId,
+    )).valueOrNull;
+    expect(singleOfA, isNotNull);
+    expect(
+      singleOfA!.updatedAt,
+      isNot(at(240)),
+      reason: 'owner B\'s version never reaches owner A',
+    );
+    expect(
+      (await adhkarStores[0].readFresh(
+        accountId: ownerB,
+        adhkarDay: day,
+        itemId: singleItem.itemId,
+      )).valueOrNull,
+      isNull,
+      reason: 'owner A\'s store holds no row of owner B',
+    );
     final ownerACounts = await clients[0]
         .from('adhkar_item_counts')
         .select()
-        .eq('owner', owner);
+        .eq('owner', owner)
+        .eq('adhkar_day', day);
     for (final row in ownerACounts) {
       expect((row as Map)['owner'], owner);
     }
@@ -885,10 +981,32 @@ void main() {
         ),
     ];
 
-    Future<int> awardRows(SupabaseClient client, String forOwner) async =>
-        (await client.from('xp_awards').select().eq('owner', forOwner)).length;
-    final awardsBefore = await awardRows(clients[0], owner);
-    final awardsBeforeB = await awardRows(clients[2], ownerB);
+    // XP rows that could only come from this feature or this run: rows whose
+    // source names My Adhkar, or whose source ID is one of this run's own
+    // entities. Owner-wide totals are never used, because other platforms and
+    // other suites write awards for the shared accounts concurrently.
+    Future<int> myAdhkarAwardRows(
+      SupabaseClient client,
+      String forOwner,
+      List<String> entityIds,
+    ) async {
+      final bySource = await client
+          .from('xp_awards')
+          .select()
+          .eq('owner', forOwner)
+          .ilike('source', '%my_adhkar%');
+      final byEntity = entityIds.isEmpty
+          ? const <dynamic>[]
+          : await client
+                .from('xp_awards')
+                .select()
+                .eq('owner', forOwner)
+                .inFilter('source_id', entityIds);
+      return bySource.length + byEntity.length;
+    }
+
+    final awardsBefore = await myAdhkarAwardRows(clients[0], owner, const []);
+    final awardsBeforeB = await myAdhkarAwardRows(clients[2], ownerB, const []);
 
     // ---- helpers -------------------------------------------------------
     Future<void> push(
@@ -1047,12 +1165,27 @@ void main() {
       expect((await localEntry(device, entryShared)).source, 'source shared');
     }
     expect(await remoteMemberships(entryShared), [groupA1, groupA2]..sort());
-    expect(
-      await dbs[0].rawScalar('SELECT count(*) FROM conflict_records'),
-      0,
-      reason: 'a clean convergence has no conflict',
-    );
-    expect(await dbs[1].rawScalar('SELECT count(*) FROM conflict_records'), 0);
+    // Scoped to the entities this run created: the inbound passes import
+    // every conflict of the shared owner, including other platforms' runs.
+    final runEntityIds = [
+      groupA1,
+      groupA2,
+      groupB1,
+      entryShared,
+      entryOnlyA1,
+      entryB,
+    ];
+    for (final device in [0, 1]) {
+      expect(
+        await dbs[device].rawScalar(
+          'SELECT count(*) FROM conflict_records WHERE account_id = '
+          "'$owner' AND entity_id IN "
+          "(${runEntityIds.map((id) => "'$id'").join(', ')})",
+        ),
+        0,
+        reason: 'a clean convergence has no conflict on device $device',
+      );
+    }
 
     // --------------------------------------------------------------------
     // Case 2: group A1 is deleted on device A while device B, offline, adds
@@ -1308,8 +1441,25 @@ void main() {
     // --------------------------------------------------------------------
     expect(await dbs[0].rawScalar('SELECT count(*) FROM xp_awards'), 0);
     expect(await dbs[1].rawScalar('SELECT count(*) FROM xp_awards'), 0);
-    expect(await awardRows(clients[0], owner), awardsBefore);
-    expect(await awardRows(clients[2], ownerB), awardsBeforeB);
+    final runSourceIds = [
+      ...runEntityIds,
+      entryBOnlyA1,
+      entryBKept,
+      groupC,
+      entryC,
+      groupOfB,
+      entryOfB,
+    ];
+    expect(
+      await myAdhkarAwardRows(clients[0], owner, runSourceIds),
+      awardsBefore,
+      reason: 'no XP award for this run\'s entities or from My Adhkar',
+    );
+    expect(
+      await myAdhkarAwardRows(clients[2], ownerB, runSourceIds),
+      awardsBeforeB,
+      reason: 'no XP award for owner B\'s entities or from My Adhkar',
+    );
   });
 }
 
