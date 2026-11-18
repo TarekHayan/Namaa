@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_layout.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 
 import 'adhkar_conflicts_view.dart';
@@ -14,7 +16,6 @@ import 'my_adhkar_cubit.dart';
 import 'widgets/adhkar_list_page.dart';
 import 'widgets/adhkar_reader.dart';
 import 'widgets/adhkar_reader_parts.dart';
-import 'widgets/adhkar_style.dart';
 import 'widgets/my_adhkar_tab.dart';
 
 /// Wraps the Adhkar page (not the reader) in the app's navigation shell. The
@@ -104,13 +105,13 @@ final class _AdhkarScreenState extends State<AdhkarScreen> {
     final state = cubit.state;
     final copy = AdhkarStrings(FoundationLocalizations.of(context));
     final locale = FoundationLocalizations.of(context).localeName;
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final reader = _readerList;
 
     final Widget page;
     if (state.catalog == null) {
       page = Scaffold(
-        backgroundColor: palette.bg,
+        backgroundColor: colors.background,
         body: state.loading
             ? const Center(child: CircularProgressIndicator())
             : AdhkarErrorView(
@@ -196,20 +197,20 @@ final class _AdhkarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final tab = state.selectedTab;
     final isMine = tab == AdhkarTab.myAdhkar;
     final morning = tab == AdhkarTab.morning;
-    final wide = MediaQuery.sizeOf(context).width >= kAdhkarWideBreakpoint;
+    final wide = AppLayout.isWide(context);
     return Scaffold(
-      backgroundColor: palette.bg,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final base = wide ? 32.0 : 20.0;
             final side = math.max(
               base,
-              (constraints.maxWidth - kAdhkarColumnMaxWidth) / 2,
+              (constraints.maxWidth - AppLayout.columnMaxWidth) / 2,
             );
             final bottom = wide ? 32.0 : 24.0;
             final head = SliverPadding(

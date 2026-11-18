@@ -5,15 +5,25 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_typography.dart';
+import 'package:namma_project/app/widgets/app_back_link.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_card.dart';
+import 'package:namma_project/app/widgets/app_confirmation.dart';
+import 'package:namma_project/app/widgets/app_empty_state.dart';
+import 'package:namma_project/app/widgets/app_icon_badge.dart';
+import 'package:namma_project/app/widgets/app_ink_surface.dart';
+import 'package:namma_project/app/widgets/app_menu_button.dart';
+import 'package:namma_project/app/widgets/app_notice.dart';
+import 'package:namma_project/app/widgets/app_toast.dart';
 import 'package:namma_project/features/adhkar/application/my_adhkar_repository.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
 import '../my_adhkar_cubit.dart';
 import '../my_adhkar_state.dart';
-import 'adhkar_controls.dart';
 import 'adhkar_style.dart';
 import 'my_adhkar_forms.dart';
-import 'my_adhkar_support.dart';
 
 /// The My Adhkar tab (contracts/adhkar-qiyam-ui.md, Story 5; approved design
 /// 2026-11-17, page 2): the user's own collection as two levels inside the
@@ -150,19 +160,29 @@ final class _Heading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     return Column(
       key: const Key('my_adhkar_header'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           copy.myAdhkarHeading,
-          style: adhkarText(20, FontWeight.w700, palette.text, height: 1.45),
+          style: AppTypography.fixed(
+            20,
+            FontWeight.w700,
+            colors.textPrimary,
+            height: 1.45,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           copy.myAdhkarNote,
-          style: adhkarText(14, FontWeight.w400, palette.text2, height: 1.7),
+          style: AppTypography.fixed(
+            14,
+            FontWeight.w400,
+            colors.textSecondary,
+            height: 1.7,
+          ),
         ),
       ],
     );
@@ -176,14 +196,18 @@ final class _MessageBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Container(
+    final colors = AppColors.of(context);
+    return AppCard(
       padding: const EdgeInsets.all(20),
-      decoration: palette.card(),
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: adhkarText(16, FontWeight.w400, palette.text2, height: 1.8),
+        style: AppTypography.fixed(
+          16,
+          FontWeight.w400,
+          colors.textSecondary,
+          height: 1.8,
+        ),
       ),
     );
   }
@@ -213,64 +237,19 @@ final class _GroupList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
     if (state.groups.isEmpty) {
-      return Padding(
+      return AppEmptyState(
         key: const Key('my_adhkar_empty'),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
-        child: Column(
-          children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: palette.soft,
-                border: Border.all(color: palette.border),
-              ),
-              child: Icon(
-                Icons.wb_sunny_outlined,
-                size: 40,
-                color: palette.accent,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              copy.myAdhkarEmptyTitle,
-              textAlign: TextAlign.center,
-              style: adhkarText(
-                20,
-                FontWeight.w800,
-                palette.text,
-                height: 1.45,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              copy.myAdhkarEmptyBody,
-              textAlign: TextAlign.center,
-              style: adhkarText(
-                16,
-                FontWeight.w400,
-                palette.text2,
-                height: 1.8,
-              ),
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: AdhkarGlow(
-                enabled: true,
-                child: FilledButton.icon(
-                  key: const Key('my_adhkar_create_group'),
-                  style: adhkarPrimaryStyle(palette),
-                  onPressed: () => _openCreate(context),
-                  icon: const Icon(Icons.add, size: 20),
-                  label: Text(copy.myAdhkarCreateGroup),
-                ),
-              ),
-            ),
-          ],
+        icon: Icons.wb_sunny_outlined,
+        title: copy.myAdhkarEmptyTitle,
+        body: copy.myAdhkarEmptyBody,
+        action: AppButton(
+          key: const Key('my_adhkar_create_group'),
+          label: copy.myAdhkarCreateGroup,
+          icon: Icons.add,
+          onPressed: () => _openCreate(context),
+          look: AppButtonLook.refined,
+          expanded: true,
         ),
       );
     }
@@ -278,20 +257,17 @@ final class _GroupList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AdhkarGlow(
-          enabled: !atLimit,
-          child: FilledButton.icon(
-            key: const Key('my_adhkar_create_group'),
-            style: adhkarPrimaryStyle(palette),
-            onPressed: atLimit ? null : () => _openCreate(context),
-            icon: const Icon(Icons.add, size: 20),
-            label: Text(copy.myAdhkarCreateGroup),
-          ),
+        AppButton(
+          key: const Key('my_adhkar_create_group'),
+          label: copy.myAdhkarCreateGroup,
+          icon: Icons.add,
+          onPressed: atLimit ? null : () => _openCreate(context),
+          look: AppButtonLook.refined,
         ),
         if (atLimit)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: AdhkarNote(
+            child: AppInlineNote(
               key: const Key('my_adhkar_group_limit_reason'),
               text: copy.myAdhkarCreateGroupDisabled,
             ),
@@ -359,70 +335,70 @@ final class _GroupRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final group = summary.group;
-    return Material(
+    return AppInkSurface(
       key: Key('my_adhkar_group_${group.groupId}'),
-      color: palette.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-        side: BorderSide(color: palette.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => unawaited(cubit.openGroup(group.groupId)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 68),
-          child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(18, 6, 6, 6),
-            child: Row(
+      color: colors.surface,
+      borderColor: colors.border,
+      radius: 22,
+      clip: Clip.antiAlias,
+      minHeight: 68,
+      padding: const EdgeInsetsDirectional.fromSTEB(18, 6, 6, 6),
+      onTap: () => unawaited(cubit.openGroup(group.groupId)),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          group.name,
-                          textDirection: myAdhkarTextDirection(
-                            group.name,
-                            Directionality.of(context),
-                          ),
-                          style: adhkarText(17, FontWeight.w700, palette.text),
-                        ),
-                      ),
-                      Text(
-                        copy.groupEntries(summary.liveEntryCount),
-                        key: Key('my_adhkar_group_count_${group.groupId}'),
-                        style: adhkarText(14, FontWeight.w400, palette.text2),
-                      ),
-                    ],
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    group.name,
+                    textDirection: AppTypography.directionFor(
+                      group.name,
+                      Directionality.of(context),
+                    ),
+                    style: AppTypography.fixed(
+                      17,
+                      FontWeight.w700,
+                      colors.textPrimary,
+                    ),
                   ),
                 ),
-                Icon(Icons.chevron_right, size: 18, color: palette.text2),
-                AdhkarMenu<_GroupAction>(
-                  key: Key('my_adhkar_group_menu_${group.groupId}'),
-                  tooltip: copy.menuLabel,
-                  onSelected: (action) => _selected(context, action),
-                  items: [
-                    AdhkarMenuEntry(
-                      value: _GroupAction.rename,
-                      label: copy.myAdhkarRename,
-                      icon: Icons.edit_outlined,
-                    ),
-                    AdhkarMenuEntry(
-                      value: _GroupAction.delete,
-                      label: copy.myAdhkarDelete,
-                      icon: Icons.delete_outline,
-                      destructive: true,
-                    ),
-                  ],
+                Text(
+                  copy.groupEntries(summary.liveEntryCount),
+                  key: Key('my_adhkar_group_count_${group.groupId}'),
+                  style: AppTypography.fixed(
+                    14,
+                    FontWeight.w400,
+                    colors.textSecondary,
+                  ),
                 ),
               ],
             ),
           ),
-        ),
+          Icon(Icons.chevron_right, size: 18, color: colors.textSecondary),
+          AppMenuButton<_GroupAction>(
+            key: Key('my_adhkar_group_menu_${group.groupId}'),
+            tooltip: copy.menuLabel,
+            onSelected: (action) => _selected(context, action),
+            entries: [
+              AppMenuEntry(
+                value: _GroupAction.rename,
+                label: copy.myAdhkarRename,
+                icon: Icons.edit_outlined,
+              ),
+              AppMenuEntry(
+                value: _GroupAction.delete,
+                label: copy.myAdhkarDelete,
+                icon: Icons.delete_outline,
+                destructive: true,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -449,7 +425,7 @@ final class _GroupDeleteConfirmation extends StatelessWidget {
   final VoidCallback onDone;
 
   @override
-  Widget build(BuildContext context) => _ConfirmationCard(
+  Widget build(BuildContext context) => AppInlineConfirmation(
     key: Key('my_adhkar_group_delete_confirmation_${group.groupId}'),
     title: copy.myAdhkarGroupDeleteTitle,
     subtitle: group.name,
@@ -465,108 +441,6 @@ final class _GroupDeleteConfirmation extends StatelessWidget {
       if (!result.ignored) onDone();
     },
   );
-}
-
-/// The in-place delete confirmation of the design: a tinted card with the
-/// destructive and the cancel button side by side (stacked when narrow).
-final class _ConfirmationCard extends StatelessWidget {
-  const _ConfirmationCard({
-    super.key,
-    required this.title,
-    this.subtitle,
-    required this.body,
-    required this.cancelKey,
-    required this.confirmKey,
-    required this.cancelLabel,
-    required this.confirmLabel,
-    required this.busy,
-    required this.onCancel,
-    required this.onConfirm,
-  });
-
-  final String title;
-  final String? subtitle;
-  final String body;
-  final Key cancelKey;
-  final Key confirmKey;
-  final String cancelLabel;
-  final String confirmLabel;
-  final bool busy;
-  final VoidCallback onCancel;
-  final VoidCallback onConfirm;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    final confirm = FilledButton(
-      key: confirmKey,
-      style: adhkarDangerStyle(palette),
-      onPressed: busy ? null : onConfirm,
-      child: Text(confirmLabel),
-    );
-    final cancel = FilledButton(
-      key: cancelKey,
-      style: adhkarSecondaryStyle(
-        palette,
-        minHeight: 48,
-        radius: 14,
-        background: palette.surface,
-      ),
-      onPressed: busy ? null : onCancel,
-      child: Text(cancelLabel),
-    );
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: palette.card(
-        radius: 22,
-        color: palette.errorSoft,
-        borderColor: palette.error,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: adhkarText(17, FontWeight.w700, palette.text)),
-          if (subtitle != null)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                subtitle!,
-                textDirection: myAdhkarTextDirection(
-                  subtitle!,
-                  Directionality.of(context),
-                ),
-                style: adhkarText(14, FontWeight.w600, palette.text2),
-              ),
-            ),
-          const SizedBox(height: 10),
-          Text(
-            body,
-            style: adhkarText(14, FontWeight.w400, palette.text, height: 1.7),
-          ),
-          const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // Two buttons of at least 120 px with a 10 px gap; stacked when
-              // they do not fit.
-              if (constraints.maxWidth >= 250) {
-                return Row(
-                  children: [
-                    Expanded(child: confirm),
-                    const SizedBox(width: 10),
-                    Expanded(child: cancel),
-                  ],
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [confirm, const SizedBox(height: 10), cancel],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// The opened group level: the back control, the group name as the heading,
@@ -591,7 +465,7 @@ final class _OpenedGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final groupId = state.openedGroupId!;
     final name = state.openedGroup?.group.name ?? '';
     final atLimit = state.entryLimitReached;
@@ -600,29 +474,10 @@ final class _OpenedGroup extends StatelessWidget {
       children: [
         Align(
           alignment: AlignmentDirectional.centerStart,
-          child: InkWell(
+          child: AppBackLink(
             key: const Key('my_adhkar_back_to_groups'),
+            label: copy.myAdhkarBackToGroups,
             onTap: onBack,
-            borderRadius: BorderRadius.circular(14),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.arrow_back, size: 20, color: palette.accent),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        copy.myAdhkarBackToGroups,
-                        style: adhkarText(16, FontWeight.w700, palette.accent),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -637,83 +492,61 @@ final class _OpenedGroup extends StatelessWidget {
               child: Text(
                 name,
                 key: const Key('my_adhkar_group_title'),
-                textDirection: myAdhkarTextDirection(
+                textDirection: AppTypography.directionFor(
                   name,
                   Directionality.of(context),
                 ),
-                style: adhkarText(
+                style: AppTypography.fixed(
                   28,
                   FontWeight.w800,
-                  palette.text,
+                  colors.textPrimary,
                   height: 1.4,
                 ),
               ),
             ),
-            AdhkarGlow(
-              enabled: !atLimit,
-              child: FilledButton.icon(
-                key: const Key('my_adhkar_add_entry'),
-                style: adhkarPrimaryStyle(palette, minHeight: 48),
-                onPressed: atLimit
-                    ? null
-                    : () => showMyAdhkarForm(
-                        context,
-                        (_) => MyAdhkarEntryForm(
-                          cubit: cubit,
-                          openedGroupId: groupId,
-                        ),
+            AppButton(
+              key: const Key('my_adhkar_add_entry'),
+              label: copy.myAdhkarAdd,
+              icon: Icons.add,
+              onPressed: atLimit
+                  ? null
+                  : () => showMyAdhkarForm(
+                      context,
+                      (_) => MyAdhkarEntryForm(
+                        cubit: cubit,
+                        openedGroupId: groupId,
                       ),
-                icon: const Icon(Icons.add, size: 20),
-                label: Text(copy.myAdhkarAdd),
-              ),
+                    ),
+              look: AppButtonLook.refined,
+              size: AppButtonSize.small,
+              tuning: const AppButtonTuning(radius: 16),
             ),
           ],
         ),
         if (atLimit)
           Padding(
             padding: const EdgeInsets.only(top: 10),
-            child: AdhkarNote(
+            child: AppInlineNote(
               key: const Key('my_adhkar_add_limit_reason'),
               text: copy.myAdhkarAddDisabled,
             ),
           ),
         const SizedBox(height: 16),
         if (state.openedGroupItems.isEmpty)
-          Padding(
+          AppEmptyState(
             key: const Key('my_adhkar_group_empty'),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
-            child: Column(
-              children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: palette.surface2,
-                    border: Border.all(color: palette.border),
-                  ),
-                  child: Icon(Icons.add, size: 32, color: palette.text2),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  copy.myAdhkarGroupEmpty,
-                  textAlign: TextAlign.center,
-                  style: adhkarText(
-                    16,
-                    FontWeight.w400,
-                    palette.text2,
-                    height: 1.8,
-                  ),
-                ),
-              ],
-            ),
+            icon: Icons.add,
+            badgeSize: 72,
+            iconSize: 32,
+            tone: AppBadgeTone.neutral,
+            body: copy.myAdhkarGroupEmpty,
           )
         else
           for (final item in state.openedGroupItems)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: confirmItemId == item.itemId
-                  ? _ConfirmationCard(
+                  ? AppInlineConfirmation(
                       key: Key(
                         'my_adhkar_entry_delete_confirmation_${item.itemId}',
                       ),
@@ -782,8 +615,7 @@ final class _EntryCard extends StatelessWidget {
           ),
         );
       case _EntryAction.copy:
-        final messenger = ScaffoldMessenger.maybeOf(context);
-        final palette = AdhkarPalette.of(context);
+        final toast = AppToast.of(context);
         await Clipboard.setData(
           ClipboardData(
             text: item.source == null
@@ -791,8 +623,10 @@ final class _EntryCard extends StatelessWidget {
                 : '${item.text}\n${item.source}',
           ),
         );
-        messenger?.hideCurrentSnackBar();
-        messenger?.showSnackBar(_copiedToast(palette, copy.myAdhkarCopied));
+        toast.show(
+          copy.myAdhkarCopied,
+          key: const Key('my_adhkar_copied_toast'),
+        );
       case _EntryAction.delete:
         onDelete();
     }
@@ -800,7 +634,7 @@ final class _EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final ambient = Directionality.of(context);
     final liveOtherNames = [
       for (final summary in groups)
@@ -809,31 +643,30 @@ final class _EntryCard extends StatelessWidget {
           summary.group.name,
     ];
     final source = item.source;
-    return Container(
+    return AppCard(
       key: Key('my_adhkar_entry_${item.itemId}'),
       padding: const EdgeInsetsDirectional.fromSTEB(18, 6, 6, 18),
-      decoration: palette.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Align(
             alignment: AlignmentDirectional.centerEnd,
-            child: AdhkarMenu<_EntryAction>(
+            child: AppMenuButton<_EntryAction>(
               key: Key('my_adhkar_entry_menu_${item.itemId}'),
               tooltip: copy.menuLabel,
               onSelected: (action) => _selected(context, action),
-              items: [
-                AdhkarMenuEntry(
+              entries: [
+                AppMenuEntry(
                   value: _EntryAction.edit,
                   label: copy.myAdhkarEdit,
                   icon: Icons.edit_outlined,
                 ),
-                AdhkarMenuEntry(
+                AppMenuEntry(
                   value: _EntryAction.copy,
                   label: copy.myAdhkarCopy,
                   icon: Icons.copy_outlined,
                 ),
-                AdhkarMenuEntry(
+                AppMenuEntry(
                   value: _EntryAction.delete,
                   label: copy.myAdhkarDelete,
                   icon: Icons.delete_outline,
@@ -850,11 +683,11 @@ final class _EntryCard extends StatelessWidget {
                 SelectableText(
                   item.text,
                   key: Key('my_adhkar_entry_text_${item.itemId}'),
-                  textDirection: myAdhkarTextDirection(item.text, ambient),
-                  style: adhkarText(
+                  textDirection: AppTypography.directionFor(item.text, ambient),
+                  style: AppTypography.fixed(
                     22,
                     FontWeight.w400,
-                    palette.text,
+                    colors.textPrimary,
                     height: 2,
                   ).copyWith(fontFamily: kDhikrFontFamily),
                 ),
@@ -863,11 +696,11 @@ final class _EntryCard extends StatelessWidget {
                   SelectableText(
                     source,
                     key: Key('my_adhkar_entry_source_${item.itemId}'),
-                    textDirection: myAdhkarTextDirection(source, ambient),
-                    style: adhkarText(
+                    textDirection: AppTypography.directionFor(source, ambient),
+                    style: AppTypography.fixed(
                       14,
                       FontWeight.w400,
-                      palette.text2,
+                      colors.textSecondary,
                       height: 1.7,
                     ),
                   ),
@@ -877,15 +710,15 @@ final class _EntryCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.only(top: 10),
                     decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: palette.border)),
+                      border: Border(top: BorderSide(color: colors.border)),
                     ),
                     child: Text(
                       copy.otherGroups(liveOtherNames.join(copy.listSeparator)),
                       key: Key('my_adhkar_entry_other_groups_${item.itemId}'),
-                      style: adhkarText(
+                      style: AppTypography.fixed(
                         13,
                         FontWeight.w600,
-                        palette.accent,
+                        colors.accentStrong,
                         height: 1.7,
                       ),
                     ),
@@ -899,45 +732,3 @@ final class _EntryCard extends StatelessWidget {
     );
   }
 }
-
-/// The «تم النسخ» toast: a pill in the text color on the page background,
-/// shown for about two seconds above the bottom bar.
-SnackBar _copiedToast(AdhkarPalette palette, String message) => SnackBar(
-  key: const Key('my_adhkar_copied_toast'),
-  behavior: SnackBarBehavior.floating,
-  backgroundColor: Colors.transparent,
-  elevation: 0,
-  padding: EdgeInsets.zero,
-  margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-  duration: const Duration(seconds: 2),
-  content: Center(
-    child: Container(
-      constraints: const BoxConstraints(minHeight: 48),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: palette.text,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x4D000000),
-            blurRadius: 20,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.check_rounded, size: 20, color: palette.bg),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              message,
-              style: adhkarText(16, FontWeight.w700, palette.bg),
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-);

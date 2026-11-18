@@ -5,11 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/theme/app_layout.dart';
+import 'package:namma_project/app/widgets/app_surface_icon_button.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_state.dart';
 import 'package:namma_project/features/adhkar/presentation/widgets/adhkar_reader.dart';
-import 'package:namma_project/features/adhkar/presentation/widgets/adhkar_reader_parts.dart';
 import 'package:namma_project/features/adhkar/presentation/widgets/adhkar_style.dart';
 
 import '../../../support/adhkar_screen_harness.dart';
@@ -411,7 +412,10 @@ void main() {
         findsOneWidget,
       );
       expect(countEnabled(tester), isFalse);
-      expect(tester.widget<InkWell>(key('adhkar_reader_reset')).onTap, isNull);
+      expect(
+        tester.widget<AppSurfaceIconButton>(key('adhkar_reader_reset')).onTap,
+        isNull,
+      );
       await tester.tap(key('adhkar_reader_count'), warnIfMissed: false);
       await tester.pump();
       expect(harness.commands.incrementCalls, isEmpty);
@@ -428,7 +432,7 @@ void main() {
       expect(key('adhkar_reader_lock_time'), findsNothing);
       expect(countEnabled(tester), isTrue);
       expect(
-        tester.widget<InkWell>(key('adhkar_reader_reset')).onTap,
+        tester.widget<AppSurfaceIconButton>(key('adhkar_reader_reset')).onTap,
         isNotNull,
       );
     });
@@ -551,7 +555,7 @@ void main() {
       expect(key('adhkar_reader_error'), findsOneWidget);
       expect(text('Could not load the adhkar content.'), findsOneWidget);
       expect(
-        tester.widget<AdhkarSquareButton>(key('adhkar_reader_list')).onTap,
+        tester.widget<AppSurfaceIconButton>(key('adhkar_reader_list')).onTap,
         isNull,
         reason: 'the list button is off in the error state',
       );
@@ -572,7 +576,7 @@ void main() {
       await openReader(tester);
       expect(
         tester.getSize(key('adhkar_reader_pages')).width,
-        lessThanOrEqualTo(kAdhkarColumnMaxWidth),
+        lessThanOrEqualTo(AppLayout.columnMaxWidth),
       );
       expect(key('adhkar_reader_prev'), findsOneWidget);
       expect(key('adhkar_reader_next'), findsOneWidget);

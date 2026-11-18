@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_filter_chip.dart';
 import 'package:namma_project/features/adhkar/application/my_adhkar_commands.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 import 'package:namma_project/features/adhkar/presentation/my_adhkar_cubit.dart';
@@ -182,7 +184,7 @@ void main() {
       await tapKey(tester, 'my_adhkar_create_group');
       expect(find.byKey(const Key('my_adhkar_group_form')), findsOneWidget);
       expect(find.text('0 / 60'), findsOneWidget);
-      var save = tester.widget<FilledButton>(
+      var save = tester.widget<AppButton>(
         find.byKey(const Key('my_adhkar_group_save')),
       );
       expect(save.onPressed, isNull, reason: 'a blank name cannot be saved');
@@ -192,7 +194,7 @@ void main() {
       );
       await tester.pump();
       expect(find.text('9 / 60'), findsOneWidget, reason: 'trimmed length');
-      save = tester.widget<FilledButton>(
+      save = tester.widget<AppButton>(
         find.byKey(const Key('my_adhkar_group_save')),
       );
       expect(save.onPressed, isNotNull);
@@ -216,7 +218,7 @@ void main() {
       expect(find.text('Enter a name of 1 to 60 characters.'), findsOneWidget);
       expect(
         tester
-            .widget<FilledButton>(find.byKey(const Key('my_adhkar_group_save')))
+            .widget<AppButton>(find.byKey(const Key('my_adhkar_group_save')))
             .onPressed,
         isNull,
       );
@@ -313,7 +315,7 @@ void main() {
         store.addGroup('group $i', id: 'g$i');
       }
       await pumpTab(tester);
-      final button = tester.widget<ButtonStyleButton>(
+      final button = tester.widget<AppButton>(
         find.byKey(const Key('my_adhkar_create_group')),
       );
       expect(button.onPressed, isNull);
@@ -423,7 +425,7 @@ void main() {
       store.phantomEntries = 998;
       await pumpTab(tester);
       await tapKey(tester, 'my_adhkar_group_ga');
-      final button = tester.widget<ButtonStyleButton>(
+      final button = tester.widget<AppButton>(
         find.byKey(const Key('my_adhkar_add_entry')),
       );
       expect(button.onPressed, isNull);
@@ -615,7 +617,7 @@ void main() {
       expect(find.text('0 / 500'), findsOneWidget);
       expect(
         tester
-            .widget<FilterChip>(
+            .widget<AppFilterChip>(
               find.byKey(const Key('my_adhkar_group_chip_ga')),
             )
             .selected,
@@ -623,13 +625,13 @@ void main() {
       );
       expect(
         tester
-            .widget<FilterChip>(
+            .widget<AppFilterChip>(
               find.byKey(const Key('my_adhkar_group_chip_gb')),
             )
             .selected,
         isFalse,
       );
-      FilledButton save() => tester.widget<FilledButton>(
+      AppButton save() => tester.widget<AppButton>(
         find.byKey(const Key('my_adhkar_entry_save')),
       );
       expect(save().onPressed, isNull);
@@ -678,14 +680,14 @@ void main() {
       expect(find.text('Choose at least one group.'), findsOneWidget);
       expect(
         tester
-            .widget<FilledButton>(find.byKey(const Key('my_adhkar_entry_save')))
+            .widget<AppButton>(find.byKey(const Key('my_adhkar_entry_save')))
             .onPressed,
         isNull,
       );
       await tapKey(tester, 'my_adhkar_group_chip_gb');
       expect(
         tester
-            .widget<FilledButton>(find.byKey(const Key('my_adhkar_entry_save')))
+            .widget<AppButton>(find.byKey(const Key('my_adhkar_entry_save')))
             .onPressed,
         isNotNull,
       );
@@ -719,7 +721,7 @@ void main() {
       );
       expect(
         tester
-            .widget<FilledButton>(find.byKey(const Key('my_adhkar_entry_save')))
+            .widget<AppButton>(find.byKey(const Key('my_adhkar_entry_save')))
             .onPressed,
         isNull,
       );
@@ -734,7 +736,7 @@ void main() {
       await tester.pump();
       expect(
         tester
-            .widget<FilledButton>(find.byKey(const Key('my_adhkar_entry_save')))
+            .widget<AppButton>(find.byKey(const Key('my_adhkar_entry_save')))
             .onPressed,
         isNotNull,
       );

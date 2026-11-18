@@ -4,171 +4,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_typography.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_card.dart';
+import 'package:namma_project/app/widgets/app_confirmation.dart';
+import 'package:namma_project/app/widgets/app_icon_badge.dart';
+import 'package:namma_project/app/widgets/app_ink_surface.dart';
+import 'package:namma_project/app/widgets/app_key_cap.dart';
+import 'package:namma_project/app/widgets/app_pill.dart';
+import 'package:namma_project/app/widgets/app_progress_ring.dart';
+import 'package:namma_project/app/widgets/app_sheets.dart';
+import 'package:namma_project/app/widgets/app_surface_icon_button.dart';
+import 'package:namma_project/app/widgets/app_text_scale_clamp.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 
 import '../adhkar_cubit.dart';
 import '../adhkar_state.dart';
-import 'adhkar_list_page.dart';
 import 'adhkar_style.dart';
-
-/// Caps the text scale inside banners and chips, as the design does (banners
-/// wrap instead of clipping at 200%).
-final class _ClampScale extends StatelessWidget {
-  const _ClampScale({required this.max, required this.child});
-
-  final double max;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => MediaQuery(
-    data: MediaQuery.of(context).copyWith(
-      textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: max),
-    ),
-    child: child,
-  );
-}
-
-/// A 48 px rounded-square icon button (the list and close buttons).
-final class AdhkarSquareButton extends StatelessWidget {
-  const AdhkarSquareButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Opacity(
-      opacity: onTap == null ? 0.4 : 1,
-      child: Semantics(
-        button: true,
-        enabled: onTap != null,
-        label: label,
-        excludeSemantics: true,
-        onTap: onTap,
-        child: Material(
-          color: palette.surface2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: palette.border),
-          ),
-          child: InkWell(
-            onTap: onTap,
-            customBorder: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: Icon(icon, size: 22, color: palette.text),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The 56 px round previous/next buttons beside the wide column.
-final class AdhkarRoundNav extends StatelessWidget {
-  const AdhkarRoundNav({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Opacity(
-      opacity: onTap == null ? 0.4 : 1,
-      child: Semantics(
-        button: true,
-        enabled: onTap != null,
-        label: label,
-        excludeSemantics: true,
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: palette.glow,
-          ),
-          child: Material(
-            color: palette.surface,
-            shape: CircleBorder(side: BorderSide(color: palette.border)),
-            child: InkWell(
-              onTap: onTap,
-              customBorder: const CircleBorder(),
-              child: SizedBox(
-                width: 56,
-                height: 56,
-                child: Icon(icon, size: 24, color: palette.text),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A full-width filled primary button (the completion state's way back).
-final class AdhkarFilledAction extends StatelessWidget {
-  const AdhkarFilledAction({
-    super.key,
-    required this.label,
-    required this.onTap,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: palette.buttonGlow,
-      ),
-      child: Material(
-        color: palette.button,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: InkWell(
-          onTap: onTap,
-          customBorder: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 56),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Center(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: adhkarText(16, FontWeight.w700, palette.onButton),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// One page of the reader: the optional preface, the text (the Quran font
 /// for a Quran item, Amiri otherwise; the verse-end markers are in the text
@@ -200,7 +53,7 @@ final class _AdhkarItemPageState extends State<AdhkarItemPage> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final item = widget.item;
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final font = item.kind == DhikrKind.quran
@@ -236,10 +89,10 @@ final class _AdhkarItemPageState extends State<AdhkarItemPage> {
                           item.prefaceAr!,
                           key: Key('adhkar_preface_${item.itemId}'),
                           textAlign: TextAlign.center,
-                          style: adhkarText(
+                          style: AppTypography.fixed(
                             19,
                             FontWeight.w700,
-                            palette.accent,
+                            colors.accentStrong,
                             height: 1.8,
                           ).copyWith(fontFamily: kDhikrFontFamily),
                         ),
@@ -252,10 +105,10 @@ final class _AdhkarItemPageState extends State<AdhkarItemPage> {
                         item.textAr,
                         key: Key('adhkar_text_${item.itemId}'),
                         textAlign: TextAlign.center,
-                        style: adhkarText(
+                        style: AppTypography.fixed(
                           widget.wide ? 34 : 28,
                           FontWeight.w400,
-                          palette.text,
+                          colors.textPrimary,
                           height: 2.15,
                         ).copyWith(fontFamily: font),
                       ),
@@ -267,7 +120,11 @@ final class _AdhkarItemPageState extends State<AdhkarItemPage> {
                         item.referenceAr,
                         key: Key('adhkar_reference_${item.itemId}'),
                         textAlign: TextAlign.center,
-                        style: adhkarText(17, FontWeight.w600, palette.accent),
+                        style: AppTypography.fixed(
+                          17,
+                          FontWeight.w600,
+                          colors.accentStrong,
+                        ),
                       ),
                     ),
                     if (virtue != null) ...[
@@ -280,27 +137,27 @@ final class _AdhkarItemPageState extends State<AdhkarItemPage> {
                       ),
                       if (_virtueOpen) ...[
                         const SizedBox(height: 10),
-                        Container(
+                        AppCard(
                           key: Key('adhkar_virtue_text_${item.itemId}'),
-                          width: double.infinity,
+                          tone: AppCardTone.secondary,
+                          radius: 20,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 16,
                           ),
-                          decoration: palette.card(
-                            radius: 20,
-                            color: palette.surface2,
-                          ),
-                          child: Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Text(
-                              virtue,
-                              style: adhkarText(
-                                19,
-                                FontWeight.w400,
-                                palette.text2,
-                                height: 1.9,
-                              ).copyWith(fontFamily: kDhikrFontFamily),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: Text(
+                                virtue,
+                                style: AppTypography.fixed(
+                                  19,
+                                  FontWeight.w400,
+                                  colors.textSecondary,
+                                  height: 1.9,
+                                ).copyWith(fontFamily: kDhikrFontFamily),
+                              ),
                             ),
                           ),
                         ),
@@ -331,46 +188,43 @@ final class _VirtuePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     return Semantics(
       button: true,
       expanded: open,
       label: label,
       excludeSemantics: true,
       onTap: onTap,
-      child: Material(
-        color: palette.surface,
-        shape: StadiumBorder(side: BorderSide(color: palette.border)),
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const StadiumBorder(),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      label,
-                      style: adhkarText(15, FontWeight.w600, palette.text),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  AnimatedRotation(
-                    turns: open ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 150),
-                    child: Icon(
-                      Icons.expand_more_rounded,
-                      size: 18,
-                      color: palette.text,
-                    ),
-                  ),
-                ],
+      child: AppInkSurface(
+        borderColor: colors.border,
+        stadium: true,
+        minHeight: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+        onTap: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                style: AppTypography.fixed(
+                  15,
+                  FontWeight.w600,
+                  colors.textPrimary,
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            AnimatedRotation(
+              turns: open ? 0.5 : 0,
+              duration: const Duration(milliseconds: 150),
+              child: Icon(
+                Icons.expand_more_rounded,
+                size: 18,
+                color: colors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -385,105 +239,45 @@ final class AdhkarDoneBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return _ClampScale(
+    final colors = AppColors.of(context);
+    return AppTextScaleClamp(
       max: 1.3,
-      child: Container(
+      child: AppCard(
         key: const Key('adhkar_reader_done_bar'),
+        tone: AppCardTone.accent,
+        radius: 16,
         constraints: const BoxConstraints(minHeight: 44),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: palette.soft,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: palette.primary),
-        ),
         child: Wrap(
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 10,
           runSpacing: 4,
           children: [
-            Icon(Icons.check_rounded, size: 20, color: palette.accent),
+            Icon(Icons.check_rounded, size: 20, color: colors.accentStrong),
             Text(
               copy.done,
-              style: adhkarText(15, FontWeight.w600, palette.text),
+              style: AppTypography.fixed(
+                15,
+                FontWeight.w600,
+                colors.textPrimary,
+              ),
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   copy.next,
-                  style: adhkarText(15, FontWeight.w600, palette.accent),
-                ),
-                const SizedBox(width: 6),
-                Icon(Icons.arrow_forward, size: 18, color: palette.accent),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A banner giving the reason counting is locked: the time window, or the
-/// missing Prayer times (with the setup action).
-final class AdhkarLockBanner extends StatelessWidget {
-  const AdhkarLockBanner({
-    super.key,
-    required this.message,
-    required this.icon,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final String message;
-  final IconData icon;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return _ClampScale(
-      max: 1.3,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 52),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: palette.card(
-          radius: 18,
-          color: palette.warnSoft,
-          borderColor: palette.warn,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, size: 24, color: palette.warn),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: adhkarText(15, FontWeight.w600, palette.text),
+                  style: AppTypography.fixed(
+                    15,
+                    FontWeight.w600,
+                    colors.accentStrong,
                   ),
                 ),
+                const SizedBox(width: 6),
+                Icon(Icons.arrow_forward, size: 18, color: colors.accentStrong),
               ],
             ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 12),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: AdhkarOutlinedAction(
-                  key: const Key('adhkar_reader_setup_button'),
-                  label: actionLabel!,
-                  borderColor: palette.warn,
-                  onTap: onAction!,
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -517,7 +311,6 @@ final class AdhkarControlBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
     final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
     final k = math.min(scale, 1.4);
     final ring = (104 * k).round().toDouble();
@@ -543,33 +336,14 @@ final class AdhkarControlBar extends StatelessWidget {
             onTap: (done || locked) ? null : onCount,
           ),
           SizedBox(width: gap),
-          Opacity(
-            opacity: resetOff ? 0.45 : 1,
-            child: Semantics(
-              button: true,
-              enabled: !resetOff,
-              label: copy.resetCount,
-              excludeSemantics: true,
-              onTap: resetOff ? null : onReset,
-              child: Material(
-                color: palette.surface2,
-                shape: CircleBorder(side: BorderSide(color: palette.border)),
-                child: InkWell(
-                  key: const Key('adhkar_reader_reset'),
-                  onTap: resetOff ? null : onReset,
-                  customBorder: const CircleBorder(),
-                  child: SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: Icon(
-                      Icons.restart_alt,
-                      size: 22,
-                      color: palette.text,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          AppSurfaceIconButton(
+            key: const Key('adhkar_reader_reset'),
+            icon: Icons.restart_alt,
+            label: copy.resetCount,
+            onTap: resetOff ? null : onReset,
+            size: 52,
+            circle: true,
+            disabledOpacity: 0.45,
           ),
         ],
       ),
@@ -611,7 +385,7 @@ final class _AdhkarCountButtonState extends State<AdhkarCountButton> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final ring = widget.ring;
     final cover = ring - 12;
     final disc = ring - 28;
@@ -624,22 +398,22 @@ final class _AdhkarCountButtonState extends State<AdhkarCountButton> {
       face = Icon(
         Icons.check_rounded,
         size: 40 * widget.k,
-        color: palette.onButton,
+        color: colors.onAccentStrong,
       );
     } else if (locked) {
       face = Icon(
         Icons.lock_outline,
         size: 40 * widget.k,
-        color: palette.text2,
+        color: colors.textSecondary,
       );
     } else {
       face = Text(
         '${widget.count}',
         textScaler: TextScaler.noScaling,
-        style: adhkarText(
+        style: AppTypography.fixed(
           36 * widget.k,
           FontWeight.w800,
-          palette.onButton,
+          colors.onAccentStrong,
           height: 1,
         ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
       );
@@ -657,21 +431,17 @@ final class _AdhkarCountButtonState extends State<AdhkarCountButton> {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            CustomPaint(
-              size: Size(ring, ring),
-              painter: AdhkarRingPainter(
-                progress: locked ? 0 : progress,
-                strokeWidth: 6,
-                fill: palette.primary,
-                track: palette.track,
-              ),
+            AppProgressRing(
+              size: ring,
+              strokeWidth: 6,
+              progress: locked ? 0 : progress,
             ),
             Container(
               width: cover,
               height: cover,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: palette.bg,
+                color: colors.background,
               ),
             ),
             AnimatedScale(
@@ -683,9 +453,9 @@ final class _AdhkarCountButtonState extends State<AdhkarCountButton> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: locked ? palette.surface2 : palette.button,
-                  border: locked ? Border.all(color: palette.border) : null,
-                  boxShadow: locked ? null : palette.buttonGlow,
+                  color: locked ? colors.surfaceSecondary : colors.accentStrong,
+                  border: locked ? Border.all(color: colors.border) : null,
+                  boxShadow: locked ? null : colors.buttonShadow,
                 ),
                 child: face,
               ),
@@ -718,29 +488,7 @@ final class AdhkarKeyboardHints extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    Widget kbd(String label) => Container(
-      constraints: const BoxConstraints(minWidth: 32),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: palette.surface2,
-        borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: BorderSide(color: palette.border),
-          top: BorderSide(color: palette.border),
-          right: BorderSide(color: palette.border),
-          bottom: BorderSide(color: palette.border, width: 2),
-        ),
-      ),
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: adhkarText(13, FontWeight.w600, palette.text, height: 1.3),
-        ),
-      ),
-    );
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Wrap(
@@ -753,26 +501,34 @@ final class AdhkarKeyboardHints extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              kbd('Space'),
+              const AppKeyCap(label: 'Space'),
               const SizedBox(width: 8),
-              kbd('Enter'),
+              const AppKeyCap(label: 'Enter'),
               const SizedBox(width: 8),
               Text(
                 copy.keyCount,
-                style: adhkarText(14, FontWeight.w400, palette.text2),
+                style: AppTypography.fixed(
+                  14,
+                  FontWeight.w400,
+                  colors.textSecondary,
+                ),
               ),
             ],
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              kbd('←'),
+              const AppKeyCap(label: '←'),
               const SizedBox(width: 8),
-              kbd('→'),
+              const AppKeyCap(label: '→'),
               const SizedBox(width: 8),
               Text(
                 copy.keyMove,
-                style: adhkarText(14, FontWeight.w400, palette.text2),
+                style: AppTypography.fixed(
+                  14,
+                  FontWeight.w400,
+                  colors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -792,56 +548,40 @@ final class AdhkarErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: palette.errorSoft,
-                border: Border.all(color: palette.border),
-              ),
-              child: Icon(Icons.error_outline, size: 44, color: palette.error),
+            const AppIconBadge(
+              icon: Icons.error_outline,
+              size: 96,
+              iconSize: 44,
+              tone: AppBadgeTone.error,
             ),
             const SizedBox(height: 20),
             Text(
               copy.contentUnavailable,
               textAlign: TextAlign.center,
-              style: adhkarText(20, FontWeight.w700, palette.text),
+              style: AppTypography.fixed(
+                20,
+                FontWeight.w700,
+                colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 20),
-            Material(
-              color: palette.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: palette.border),
-              ),
-              child: InkWell(
-                key: const Key('adhkar_retry'),
-                onTap: onRetry,
-                customBorder: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 52),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 6,
-                    ),
-                    child: Text(
-                      copy.retry,
-                      textAlign: TextAlign.center,
-                      style: adhkarText(16, FontWeight.w600, palette.text),
-                    ),
-                  ),
-                ),
+            AppButton(
+              key: const Key('adhkar_retry'),
+              label: copy.retry,
+              onPressed: onRetry,
+              look: AppButtonLook.refined,
+              variant: AppButtonVariant.secondary,
+              fill: colors.surface,
+              tuning: const AppButtonTuning(
+                padding: EdgeInsets.symmetric(horizontal: 28, vertical: 6),
+                labelHeight: 1.5,
               ),
             ),
           ],
@@ -895,136 +635,16 @@ final class AdhkarOrnamentPainter extends CustomPainter {
 
 /// Opens the reset confirmation dialog; true when the person confirms.
 Future<bool?> showAdhkarResetDialog(BuildContext context, AdhkarStrings copy) =>
-    showDialog<bool>(
+    showAppConfirmDialog(
       context: context,
-      barrierColor: AdhkarPalette.of(context).scrim,
-      builder: (dialogContext) {
-        final palette = AdhkarPalette.of(dialogContext);
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          insetPadding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 340),
-            child: Container(
-              key: const Key('adhkar_reset_dialog'),
-              padding: const EdgeInsets.all(24),
-              decoration: palette.card(radius: 28, shadows: palette.glow),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      copy.resetTitle,
-                      style: adhkarText(
-                        20,
-                        FontWeight.w700,
-                        palette.text,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      copy.resetBody,
-                      style: adhkarText(
-                        16,
-                        FontWeight.w400,
-                        palette.text2,
-                        height: 1.7,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final cancel = _DialogButton(
-                          key: const Key('adhkar_reset_cancel'),
-                          label: copy.myAdhkarCancel,
-                          background: palette.surface2,
-                          foreground: palette.text,
-                          border: palette.border,
-                          onTap: () => Navigator.of(dialogContext).pop(false),
-                        );
-                        final confirm = _DialogButton(
-                          key: const Key('adhkar_reset_confirm'),
-                          label: copy.resetConfirm,
-                          background: palette.error,
-                          foreground: palette.onError,
-                          onTap: () => Navigator.of(dialogContext).pop(true),
-                        );
-                        // Side by side when both fit; stacked when narrow.
-                        if (constraints.maxWidth >= 250) {
-                          return Row(
-                            children: [
-                              Expanded(child: cancel),
-                              const SizedBox(width: 10),
-                              Expanded(child: confirm),
-                            ],
-                          );
-                        }
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            confirm,
-                            const SizedBox(height: 10),
-                            cancel,
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+      title: copy.resetTitle,
+      body: copy.resetBody,
+      cancelLabel: copy.myAdhkarCancel,
+      confirmLabel: copy.resetConfirm,
+      panelKey: const Key('adhkar_reset_dialog'),
+      cancelKey: const Key('adhkar_reset_cancel'),
+      confirmKey: const Key('adhkar_reset_confirm'),
     );
-
-final class _DialogButton extends StatelessWidget {
-  const _DialogButton({
-    super.key,
-    required this.label,
-    required this.background,
-    required this.foreground,
-    required this.onTap,
-    this.border,
-  });
-
-  final String label;
-  final Color background;
-  final Color foreground;
-  final Color? border;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: background,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: border == null ? BorderSide.none : BorderSide(color: border!),
-    ),
-    child: InkWell(
-      onTap: onTap,
-      customBorder: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 52),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: adhkarText(16, FontWeight.w700, foreground),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-}
 
 /// Opens the list sheet: every item with its first words, its count and a
 /// done mark; the current row is highlighted and scrolled into view, and
@@ -1037,11 +657,8 @@ Future<void> showAdhkarListSheet({
   required ValueChanged<int> onJump,
 }) {
   final copy = AdhkarStrings(FoundationLocalizations.of(context));
-  return showModalBottomSheet<void>(
+  return showAppBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: AdhkarPalette.of(context).scrim,
     builder: (sheetContext) => _ListSheet(
       copy: copy,
       cubit: cubit,
@@ -1089,7 +706,7 @@ final class _ListSheetState extends State<_ListSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final copy = widget.copy;
     final list = widget.list;
     final height = MediaQuery.sizeOf(context).height * 0.72;
@@ -1100,27 +717,14 @@ final class _ListSheetState extends State<_ListSheet> {
         final done = items
             .where((item) => state.countOf(item.itemId) >= item.target)
             .length;
-        return Container(
+        return AppSheetPanel(
           key: const Key('adhkar_reader_sheet'),
           height: height,
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: palette.border),
-            boxShadow: palette.glow,
-          ),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 10, bottom: 4),
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: palette.border,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
+              const Padding(
+                padding: EdgeInsets.only(top: 10, bottom: 4),
+                child: AppSheetHandle(),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 14),
@@ -1131,24 +735,21 @@ final class _ListSheetState extends State<_ListSheet> {
                         copy.listLabel(list == AdhkarList.morning),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: adhkarText(20, FontWeight.w700, palette.text),
+                        style: AppTypography.fixed(
+                          20,
+                          FontWeight.w700,
+                          colors.textPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Container(
+                    AppPill(
+                      label: copy.counter(done, items.length),
+                      labelKey: const Key('adhkar_reader_sheet_count'),
+                      maxLines: 1,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
                         vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: palette.soft,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        copy.counter(done, items.length),
-                        key: const Key('adhkar_reader_sheet_count'),
-                        maxLines: 1,
-                        style: adhkarText(15, FontWeight.w700, palette.accent),
                       ),
                     ),
                   ],
@@ -1198,94 +799,91 @@ final class _SheetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final done = count >= item.target;
     final font = item.kind == DhikrKind.quran
         ? kQuranFontFamily
         : kDhikrFontFamily;
-    return Material(
-      color: current ? palette.soft : Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: current ? palette.primary : Colors.transparent),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 60),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: palette.surface2,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '${item.position}',
-                    style: adhkarText(15, FontWeight.w700, palette.text2),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        item.textAr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: adhkarText(
-                          19,
-                          FontWeight.w400,
-                          palette.text,
-                          height: 1.7,
-                        ).copyWith(fontFamily: font),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '$count / ${item.target}',
-                  style: adhkarText(15, FontWeight.w600, palette.text2),
-                ),
-                const SizedBox(width: 10),
-                if (done)
-                  Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: palette.button,
-                    ),
-                    child: Icon(
-                      Icons.check_rounded,
-                      size: 16,
-                      color: palette.onButton,
-                    ),
-                  )
-                else
-                  Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: palette.border, width: 2),
-                    ),
-                  ),
-              ],
+    return AppInkSurface(
+      color: current ? colors.accentSoft : Colors.transparent,
+      borderColor: current ? colors.primary : Colors.transparent,
+      radius: 18,
+      minHeight: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: colors.surfaceSecondary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '${item.position}',
+              style: AppTypography.fixed(
+                15,
+                FontWeight.w700,
+                colors.textSecondary,
+              ),
             ),
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  item.textAr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.fixed(
+                    19,
+                    FontWeight.w400,
+                    colors.textPrimary,
+                    height: 1.7,
+                  ).copyWith(fontFamily: font),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '$count / ${item.target}',
+            style: AppTypography.fixed(
+              15,
+              FontWeight.w600,
+              colors.textSecondary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          if (done)
+            Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.accentStrong,
+              ),
+              child: Icon(
+                Icons.check_rounded,
+                size: 16,
+                color: colors.onAccentStrong,
+              ),
+            )
+          else
+            Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.border, width: 2),
+              ),
+            ),
+        ],
       ),
     );
   }

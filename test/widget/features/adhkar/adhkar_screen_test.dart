@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 import 'package:namma_project/features/adhkar/presentation/adhkar_state.dart';
 
@@ -291,9 +292,7 @@ void main() {
       expect(find.textContaining('counting is paused'), findsNothing);
       expect(key('my_adhkar_group_ga'), findsOneWidget);
       expect(
-        tester
-            .widget<ButtonStyleButton>(key('my_adhkar_create_group'))
-            .onPressed,
+        tester.widget<AppButton>(key('my_adhkar_create_group')).onPressed,
         isNotNull,
         reason: 'My Adhkar has no locked state',
       );

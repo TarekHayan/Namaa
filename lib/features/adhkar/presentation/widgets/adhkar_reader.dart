@@ -6,13 +6,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_layout.dart';
+import 'package:namma_project/app/theme/app_typography.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_card.dart';
+import 'package:namma_project/app/widgets/app_linear_progress.dart';
+import 'package:namma_project/app/widgets/app_notice.dart';
+import 'package:namma_project/app/widgets/app_pill.dart';
+import 'package:namma_project/app/widgets/app_surface_icon_button.dart';
+import 'package:namma_project/app/widgets/app_text_scale_clamp.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 
 import '../adhkar_cubit.dart';
 import '../adhkar_state.dart';
 import 'adhkar_list_page.dart';
 import 'adhkar_reader_parts.dart';
-import 'adhkar_style.dart';
 
 /// How long the done bar holds before the page slides to the next item.
 const Duration kAdhkarDoneHold = Duration(milliseconds: 600);
@@ -176,9 +185,9 @@ final class _AdhkarReaderState extends State<AdhkarReader> {
   @override
   Widget build(BuildContext context) {
     final copy = AdhkarStrings(FoundationLocalizations.of(context));
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final wide = MediaQuery.sizeOf(context).width >= kAdhkarWideBreakpoint;
+    final wide = AppLayout.isWide(context);
     return BlocBuilder<AdhkarCubit, AdhkarState>(
       builder: (context, state) {
         final items = _items(state);
@@ -226,7 +235,7 @@ final class _AdhkarReaderState extends State<AdhkarReader> {
           onKeyEvent: (_, event) => _onKey(event, items, rtl),
           child: Material(
             key: const Key('adhkar_reader'),
-            color: palette.bg,
+            color: colors.background,
             child: SafeArea(
               child: Column(
                 children: [
@@ -280,14 +289,14 @@ final class _ReaderHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 56),
         child: Row(
           children: [
-            AdhkarSquareButton(
+            AppSurfaceIconButton(
               key: const Key('adhkar_reader_list'),
               icon: Icons.format_list_bulleted_rounded,
               label: listLabel,
@@ -298,16 +307,16 @@ final class _ReaderHeader extends StatelessWidget {
               child: Text(
                 title,
                 textAlign: TextAlign.center,
-                style: adhkarText(
+                style: AppTypography.fixed(
                   18,
                   FontWeight.w700,
-                  palette.text,
+                  colors.textPrimary,
                   height: 1.3,
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            AdhkarSquareButton(
+            AppSurfaceIconButton(
               key: const Key('adhkar_reader_close'),
               icon: Icons.close_rounded,
               label: closeLabel,
@@ -327,28 +336,11 @@ final class _TopProgress extends StatelessWidget {
   final double progress;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Container(
-      key: const Key('adhkar_reader_progress'),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 4,
-      decoration: BoxDecoration(
-        color: palette.border,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      alignment: AlignmentDirectional.centerStart,
-      child: FractionallySizedBox(
-        widthFactor: progress.clamp(0.0, 1.0),
-        child: Container(
-          decoration: BoxDecoration(
-            color: palette.primary,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AppLinearProgress(
+    key: const Key('adhkar_reader_progress'),
+    margin: const EdgeInsets.symmetric(horizontal: 16),
+    progress: progress,
+  );
 }
 
 /// The reader proper: the pages, and under them the done bar or lock
@@ -390,7 +382,6 @@ final class _ReaderBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
     final item = items[index];
     final count = state.countOf(item.itemId);
     final holding = holdingItemId == item.itemId;
@@ -402,22 +393,31 @@ final class _ReaderBody extends StatelessWidget {
     if (holding) {
       banner = AdhkarDoneBar(copy: copy);
     } else if (state.countingLocked) {
-      banner = AdhkarLockBanner(
-        key: const Key('adhkar_reader_lock_setup'),
-        message: copy.countingLocked,
-        icon: Icons.location_on_outlined,
-        actionLabel: onOpenPrayerSetup == null ? null : copy.openPrayerSetup,
-        onAction: onOpenPrayerSetup,
+      banner = AppTextScaleClamp(
+        max: 1.3,
+        child: AppBanner(
+          key: const Key('adhkar_reader_lock_setup'),
+          compact: true,
+          message: copy.countingLocked,
+          icon: Icons.location_on_outlined,
+          actionLabel: onOpenPrayerSetup == null ? null : copy.openPrayerSetup,
+          onAction: onOpenPrayerSetup,
+          actionKey: const Key('adhkar_reader_setup_button'),
+        ),
       );
     } else if (!countable) {
       final at = clock?.nextBoundaryUtc;
       final zone = clock?.zoneId;
-      banner = AdhkarLockBanner(
-        key: const Key('adhkar_reader_lock_time'),
-        message: at != null && zone != null
-            ? copy.startsAt(formatAdhkarTime(at, zone, locale))
-            : copy.countingLocked,
-        icon: Icons.schedule_rounded,
+      banner = AppTextScaleClamp(
+        max: 1.3,
+        child: AppBanner(
+          key: const Key('adhkar_reader_lock_time'),
+          compact: true,
+          message: at != null && zone != null
+              ? copy.startsAt(formatAdhkarTime(at, zone, locale))
+              : copy.countingLocked,
+          icon: Icons.schedule_rounded,
+        ),
       );
     }
 
@@ -449,13 +449,11 @@ final class _ReaderBody extends StatelessWidget {
                     bottom: 16,
                     end: 4,
                     width: 10,
-                    child: Container(
+                    child: AppCard(
                       key: const Key('adhkar_reader_next_sliver'),
-                      decoration: BoxDecoration(
-                        color: palette.soft,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: palette.primary),
-                      ),
+                      tone: AppCardTone.accent,
+                      radius: 10,
+                      child: const SizedBox.expand(),
                     ),
                   ),
               ],
@@ -503,29 +501,37 @@ final class _ReaderBody extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          AdhkarRoundNav(
+          AppSurfaceIconButton(
             key: const Key('adhkar_reader_prev'),
             icon: Icons.chevron_left,
             label: copy.previousItem,
             onTap: index > 0 ? () => onStep(-1) : null,
+            size: 56,
+            iconSize: 24,
+            circle: true,
+            raised: true,
           ),
           const SizedBox(width: 24),
           Expanded(
             child: Align(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
-                  maxWidth: kAdhkarColumnMaxWidth,
+                  maxWidth: AppLayout.columnMaxWidth,
                 ),
                 child: column,
               ),
             ),
           ),
           const SizedBox(width: 24),
-          AdhkarRoundNav(
+          AppSurfaceIconButton(
             key: const Key('adhkar_reader_next'),
             icon: Icons.chevron_right,
             label: copy.nextItem,
             onTap: index < items.length - 1 ? () => onStep(1) : null,
+            size: 56,
+            iconSize: 24,
+            circle: true,
+            raised: true,
           ),
         ],
       ),
@@ -543,11 +549,11 @@ final class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.only(top: 12),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: palette.border)),
+        border: Border(top: BorderSide(color: colors.border)),
       ),
       child: Wrap(
         alignment: WrapAlignment.spaceBetween,
@@ -555,28 +561,17 @@ final class _InfoRow extends StatelessWidget {
         spacing: 12,
         runSpacing: 6,
         children: [
-          Container(
-            key: const Key('adhkar_reader_repeat'),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-            decoration: BoxDecoration(
-              color: palette.soft,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              repeatLabel,
-              style: adhkarText(15, FontWeight.w700, palette.accent),
-            ),
-          ),
+          AppPill(key: const Key('adhkar_reader_repeat'), label: repeatLabel),
           // The position reads "n | N" left to right in both languages.
           Directionality(
             textDirection: TextDirection.ltr,
             child: Text(
               positionLabel,
               key: const Key('adhkar_reader_position'),
-              style: adhkarText(
+              style: AppTypography.fixed(
                 15,
                 FontWeight.w600,
-                palette.text2,
+                colors.textSecondary,
               ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
             ),
           ),
@@ -601,7 +596,7 @@ final class _CompleteView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     return Column(
       key: const Key('adhkar_reader_complete'),
       children: [
@@ -626,8 +621,8 @@ final class _CompleteView extends StatelessWidget {
                             CustomPaint(
                               size: const Size(200, 200),
                               painter: AdhkarOrnamentPainter(
-                                stroke: palette.primary,
-                                fill: palette.soft,
+                                stroke: colors.primary,
+                                fill: colors.accentSoft,
                               ),
                             ),
                             Container(
@@ -635,13 +630,13 @@ final class _CompleteView extends StatelessWidget {
                               height: 84,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: palette.button,
-                                boxShadow: palette.buttonGlow,
+                                color: colors.accentStrong,
+                                boxShadow: colors.buttonShadow,
                               ),
                               child: Icon(
                                 Icons.check_rounded,
                                 size: 44,
-                                color: palette.onButton,
+                                color: colors.onAccentStrong,
                               ),
                             ),
                           ],
@@ -651,33 +646,24 @@ final class _CompleteView extends StatelessWidget {
                       Text(
                         copy.completeTitle,
                         textAlign: TextAlign.center,
-                        style: adhkarText(
+                        style: AppTypography.fixed(
                           28,
                           FontWeight.w800,
-                          palette.text,
+                          colors.textPrimary,
                           height: 1.4,
                         ),
                       ),
                       if (showPoints) ...[
                         const SizedBox(height: 20),
-                        Container(
+                        // Fills the width, as the approved page does.
+                        AppPill(
                           key: const Key('adhkar_reader_points'),
-                          constraints: const BoxConstraints(minHeight: 44),
+                          label: copy.points,
+                          hairline: true,
+                          fontSize: 16,
+                          minHeight: 44,
                           padding: const EdgeInsets.symmetric(horizontal: 20),
-                          decoration: BoxDecoration(
-                            color: palette.soft,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: palette.border),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            copy.points,
-                            style: adhkarText(
-                              16,
-                              FontWeight.w700,
-                              palette.accent,
-                            ),
-                          ),
+                          stretch: true,
                         ),
                       ],
                     ],
@@ -691,10 +677,19 @@ final class _CompleteView extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: AdhkarFilledAction(
+            child: AppButton(
               key: const Key('adhkar_reader_back'),
               label: copy.backToAdhkar,
-              onTap: onClose,
+              onPressed: onClose,
+              look: AppButtonLook.refined,
+              size: AppButtonSize.large,
+              expanded: true,
+              tuning: const AppButtonTuning(
+                radius: 18,
+                minHeight: 56,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                labelHeight: 1.5,
+              ),
             ),
           ),
         ),

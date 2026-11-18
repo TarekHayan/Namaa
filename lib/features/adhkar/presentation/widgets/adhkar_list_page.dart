@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_typography.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_card.dart';
+import 'package:namma_project/app/widgets/app_icon_badge.dart';
+import 'package:namma_project/app/widgets/app_notice.dart';
+import 'package:namma_project/app/widgets/app_progress_ring.dart';
+import 'package:namma_project/app/widgets/app_segmented_control.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_clock.dart';
 import 'package:timezone/data/latest_all.dart' as timezone_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../adhkar_state.dart';
-import 'adhkar_style.dart';
 
 /// The page title, the subtitle and the three tabs (Morning, Evening, My
 /// Adhkar) of the approved design. The title, subtitle and tabs stay put
@@ -26,111 +33,50 @@ final class AdhkarTitleBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     return Column(
       key: const Key('adhkar_header'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           copy.title,
-          style: adhkarText(28, FontWeight.w800, palette.text, height: 1.4),
+          style: AppTypography.fixed(
+            28,
+            FontWeight.w800,
+            colors.textPrimary,
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           copy.subtitle,
-          style: adhkarText(14, FontWeight.w400, palette.text2, height: 1.6),
+          style: AppTypography.fixed(
+            14,
+            FontWeight.w400,
+            colors.textSecondary,
+            height: 1.6,
+          ),
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: palette.card(radius: 20, color: palette.surface2),
-          child: Row(
-            children: [
-              _Tab(
-                key: const Key('adhkar_switch_morning'),
-                label: copy.tabLabel(true),
-                selected: selectedTab == AdhkarTab.morning,
-                onTap: () => onTabChanged(AdhkarTab.morning),
-              ),
-              const SizedBox(width: 4),
-              _Tab(
-                key: const Key('adhkar_switch_evening'),
-                label: copy.tabLabel(false),
-                selected: selectedTab == AdhkarTab.evening,
-                onTap: () => onTabChanged(AdhkarTab.evening),
-              ),
-              const SizedBox(width: 4),
-              _Tab(
-                key: const Key('adhkar_switch_my_adhkar'),
-                label: copy.myAdhkarTab,
-                selected: selectedTab == AdhkarTab.myAdhkar,
-                onTap: () => onTabChanged(AdhkarTab.myAdhkar),
-              ),
-            ],
-          ),
+        AppSegmentedControl(
+          selectedIndex: selectedTab.index,
+          onChanged: (index) => onTabChanged(AdhkarTab.values[index]),
+          segments: [
+            AppSegment(
+              key: const Key('adhkar_switch_morning'),
+              label: copy.tabLabel(true),
+            ),
+            AppSegment(
+              key: const Key('adhkar_switch_evening'),
+              label: copy.tabLabel(false),
+            ),
+            AppSegment(
+              key: const Key('adhkar_switch_my_adhkar'),
+              label: copy.myAdhkarTab,
+            ),
+          ],
         ),
       ],
-    );
-  }
-}
-
-final class _Tab extends StatelessWidget {
-  const _Tab({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Expanded(
-      child: Semantics(
-        button: true,
-        selected: selected,
-        excludeSemantics: true,
-        label: label,
-        onTap: onTap,
-        child: Material(
-          color: selected ? palette.surface : Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: selected ? palette.primary : Colors.transparent,
-            ),
-          ),
-          shadowColor: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            customBorder: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                child: Center(
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: adhkarText(
-                      15,
-                      selected ? FontWeight.w700 : FontWeight.w600,
-                      selected ? palette.accent : palette.text2,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -165,7 +111,7 @@ final class AdhkarListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final list = morning ? AdhkarList.morning : AdhkarList.evening;
     final items = state.catalog?.itemsOf(list) ?? const <DhikrItem>[];
     final clock = state.clock;
@@ -250,10 +196,10 @@ final class AdhkarListPage extends StatelessWidget {
               copy.quranAttribution,
               key: const Key('adhkar_attribution'),
               textAlign: TextAlign.center,
-              style: adhkarText(
+              style: AppTypography.fixed(
                 12,
                 FontWeight.w400,
-                palette.text2,
+                colors.textSecondary,
                 height: 1.6,
               ),
             ),
@@ -280,11 +226,12 @@ final class _ProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Container(
+    final colors = AppColors.of(context);
+    return AppCard(
       key: const Key('adhkar_progress_card'),
+      radius: 28,
       padding: const EdgeInsets.all(20),
-      decoration: palette.card(radius: 28, shadows: palette.glow),
+      elevated: true,
       child: Row(
         children: [
           Semantics(
@@ -293,13 +240,9 @@ final class _ProgressCard extends StatelessWidget {
             child: SizedBox(
               width: 96,
               height: 96,
-              child: CustomPaint(
-                painter: AdhkarRingPainter(
-                  progress: total == 0 ? 0 : completed / total,
-                  strokeWidth: 8,
-                  fill: palette.primary,
-                  track: palette.track,
-                ),
+              child: AppProgressRing(
+                progress: total == 0 ? 0 : completed / total,
+                strokeWidth: 8,
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -309,10 +252,10 @@ final class _ProgressCard extends StatelessWidget {
                         copy.percent(percent),
                         key: const Key('adhkar_progress_percent'),
                         textScaler: TextScaler.noScaling,
-                        style: adhkarText(
+                        style: AppTypography.fixed(
                           24,
                           FontWeight.w800,
-                          palette.text,
+                          colors.textPrimary,
                           height: 1.2,
                         ),
                       ),
@@ -329,20 +272,20 @@ final class _ProgressCard extends StatelessWidget {
               children: [
                 Text(
                   copy.progress(listLabel, completed, total),
-                  style: adhkarText(
+                  style: AppTypography.fixed(
                     17,
                     FontWeight.w700,
-                    palette.text,
+                    colors.textPrimary,
                     height: 1.45,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   copy.doneCount(completed),
-                  style: adhkarText(
+                  style: AppTypography.fixed(
                     14,
                     FontWeight.w400,
-                    palette.text2,
+                    colors.textSecondary,
                     height: 1.6,
                   ),
                 ),
@@ -370,34 +313,40 @@ final class _FinishedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Container(
+    final colors = AppColors.of(context);
+    return AppCard(
       key: const Key('adhkar_finished_card'),
+      radius: 28,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
-      decoration: palette.card(radius: 28),
       child: Column(
         children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: palette.soft,
-              border: Border.all(color: palette.primary),
-            ),
-            child: Icon(Icons.check_rounded, size: 36, color: palette.accent),
+          AppIconBadge(
+            icon: Icons.check_rounded,
+            size: 72,
+            iconSize: 36,
+            borderColor: colors.primary,
           ),
           const SizedBox(height: 12),
           Text(
             copy.completeTitle,
             textAlign: TextAlign.center,
-            style: adhkarText(20, FontWeight.w800, palette.text, height: 1.4),
+            style: AppTypography.fixed(
+              20,
+              FontWeight.w800,
+              colors.textPrimary,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             copy.progress(listLabel, completed, total),
             textAlign: TextAlign.center,
-            style: adhkarText(14, FontWeight.w400, palette.text2, height: 1.6),
+            style: AppTypography.fixed(
+              14,
+              FontWeight.w400,
+              colors.textSecondary,
+              height: 1.6,
+            ),
           ),
         ],
       ),
@@ -421,22 +370,26 @@ final class _TimeLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final at = startsAtUtc;
     if (at == null || zoneId == null) return const SizedBox.shrink();
-    return Container(
+    return AppCard(
       key: const Key('adhkar_starts_at_notice'),
+      radius: 20,
       constraints: const BoxConstraints(minHeight: 56),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: palette.card(radius: 20),
       child: Row(
         children: [
-          Icon(Icons.schedule_rounded, size: 22, color: palette.accent),
+          Icon(Icons.schedule_rounded, size: 22, color: colors.accentStrong),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               copy.startsAt(formatAdhkarTime(at, zoneId!, locale)),
-              style: adhkarText(16, FontWeight.w600, palette.text),
+              style: AppTypography.fixed(
+                16,
+                FontWeight.w600,
+                colors.textPrimary,
+              ),
             ),
           ),
         ],
@@ -475,104 +428,15 @@ final class _SetupNotice extends StatelessWidget {
   final VoidCallback? onOpenPrayerSetup;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Container(
-      key: const Key('adhkar_setup_notice'),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: palette.card(
-        radius: 20,
-        color: palette.warnSoft,
-        borderColor: palette.warn,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Icon(
-                  Icons.location_on_outlined,
-                  size: 24,
-                  color: palette.warn,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  locked ? copy.countingLocked : copy.setupPrompt,
-                  key: locked ? const Key('adhkar_locked_notice') : null,
-                  style: adhkarText(
-                    16,
-                    FontWeight.w600,
-                    palette.text,
-                    height: 1.6,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (onOpenPrayerSetup != null) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: AdhkarOutlinedAction(
-                key: const Key('adhkar_setup_button'),
-                label: copy.openPrayerSetup,
-                borderColor: palette.warn,
-                onTap: onOpenPrayerSetup!,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// A 48 px outlined action on a tinted banner (the setup button).
-final class AdhkarOutlinedAction extends StatelessWidget {
-  const AdhkarOutlinedAction({
-    super.key,
-    required this.label,
-    required this.borderColor,
-    required this.onTap,
-  });
-
-  final String label;
-  final Color borderColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Material(
-      color: palette.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: borderColor),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: adhkarText(16, FontWeight.w700, palette.text),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AppBanner(
+    key: const Key('adhkar_setup_notice'),
+    message: locked ? copy.countingLocked : copy.setupPrompt,
+    messageKey: locked ? const Key('adhkar_locked_notice') : null,
+    icon: Icons.location_on_outlined,
+    actionLabel: onOpenPrayerSetup == null ? null : copy.openPrayerSetup,
+    onAction: onOpenPrayerSetup,
+    actionKey: const Key('adhkar_setup_button'),
+  );
 }
 
 final class _StreakRow extends StatelessWidget {
@@ -583,32 +447,30 @@ final class _StreakRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Container(
+    final colors = AppColors.of(context);
+    return AppCard(
       key: const Key('adhkar_streak_row'),
+      radius: 22,
       constraints: const BoxConstraints(minHeight: 68),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: palette.card(radius: 22),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: palette.warnSoft,
-            ),
-            child: Icon(
-              Icons.local_fire_department_outlined,
-              size: 24,
-              color: palette.warn,
-            ),
+          const AppIconBadge(
+            icon: Icons.local_fire_department_outlined,
+            size: 44,
+            iconSize: 24,
+            tone: AppBadgeTone.warning,
+            bordered: false,
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Text(
               copy.streak(streak),
-              style: adhkarText(16, FontWeight.w700, palette.text),
+              style: AppTypography.fixed(
+                16,
+                FontWeight.w700,
+                colors.textPrimary,
+              ),
             ),
           ),
         ],
@@ -617,8 +479,8 @@ final class _StreakRow extends StatelessWidget {
   }
 }
 
-/// The main button: «ابدأ», «متابعة من الذكر n», or (finished, secondary
-/// style) «قراءة القائمة مرة أخرى».
+/// The main button: start, continue from an item, or (finished, secondary
+/// style) read the list again.
 final class _MainButton extends StatelessWidget {
   const _MainButton({
     required this.label,
@@ -631,99 +493,20 @@ final class _MainButton extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    final foreground = secondary ? palette.text : palette.onButton;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: secondary ? null : palette.buttonGlow,
-      ),
-      child: Material(
-        color: secondary ? palette.surface : palette.button,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: secondary ? BorderSide(color: palette.border) : BorderSide.none,
-        ),
-        child: InkWell(
-          key: const Key('adhkar_main_button'),
-          onTap: onTap,
-          customBorder: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 58),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: adhkarText(
-                        16,
-                        FontWeight.w700,
-                        foreground,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Icon(Icons.arrow_forward, size: 22, color: foreground),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The compact "Sync differences" row at the bottom of the Adhkar page.
-final class AdhkarSyncRow extends StatelessWidget {
-  const AdhkarSyncRow({super.key, required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Material(
-      color: palette.surface2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: palette.border),
-      ),
-      child: InkWell(
-        key: const Key('adhkar_sync_row'),
-        onTap: onTap,
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Icon(Icons.sync_alt_rounded, size: 20, color: palette.text),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: adhkarText(14, FontWeight.w600, palette.text),
-                  ),
-                ),
-                Icon(Icons.chevron_right, size: 18, color: palette.text),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AppButton(
+    key: const Key('adhkar_main_button'),
+    label: label,
+    onPressed: onTap,
+    look: AppButtonLook.refined,
+    variant: secondary ? AppButtonVariant.secondary : AppButtonVariant.primary,
+    size: AppButtonSize.large,
+    trailingIcon: Icons.arrow_forward,
+    expanded: true,
+    fill: secondary ? AppColors.of(context).surface : null,
+    tuning: const AppButtonTuning(
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      fontWeight: FontWeight.w700,
+      labelHeight: 1.4,
+    ),
+  );
 }

@@ -2,11 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:namma_project/app/l10n/adhkar_strings_adapter.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_typography.dart';
+import 'package:namma_project/app/widgets/app_button.dart';
+import 'package:namma_project/app/widgets/app_confirmation.dart';
+import 'package:namma_project/app/widgets/app_filter_chip.dart';
+import 'package:namma_project/app/widgets/app_form_field.dart';
+import 'package:namma_project/app/widgets/app_notice.dart';
+import 'package:namma_project/app/widgets/app_sheets.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
 import '../my_adhkar_cubit.dart';
 import '../my_adhkar_state.dart';
-import 'adhkar_controls.dart';
 import 'adhkar_style.dart';
 import 'my_adhkar_support.dart';
 
@@ -14,122 +21,8 @@ import 'my_adhkar_support.dart';
 /// wide windows (contracts/adhkar-qiyam-ui.md). The [builder] is built under
 /// the route's own context, so it must not rely on the tab's providers: the
 /// forms take the Cubit explicitly.
-Future<void> showMyAdhkarForm(BuildContext context, WidgetBuilder builder) {
-  final palette = AdhkarPalette.of(context);
-  if (MediaQuery.sizeOf(context).width >= kMyAdhkarDialogBreakpoint) {
-    return showDialog<void>(
-      context: context,
-      barrierColor: palette.scrim,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        insetPadding: const EdgeInsets.all(40),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: builder(dialogContext),
-        ),
-      ),
-    );
-  }
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: palette.scrim,
-    builder: builder,
-  );
-}
-
-/// The shared panel of the group and entry forms: a bottom sheet (with its
-/// drag handle) on a phone and a dialog card on a wide window, the title, a
-/// scrolling body, and the Save / Cancel footer.
-final class _FormPanel extends StatelessWidget {
-  const _FormPanel({
-    required this.panelKey,
-    required this.title,
-    required this.body,
-    required this.footer,
-  });
-
-  final Key panelKey;
-  final String title;
-  final List<Widget> body;
-  final Widget footer;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    final phone = MediaQuery.sizeOf(context).width < kMyAdhkarDialogBreakpoint;
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: Container(
-        key: panelKey,
-        decoration: BoxDecoration(
-          color: palette.surface,
-          borderRadius: phone
-              ? const BorderRadius.vertical(top: Radius.circular(28))
-              : BorderRadius.circular(28),
-          border: Border.all(color: palette.border),
-          boxShadow: palette.glow,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (phone)
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: palette.border,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 18, 24, 8),
-              child: Text(
-                title,
-                style: adhkarText(
-                  20,
-                  FontWeight.w700,
-                  palette.text,
-                  height: 1.45,
-                ),
-              ),
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < body.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 18),
-                      body[i],
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-              decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: palette.border)),
-              ),
-              child: footer,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+Future<void> showMyAdhkarForm(BuildContext context, WidgetBuilder builder) =>
+    showAppAdaptiveSheet<void>(context, builder);
 
 /// Save and Cancel side by side (stacked when narrow), Save first.
 final class _FormFooter extends StatelessWidget {
@@ -150,115 +43,20 @@ final class _FormFooter extends StatelessWidget {
   final VoidCallback onCancel;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    final save = AdhkarGlow(
-      enabled: onSave != null,
-      child: FilledButton(
-        key: saveKey,
-        style: adhkarPrimaryStyle(palette),
-        onPressed: onSave,
-        child: Text(saveLabel),
-      ),
-    );
-    final cancel = FilledButton(
+  Widget build(BuildContext context) => AppButtonPair(
+    minInlineWidth: 290,
+    primary: AppButton(
+      key: saveKey,
+      label: saveLabel,
+      onPressed: onSave,
+      look: AppButtonLook.refined,
+    ),
+    secondary: AppButton(
       key: cancelKey,
-      style: adhkarSecondaryStyle(palette),
+      label: cancelLabel,
       onPressed: onCancel,
-      child: Text(cancelLabel),
-    );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= 290) {
-          return Row(
-            children: [
-              Expanded(child: save),
-              const SizedBox(width: 10),
-              Expanded(child: cancel),
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [save, const SizedBox(height: 10), cancel],
-        );
-      },
-    );
-  }
-}
-
-/// A field with its label above it, as the design lays forms out.
-final class _LabeledField extends StatelessWidget {
-  const _LabeledField({required this.label, required this.field});
-
-  final String label;
-  final Widget field;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(label, style: adhkarText(14, FontWeight.w700, palette.text)),
-        const SizedBox(height: 8),
-        field,
-      ],
-    );
-  }
-}
-
-/// The design's input: a filled field with a 16 px radius, a hairline border
-/// that becomes a 1.5 px accent border while focused and a 1.5 px error
-/// border when invalid, the error with its icon on the start side and the
-/// counter (always left to right) on the end side.
-InputDecoration _fieldDecoration(
-  AdhkarPalette palette, {
-  required String counterText,
-  required Key counterKey,
-  required bool counterError,
-  String? errorText,
-  String? helperText,
-}) {
-  OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(16),
-    borderSide: BorderSide(color: color, width: width),
-  );
-  return InputDecoration(
-    filled: true,
-    fillColor: palette.surface2,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    border: border(palette.border, 1),
-    enabledBorder: border(palette.border, 1),
-    focusedBorder: border(palette.primary, 1.5),
-    errorBorder: border(palette.error, 1.5),
-    focusedErrorBorder: border(palette.error, 1.5),
-    error: errorText == null
-        ? null
-        : AdhkarNote(
-            text: errorText,
-            color: palette.errorText,
-            iconColor: palette.errorText,
-            weight: FontWeight.w600,
-          ),
-    helper: helperText == null
-        ? null
-        : Text(
-            helperText,
-            style: adhkarText(14, FontWeight.w400, palette.text2, height: 1.6),
-          ),
-    helperMaxLines: 3,
-    counter: Directionality(
-      textDirection: TextDirection.ltr,
-      child: Text(
-        counterText,
-        key: counterKey,
-        style: adhkarText(
-          14,
-          FontWeight.w400,
-          counterError ? palette.errorText : palette.text2,
-        ),
-      ),
+      look: AppButtonLook.refined,
+      variant: AppButtonVariant.secondary,
     ),
   );
 }
@@ -333,7 +131,7 @@ final class _MyAdhkarGroupFormState extends State<MyAdhkarGroupForm> {
   @override
   Widget build(BuildContext context) {
     final copy = AdhkarStrings(FoundationLocalizations.of(context));
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final length = myAdhkarLength(_name.text);
     final tooLong = length > MyAdhkarGroupDraft.maxNameLength;
     final ambient = Directionality.of(context);
@@ -344,26 +142,30 @@ final class _MyAdhkarGroupFormState extends State<MyAdhkarGroupForm> {
         : null;
     return BlocBuilder<MyAdhkarCubit, MyAdhkarState>(
       bloc: widget.cubit,
-      builder: (context, state) => _FormPanel(
+      builder: (context, state) => AppFormSheet(
         panelKey: const Key('my_adhkar_group_form'),
         title: widget.existing == null
             ? copy.myAdhkarGroupSheetTitleCreate
             : copy.myAdhkarGroupSheetTitleRename,
-        body: [
-          _LabeledField(
+        fields: [
+          AppLabeledField(
             label: copy.myAdhkarGroupNameLabel,
             field: TextField(
               key: const Key('my_adhkar_group_name_field'),
               controller: _name,
               autofocus: true,
-              textDirection: myAdhkarTextDirection(_name.text, ambient),
+              textDirection: AppTypography.directionFor(_name.text, ambient),
               textInputAction: TextInputAction.done,
-              style: adhkarText(16, FontWeight.w400, palette.text),
+              style: AppTypography.fixed(
+                16,
+                FontWeight.w400,
+                colors.textPrimary,
+              ),
               onSubmitted: (_) {
                 if (_valid && !state.busy) _save();
               },
-              decoration: _fieldDecoration(
-                palette,
+              decoration: appCountedFieldDecoration(
+                colors,
                 counterText: copy.counter(
                   length,
                   MyAdhkarGroupDraft.maxNameLength,
@@ -489,7 +291,7 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
   @override
   Widget build(BuildContext context) {
     final copy = AdhkarStrings(FoundationLocalizations.of(context));
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final ambient = Directionality.of(context);
     final textLength = myAdhkarLength(_text.text);
     final sourceLength = myAdhkarLength(_source.text);
@@ -513,13 +315,13 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
             _sourceValid &&
             liveSelected.isNotEmpty &&
             !state.busy;
-        return _FormPanel(
+        return AppFormSheet(
           panelKey: const Key('my_adhkar_entry_form'),
           title: widget.existing == null
               ? copy.myAdhkarEntrySheetTitleAdd
               : copy.myAdhkarEntrySheetTitleEdit,
-          body: [
-            _LabeledField(
+          fields: [
+            AppLabeledField(
               label: copy.myAdhkarTextLabel,
               field: TextField(
                 key: const Key('my_adhkar_text_field'),
@@ -528,15 +330,15 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
                 minLines: 4,
                 maxLines: 8,
                 keyboardType: TextInputType.multiline,
-                textDirection: myAdhkarTextDirection(_text.text, ambient),
-                style: adhkarText(
+                textDirection: AppTypography.directionFor(_text.text, ambient),
+                style: AppTypography.fixed(
                   22,
                   FontWeight.w400,
-                  palette.text,
+                  colors.textPrimary,
                   height: 1.9,
                 ).copyWith(fontFamily: kDhikrFontFamily),
-                decoration: _fieldDecoration(
-                  palette,
+                decoration: appCountedFieldDecoration(
+                  colors,
                   counterText: copy.counter(
                     textLength,
                     MyDhikrDraft.maxTextLength,
@@ -547,7 +349,7 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
                 ),
               ),
             ),
-            _LabeledField(
+            AppLabeledField(
               label: copy.myAdhkarSourceLabel,
               field: TextField(
                 key: const Key('my_adhkar_source_field'),
@@ -555,10 +357,17 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
                 minLines: 1,
                 maxLines: 3,
                 keyboardType: TextInputType.multiline,
-                textDirection: myAdhkarTextDirection(_source.text, ambient),
-                style: adhkarText(16, FontWeight.w400, palette.text),
-                decoration: _fieldDecoration(
-                  palette,
+                textDirection: AppTypography.directionFor(
+                  _source.text,
+                  ambient,
+                ),
+                style: AppTypography.fixed(
+                  16,
+                  FontWeight.w400,
+                  colors.textPrimary,
+                ),
+                decoration: appCountedFieldDecoration(
+                  colors,
                   counterText: copy.counter(
                     sourceLength,
                     MyDhikrDraft.maxSourceLength,
@@ -575,7 +384,11 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
               children: [
                 Text(
                   copy.myAdhkarGroupsLabel,
-                  style: adhkarText(14, FontWeight.w700, palette.text),
+                  style: AppTypography.fixed(
+                    14,
+                    FontWeight.w700,
+                    colors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Wrap(
@@ -583,11 +396,15 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
                   runSpacing: 8,
                   children: [
                     for (final summary in state.groups)
-                      _GroupChip(
-                        chipKey: Key(
+                      AppFilterChip(
+                        key: Key(
                           'my_adhkar_group_chip_${summary.group.groupId}',
                         ),
-                        name: summary.group.name,
+                        label: summary.group.name,
+                        textDirection: AppTypography.directionFor(
+                          summary.group.name,
+                          ambient,
+                        ),
                         selected: liveSelected.contains(summary.group.groupId),
                         onSelected: (on) => setState(() {
                           _failure = null;
@@ -603,23 +420,19 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
                 if (liveSelected.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
-                    child: AdhkarNote(
+                    child: AppInlineNote(
                       key: const Key('my_adhkar_group_set_error'),
                       text: copy.myAdhkarGroupSetInvalid,
-                      color: palette.errorText,
-                      iconColor: palette.errorText,
-                      weight: FontWeight.w600,
+                      tone: AppNoticeTone.error,
                     ),
                   ),
                 if (_failure != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
-                    child: AdhkarNote(
+                    child: AppInlineNote(
                       key: const Key('my_adhkar_form_error'),
                       text: myAdhkarFailureText(copy, _failure!),
-                      color: palette.errorText,
-                      iconColor: palette.errorText,
-                      weight: FontWeight.w600,
+                      tone: AppNoticeTone.error,
                     ),
                   ),
               ],
@@ -635,50 +448,6 @@ final class _MyAdhkarEntryFormState extends State<MyAdhkarEntryForm> {
           ),
         );
       },
-    );
-  }
-}
-
-/// A group choice: a 48 px pill, with the accent border and a check when
-/// selected.
-final class _GroupChip extends StatelessWidget {
-  const _GroupChip({
-    required this.chipKey,
-    required this.name,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final Key chipKey;
-  final String name;
-  final bool selected;
-  final ValueChanged<bool> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return FilterChip(
-      key: chipKey,
-      selected: selected,
-      onSelected: onSelected,
-      showCheckmark: true,
-      checkmarkColor: palette.accent,
-      backgroundColor: palette.surface2,
-      selectedColor: palette.soft,
-      surfaceTintColor: Colors.transparent,
-      side: BorderSide(color: selected ? palette.primary : palette.border),
-      shape: const StadiumBorder(),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      materialTapTargetSize: MaterialTapTargetSize.padded,
-      label: Text(
-        name,
-        textDirection: myAdhkarTextDirection(name, Directionality.of(context)),
-        style: adhkarText(
-          14,
-          selected ? FontWeight.w700 : FontWeight.w600,
-          selected ? palette.accent : palette.text,
-        ),
-      ),
     );
   }
 }

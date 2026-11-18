@@ -3,14 +3,19 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
+import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/theme/app_layout.dart';
+import 'package:namma_project/app/theme/app_typography.dart';
+import 'package:namma_project/app/widgets/app_action_tile.dart';
+import 'package:namma_project/app/widgets/app_back_link.dart';
+import 'package:namma_project/app/widgets/app_card.dart';
+import 'package:namma_project/app/widgets/app_pill.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_catalog_port.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
 import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
 
 import '../domain/adhkar_conflict_evidence.dart';
-import 'widgets/adhkar_list_page.dart';
 import 'widgets/adhkar_style.dart';
-import 'widgets/my_adhkar_support.dart';
 
 /// The owner-scoped conflict evidence behind the "Sync differences" row and
 /// page (contracts/adhkar-qiyam-ui.md): the owner's retained count conflicts
@@ -73,7 +78,9 @@ final class AdhkarConflictsRow extends StatelessWidget {
                 if (!any) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(top: 16),
-                  child: AdhkarSyncRow(
+                  child: AppActionTile(
+                    key: const Key('adhkar_sync_row'),
+                    icon: Icons.sync_alt_rounded,
                     label: FoundationLocalizations.of(context).adhkarConflicts,
                     onTap: onOpen,
                   ),
@@ -100,18 +107,18 @@ final class AdhkarConflictsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final copy = FoundationLocalizations.of(context);
-    final wide = MediaQuery.sizeOf(context).width >= kAdhkarWideBreakpoint;
+    final wide = AppLayout.isWide(context);
     return Scaffold(
-      backgroundColor: palette.bg,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final base = wide ? 32.0 : 20.0;
             final side = math.max(
               base,
-              (constraints.maxWidth - kAdhkarColumnMaxWidth) / 2,
+              (constraints.maxWidth - AppLayout.columnMaxWidth) / 2,
             );
             return FutureBuilder<AdhkarCatalog?>(
               future: source.catalogFuture,
@@ -135,7 +142,8 @@ final class AdhkarConflictsPage extends StatelessWidget {
                               children: [
                                 Align(
                                   alignment: AlignmentDirectional.centerStart,
-                                  child: _BackAction(
+                                  child: AppBackLink(
+                                    key: const Key('adhkar_sync_back'),
                                     label: copy.adhkarBackToAdhkar,
                                     onTap: onBack,
                                   ),
@@ -143,10 +151,10 @@ final class AdhkarConflictsPage extends StatelessWidget {
                                 const SizedBox(height: 16),
                                 Text(
                                   copy.adhkarConflicts,
-                                  style: adhkarText(
+                                  style: AppTypography.fixed(
                                     28,
                                     FontWeight.w800,
-                                    palette.text,
+                                    colors.textPrimary,
                                     height: 1.4,
                                   ),
                                 ),
@@ -311,42 +319,6 @@ final class AdhkarConflictsPage extends StatelessWidget {
       );
 }
 
-final class _BackAction extends StatelessWidget {
-  const _BackAction({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return InkWell(
-      key: const Key('adhkar_sync_back'),
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.arrow_back, size: 20, color: palette.accent),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  label,
-                  style: adhkarText(16, FontWeight.w700, palette.accent),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 final class _Footer extends StatelessWidget {
   const _Footer({required this.text});
 
@@ -354,7 +326,7 @@ final class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     return Row(
       key: const Key('adhkar_sync_footer'),
       mainAxisAlignment: MainAxisAlignment.center,
@@ -362,14 +334,23 @@ final class _Footer extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 2),
-          child: Icon(Icons.info_outline, size: 18, color: palette.text2),
+          child: Icon(
+            Icons.info_outline,
+            size: 18,
+            color: colors.textSecondary,
+          ),
         ),
         const SizedBox(width: 8),
         Flexible(
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: adhkarText(14, FontWeight.w400, palette.text2, height: 1.6),
+            style: AppTypography.fixed(
+              14,
+              FontWeight.w400,
+              colors.textSecondary,
+              height: 1.6,
+            ),
           ),
         ),
       ],
@@ -394,17 +375,16 @@ final class _EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
-    return Container(
+    final colors = AppColors.of(context);
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: palette.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             title,
             key: cardKey,
-            style: adhkarText(17, FontWeight.w700, palette.text),
+            style: AppTypography.fixed(17, FontWeight.w700, colors.textPrimary),
           ),
           const SizedBox(height: 12),
           if (wide)
@@ -450,64 +430,42 @@ final class _VersionView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AdhkarPalette.of(context);
+    final colors = AppColors.of(context);
     final ambient = Directionality.of(context);
     final text = value;
-    return Container(
+    return AppCard(
+      tone: activeVersion ? AppCardTone.accent : AppCardTone.secondary,
+      radius: 18,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: activeVersion ? palette.soft : palette.surface2,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: activeVersion ? palette.primary : palette.border,
-        ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          AppPill(
+            label: label,
+            tone: activeVersion ? AppPillTone.filled : AppPillTone.neutral,
+            fontSize: 14,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-            decoration: BoxDecoration(
-              color: activeVersion ? palette.button : palette.surface,
-              borderRadius: BorderRadius.circular(999),
-              border: activeVersion ? null : Border.all(color: palette.border),
-            ),
-            child: Text(
-              label,
-              style: adhkarText(
-                14,
-                FontWeight.w700,
-                activeVersion ? palette.onButton : palette.text,
-              ),
-            ),
           ),
           if (time != null) ...[
             const SizedBox(height: 8),
-            Text(time!, style: adhkarText(14, FontWeight.w400, palette.text2)),
+            Text(
+              time!,
+              style: AppTypography.fixed(
+                14,
+                FontWeight.w400,
+                colors.textSecondary,
+              ),
+            ),
           ],
           const SizedBox(height: 8),
           if (deleted)
-            Container(
+            AppPill(
               key: const Key('adhkar_sync_deleted'),
+              label: deletedLabel,
+              tone: AppPillTone.error,
+              icon: Icons.delete_outline,
+              fontSize: 16,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: palette.errorSoft,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: palette.error),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.delete_outline, size: 16, color: palette.error),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      deletedLabel,
-                      style: adhkarText(16, FontWeight.w700, palette.text),
-                    ),
-                  ),
-                ],
-              ),
             )
           else if (text != null && longText)
             Align(
@@ -516,11 +474,11 @@ final class _VersionView extends StatelessWidget {
                 text,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                textDirection: myAdhkarTextDirection(text, ambient),
-                style: adhkarText(
+                textDirection: AppTypography.directionFor(text, ambient),
+                style: AppTypography.fixed(
                   22,
                   FontWeight.w400,
-                  palette.text,
+                  colors.textPrimary,
                   height: 1.9,
                 ).copyWith(fontFamily: kDhikrFontFamily),
               ),
@@ -530,11 +488,11 @@ final class _VersionView extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               child: Text(
                 text,
-                textDirection: myAdhkarTextDirection(text, ambient),
-                style: adhkarText(
+                textDirection: AppTypography.directionFor(text, ambient),
+                style: AppTypography.fixed(
                   16,
                   FontWeight.w600,
-                  palette.text,
+                  colors.textPrimary,
                   height: 1.7,
                 ),
               ),
