@@ -7,7 +7,7 @@ Claude Code, Codex, Cursor, Copilot and the others. `CLAUDE.md` imports it.
 
 Namaa is one Flutter app for Android, iOS, Windows, macOS and Linux. It brings
 together personal productivity (Tasks, Habits, Mind Maps), religious practice
-(Prayer now; Quran, Dhikr and Qiyam later) and personal finance tracking, all
+(Prayer, Adhkar and Qiyam now; Quran and Dhikr later) and personal finance tracking, all
 around a "Today" dashboard. The app is local-first: it works offline and syncs
 each account across devices through Supabase. Arabic is the primary language
 (RTL), and English is the second.
@@ -38,10 +38,10 @@ ask the product owner. Do not decide it in code.
 | 006 | Today dashboard | merged (T074/T075 closure items left open) |
 | 007 | Dashboard prototype UI | merged (T049 final audit open) |
 | 008 | Prayer experience (location-only, statuses, sync, XP) | merged 2026-11-09, PR #11 |
-| 009 | Adhkar (Morning/Evening) and Qiyam (Phase 4) | spec in progress on `namaa/009-adhkar-qiyam` |
+| 009 | Adhkar (Morning/Evening, reader, «أذكاري») and Qiyam (Phase 4) | merged 2026-11-18, PR #12 (T074/T075 device checks deferred: no phone available) |
 | — | Authentication / per-account data | proposed, not started (number assigned when specified) |
 
-Not built yet: Quran, Dhikr, Qiyam, Pomodoro, Finance, Notifications,
+Not built yet: Quran, Dhikr, Pomodoro, Finance, Notifications,
 Analytics, Settings. The Finance tab currently opens a "coming soon" page.
 
 When you close a feature, update this table in the same PR.
@@ -97,7 +97,8 @@ Other rules:
 - **State.** Use BLoC/Cubit only.
 - **Navigation.**
   - GoRouter lives in `lib/app/routing/app_router.dart`, with top-level
-    sibling routes `/`, `/tasks`, `/habits`, `/mind-maps` and `/prayer`.
+    sibling routes `/`, `/tasks`, `/habits`, `/mind-maps`, `/prayer`,
+    `/adhkar` and `/qiyam`.
   - The shell is `TodayNavigationShell`, which behaves as tabs. Sections are
     switched with `go`, and pages never stack.
   - Overlay sections (track, finance, preview) replace one another.

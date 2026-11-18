@@ -640,7 +640,7 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [x] T072 [P] Dependency and manifest audit.
   - **Depends**: T071.
   - **Done**: No new package, no notification permission or plugin (FR-015), and only Amiri added under assets. Recorded in verification.md.
-- [ ] T073 The owner reviews and approves specs/009-adhkar-qiyam/content-sources.md, and T006 is re-checked against it.
+- [x] T073 The owner reviews and approves specs/009-adhkar-qiyam/content-sources.md, and T006 is re-checked against it.
   - **Depends**: T002, T006.
   - **Done**:
     - Every shipped item is marked approved by the product owner.
@@ -653,16 +653,16 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [ ] T075 The product owner checks the screens on the phone (CPH2481) and on Windows: AR/EN, light/dark, tashkeel rendering, and prototype order.
   - **Depends**: T074.
   - **Done**: The owner's reported result is recorded for SC-006. Nothing is claimed without it.
-- [ ] T076 With the owner's approval, push 0016 and 0017 to the isolated staging project (never production), then run the hosted offline-sync entry through CI.
+- [x] T076 With the owner's approval, push 0016 and 0017 to the isolated staging project (never production), then run the hosted offline-sync entry through CI.
   - **Depends**: T070, T073.
   - **Done**: The staging migration is recorded, and the hosted result is recorded with the run URL.
-- [ ] T077 Update the status table in AGENTS.md for 009 and finalize verification.md, quickstart.md and the task states.
+- [x] T077 Update the status table in AGENTS.md for 009 and finalize verification.md, quickstart.md and the task states.
   - **Depends**: T075, T076.
   - **Done**: Every SC links to its evidence. Any unrun item stays unchecked. This is done before the final gate run, so the closing docs do not restart CI.
 - [ ] T078 Run the full PR-to-develop gate on the final head, and record the run URL and SHA in verification.md.
   - **Depends**: T077.
   - **Done**: Every job is green. Same-head reruns are made only for infrastructure failures, after reading the logs.
-- [ ] T079 Audit tasks.md against FR-001…FR-021 and SC-001…SC-008, and report the closure recommendation.
+- [x] T079 Audit tasks.md against FR-001…FR-021 and SC-001…SC-008, and report the closure recommendation.
   - **Depends**: T078.
   - **Done**: The report names any remaining blocker. Merging happens only on the owner's go.
 

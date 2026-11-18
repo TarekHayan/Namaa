@@ -1795,3 +1795,30 @@ CI failed `integration_test/adhkar_qiyam_offline_sync_test.dart` on Windows, mac
 ## Latin digits everywhere (owner, 2026-11-18)
 
 `useLatinDigits()` (`lib/app/theme/app_digits.dart`) makes `intl` print Arabic dates and times with Latin digits; `configureDependencies` calls it at startup and `test/flutter_test_config.dart` for every test. `flutter analyze` No issues found; `flutter test` 1621 passed, 1 skipped (a first run showed one failure that did not reproduce on the full rerun); a Windows capture of the Arabic Adhkar page shows «وقتها يبدأ من 16:58» beside «(0 / 23)» and «0%».
+
+## Closure (2026-11-18)
+
+The owner asked to merge on 2026-11-18. Task states:
+
+- **T073 (done).** The owner approved `content-sources.md` on 2026-11-15 and the final list on 2026-11-16 («موافق على الكل»). The asset was generated from it by script and checked byte for byte (T006), and `qiyam_supplications_asset_test.dart` pins s1 and s2 to it. SC-002: every shipped text and reference comes from the review file; no religious text is in code or tests.
+- **T076 (done).** 0016 and 0017 were applied to staging (section above). The hosted offline-sync entry passed on Windows, macOS and the iOS prayer group in run https://github.com/TarekHayan/Namaa/actions/runs/44344806305 (head `e4f2161`).
+- **T077 (done).** `AGENTS.md` lists 009 as merged; routes and status lines are updated.
+- **T078.** The last fully green five-target run before the closing commits is run 44344806305 at `e4f2161` (17 checks green). The digits commit (`98112b3`) and this closing commit rerun the full gate on the PR; the merge waits for that run to be green.
+- **T074 and T075 (open, deferred).** The owner has no Android phone available. In place of a human check, the coordinator captured 85 screenshots of the real app on Windows at phone (390×844) and desktop (1280×800) sizes, AR/EN and light/dark, with Cairo as the location, and sent them to the owner (`docs/explainers/owner-review-009`, not in git). Count latency in a Windows **debug** build with the test harness, tap to the count label changing: 293 ms (first, cold), then 124–165 ms. This does not meet or measure SC-001's 100 ms on a real device in a release build, so SC-001 stays unverified. The 30-second Qiyam journey and the phone checks remain the owner's.
+
+### Audit (T079)
+
+| Requirement | Evidence |
+|---|---|
+| FR-001–FR-005, FR-006, FR-006a, FR-006b, FR-007 | Catalog asset and loader tests; Adhkar commands, cubit and reader widget tests; `adhkar_qiyam_flow_test.dart` (Morning across Fajr and Maghrib, restart, one award) |
+| FR-002, SC-002 | T006, T073 above |
+| FR-008, FR-009, FR-010, FR-011, FR-011a, FR-012, FR-013, FR-014 | Qiyam domain, commands, cubit and screen tests; T050 flow test (night attribution, Yes→No→Yes one award, restart); history and streak tests |
+| FR-015 | T072 manifest audit: no notification package or permission |
+| FR-016, FR-017, FR-027, SC-003, SC-004 | Outbox, adapters, inbound and pgTAP tests; `adhkar_qiyam_offline_sync_test.dart` locally and on staging (two devices, replay, conflicts, one award per set and night, owner isolation) |
+| FR-018, SC-006 (automated part) | T057/T058 tests; `adhkar_qiyam_localized_route_test.dart` (Home and Track equal the screens, AR/EN, touch and keyboard, phone and desktop) |
+| FR-019, FR-020, FR-021 | Widget tests at 320 px and 200% text, AR/EN, light/dark; screens built from the approved canvas |
+| FR-022–FR-029, SC-009 (automated part) | My Adhkar domain, repository, commands, cubit, tab, sync and pgTAP tests; two-device integration |
+| SC-005, SC-007, SC-008 | Last-third and window tests against the Prayer boundaries; streak pattern tests |
+| SC-001, SC-006 (human part), SC-009 (30 s) | Open: T074 and T075 need a real phone |
+
+**Recommendation.** Every functional requirement has automated evidence, and the five-target gate is green. The remaining items are human device checks (T074, T075), deferred because no phone is available; they do not block the merge the owner asked for.
