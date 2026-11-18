@@ -1822,3 +1822,7 @@ The owner asked to merge on 2026-11-18. Task states:
 | SC-001, SC-006 (human part), SC-009 (30 s) | Open: T074 and T075 need a real phone |
 
 **Recommendation.** Every functional requirement has automated evidence, and the five-target gate is green. The remaining items are human device checks (T074, T075), deferred because no phone is available; they do not block the merge the owner asked for.
+
+## Android habits flake (2026-11-18, run 44384216619 at 7f8aab1)
+
+`Android integration (habits-today)` failed `integration_test/habits_offline_sync_test.dart` ("debug preview navigation completes and restores one due habit") with `TimeoutException after 0:00:10`. The emulator log shows a 10.5 s frame and `adb: device offline`, and the same test passed at `e4f2161`; no Habits code changed since. The owner asked to stop the run and fix it rather than rerun: the run was cancelled, and the wait now pumps frames against a 60 s deadline instead of a 10 s stream timeout, so an emulator stall no longer fails a healthy save while a save that never lands still fails. Local Windows run of the file: 3 tests passed.

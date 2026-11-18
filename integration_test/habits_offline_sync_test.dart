@@ -339,10 +339,16 @@ void main() {
                 value.isDue &&
                 value.isCompleted == completed,
           );
-      if (!matches(cubit.state)) {
-        await cubit.stream
-            .firstWhere(matches)
-            .timeout(const Duration(seconds: 10));
+      // A hosted Android emulator can stall for ten seconds or more (CI run
+      // 44384216619: a 10.5 s frame and `adb: device offline`), so a short
+      // real-time deadline failed a healthy save. The wait now pumps frames
+      // against a generous deadline; a save that never lands still fails.
+      final deadline = DateTime.now().add(const Duration(seconds: 60));
+      while (!matches(cubit.state)) {
+        if (DateTime.now().isAfter(deadline)) {
+          fail('The preview habit never reached completed=$completed');
+        }
+        await tester.pump(const Duration(milliseconds: 100));
       }
       await tester.pumpAndSettle();
     }
