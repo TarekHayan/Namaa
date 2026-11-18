@@ -48,6 +48,7 @@
 ### Session 2026-11-18
 
 - Q: Do the Adhkar and Qiyam screens keep the prototype's structure? → A: No. Both are redesigned in Claude Design first and built from the approved canvas (Adhkar on 2026-11-17, Qiyam on 2026-11-18). The rules, data and sync are unchanged (FR-020).
+- Q: How does the user set the Qiyam start and end times? → A: With a clock dial (as in Tasks), never typed; any time from tonight's Isha to Fajr, the end after the start.
 
 ## User Scenarios & Testing *(mandatory)*
 

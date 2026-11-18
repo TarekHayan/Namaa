@@ -33,6 +33,22 @@ QiyamNightState qiyamAvailable([String nightDate = '2026-11-11']) =>
       nextBoundaryUtc: DateTime.utc(2026, 11, 11, 16, 50),
       zoneId: 'UTC',
       zoneOffsetMinutes: 0,
+      // The window of the start and end times: Isha 19:12 to Fajr 04:51.
+      ishaUtc: DateTime.utc(2026, 11, 10, 19, 12),
+      nextFajrUtc: DateTime.utc(2026, 11, 11, 4, 51),
+    );
+
+/// A saved schedule whose night has no Isha: the times have no window.
+QiyamNightState qiyamAvailableNoIsha([String nightDate = '2026-11-11']) =>
+    QiyamNightState(
+      scheduleState: QiyamScheduleState.available,
+      nightDate: nightDate,
+      lastThirdUtc: DateTime.utc(2026, 11, 11, 1, 40),
+      editable: true,
+      nextBoundaryUtc: DateTime.utc(2026, 11, 11, 16, 50),
+      zoneId: 'UTC',
+      zoneOffsetMinutes: 0,
+      nextFajrUtc: DateTime.utc(2026, 11, 11, 4, 51),
     );
 
 /// No saved Prayer location: the night follows the device rule, there is no

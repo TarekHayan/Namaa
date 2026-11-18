@@ -678,7 +678,6 @@
   "qiyamSaved": "Saved",
   "qiyamSaveFailed": "Could not save. Try again.",
   "qiyamNightInvalidRakahs": "Choose a whole number of rak’ahs (2, 4, 8 or 11).",
-  "qiyamNightInvalidTime": "Enter a valid 24-hour time, like 02:41.",
   "qiyamNightNoteTooLong": "The note is longer than 500 characters.",
   "qiyamNightNotPerformedDetails": "Details are not kept with the answer “Not yet”.",
   "qiyamNightChanged": "The night has changed; record the current night.",
@@ -711,6 +710,11 @@
   "qiyamShowAll": "Show all",
   "qiyamShowLess": "Show less",
   "qiyamPickTime": "Pick a time",
+  "qiyamTimeOutsideWindow": "Pick a time between Isha ({isha}) and Fajr ({fajr}).",
+  "@qiyamTimeOutsideWindow": {
+    "placeholders": {"isha": {"type": "String"}, "fajr": {"type": "String"}}
+  },
+  "qiyamEndAfterStart": "The end time comes after the start time.",
   "qiyamNightDetailsTitle": "Night details",
   "qiyamDetailStatus": "Status",
   "qiyamDetailWitr": "Witr",

@@ -7,8 +7,11 @@ import 'package:namma_project/app/widgets/app_form_field.dart';
 import 'package:namma_project/app/widgets/app_notice.dart';
 import 'package:namma_project/app/widgets/app_switch_tile.dart';
 import 'package:namma_project/app/widgets/app_time_field.dart';
+import 'package:namma_project/features/qiyam/domain/qiyam_night.dart';
 import 'package:namma_project/features/qiyam/domain/qiyam_night_record.dart';
 import 'package:namma_project/features/qiyam/presentation/qiyam_state.dart';
+
+import 'qiyam_header.dart' show qiyamLocalTime;
 
 /// The optional details of a "Yes" night (approved design, 2026-11-18): the
 /// rak'ah chips (2, 4, 8, 11), the start and end time fields, the Witr switch
@@ -18,10 +21,18 @@ import 'package:namma_project/features/qiyam/presentation/qiyam_state.dart';
 /// "Saving…", "Saved" or that saving failed (the typed values stay, and the
 /// next change retries). A value the rules reject is not saved and its message
 /// shows under its own field.
+///
+/// The start and end times are never typed: a tap opens the clock dial (as in
+/// Tasks), and any time from tonight's Isha to Fajr is accepted, the end after
+/// the start and possibly past midnight (owner decision, 2026-11-18). A pick
+/// outside that window, or an end that is not after the start, is not saved
+/// and shows its message under its field. Without an Isha for the night (no
+/// saved location, or no Isha in the schedule) any time is accepted.
 final class QiyamDetailsForm extends StatefulWidget {
   const QiyamDetailsForm({
     super.key,
     required this.copy,
+    required this.night,
     required this.form,
     required this.status,
     required this.failureMessageKey,
@@ -32,6 +43,9 @@ final class QiyamDetailsForm extends StatefulWidget {
   });
 
   final QiyamStrings copy;
+
+  /// The resolved night; its Isha and Fajr bound the times.
+  final QiyamNightState? night;
   final QiyamForm form;
   final QiyamActionStatus? status;
   final String? failureMessageKey;
@@ -45,42 +59,27 @@ final class QiyamDetailsForm extends StatefulWidget {
 }
 
 final class _QiyamDetailsFormState extends State<QiyamDetailsForm> {
-  // The controllers start from the stored values and then belong to the
+  // The note controller starts from the stored value and then belongs to the
   // user: a later state emission never overwrites what is being typed.
-  late final TextEditingController _start = TextEditingController(
-    text: widget.form.startTime ?? '',
-  );
-  late final TextEditingController _end = TextEditingController(
-    text: widget.form.endTime ?? '',
-  );
   late final TextEditingController _note = TextEditingController(
     text: widget.form.note ?? '',
   );
 
   @override
   void dispose() {
-    _start.dispose();
-    _end.dispose();
     _note.dispose();
     super.dispose();
   }
-
-  void _timesChanged() => widget.onTimes(_start.text, _end.text);
 
   @override
   Widget build(BuildContext context) {
     final copy = widget.copy;
     final colors = AppColors.of(context);
     return ListenableBuilder(
-      listenable: Listenable.merge([_start, _end, _note]),
+      listenable: _note,
       builder: (context, _) {
         final key = widget.failureMessageKey;
         final failed = widget.status == QiyamActionStatus.failed;
-        final timeRejected = failed && key == 'qiyam.night.invalid_time';
-        final startBad =
-            timeRejected && !QiyamNightDraft.isValidTime(_clean(_start.text));
-        final endBad =
-            timeRejected && !QiyamNightDraft.isValidTime(_clean(_end.text));
         final noteLength = _note.text.length;
         final noteBad =
             noteLength > QiyamNightDraft.maxNoteLength ||
@@ -144,20 +143,11 @@ final class _QiyamDetailsFormState extends State<QiyamDetailsForm> {
             const SizedBox(height: 20),
             _TimeFields(
               copy: copy,
-              start: _start,
-              end: _end,
-              startInvalid: startBad,
-              endInvalid: endBad,
-              onChanged: _timesChanged,
+              night: widget.night,
+              startTime: widget.form.startTime,
+              endTime: widget.form.endTime,
+              onTimes: widget.onTimes,
             ),
-            if (timeRejected) ...[
-              const SizedBox(height: 8),
-              AppInlineNote(
-                key: const Key('qiyam_time_error'),
-                text: copy.invalidTime,
-                tone: AppNoticeTone.error,
-              ),
-            ],
             const SizedBox(height: 12),
             AppSwitchTile(
               label: copy.witr,
@@ -200,51 +190,112 @@ final class _QiyamDetailsFormState extends State<QiyamDetailsForm> {
   }
 
   static const List<int> _rakahChoices = [2, 4, 8, 11];
-
-  static String? _clean(String value) => value.isEmpty ? null : value;
 }
 
 /// The start and end fields side by side, stacked when the card is too narrow
-/// for two fields with their clock buttons.
+/// for two fields. Each is a clock-dial field; the picks are checked against
+/// the night's Isha-to-Fajr window here, and a valid pick goes up as `HH:mm`.
 final class _TimeFields extends StatelessWidget {
   const _TimeFields({
     required this.copy,
-    required this.start,
-    required this.end,
-    required this.startInvalid,
-    required this.endInvalid,
-    required this.onChanged,
+    required this.night,
+    required this.startTime,
+    required this.endTime,
+    required this.onTimes,
   });
 
   final QiyamStrings copy;
-  final TextEditingController start;
-  final TextEditingController end;
-  final bool startInvalid;
-  final bool endInvalid;
-  final VoidCallback onChanged;
+  final QiyamNightState? night;
+  final String? startTime;
+  final String? endTime;
+  final void Function(String? startTime, String? endTime) onTimes;
+
+  /// Tonight's Isha-to-Fajr window as wall-clock times in the location's
+  /// zone, or null when the night has none.
+  AppTimeWindow? get _window {
+    final resolved = night;
+    final zone = resolved?.zoneId;
+    final isha = resolved?.ishaUtc;
+    final fajr = resolved?.nextFajrUtc;
+    if (zone == null || isha == null || fajr == null) return null;
+    final start = qiyamLocalTime(isha, zone);
+    final end = qiyamLocalTime(fajr, zone);
+    if (start == null || end == null) return null;
+    return AppTimeWindow(start: start, end: end);
+  }
+
+  static TimeOfDay? _parse(String? value) {
+    if (value == null || !QiyamNightDraft.isValidTime(value)) return null;
+    return TimeOfDay(
+      hour: int.parse(value.substring(0, 2)),
+      minute: int.parse(value.substring(3, 5)),
+    );
+  }
+
+  static String _format24(TimeOfDay time) =>
+      '${time.hour.toString().padLeft(2, '0')}:'
+      '${time.minute.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
+    final window = _window;
+    final start = _parse(startTime);
+    final end = _parse(endTime);
+
+    String? outside(TimeOfDay picked) =>
+        window == null || window.contains(picked)
+        ? null
+        : copy.timeOutsideWindow(
+            AppTimeField.format(context, window.start),
+            AppTimeField.format(context, window.end),
+          );
+
+    String? endError(TimeOfDay picked) {
+      final bad = outside(picked);
+      if (bad != null) return bad;
+      if (window != null &&
+          start != null &&
+          window.offsetOf(picked) <= window.offsetOf(start)) {
+        return copy.endAfterStart;
+      }
+      return null;
+    }
+
+    // Where each dial opens when nothing is saved: Isha for the start, an
+    // hour after the start for the end, never past Fajr.
+    TimeOfDay? endInitial;
+    final endBase = start ?? window?.start;
+    if (endBase != null) {
+      final later = AppTimeWindow.shifted(endBase, 60);
+      endInitial = window == null || window.contains(later)
+          ? later
+          : window.end;
+    }
+
     final startField = AppLabeledField(
       label: copy.startTime,
       field: AppTimeField(
         fieldKey: const Key('qiyam_start_time'),
-        pickerKey: const Key('qiyam_start_picker'),
-        controller: start,
-        invalid: startInvalid,
-        pickTooltip: copy.pickTime,
-        onChanged: (_) => onChanged(),
+        errorKey: const Key('qiyam_start_time_error'),
+        value: start,
+        initialTime: window?.start,
+        semanticLabel: copy.startTime,
+        pickHint: copy.pickTime,
+        validator: outside,
+        onPicked: (picked) => onTimes(_format24(picked), endTime),
       ),
     );
     final endField = AppLabeledField(
       label: copy.endTime,
       field: AppTimeField(
         fieldKey: const Key('qiyam_end_time'),
-        pickerKey: const Key('qiyam_end_picker'),
-        controller: end,
-        invalid: endInvalid,
-        pickTooltip: copy.pickTime,
-        onChanged: (_) => onChanged(),
+        errorKey: const Key('qiyam_end_time_error'),
+        value: end,
+        initialTime: endInitial,
+        semanticLabel: copy.endTime,
+        pickHint: copy.pickTime,
+        validator: endError,
+        onPicked: (picked) => onTimes(startTime, _format24(picked)),
       ),
     );
     return LayoutBuilder(
@@ -284,7 +335,6 @@ final class _SaveStatus extends StatelessWidget {
 
   static const Set<String> _fieldMessages = {
     'qiyam.night.invalid_rakahs',
-    'qiyam.night.invalid_time',
     'qiyam.night.note_too_long',
     'qiyam.night.not_performed_details',
   };

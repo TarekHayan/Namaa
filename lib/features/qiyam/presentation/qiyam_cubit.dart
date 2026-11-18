@@ -13,9 +13,9 @@ import 'qiyam_state.dart';
 /// The Qiyam screen state holder (contracts/adhkar-qiyam-application.md):
 /// it loads the night, the record and the editable form, schedules ONE
 /// timer for the next night boundary (plus a refresh on resume), saves
-/// edits through the command — the note, and a time that is not yet a
-/// complete `HH:mm`, are debounced by one second so half-typed values are
-/// not committed — and reports per-command feedback. The +30 points moment
+/// edits through the command — the note is debounced by one second so
+/// half-typed text is not committed, while chips, the switch and picked
+/// times save at once — and reports per-command feedback. The +30 points moment
 /// is one-shot per night: only the first `performed = true` save fires it,
 /// and it stays on the state until the night rolls over. Nothing is emitted
 /// after close, and a night resolution from an earlier generation never
@@ -110,19 +110,13 @@ final class QiyamCubit extends Cubit<QiyamState> {
     await _runSave(_with(form, witr: !form.witr));
   }
 
-  /// A pair of complete times (or an emptied field) saves at once, as the
-  /// platform picker produces them; a half-typed value shares the note's
-  /// debounce so it is not committed (and rejected) mid-entry.
+  /// A picked start or end time saves at once; the clock dial only produces
+  /// complete `HH:mm` values, and the form validates them against the night's
+  /// window before they get here.
   void updateTimes(String? startTime, String? endTime) {
     final form = state.form;
     if (form == null || !form.performed) return;
-    final next = _with(form, startTime: startTime, endTime: endTime);
-    if (QiyamNightDraft.isValidTime(_clean(next.startTime)) &&
-        QiyamNightDraft.isValidTime(_clean(next.endTime))) {
-      unawaited(_runSave(next));
-    } else {
-      _scheduleSave(next);
-    }
+    unawaited(_runSave(_with(form, startTime: startTime, endTime: endTime)));
   }
 
   void updateNote(String text) {

@@ -197,8 +197,7 @@ void main() {
     await cubit.close();
   });
 
-  test('a complete pair of times saves at once, a half-typed one waits for '
-      'the debounce', () {
+  test('a picked time saves at once and keeps the other one', () {
     FakeAsync().run((async) {
       repository.emit(record('2026-11-11'));
       final cubit = buildCubit();
@@ -207,26 +206,21 @@ void main() {
       async.elapse(const Duration(milliseconds: 1));
       async.flushMicrotasks();
       commands.outcome = const QiyamNightSaved(firstPerformed: false);
-      cubit.updateTimes('02:4', '02:00');
+      cubit.updateTimes('23:10', null);
       async.flushMicrotasks();
-      expect(commands.drafts, isEmpty, reason: 'half typed: not saved yet');
-      async.elapse(const Duration(milliseconds: 999));
+      expect(commands.drafts, hasLength(1), reason: 'no debounce for times');
+      expect(commands.drafts.last.startTime, '23:10');
+      cubit.updateTimes('23:10', '01:20');
       async.flushMicrotasks();
-      expect(commands.drafts, isEmpty);
-      async.elapse(const Duration(milliseconds: 1));
-      async.flushMicrotasks();
-      expect(commands.drafts, hasLength(1));
-      expect(commands.drafts.single.startTime, '02:4');
-      cubit.updateTimes('02:41', '03:35');
-      async.flushMicrotasks();
-      expect(commands.drafts, hasLength(2), reason: 'complete: saved at once');
-      expect(commands.drafts.last.startTime, '02:41');
-      expect(commands.drafts.last.endTime, '03:35');
-      // An emptied field is valid too and saves at once.
-      cubit.updateTimes('', '03:35');
+      expect(commands.drafts, hasLength(2));
+      expect(commands.drafts.last.startTime, '23:10');
+      expect(commands.drafts.last.endTime, '01:20');
+      // Only the end changes: the start stays as saved.
+      cubit.updateTimes(null, '02:05');
       async.flushMicrotasks();
       expect(commands.drafts, hasLength(3));
-      expect(commands.drafts.last.startTime, isNull);
+      expect(commands.drafts.last.startTime, '23:10');
+      expect(commands.drafts.last.endTime, '02:05');
       cubit.close();
     });
   });

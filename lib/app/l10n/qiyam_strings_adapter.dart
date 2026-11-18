@@ -46,7 +46,6 @@ final class QiyamStrings {
   String get retry => copy.retry;
   String get detailsNotKept => copy.qiyamNightNotPerformedDetails;
   String get noteTooLong => copy.qiyamNightNoteTooLong;
-  String get invalidTime => copy.qiyamNightInvalidTime;
   String get invalidRakahs => copy.qiyamNightInvalidRakahs;
   String get segYes => copy.qiyamSegYes;
   String get noCalm => copy.qiyamNoCalm;
@@ -54,6 +53,9 @@ final class QiyamStrings {
   String get showAll => copy.qiyamShowAll;
   String get showLess => copy.qiyamShowLess;
   String get pickTime => copy.qiyamPickTime;
+  String timeOutsideWindow(String isha, String fajr) =>
+      copy.qiyamTimeOutsideWindow(isha, fajr);
+  String get endAfterStart => copy.qiyamEndAfterStart;
   String get nightDetailsTitle => copy.qiyamNightDetailsTitle;
   String get detailStatus => copy.qiyamDetailStatus;
   String get detailWitr => copy.qiyamDetailWitr;

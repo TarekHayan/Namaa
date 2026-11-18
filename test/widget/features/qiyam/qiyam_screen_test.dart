@@ -6,10 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/widgets/app_pill.dart';
 import 'package:namma_project/app/widgets/app_sheets.dart';
-import 'package:namma_project/app/widgets/app_time_field.dart';
 import 'package:namma_project/features/qiyam/application/save_qiyam_night.dart';
 
 import '../../../support/qiyam_test_support.dart';
+import '../../../support/time_dial_support.dart';
 
 /// T107: the Qiyam screen in the approved design (contracts/
 /// adhkar-qiyam-ui.md, "Qiyam screen (approved design, 2026-11-18)"): the
@@ -436,21 +436,174 @@ void main() {
       expect(h.commands.drafts.last.rakahs, 8);
     });
 
-    qiyamTestWidgets(
-      'a complete time saves at once; the end may cross midnight',
-      (tester) async {
-        await openDetails(tester);
-        await tester.enterText(key('qiyam_start_time'), '23:00');
-        await tester.pump();
-        await tester.pump();
-        expect(h.commands.drafts.last.startTime, '23:00');
-        await tester.enterText(key('qiyam_end_time'), '01:00');
-        await tester.pump();
-        await tester.pump();
-        expect(h.commands.drafts.last.endTime, '01:00');
-        expect(h.commands.drafts.last.startTime, '23:00');
-      },
-    );
+    // Opens a time field's dial and picks [hour]:[minute] on it.
+    Future<void> pickTime(
+      WidgetTester tester,
+      String field,
+      int hour,
+      int minute,
+    ) async {
+      await tester.ensureVisible(key(field));
+      await tester.pump();
+      await tester.tap(key(field));
+      await tester.pumpAndSettle();
+      await pickDialTime(tester, hour, minute);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    const outsideWindow = 'Pick a time between Isha (19:12) and Fajr (04:51).';
+    const endNotAfterStart = 'The end time comes after the start time.';
+
+    qiyamTestWidgets('the times are never typed: a tap opens a dial with no '
+        'text input', (tester) async {
+      await openDetails(tester);
+      expect(
+        find.descendant(
+          of: key('qiyam_start_time'),
+          matching: find.byType(EditableText),
+        ),
+        findsNothing,
+      );
+      await tester.ensureVisible(key('qiyam_start_time'));
+      await tester.pump();
+      await tester.tap(key('qiyam_start_time'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TimePickerDialog), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(TimePickerDialog),
+          matching: find.byType(TextField),
+        ),
+        findsNothing,
+      );
+      expect(find.byIcon(Icons.keyboard_outlined), findsNothing);
+      // The dial opens at Isha for an empty start.
+      expect(find.text('19'), findsOneWidget);
+      expect(find.text('12'), findsOneWidget);
+      await cancelDial(tester);
+      expect(h.commands.drafts.last.startTime, isNull);
+    });
+
+    qiyamTestWidgets('a pick inside the window saves at once and the field '
+        'shows it', (tester) async {
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 22, 30);
+      expect(h.commands.drafts.last.startTime, '22:30');
+      expect(find.text('22:30'), findsOneWidget);
+      expect(find.text(outsideWindow), findsNothing);
+    });
+
+    qiyamTestWidgets('the end may cross midnight', (tester) async {
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 23, 0);
+      expect(h.commands.drafts.last.startTime, '23:00');
+      await pickTime(tester, 'qiyam_end_time', 1, 0);
+      expect(h.commands.drafts.last.endTime, '01:00');
+      expect(h.commands.drafts.last.startTime, '23:00');
+      expect(find.text(endNotAfterStart), findsNothing);
+    });
+
+    qiyamTestWidgets('Isha and Fajr themselves are accepted', (tester) async {
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 19, 12);
+      expect(h.commands.drafts.last.startTime, '19:12');
+      await pickTime(tester, 'qiyam_end_time', 4, 51);
+      expect(h.commands.drafts.last.endTime, '04:51');
+    });
+
+    qiyamTestWidgets('a pick outside Isha to Fajr is not saved and shows its '
+        'message under its field', (tester) async {
+      await openDetails(tester);
+      final saved = h.commands.drafts.length;
+      await pickTime(tester, 'qiyam_start_time', 18, 0);
+      expect(find.text(outsideWindow), findsOneWidget);
+      expect(
+        find.descendant(
+          of: key('qiyam_start_time_error').first,
+          matching: find.text(outsideWindow),
+        ),
+        findsOneWidget,
+      );
+      expect(h.commands.drafts, hasLength(saved), reason: 'not saved');
+      expect(find.text('18:00'), findsNothing);
+      // After Fajr is refused too, then a valid pick clears the message.
+      await pickTime(tester, 'qiyam_end_time', 5, 30);
+      expect(find.text(outsideWindow), findsNWidgets(2));
+      expect(h.commands.drafts, hasLength(saved));
+      await pickTime(tester, 'qiyam_start_time', 20, 0);
+      expect(find.text(outsideWindow), findsOneWidget);
+      expect(h.commands.drafts.last.startTime, '20:00');
+    });
+
+    qiyamTestWidgets('an end that is not after the start is not saved', (
+      tester,
+    ) async {
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 23, 0);
+      final saved = h.commands.drafts.length;
+      await pickTime(tester, 'qiyam_end_time', 22, 0);
+      expect(find.text(endNotAfterStart), findsOneWidget);
+      expect(h.commands.drafts, hasLength(saved));
+      // The same minute is not after the start either.
+      await pickTime(tester, 'qiyam_end_time', 23, 0);
+      expect(find.text(endNotAfterStart), findsOneWidget);
+      expect(h.commands.drafts, hasLength(saved));
+      await pickTime(tester, 'qiyam_end_time', 23, 1);
+      expect(find.text(endNotAfterStart), findsNothing);
+      expect(h.commands.drafts.last.endTime, '23:01');
+    });
+
+    qiyamTestWidgets('the end dial opens an hour after the start, never past '
+        'Fajr', (tester) async {
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 23, 30);
+      await tester.tap(key('qiyam_end_time'));
+      await tester.pumpAndSettle();
+      expect(find.text('00'), findsWidgets);
+      expect(find.text('30'), findsOneWidget);
+      await cancelDial(tester);
+      await pickTime(tester, 'qiyam_start_time', 4, 30);
+      // 04:30 + 1 h is after Fajr (04:51), so the dial opens at Fajr.
+      await tester.tap(key('qiyam_end_time'));
+      await tester.pumpAndSettle();
+      expect(find.text('04'), findsOneWidget);
+      expect(find.text('51'), findsOneWidget);
+      await cancelDial(tester);
+    });
+
+    qiyamTestWidgets('no saved location: any time is accepted', (tester) async {
+      h = QiyamHarness(night: qiyamSetupRequired());
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 12, 0);
+      expect(h.commands.drafts.last.startTime, '12:00');
+      await pickTime(tester, 'qiyam_end_time', 7, 30);
+      expect(h.commands.drafts.last.endTime, '07:30');
+      expect(find.text(outsideWindow), findsNothing);
+      expect(find.text(endNotAfterStart), findsNothing);
+    });
+
+    qiyamTestWidgets('a saved schedule with no Isha has no window either', (
+      tester,
+    ) async {
+      h = QiyamHarness(night: qiyamAvailableNoIsha());
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 15, 0);
+      expect(h.commands.drafts.last.startTime, '15:00');
+      expect(find.text(outsideWindow), findsNothing);
+    });
+
+    qiyamTestWidgets('the message and the window are in Arabic too', (
+      tester,
+    ) async {
+      await openDetails(tester, locale: const Locale('ar'));
+      await pickTime(tester, 'qiyam_start_time', 18, 0);
+      expect(find.textContaining('اختر وقتًا بين العشاء ('), findsOneWidget);
+      expect(find.textContaining('والفجر ('), findsOneWidget);
+      await pickTime(tester, 'qiyam_start_time', 23, 0);
+      await pickTime(tester, 'qiyam_end_time', 22, 0);
+      expect(find.text('وقت النهاية بعد وقت البداية.'), findsOneWidget);
+    });
 
     qiyamTestWidgets(
       'the note saves about a second after typing stops and shows '
@@ -471,31 +624,6 @@ void main() {
         expect(h.commands.drafts.last.note, 'abcd');
       },
     );
-
-    qiyamTestWidgets('an invalid time is not saved and its message shows under '
-        'the field, only the wrong field in error', (tester) async {
-      await openDetails(tester);
-      h.commands.failure = qiyamValidationFailure('qiyam.night.invalid_time');
-      await tester.enterText(key('qiyam_start_time'), '2:41');
-      await QiyamHarness.settle(tester);
-      expect(
-        find.text('Enter a valid 24-hour time, like 02:41.'),
-        findsOneWidget,
-      );
-      expect(find.text('Could not save. Try again.'), findsNothing);
-      final fields = tester.widgetList<AppTimeField>(find.byType(AppTimeField));
-      expect(fields.map((f) => f.invalid), [true, false]);
-      // Fixing it saves and clears the message.
-      h.commands.failure = null;
-      await tester.enterText(key('qiyam_start_time'), '02:41');
-      await tester.pump();
-      await tester.pump();
-      expect(
-        find.text('Enter a valid 24-hour time, like 02:41.'),
-        findsNothing,
-      );
-      expect(h.commands.drafts.last.startTime, '02:41');
-    });
 
     qiyamTestWidgets('a rejected rakah count shows its message under the '
         'chips', (tester) async {
@@ -550,25 +678,6 @@ void main() {
       },
     );
 
-    qiyamTestWidgets('the time picker button fills the field and saves', (
-      tester,
-    ) async {
-      await openDetails(tester);
-      await tester.ensureVisible(key('qiyam_start_picker'));
-      await tester.pump();
-      await tester.tap(key('qiyam_start_picker'));
-      await tester.pumpAndSettle();
-      expect(find.byType(TimePickerDialog), findsOneWidget);
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-      final text = tester
-          .widget<TextField>(key('qiyam_start_time'))
-          .controller!
-          .text;
-      expect(RegExp(r'^\d{2}:\d{2}$').hasMatch(text), isTrue);
-      expect(h.commands.drafts.last.startTime, text);
-    });
-
     qiyamTestWidgets('opening with a saved record shows its values', (
       tester,
     ) async {
@@ -583,12 +692,18 @@ void main() {
       await h.pump(tester, h.buildCubit(), locale: const Locale('en'));
       expect(tester.widget<Switch>(key('qiyam_witr')).value, isFalse);
       expect(
-        tester.widget<TextField>(key('qiyam_start_time')).controller!.text,
-        '02:41',
+        find.descendant(
+          of: key('qiyam_start_time'),
+          matching: find.text('02:41'),
+        ),
+        findsOneWidget,
       );
       expect(
-        tester.widget<TextField>(key('qiyam_end_time')).controller!.text,
-        '03:35',
+        find.descendant(
+          of: key('qiyam_end_time'),
+          matching: find.text('03:35'),
+        ),
+        findsOneWidget,
       );
       expect(
         tester.widget<TextField>(key('qiyam_note')).controller!.text,
@@ -945,10 +1060,11 @@ void main() {
         await _tapVisible(tester, const Key('qiyam_yes'));
         await tester.pump();
         await tester.pump();
-        h.commands.failure = qiyamValidationFailure('qiyam.night.invalid_time');
-        await tester.enterText(
-          find.byKey(const Key('qiyam_start_time')),
-          '2:41',
+        await _tapVisible(tester, const Key('qiyam_start_time'));
+        await tester.pumpAndSettle();
+        await pickDialTime(tester, 18, 0);
+        h.commands.failure = qiyamValidationFailure(
+          'qiyam.night.note_too_long',
         );
         await tester.enterText(find.byKey(const Key('qiyam_note')), 'a' * 512);
         await tester.pump(const Duration(milliseconds: 1100));

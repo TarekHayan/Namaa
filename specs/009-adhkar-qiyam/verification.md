@@ -1716,3 +1716,37 @@ started, no hosted (staging or production) call was made.
 Not verified here: the hosted Android, iOS, macOS, Linux and Windows CI runs;
 a run on the Android phone (CPH2481) and a hand-driven Windows run; the owner's
 visual check of the Home tiles and the Track hub subtitles.
+
+## Qiyam times on a clock dial, Isha to Fajr (2026-11-18)
+
+Owner decision (2026-11-18): the Qiyam start and end times are never typed.
+A tap on the field opens the Material clock dial (dial only, as in Tasks);
+any time from tonight's Isha to the night's Fajr is accepted, the end after
+the start and possibly past midnight. A pick outside the window, or an end not
+after the start, is not saved and shows its message under its field. Without
+an Isha for the night (no saved location, or no Isha in the schedule) any time
+is accepted. No storage, sync, migration or XP change.
+
+- `PrayerDayBoundariesAvailable` carries the day's optional `ishaUtc`; the
+  reader fills it from the same schedule. `QiyamNightBoundaries` takes an
+  optional `ishaUtc` (UTC, strictly between Maghrib and the next Fajr) and
+  `QiyamNightState` carries `ishaUtc` and `nextFajrUtc`; the composition
+  adapter supplies them (an out-of-order Isha is dropped, never locks the
+  night). The preview port delegates to the same adapter.
+- `AppTimeField` is now a read-only tap target (tap, Enter, Space) with an
+  optional caller `validator`; `AppTimeWindow` (may cross midnight) helps
+  build it. The typed path and the debounce for half-typed times in
+  `QiyamCubit` are gone.
+- Tests added or rewritten: `AppTimeField`/`AppTimeWindow` widget tests, the
+  Qiyam screen tests (in-window pick, out-of-window, end not after start,
+  midnight crossing, no schedule, no Isha, AR/EN, 320 px at 200%), the
+  `QiyamNight` Isha bound, the adapter and reader, and the cubit. The dial is
+  driven by `test/support/time_dial_support.dart`. A tap on the dial snaps to
+  five minutes; a drag reaches every minute.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (635 files) |
+| Analyze | `flutter analyze` | No issues found |
+| Full suite | `flutter test` | **1617 passed, 1 skipped, 0 failed** |
+| Windows flow | `flutter test integration_test/adhkar_qiyam_flow_test.dart -d windows` | **NOT RUN to completion**: the build failed at the install step because a `flutter run` session (`namma_project.exe`, started 11:48) holds `build/windows/x64/runner/Debug/namma_project.exe`; it was not killed because it is not this task's process. The flow test does not touch the time fields. |

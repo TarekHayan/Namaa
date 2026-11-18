@@ -171,3 +171,17 @@ String formatQiyamTime(DateTime instantUtc, String zoneId, String locale) {
     return DateFormat.Hm(locale).format(instantUtc.toUtc());
   }
 }
+
+/// The wall-clock time of [instantUtc] in the location's zone [zoneId], or
+/// null when the zone is unknown (no guessed zone is substituted).
+TimeOfDay? qiyamLocalTime(DateTime instantUtc, String zoneId) {
+  if (tz.timeZoneDatabase.locations.isEmpty) {
+    timezone_data.initializeTimeZones();
+  }
+  try {
+    final local = tz.TZDateTime.from(instantUtc, tz.getLocation(zoneId));
+    return TimeOfDay(hour: local.hour, minute: local.minute);
+  } catch (_) {
+    return null;
+  }
+}

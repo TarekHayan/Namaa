@@ -117,6 +117,7 @@ final class QiyamTrackerCard extends StatelessWidget {
             QiyamDetailsForm(
               key: ValueKey('qiyam_details_${night?.nightDate}'),
               copy: copy,
+              night: night,
               form: form,
               status: status,
               failureMessageKey: failureMessageKey,

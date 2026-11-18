@@ -672,7 +672,6 @@
   "qiyamSaved": "تم الحفظ",
   "qiyamSaveFailed": "تعذّر الحفظ؛ حاول مرة أخرى.",
   "qiyamNightInvalidRakahs": "اختر عددًا صحيحًا من الركعات (2 أو 4 أو 8 أو 11).",
-  "qiyamNightInvalidTime": "أدخل وقتًا صحيحًا بتنسيق 24 ساعة مثل 02:41.",
   "qiyamNightNoteTooLong": "الملاحظة أطول من 500 حرف.",
   "qiyamNightNotPerformedDetails": "لا تُحفظ التفاصيل مع إجابة «لم أقم بعد».",
   "qiyamNightChanged": "لقد تبدّلت الليلة؛ سجّل الليلة الحالية.",
@@ -705,6 +704,11 @@
   "qiyamShowAll": "عرض الكل",
   "qiyamShowLess": "عرض أقل",
   "qiyamPickTime": "اختيار الوقت",
+  "qiyamTimeOutsideWindow": "اختر وقتًا بين العشاء ({isha}) والفجر ({fajr}).",
+  "@qiyamTimeOutsideWindow": {
+    "placeholders": {"isha": {"type": "String"}, "fajr": {"type": "String"}}
+  },
+  "qiyamEndAfterStart": "وقت النهاية بعد وقت البداية.",
   "qiyamNightDetailsTitle": "تفاصيل الليلة",
   "qiyamDetailStatus": "الحالة",
   "qiyamDetailWitr": "الوتر",
