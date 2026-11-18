@@ -77,6 +77,7 @@ final class PrayerDayBoundariesReader implements PrayerDayBoundariesPort {
       maghribUtc: maghrib!.instantUtc!,
       nextFajrUtc: nextFajr!.instantUtc!,
       zoneId: preferences.city.timeZoneId,
+      ishaUtc: daySchedule.times[PrayerName.isha]?.instantUtc,
     );
   }
 

@@ -34,6 +34,8 @@ void main() {
     '2026-11-12': DateTime.utc(2026, 11, 12, 16, 49),
     '2026-11-13': DateTime.utc(2026, 11, 13, 16, 49),
   };
+  // Isha of each day, 80 minutes after its Maghrib.
+  DateTime isha(String day) => maghrib[day]!.add(const Duration(minutes: 80));
   // The four days the scenarios request; 2026-11-14 exists only as the
   // next-Fajr source for 2026-11-13's boundaries.
   const coreDays = ['2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13'];
@@ -54,6 +56,7 @@ void main() {
         maghribUtc: maghrib[day]!,
         nextFajrUtc: fajr[_nextKey(day)]!,
         zoneId: 'UTC',
+        ishaUtc: isha(day),
       );
     }
     preferences = FakePreferences()..stored = _prefs();
@@ -143,6 +146,79 @@ void main() {
       ),
     );
     expect(afterMaghrib.lastThirdAvailable, isTrue);
+  });
+
+  test('the window runs from the night\'s Isha to its Fajr', () async {
+    final evening = (await adapter.resolve(
+      ownerId: 'owner',
+      nowUtc: DateTime.utc(2026, 11, 11, 20),
+    )).valueOrNull!;
+    expect(evening.ishaUtc, isha('2026-11-11'));
+    expect(evening.nextFajrUtc, fajr['2026-11-12']);
+
+    // Before Maghrib the running night is the previous day's: its own Isha.
+    final earlyMorning = (await adapter.resolve(
+      ownerId: 'owner',
+      nowUtc: DateTime.utc(2026, 11, 11, 3),
+    )).valueOrNull!;
+    expect(earlyMorning.ishaUtc, isha('2026-11-10'));
+    expect(earlyMorning.nextFajrUtc, fajr['2026-11-11']);
+  });
+
+  test('a night whose schedule has no Isha is still available, with no '
+      'window', () async {
+    boundaries.results[PrayerLocalDate.parse(
+      '2026-11-11',
+    )] = PrayerDayBoundariesAvailable(
+      date: PrayerLocalDate.parse('2026-11-11'),
+      fajrUtc: fajr['2026-11-11']!,
+      maghribUtc: maghrib['2026-11-11']!,
+      nextFajrUtc: fajr['2026-11-12']!,
+      zoneId: 'UTC',
+    );
+    final state = (await adapter.resolve(
+      ownerId: 'owner',
+      nowUtc: DateTime.utc(2026, 11, 11, 20),
+    )).valueOrNull!;
+    expect(state.scheduleState, QiyamScheduleState.available);
+    expect(state.editable, isTrue);
+    expect(state.ishaUtc, isNull);
+    expect(state.nextFajrUtc, fajr['2026-11-12']);
+  });
+
+  test('an Isha outside Maghrib to Fajr leaves the times without a window, '
+      'not the night unavailable', () async {
+    for (final badIsha in [
+      maghrib['2026-11-11']!.subtract(const Duration(minutes: 5)),
+      fajr['2026-11-12']!.add(const Duration(minutes: 5)),
+    ]) {
+      boundaries.results[PrayerLocalDate.parse(
+        '2026-11-11',
+      )] = PrayerDayBoundariesAvailable(
+        date: PrayerLocalDate.parse('2026-11-11'),
+        fajrUtc: fajr['2026-11-11']!,
+        maghribUtc: maghrib['2026-11-11']!,
+        nextFajrUtc: fajr['2026-11-12']!,
+        zoneId: 'UTC',
+        ishaUtc: badIsha,
+      );
+      final state = (await adapter.resolve(
+        ownerId: 'owner',
+        nowUtc: DateTime.utc(2026, 11, 11, 20),
+      )).valueOrNull!;
+      expect(state.scheduleState, QiyamScheduleState.available);
+      expect(state.ishaUtc, isNull);
+    }
+  });
+
+  test('without a saved location there is no window', () async {
+    preferences.stored = null;
+    final state = (await adapter.resolve(
+      ownerId: 'owner',
+      nowUtc: DateTime.utc(2026, 11, 11, 9, 59),
+    )).valueOrNull!;
+    expect(state.ishaUtc, isNull);
+    expect(state.nextFajrUtc, isNull);
   });
 
   test('setupRequired keeps recording on the device 12:00 rule', () async {

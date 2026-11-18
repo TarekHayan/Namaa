@@ -268,6 +268,90 @@ void main() {
     expect(state.nextBoundaryUtc, isNull);
   });
 
+  group('the night\'s Isha (the window of the start and end times)', () {
+    final isha = DateTime.utc(2026, 11, 11, 18, 20);
+
+    QiyamNightBoundaries withIsha(DateTime? ishaUtc) => QiyamNightBoundaries(
+      maghribUtc: wednesdayMaghrib,
+      nextFajrUtc: thursdayFajr,
+      lastThirdUtc: DateTime.utc(2026, 11, 12, 1, 36),
+      nightDay: '2026-11-11',
+      zoneId: 'UTC',
+      ishaUtc: ishaUtc,
+    );
+
+    test('an Isha between Maghrib and the next Fajr is kept', () {
+      expect(withIsha(isha).ishaUtc, isha);
+    });
+
+    test('Isha is optional', () {
+      expect(withIsha(null).ishaUtc, isNull);
+    });
+
+    test('an Isha at or before Maghrib, at or after the next Fajr, or not in '
+        'UTC is rejected', () {
+      expect(() => withIsha(wednesdayMaghrib), throwsArgumentError);
+      expect(
+        () => withIsha(wednesdayMaghrib.subtract(const Duration(minutes: 1))),
+        throwsArgumentError,
+      );
+      expect(() => withIsha(thursdayFajr), throwsArgumentError);
+      expect(
+        () => withIsha(thursdayFajr.add(const Duration(minutes: 1))),
+        throwsArgumentError,
+      );
+      expect(
+        () => withIsha(DateTime(2026, 11, 11, 20, 20)),
+        throwsArgumentError,
+        reason: 'a local-time instant is not UTC',
+      );
+    });
+
+    test('the resolved night carries Isha and the last Fajr', () {
+      final state = QiyamNight.resolve(
+        nowUtc: DateTime.utc(2026, 11, 12, 3),
+        input: QiyamScheduledNight(
+          zoneOffsetMinutes: 0,
+          boundaries: withIsha(isha),
+          nextMaghribUtc: thursdayMaghrib,
+        ),
+      );
+      expect(state.ishaUtc, isha);
+      expect(state.nextFajrUtc, thursdayFajr);
+    });
+
+    test('a night with no Isha still carries the last Fajr', () {
+      final state = QiyamNight.resolve(
+        nowUtc: DateTime.utc(2026, 11, 12, 3),
+        input: QiyamScheduledNight(
+          zoneOffsetMinutes: 0,
+          boundaries: withIsha(null),
+        ),
+      );
+      expect(state.ishaUtc, isNull);
+      expect(state.nextFajrUtc, thursdayFajr);
+    });
+
+    test('no schedule and an unavailable schedule have no window', () {
+      final none = QiyamNight.resolve(
+        nowUtc: DateTime.utc(2026, 11, 12, 3),
+        input: QiyamNoSchedule(
+          deviceLocal: DateTime(2026, 11, 12, 5),
+          zoneId: 'UTC+02:00',
+          zoneOffsetMinutes: 120,
+        ),
+      );
+      expect(none.ishaUtc, isNull);
+      expect(none.nextFajrUtc, isNull);
+      final unavailable = QiyamNight.resolve(
+        nowUtc: DateTime.utc(2026, 11, 12, 3),
+        input: const QiyamScheduleUnavailable(),
+      );
+      expect(unavailable.ishaUtc, isNull);
+      expect(unavailable.nextFajrUtc, isNull);
+    });
+  });
+
   test('unordered boundary instants are rejected at construction', () {
     expect(
       () => QiyamNightBoundaries(

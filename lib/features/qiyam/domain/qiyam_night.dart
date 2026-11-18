@@ -23,7 +23,9 @@ enum QiyamScheduleState { available, setupRequired, unavailable }
 /// The boundaries of one Qiyam night, prepared by the composition adapter:
 /// [maghribUtc] opens night [nightDay] and [nextFajrUtc] is the night's last
 /// Fajr; [lastThirdUtc] is the night's last third as computed by the shared
-/// Prayer projection (SC-005).
+/// Prayer projection (SC-005). [ishaUtc] is the night's Isha when the
+/// schedule has one: Isha to the next Fajr is the window the recorded start
+/// and end times may fall in (owner decision, 2026-11-18).
 final class QiyamNightBoundaries {
   QiyamNightBoundaries({
     required this.maghribUtc,
@@ -31,10 +33,15 @@ final class QiyamNightBoundaries {
     required this.lastThirdUtc,
     required this.nightDay,
     required this.zoneId,
+    this.ishaUtc,
   }) {
     if (!maghribUtc.isUtc ||
         !nextFajrUtc.isUtc ||
         (lastThirdUtc != null && !lastThirdUtc!.isUtc) ||
+        (ishaUtc != null &&
+            (!ishaUtc!.isUtc ||
+                !maghribUtc.isBefore(ishaUtc!) ||
+                !ishaUtc!.isBefore(nextFajrUtc))) ||
         !maghribUtc.isBefore(nextFajrUtc) ||
         lastThirdUtc != null &&
             (!maghribUtc.isBefore(lastThirdUtc!) ||
@@ -56,6 +63,10 @@ final class QiyamNightBoundaries {
   /// The start of the night's last third; null only when the caller could
   /// not compute it (which the adapter reports as unavailable instead).
   final DateTime? lastThirdUtc;
+
+  /// The night's Isha, strictly between Maghrib and the next Fajr; null when
+  /// the schedule cannot produce it (the times then have no window).
+  final DateTime? ishaUtc;
 
   /// The night's civil date `YYYY-MM-DD`: night D starts at Maghrib on D.
   final String nightDay;
@@ -131,6 +142,8 @@ final class QiyamNightState {
     required this.nextBoundaryUtc,
     required this.zoneId,
     required this.zoneOffsetMinutes,
+    this.ishaUtc,
+    this.nextFajrUtc,
   });
 
   final QiyamScheduleState scheduleState;
@@ -141,6 +154,13 @@ final class QiyamNightState {
   /// The start of the night's last third; null when the schedule cannot
   /// produce it (setupRequired or unavailable).
   final DateTime? lastThirdUtc;
+
+  /// The night's Isha and last Fajr: the window the start and end times may
+  /// be picked from (owner decision, 2026-11-18). Both are null without a
+  /// schedule, and [ishaUtc] is also null when the schedule has no Isha; the
+  /// times then have no window.
+  final DateTime? ishaUtc;
+  final DateTime? nextFajrUtc;
 
   /// Only the current night is editable; unavailable locks recording.
   final bool editable;
@@ -207,6 +227,8 @@ final class QiyamNight {
       nextBoundaryUtc: scheduled.nextMaghribUtc,
       zoneId: boundaries.zoneId,
       zoneOffsetMinutes: scheduled.zoneOffsetMinutes,
+      ishaUtc: boundaries.ishaUtc,
+      nextFajrUtc: boundaries.nextFajrUtc,
     );
   }
 

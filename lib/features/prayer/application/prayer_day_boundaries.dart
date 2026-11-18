@@ -23,8 +23,9 @@ sealed class PrayerDayBoundariesResult {
   const PrayerDayBoundariesResult();
 }
 
-/// The three instants for [date], taken from the schedule source that served
-/// the day.
+/// The instants for [date], taken from the schedule source that served the
+/// day: its Fajr and Maghrib, the next date's Fajr and, when the schedule can
+/// produce it, the day's Isha.
 final class PrayerDayBoundariesAvailable extends PrayerDayBoundariesResult {
   const PrayerDayBoundariesAvailable({
     required this.date,
@@ -32,6 +33,7 @@ final class PrayerDayBoundariesAvailable extends PrayerDayBoundariesResult {
     required this.maghribUtc,
     required this.nextFajrUtc,
     required this.zoneId,
+    this.ishaUtc,
   });
 
   final PrayerLocalDate date;
@@ -39,6 +41,11 @@ final class PrayerDayBoundariesAvailable extends PrayerDayBoundariesResult {
   final DateTime maghribUtc;
   final DateTime nextFajrUtc;
   final String zoneId;
+
+  /// The day's Isha, or null when the schedule cannot produce it. Unlike the
+  /// three required instants, a missing Isha never makes the day unavailable:
+  /// only the Qiyam time window needs it, and it then simply has no window.
+  final DateTime? ishaUtc;
 }
 
 /// No saved Prayer location/method for the owner.

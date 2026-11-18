@@ -38,7 +38,9 @@ final class QiyamDeviceContext {
 /// unordered instants — resolves to the unavailable state: the screen stays
 /// visible but recording is locked, with no calendar or noon fallback (owner
 /// decision, 2026-11-10). Only `SetupRequired` (no saved location) keeps
-/// recording on the device's 12:00 rule.
+/// recording on the device's 12:00 rule. The night's Isha (from the same
+/// boundaries) gives the start and end times their Isha-to-Fajr window; a
+/// missing or out-of-order Isha leaves the times without a window.
 final class PrayerQiyamNightAdapter implements QiyamNightPort {
   PrayerQiyamNightAdapter({
     required PrayerDayBoundariesPort boundaries,
@@ -97,6 +99,7 @@ final class PrayerQiyamNightAdapter implements QiyamNightPort {
           nowUtc,
           nightDay: previous.date.value,
           maghribUtc: previous.maghribUtc,
+          ishaUtc: previous.ishaUtc,
           nextFajrUtc: previous.nextFajrUtc,
           zoneId: previous.zoneId,
           zoneOffsetMinutes: zoneOffsetMinutes,
@@ -115,6 +118,7 @@ final class PrayerQiyamNightAdapter implements QiyamNightPort {
         nowUtc,
         nightDay: available.date.value,
         maghribUtc: available.maghribUtc,
+        ishaUtc: available.ishaUtc,
         nextFajrUtc: available.nextFajrUtc,
         zoneId: available.zoneId,
         zoneOffsetMinutes: zoneOffsetMinutes,
@@ -131,6 +135,7 @@ final class PrayerQiyamNightAdapter implements QiyamNightPort {
     DateTime nowUtc, {
     required String nightDay,
     required DateTime maghribUtc,
+    required DateTime? ishaUtc,
     required DateTime nextFajrUtc,
     required String zoneId,
     required int zoneOffsetMinutes,
@@ -159,6 +164,14 @@ final class PrayerQiyamNightAdapter implements QiyamNightPort {
             lastThirdUtc: lastThird,
             nightDay: nightDay,
             zoneId: zoneId,
+            // An Isha outside Maghrib..Fajr is a schedule quirk: the times
+            // simply get no window, recording is not locked for it.
+            ishaUtc:
+                ishaUtc != null &&
+                    ishaUtc.isAfter(maghribUtc) &&
+                    ishaUtc.isBefore(nextFajrUtc)
+                ? ishaUtc
+                : null,
           ),
           zoneOffsetMinutes: zoneOffsetMinutes,
           nextMaghribUtc: nextMaghribUtc,

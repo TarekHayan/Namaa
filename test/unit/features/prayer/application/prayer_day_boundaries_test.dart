@@ -115,6 +115,8 @@ void main() {
       // The next Fajr comes from the D+1 annual cache.
       expect(available.nextFajrUtc, DateTime.utc(2026, 11, 10, 5, 10));
       expect(available.zoneId, 'Africa/Cairo');
+      // The day's own Isha rides along for the Qiyam time window.
+      expect(available.ishaUtc, DateTime.utc(2026, 11, 9, 19, 10));
       // No calculator fallback happened: no provider access per request.
       expect(calculator.calls, 0);
       expect(annual.calls, 2);
