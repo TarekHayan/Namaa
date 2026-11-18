@@ -78,7 +78,7 @@ widgets; they move to these components when they are redesigned.
 | `AppFilterChip` | One selectable choice in a multi-select group. |
 | `AppChoiceChip` | One choice of a single-select group (a 56 x 48 px pill, the selected one soft accent with an accent outline); the rak'ah choices of Qiyam. |
 | `AppSwitchTile` | A label with an on/off switch in the theme's colors, at least 48 px tall. |
-| `AppTimeField` | A 24-hour `HH:mm` field, always left to right, with a clock button that opens the platform time picker. It holds no validation; the owner passes `invalid`. |
+| `AppTimeField` | A 24-hour time the user never types: the whole field is a read-only tap target (a tap, Enter or Space) that opens the Material clock dial, dial only with no keyboard entry, and shows the choice in the locale's format, always left to right. The caller passes the `value`, `onPicked`, the translated name, hint and placeholder, and an optional `validator`: a message refuses the pick, which is then not passed on and shows under the field. `AppTimeWindow` (start, end, may cross midnight) gives the caller `contains`, `offsetOf` and `shifted` to build that validator. |
 | `AppSegmentedControl` | The page-level tab switch (a tray of equal choices). |
 | `AppInkSurface` | The base of a tappable rounded row, tab or tile. |
 | `AppActionTile` | A bordered tappable row with an icon, a label and a chevron. |
