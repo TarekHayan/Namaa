@@ -1765,3 +1765,17 @@ Coordinator re-run on 2026-11-18 at edf910b, after the owner's app was closed:
 `flutter test` **1621 passed, 1 skipped, 0 failed**; `flutter analyze` No
 issues found; `flutter test integration_test/adhkar_qiyam_flow_test.dart -d windows`
 **passed** (2 tests: the Qiyam night journey and the Adhkar Morning journey).
+
+## T076: migrations 0016 and 0017 on staging (2026-11-18)
+
+The owner approved pushing 0016 and 0017 to staging in this conversation. The
+linked project is `namaa_satging` (`qfjwybbmqhpxxikubhuh`, eu-west-1); the
+production project (`Namaa Project`) was not touched. The staging project had
+auto-paused; the owner restored it from the dashboard first.
+
+1. **Before.** `supabase migration list --linked`: 0001–0015 applied remotely; 0016 and 0017 local only.
+2. **Dry run.** `supabase db push --linked --dry-run` listed only `0016_adhkar_qiyam.sql` and `0017_my_adhkar.sql`, with no seeds and no roles.
+3. **Push.** `supabase db push --linked` applied both.
+4. **After.** `supabase migration list --linked` shows 0016 and 0017 both locally and remotely.
+
+The hosted offline-sync entry (`integration_test/adhkar_qiyam_offline_sync_test.dart` against staging) runs in CI on the PR; its result is recorded with T078.
