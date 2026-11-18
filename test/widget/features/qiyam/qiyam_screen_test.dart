@@ -652,20 +652,20 @@ void main() {
       expect(find.text('وقت البداية قبل وقت النهاية.'), findsOneWidget);
     });
 
-    qiyamTestWidgets('Arabic shows Arabic-Indic digits everywhere on the page: '
+    qiyamTestWidgets('Arabic shows Latin digits everywhere on the page: '
         'the chip, the fields and the message', (tester) async {
       await openDetails(tester, locale: const Locale('ar'));
       await pickTime(tester, 'qiyam_start_time', 22, 30);
-      expect(find.text('٢٢:٣٠'), findsOneWidget);
-      expect(find.text('22:30'), findsNothing);
+      expect(find.text('22:30'), findsOneWidget);
+      expect(find.text('٢٢:٣٠'), findsNothing);
       expect(
-        find.text('الثلث الأخير من الليل ٠١:٤٠'),
+        find.text('الثلث الأخير من الليل 01:40'),
         findsOneWidget,
         reason: 'the chip uses the same digits',
       );
       await pickTime(tester, 'qiyam_end_time', 5, 30);
       expect(
-        find.text('اختر وقتًا بين العشاء (١٩:١٢) والفجر (٠٤:٥١).'),
+        find.text('اختر وقتًا بين العشاء (19:12) والفجر (04:51).'),
         findsOneWidget,
       );
     });

@@ -1791,3 +1791,7 @@ CI failed `integration_test/adhkar_qiyam_offline_sync_test.dart` on Windows, mac
 ## Route test on the iOS simulator (2026-11-18, PR #12 at fcef813)
 
 `iOS simulator (prayer)` failed `integration_test/adhkar_qiyam_localized_route_test.dart`, variant "ar touch desktop": `timed out waiting for a widget (present: [today_screen, today_sidebar_track])`. The sidebar's `ListView` builds lazily, and on the iOS simulator the Adhkar item sat below its visible part, so it was never built. The test now scrolls the sidebar until the item is visible before it activates it. Checks on Windows: the route test passed (6 variants); with the desktop height temporarily set to 480 px to force the scroll path, both desktop variants passed; the height was then restored to 900 px.
+
+## Latin digits everywhere (owner, 2026-11-18)
+
+`useLatinDigits()` (`lib/app/theme/app_digits.dart`) makes `intl` print Arabic dates and times with Latin digits; `configureDependencies` calls it at startup and `test/flutter_test_config.dart` for every test. `flutter analyze` No issues found; `flutter test` 1621 passed, 1 skipped (a first run showed one failure that did not reproduce on the full rerun); a Windows capture of the Arabic Adhkar page shows «وقتها يبدأ من 16:58» beside «(0 / 23)» and «0%».

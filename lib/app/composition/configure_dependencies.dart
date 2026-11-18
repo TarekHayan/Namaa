@@ -34,6 +34,7 @@ import 'package:namma_project/app/composition/qiyam_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
+import 'package:namma_project/app/theme/app_digits.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/application/synchronization_engine.dart';
 import 'package:namma_project/core/data/cloud/supabase/secure_supabase_storage.dart';
@@ -217,6 +218,7 @@ Future<void> configureDependencies({
   SecureKeyValueStore? secureStoreOverride,
   String? databasePathOverride,
 }) async {
+  useLatinDigits();
   final getIt = GetIt.instance;
   await getIt.reset();
 
