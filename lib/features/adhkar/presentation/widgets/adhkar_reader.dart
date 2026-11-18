@@ -156,6 +156,9 @@ final class _AdhkarReaderState extends State<AdhkarReader> {
     }
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.enter) {
+      // A focused button (close, list, reset, previous, next) activates
+      // itself with these keys; only the reader's own focus counts.
+      if (!_focus.hasPrimaryFocus) return KeyEventResult.ignored;
       unawaited(_count(items[_index.clamp(0, items.length - 1)]));
       return KeyEventResult.handled;
     }

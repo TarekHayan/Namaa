@@ -616,6 +616,34 @@ void main() {
       await finishHoldAndSlide(tester);
     });
 
+    adhkarTestWidgets('Enter on a focused button activates that button instead '
+        'of counting', (tester) async {
+      final harness = AdhkarHarness(counts: {'m1': 1, 'm2': 3});
+      await harness.pump(tester, size: const Size(1280, 800));
+      await openReader(tester);
+      // Tab until the close button has the focus.
+      final close = key('adhkar_reader_close');
+      for (var i = 0; i < 20; i++) {
+        final focus = FocusManager.instance.primaryFocus?.context;
+        var onClose = false;
+        focus?.visitAncestorElements((ancestor) {
+          if (identical(ancestor, close.evaluate().first)) onClose = true;
+          return !onClose;
+        });
+        if (onClose) break;
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(key('adhkar_reader'), findsNothing, reason: 'the reader closed');
+      expect(
+        harness.commands.incrementCalls,
+        isEmpty,
+        reason: 'nothing counted',
+      );
+    });
+
     adhkarTestWidgets('the arrow keys follow the screen in English', (
       tester,
     ) async {
