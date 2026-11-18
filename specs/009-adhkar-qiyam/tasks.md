@@ -365,10 +365,10 @@
 - [x] T048 [US2] Implement lib/features/qiyam/presentation/qiyam_screen.dart, plus widgets/qiyam_header.dart, qiyam_tracker_card.dart and qiyam_supplications_card.dart.
   - **Depends**: T047.
   - **Done**: T047 passes.
-- [ ] T049 [US2] Register the Qiyam services and Cubit in lib/app/composition/configure_dependencies.dart and lib/app/composition/qiyam_preview_adapters.dart. Add the `/qiyam` route and the `qiyam` shell section, and activate the Qiyam entry points (Track tile, Home hub, sidebar). Add the approved supplications s1 and s2 to `qiyam_supplications` in assets/religious/adhkar_catalog_v1.json, extracted by script from content-sources.md (byte for byte).
+- [x] T049 [US2] Register the Qiyam services and Cubit in lib/app/composition/configure_dependencies.dart and lib/app/composition/qiyam_preview_adapters.dart. Add the `/qiyam` route and the `qiyam` shell section, and activate the Qiyam entry points (Track tile, Home hub, sidebar). Add the approved supplications s1 and s2 to `qiyam_supplications` in assets/religious/adhkar_catalog_v1.json, extracted by script from content-sources.md (byte for byte).
   - **Depends**: T043, T048, T035.
   - **Done**: The router and shell tests in test/widget/app/app_router_test.dart are extended and pass, and preview stays local-only.
-- [ ] T050 [US2] Extend integration_test/adhkar_qiyam_flow_test.dart with Qiyam:
+- [x] T050 [US2] Extend integration_test/adhkar_qiyam_flow_test.dart with Qiyam:
   - a fake clock at 03:00 Thursday, then 10:00, checking that the record is on Wednesday night and editable, and read-only after Maghrib;
   - Yes → No → Yes giving one award;
   - restart persistence.
@@ -611,7 +611,7 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
   - **Depends**: T103.
   - **Done**: The tests pass and show no foreign-owner data.
 
-- [ ] T107 [US2] [US3] Rebuild the Qiyam screen in the approved design (contracts/adhkar-qiyam-ui.md, "Qiyam screen (approved design, 2026-11-18)"), from the shared components in lib/app/widgets/: the heading chips, the tonight tracker and its answered switch, the one-time points badge, the autosaved details form, the collapsible supplications, the paged history with read-only night details, the states, and the sync differences page. Behavior, storage, sync and XP are unchanged. Widget tests: AR/EN, light/dark, 320 px at 200% text, each state, one award across Yes → No → Yes, and device back.
+- [x] T107 [US2] [US3] Rebuild the Qiyam screen in the approved design (contracts/adhkar-qiyam-ui.md, "Qiyam screen (approved design, 2026-11-18)"), from the shared components in lib/app/widgets/: the heading chips, the tonight tracker and its answered switch, the one-time points badge, the autosaved details form, the collapsible supplications, the paged history with read-only night details, the states, and the sync differences page. Behavior, storage, sync and XP are unchanged. Widget tests: AR/EN, light/dark, 320 px at 200% text, each state, one award across Yes → No → Yes, and device back.
   - **Depends**: T049, T106.
   - **Done**: The tests pass with no overflow, and the old Qiyam widgets that nothing uses are removed.
 

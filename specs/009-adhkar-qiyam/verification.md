@@ -1547,3 +1547,66 @@ Windows run; the real-font look of the Quran text and the section on a real
 screen (the widget tests use the placeholder catalog and the test fonts); and
 the owner's visual approval of the built screens against the canvas.
 
+
+## Qiyam wiring and the Qiyam screen in the approved design — T049, T050, T107 (2026-11-18)
+
+- **T049 wiring.** `QiyamCubit`, `SaveQiyamNight`, the night port
+  (`PrayerQiyamNightAdapter`), the supplications port, the commit port
+  (`DriftQiyamUnitOfWork`), the clock and the identity are registered in
+  `configure_dependencies.dart`. The debug preview (`qiyam_preview_adapters.dart`)
+  has its own closed owner, reads the night from the preview Prayer location, and
+  passes `queueForSync: false` to the command, so nothing is queued for upload.
+  `/qiyam` is a top-level sibling route behind the same account gate as `/prayer`
+  and `/adhkar`; the `qiyam` shell section highlights Track on a phone and
+  selects the Qiyam item on desktop. The Home quick hub, the Track hub tile and
+  the sidebar item are active.
+- **Supplications.** `qiyam_supplications` holds s1 and s2 (the full Qunut of
+  "s2: full Qunut, approved"). They were written into the asset by a script kept
+  outside the repository (`extract.js`: reads `content-sources.md` as UTF-8, takes
+  the text between « » in the s1 section and in the "s2: full Qunut, approved"
+  section, and the "Source shown (prototype)" lines of s1 and s2, and inserts
+  them by one text replacement so the rest of the file is byte-identical). A
+  second, independent check (PowerShell, `ConvertFrom-Json` on the asset, then a
+  byte search of each UTF-8 string in `content-sources.md`) found each text once,
+  delimited by « » (C2 AB / C2 BB), and each source line once after
+  "Source shown (prototype): ". A permanent test,
+  `test/unit/features/adhkar/data/qiyam_supplications_asset_test.dart`, compares
+  the asset with `content-sources.md` (no religious text in code or tests). The
+  server seed holds only item IDs, positions and targets (no supplications), so
+  `catalog_seed_sync_test.dart` and migration 0016 are unchanged.
+- **T107 screen.** Rebuilt from the shared components: the heading chips, the
+  tonight tracker with the answered switch, the one-time points badge, the
+  autosaved details form, the collapsible supplications, the paged history, the
+  read-only night details (sheet on a phone, dialog on desktop), the states, and
+  the sync differences page shared with Adhkar. New shared components:
+  `AppChoiceChip`, `AppSwitchTile`, `AppTimeField`, `AppConflictsPage` with
+  `AppConflictEntryCard`, `AppConflictVersionCard` and `appConflictStamp`
+  (Adhkar's sync page now uses them), `AppPill` warning tone, icon color and
+  radius, and `AppBanner` accent tone; all in `docs/design/app_components.md`.
+- **Presentation behavior added by the design.** The note autosaves after one
+  second (was 400 ms); a complete `HH:mm` pair, a picker choice or an emptied
+  field saves at once, a half-typed time waits for the debounce; the points badge
+  stays until the night rolls over (a later save neither raises nor clears it);
+  a night that rolls over while the page is open shows the "night changed"
+  banner; saves run one after another so a quick Yes, No, Yes never makes the
+  second one stale.
+- **Strings.** New copy is in `app_ar.arb` and `app_en.arb`, edited line by
+  line; the English strings follow the canvas.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (630 files) |
+| Analyze | `flutter analyze` | No issues found |
+| Full suite | `flutter test` | **1560 passed, 1 skipped, 0 failed** |
+| Screen | `flutter test test/widget/features/qiyam` | all passed (every state, AR/EN, light/dark, 320 px at 200% text, the points badge across Yes, No, Yes, autosave and its failure, validation, supplications, history, details sheet and dialog, device back, side column) |
+| Route and entries | `flutter test test/widget/app/qiyam_route_test.dart test/widget/features/today/qiyam_entry_points_test.dart` | all passed |
+| App flow | `flutter test test/widget/app/qiyam_app_flow_test.dart` | passed (real preview graph and asset: Home hub opens Qiyam, the real s1 and s2, a Yes stored locally with one award and nothing queued, Yes, No, Yes keeps one award, device back goes Home) |
+| T050 | `flutter test integration_test/adhkar_qiyam_flow_test.dart -d windows` | passed on Windows 2026-11-18 (03:00 Thursday is Wednesday night and editable; 10:00 still editable; Yes, No, Yes gives one award; restart restores the answer; after Maghrib the new night is unanswered and a late save for Wednesday writes nothing; the next night has its own award) |
+| Windows compile | `flutter build windows --debug` | Built `build/windows/x64/runner/Debug/namma_project.exe` |
+
+Not verified here: a run on the Android phone (CPH2481) and a hand-driven
+Windows run; the real-font look of the Amiri supplications; the owner's visual
+approval of the built screen against the canvas; iOS and macOS runs. The Track
+hub tile subtitles of the contract ("Last third 02:41" / "Recorded") are not
+built (the Adhkar tile has none either). The integration file holds only the
+Qiyam part; the Adhkar part is T036.
