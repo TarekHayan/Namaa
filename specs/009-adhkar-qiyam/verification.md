@@ -1748,5 +1748,15 @@ is accepted. No storage, sync, migration or XP change.
 | --- | --- | --- |
 | Format | `dart format --output=none --set-exit-if-changed lib test integration_test` | clean (635 files) |
 | Analyze | `flutter analyze` | No issues found |
-| Full suite | `flutter test` | **1617 passed, 1 skipped, 0 failed** |
+| Full suite | `flutter test` | **1617 passed, 1 skipped, 0 failed** (before the follow-up below) |
 | Windows flow | `flutter test integration_test/adhkar_qiyam_flow_test.dart -d windows` | **NOT RUN to completion**: the build failed at the install step because a `flutter run` session (`namma_project.exe`, started 11:48) holds `build/windows/x64/runner/Debug/namma_project.exe`; it was not killed because it is not this task's process. The flow test does not touch the time fields. |
+
+Follow-up the same day (owner decision): a start that is not before the saved
+end (same window arithmetic, midnight crossing allowed) is refused with «وقت
+البداية قبل وقت النهاية.» under the start field; and `AppTimeField` and the
+window message format times with `DateFormat.Hm` and the active locale, so
+Arabic shows Arabic-Indic digits across the page, as the last-third chip does.
+The Windows integration run is skipped on purpose: the owner's `flutter run`
+session holds the exe, and the coordinator runs it once that app is closed.
+
+Follow-up gates: `dart format --output=none --set-exit-if-changed lib test integration_test` clean (635 files); `flutter analyze` No issues found; `flutter test test/widget/features/qiyam test/unit/features/qiyam test/widget/app test/unit/app test/architecture` **553 passed, 0 failed**. The full suite was not rerun after the follow-up.

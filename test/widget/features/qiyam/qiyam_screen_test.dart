@@ -454,6 +454,7 @@ void main() {
 
     const outsideWindow = 'Pick a time between Isha (19:12) and Fajr (04:51).';
     const endNotAfterStart = 'The end time comes after the start time.';
+    const startNotBeforeEnd = 'The start time comes before the end time.';
 
     qiyamTestWidgets('the times are never typed: a tap opens a dial with no '
         'text input', (tester) async {
@@ -554,6 +555,49 @@ void main() {
       expect(h.commands.drafts.last.endTime, '23:01');
     });
 
+    qiyamTestWidgets('a start that is not before the saved end is not saved', (
+      tester,
+    ) async {
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 23, 0);
+      await pickTime(tester, 'qiyam_end_time', 1, 0);
+      final saved = h.commands.drafts.length;
+      // Later than the end (04:00 is after 01:00 across midnight).
+      await pickTime(tester, 'qiyam_start_time', 4, 0);
+      expect(find.text(startNotBeforeEnd), findsOneWidget);
+      expect(
+        find.descendant(
+          of: key('qiyam_start_time_error'),
+          matching: find.text(startNotBeforeEnd),
+        ),
+        findsOneWidget,
+      );
+      expect(h.commands.drafts, hasLength(saved));
+      expect(h.commands.drafts.last.startTime, '23:00');
+      // The same minute is not before the end either.
+      await pickTime(tester, 'qiyam_start_time', 1, 0);
+      expect(find.text(startNotBeforeEnd), findsOneWidget);
+      expect(h.commands.drafts, hasLength(saved));
+      // Across midnight is fine: 22:30 is before 01:00 of the same night.
+      await pickTime(tester, 'qiyam_start_time', 22, 30);
+      expect(find.text(startNotBeforeEnd), findsNothing);
+      expect(h.commands.drafts.last.startTime, '22:30');
+      expect(h.commands.drafts.last.endTime, '01:00');
+    });
+
+    qiyamTestWidgets('a start is not checked against an end that is not '
+        'saved, nor without a window', (tester) async {
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_start_time', 3, 0);
+      expect(h.commands.drafts.last.startTime, '03:00');
+      h = QiyamHarness(night: qiyamSetupRequired());
+      await openDetails(tester);
+      await pickTime(tester, 'qiyam_end_time', 7, 30);
+      await pickTime(tester, 'qiyam_start_time', 12, 0);
+      expect(h.commands.drafts.last.startTime, '12:00');
+      expect(find.text(startNotBeforeEnd), findsNothing);
+    });
+
     qiyamTestWidgets('the end dial opens an hour after the start, never past '
         'Fajr', (tester) async {
       await openDetails(tester);
@@ -603,6 +647,27 @@ void main() {
       await pickTime(tester, 'qiyam_start_time', 23, 0);
       await pickTime(tester, 'qiyam_end_time', 22, 0);
       expect(find.text('وقت النهاية بعد وقت البداية.'), findsOneWidget);
+      await pickTime(tester, 'qiyam_end_time', 1, 0);
+      await pickTime(tester, 'qiyam_start_time', 4, 0);
+      expect(find.text('وقت البداية قبل وقت النهاية.'), findsOneWidget);
+    });
+
+    qiyamTestWidgets('Arabic shows Arabic-Indic digits everywhere on the page: '
+        'the chip, the fields and the message', (tester) async {
+      await openDetails(tester, locale: const Locale('ar'));
+      await pickTime(tester, 'qiyam_start_time', 22, 30);
+      expect(find.text('٢٢:٣٠'), findsOneWidget);
+      expect(find.text('22:30'), findsNothing);
+      expect(
+        find.text('الثلث الأخير من الليل ٠١:٤٠'),
+        findsOneWidget,
+        reason: 'the chip uses the same digits',
+      );
+      await pickTime(tester, 'qiyam_end_time', 5, 30);
+      expect(
+        find.text('اختر وقتًا بين العشاء (١٩:١٢) والفجر (٠٤:٥١).'),
+        findsOneWidget,
+      );
     });
 
     qiyamTestWidgets(

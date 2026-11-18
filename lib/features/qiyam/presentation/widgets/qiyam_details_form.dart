@@ -250,6 +250,17 @@ final class _TimeFields extends StatelessWidget {
             AppTimeField.format(context, window.end),
           );
 
+    String? startError(TimeOfDay picked) {
+      final bad = outside(picked);
+      if (bad != null) return bad;
+      if (window != null &&
+          end != null &&
+          window.offsetOf(picked) >= window.offsetOf(end)) {
+        return copy.startBeforeEnd;
+      }
+      return null;
+    }
+
     String? endError(TimeOfDay picked) {
       final bad = outside(picked);
       if (bad != null) return bad;
@@ -281,7 +292,7 @@ final class _TimeFields extends StatelessWidget {
         initialTime: window?.start,
         semanticLabel: copy.startTime,
         pickHint: copy.pickTime,
-        validator: outside,
+        validator: startError,
         onPicked: (picked) => onTimes(_format24(picked), endTime),
       ),
     );

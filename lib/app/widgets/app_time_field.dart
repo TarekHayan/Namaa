@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -37,7 +38,7 @@ final class AppTimeWindow {
 /// target (a tap, Enter or Space on the focused field): it opens the platform
 /// clock dial, the same Material time picker the Tasks editor uses but dial
 /// only, with no switch to keyboard entry. It shows the chosen time in the
-/// locale's format (always left to right) and a clock icon.
+/// locale's digits (always left to right) and a clock icon.
 ///
 /// The field holds no rules. A pick goes to [validator] first: a message means
 /// the time is refused, so [onPicked] is not called and the message shows under
@@ -90,12 +91,21 @@ class AppTimeField extends StatefulWidget {
   /// The key of the error line under the field.
   final Key? errorKey;
 
-  /// [time] in the locale's 24-hour format, as the field shows it. Callers use
-  /// it to put times into their own messages.
-  static String format(BuildContext context, TimeOfDay time) =>
-      MaterialLocalizations.of(
-        context,
-      ).formatTimeOfDay(time, alwaysUse24HourFormat: true);
+  /// [time] as `HH:mm` in the active locale's digits (`DateFormat.Hm`, the
+  /// way the rest of the app shows times, so Arabic shows Arabic-Indic digits
+  /// on the whole page). Callers use it to put times into their own messages.
+  static String format(BuildContext context, TimeOfDay time) {
+    final at = DateTime(2000, 1, 1, time.hour, time.minute);
+    try {
+      return DateFormat.Hm(
+        Localizations.localeOf(context).toString(),
+      ).format(at);
+    } catch (_) {
+      // Locale data not loaded (no localization delegates): plain digits.
+      return '${time.hour.toString().padLeft(2, '0')}:'
+          '${time.minute.toString().padLeft(2, '0')}';
+    }
+  }
 
   @override
   State<AppTimeField> createState() => _AppTimeFieldState();

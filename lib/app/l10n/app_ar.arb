@@ -709,6 +709,7 @@
     "placeholders": {"isha": {"type": "String"}, "fajr": {"type": "String"}}
   },
   "qiyamEndAfterStart": "وقت النهاية بعد وقت البداية.",
+  "qiyamStartBeforeEnd": "وقت البداية قبل وقت النهاية.",
   "qiyamNightDetailsTitle": "تفاصيل الليلة",
   "qiyamDetailStatus": "الحالة",
   "qiyamDetailWitr": "الوتر",

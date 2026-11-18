@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/widgets/app_choice_chip.dart';
@@ -253,6 +254,27 @@ void main() {
         );
       });
     }
+
+    testWidgets('Arabic shows Arabic-Indic digits, English Latin ones', (
+      tester,
+    ) async {
+      Future<void> pumpIn(Locale locale) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            key: UniqueKey(),
+            locale: locale,
+            supportedLocales: [locale],
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: Scaffold(body: field(<TimeOfDay>[])),
+          ),
+        );
+      }
+
+      await pumpIn(const Locale('ar'));
+      expect(find.text('١٣:٠٥'), findsOneWidget);
+      await pumpIn(const Locale('en'));
+      expect(find.text('13:05'), findsOneWidget);
+    });
 
     testWidgets('an empty field shows the placeholder', (tester) async {
       await pumpShared(tester, field(<TimeOfDay>[], value: null));

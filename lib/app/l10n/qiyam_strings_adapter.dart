@@ -56,6 +56,7 @@ final class QiyamStrings {
   String timeOutsideWindow(String isha, String fajr) =>
       copy.qiyamTimeOutsideWindow(isha, fajr);
   String get endAfterStart => copy.qiyamEndAfterStart;
+  String get startBeforeEnd => copy.qiyamStartBeforeEnd;
   String get nightDetailsTitle => copy.qiyamNightDetailsTitle;
   String get detailStatus => copy.qiyamDetailStatus;
   String get detailWitr => copy.qiyamDetailWitr;

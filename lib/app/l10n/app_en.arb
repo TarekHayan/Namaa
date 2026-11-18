@@ -715,6 +715,7 @@
     "placeholders": {"isha": {"type": "String"}, "fajr": {"type": "String"}}
   },
   "qiyamEndAfterStart": "The end time comes after the start time.",
+  "qiyamStartBeforeEnd": "The start time comes before the end time.",
   "qiyamNightDetailsTitle": "Night details",
   "qiyamDetailStatus": "Status",
   "qiyamDetailWitr": "Witr",
