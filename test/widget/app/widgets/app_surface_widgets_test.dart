@@ -226,6 +226,62 @@ void main() {
       });
     }
 
+    for (final (name, brightness, direction) in kSharedMatrix) {
+      testWidgets('the warning tone, an icon color and a smaller radius '
+          '($name)', (tester) async {
+        final colors = _colors(brightness);
+        await pumpShared(
+          tester,
+          const Column(
+            children: [
+              AppPill(
+                key: Key('warning'),
+                label: 'W',
+                tone: AppPillTone.warning,
+                icon: Icons.error_outline,
+                radius: 16,
+              ),
+              AppPill(
+                key: Key('flame'),
+                label: 'F',
+                tone: AppPillTone.neutral,
+                icon: Icons.local_fire_department_outlined,
+                iconColor: Color(0xFF123456),
+              ),
+            ],
+          ),
+          brightness: brightness,
+          direction: direction,
+        );
+        final box = _decoration(tester, find.byKey(const Key('warning')));
+        expect(box.color, colors.warningSoft);
+        expect((box.border! as Border).top.color, colors.warning);
+        expect(box.borderRadius, BorderRadius.circular(16));
+        expect(
+          tester
+              .widget<Icon>(
+                find.descendant(
+                  of: find.byKey(const Key('warning')),
+                  matching: find.byType(Icon),
+                ),
+              )
+              .color,
+          colors.warning,
+        );
+        expect(
+          tester
+              .widget<Icon>(
+                find.descendant(
+                  of: find.byKey(const Key('flame')),
+                  matching: find.byType(Icon),
+                ),
+              )
+              .color,
+          const Color(0xFF123456),
+        );
+      });
+    }
+
     testWidgets('a minimum height keeps the label centered and the pill '
         'hugging its content', (tester) async {
       await pumpShared(
@@ -481,6 +537,39 @@ void main() {
         expect(find.byKey(const Key('banner_message')), findsOneWidget);
         await tester.tap(find.byKey(const Key('banner_action')));
         expect(taps, 1);
+      });
+    }
+
+    for (final (name, brightness, direction) in kSharedMatrix) {
+      testWidgets('the accent tone tints the banner with the accent ($name)', (
+        tester,
+      ) async {
+        final colors = _colors(brightness);
+        await pumpShared(
+          tester,
+          const AppBanner(
+            key: Key('banner'),
+            tone: AppBannerTone.accent,
+            message: 'The night has changed',
+            icon: Icons.dark_mode_outlined,
+          ),
+          brightness: brightness,
+          direction: direction,
+        );
+        final box = _decoration(tester, find.byKey(const Key('banner')));
+        expect(box.color, colors.accentSoft);
+        expect((box.border! as Border).top.color, colors.primary);
+        expect(
+          tester
+              .widget<Icon>(
+                find.descendant(
+                  of: find.byKey(const Key('banner')),
+                  matching: find.byType(Icon),
+                ),
+              )
+              .color,
+          colors.accentStrong,
+        );
       });
     }
 

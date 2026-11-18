@@ -16,6 +16,9 @@ enum AppPillTone {
 
   /// Soft error fill with an error border, main text (a deleted mark).
   error,
+
+  /// Soft warning fill with a warning border, main text (a notice chip).
+  warning,
 }
 
 /// A small rounded label with an optional leading icon. Callers pass the
@@ -30,6 +33,8 @@ class AppPill extends StatelessWidget {
     this.minHeight,
     this.hairline = false,
     this.icon,
+    this.iconColor,
+    this.radius = 999,
     this.maxLines,
     this.labelKey,
   });
@@ -45,6 +50,13 @@ class AppPill extends StatelessWidget {
 
   /// A leading icon, drawn in the tone's accent.
   final IconData? icon;
+
+  /// The leading icon's color, instead of the tone's.
+  final Color? iconColor;
+
+  /// The corner radius; a pill is fully rounded, a chip whose label wraps
+  /// over several lines can use a smaller one.
+  final double radius;
   final int? maxLines;
 
   /// The key of the label's `Text`.
@@ -78,6 +90,12 @@ class AppPill extends StatelessWidget {
         colors.textPrimary,
         colors.error,
       ),
+      AppPillTone.warning => (
+        colors.warningSoft,
+        colors.warning,
+        colors.textPrimary,
+        colors.warning,
+      ),
     };
     final style = AppTypography.fixed(fontSize, FontWeight.w700, text);
     final Widget content = icon == null
@@ -85,7 +103,7 @@ class AppPill extends StatelessWidget {
         : Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: glyph),
+              Icon(icon, size: 16, color: iconColor ?? glyph),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(label, key: labelKey, style: style),
@@ -99,7 +117,7 @@ class AppPill extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: fill,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(radius),
         border: outline == null ? null : Border.all(color: outline),
       ),
       // With a minimum height the label stays centered and the pill still

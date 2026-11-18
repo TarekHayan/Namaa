@@ -1,14 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
-import 'package:namma_project/app/theme/app_layout.dart';
 import 'package:namma_project/app/theme/app_typography.dart';
 import 'package:namma_project/app/widgets/app_action_tile.dart';
-import 'package:namma_project/app/widgets/app_back_link.dart';
-import 'package:namma_project/app/widgets/app_card.dart';
+import 'package:namma_project/app/widgets/app_conflicts.dart';
 import 'package:namma_project/app/widgets/app_pill.dart';
 import 'package:namma_project/features/adhkar/application/adhkar_catalog_port.dart';
 import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
@@ -107,82 +103,39 @@ final class AdhkarConflictsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
     final copy = FoundationLocalizations.of(context);
-    final wide = AppLayout.isWide(context);
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final base = wide ? 32.0 : 20.0;
-            final side = math.max(
-              base,
-              (constraints.maxWidth - AppLayout.columnMaxWidth) / 2,
-            );
-            return FutureBuilder<AdhkarCatalog?>(
-              future: source.catalogFuture,
-              builder: (context, catalogSnapshot) =>
-                  StreamBuilder<List<AdhkarConflictEvidence>>(
-                    stream: source.conflicts,
-                    builder: (context, snapshot) =>
-                        StreamBuilder<List<MyAdhkarConflictEvidence>>(
-                          stream: source.myAdhkarConflicts,
-                          builder: (context, mineSnapshot) {
-                            final rows =
-                                snapshot.data ??
-                                const <AdhkarConflictEvidence>[];
-                            final mine =
-                                mineSnapshot.data ??
-                                const <MyAdhkarConflictEvidence>[];
-                            final resolvedCatalog = catalogSnapshot.data;
-                            return ListView(
-                              key: const Key('adhkar_sync_page'),
-                              padding: EdgeInsets.fromLTRB(side, 24, side, 24),
-                              children: [
-                                Align(
-                                  alignment: AlignmentDirectional.centerStart,
-                                  child: AppBackLink(
-                                    key: const Key('adhkar_sync_back'),
-                                    label: copy.adhkarBackToAdhkar,
-                                    onTap: onBack,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  copy.adhkarConflicts,
-                                  style: AppTypography.fixed(
-                                    28,
-                                    FontWeight.w800,
-                                    colors.textPrimary,
-                                    height: 1.4,
-                                  ),
-                                ),
-                                for (final row in rows) ...[
-                                  const SizedBox(height: 16),
-                                  _countCard(
-                                    context,
-                                    copy,
-                                    resolvedCatalog,
-                                    row,
-                                    wide,
-                                  ),
-                                ],
-                                for (final row in mine) ...[
-                                  const SizedBox(height: 16),
-                                  _myAdhkarCard(context, copy, row, wide),
-                                ],
-                                const SizedBox(height: 20),
-                                _Footer(text: copy.adhkarConflictReadOnly),
-                              ],
-                            );
-                          },
-                        ),
-                  ),
-            );
-          },
-        ),
-      ),
+    return FutureBuilder<AdhkarCatalog?>(
+      future: source.catalogFuture,
+      builder: (context, catalogSnapshot) =>
+          StreamBuilder<List<AdhkarConflictEvidence>>(
+            stream: source.conflicts,
+            builder: (context, snapshot) =>
+                StreamBuilder<List<MyAdhkarConflictEvidence>>(
+                  stream: source.myAdhkarConflicts,
+                  builder: (context, mineSnapshot) {
+                    final rows =
+                        snapshot.data ?? const <AdhkarConflictEvidence>[];
+                    final mine =
+                        mineSnapshot.data ?? const <MyAdhkarConflictEvidence>[];
+                    final resolvedCatalog = catalogSnapshot.data;
+                    return AppConflictsPage(
+                      pageKey: const Key('adhkar_sync_page'),
+                      backKey: const Key('adhkar_sync_back'),
+                      footerKey: const Key('adhkar_sync_footer'),
+                      title: copy.adhkarConflicts,
+                      backLabel: copy.adhkarBackToAdhkar,
+                      onBack: onBack,
+                      footer: copy.adhkarConflictReadOnly,
+                      entries: [
+                        for (final row in rows)
+                          _countCard(context, copy, resolvedCatalog, row),
+                        for (final row in mine)
+                          _myAdhkarCard(context, copy, row),
+                      ],
+                    );
+                  },
+                ),
+          ),
     );
   }
 
@@ -191,13 +144,11 @@ final class AdhkarConflictsPage extends StatelessWidget {
     FoundationLocalizations copy,
     AdhkarCatalog? resolvedCatalog,
     AdhkarConflictEvidence row,
-    bool wide,
   ) {
     final title = _titleFor(copy, resolvedCatalog, row);
-    return _EntryCard(
-      cardKey: ValueKey('adhkar-conflict-${row.id}'),
+    return AppConflictEntryCard(
+      titleKey: ValueKey('adhkar-conflict-${row.id}'),
       title: title,
-      wide: wide,
       active: _VersionView(
         label: copy.adhkarConflictActive,
         time: _stamp(context, copy, row.activeAt),
@@ -217,7 +168,6 @@ final class AdhkarConflictsPage extends StatelessWidget {
     BuildContext context,
     FoundationLocalizations copy,
     MyAdhkarConflictEvidence row,
-    bool wide,
   ) {
     final isGroup = row.entityType == 'group';
     _VersionView version(
@@ -241,10 +191,9 @@ final class AdhkarConflictsPage extends StatelessWidget {
       );
     }
 
-    return _EntryCard(
-      cardKey: ValueKey('my-adhkar-conflict-${row.id}'),
+    return AppConflictEntryCard(
+      titleKey: ValueKey('my-adhkar-conflict-${row.id}'),
       title: isGroup ? copy.myAdhkarConflictGroup : copy.myAdhkarConflictEntry,
-      wide: wide,
       active: version(
         row.active,
         copy.adhkarConflictActive,
@@ -265,17 +214,13 @@ final class AdhkarConflictsPage extends StatelessWidget {
     BuildContext context,
     FoundationLocalizations copy,
     DateTime at,
-  ) {
-    final local = at.toLocal();
-    final now = source.now();
-    final time = DateFormat.jm(source.locale).format(local);
-    final today = DateTime(now.year, now.month, now.day);
-    final day = DateTime(local.year, local.month, local.day);
-    final difference = today.difference(day).inDays;
-    if (difference == 0) return copy.adhkarSyncToday(time);
-    if (difference == 1) return copy.adhkarSyncYesterday(time);
-    return DateFormat.yMMMd(source.locale).add_jm().format(local);
-  }
+  ) => appConflictStamp(
+    at: at,
+    now: source.now(),
+    locale: source.locale,
+    today: copy.adhkarSyncToday,
+    yesterday: copy.adhkarSyncYesterday,
+  );
 
   /// The human entry title: the list name plus the item's position from the
   /// catalog ("Morning adhkar · Dhikr 8"); an item the catalog does not know
@@ -319,94 +264,6 @@ final class AdhkarConflictsPage extends StatelessWidget {
       );
 }
 
-final class _Footer extends StatelessWidget {
-  const _Footer({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Row(
-      key: const Key('adhkar_sync_footer'),
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 2),
-          child: Icon(
-            Icons.info_outline,
-            size: 18,
-            color: colors.textSecondary,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: AppTypography.fixed(
-              14,
-              FontWeight.w400,
-              colors.textSecondary,
-              height: 1.6,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-final class _EntryCard extends StatelessWidget {
-  const _EntryCard({
-    required this.cardKey,
-    required this.title,
-    required this.wide,
-    required this.active,
-    required this.saved,
-  });
-
-  final Key cardKey;
-  final String title;
-  final bool wide;
-  final _VersionView active;
-  final _VersionView saved;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return AppCard(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            title,
-            key: cardKey,
-            style: AppTypography.fixed(17, FontWeight.w700, colors.textPrimary),
-          ),
-          const SizedBox(height: 12),
-          if (wide)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: active),
-                const SizedBox(width: 12),
-                Expanded(child: saved),
-              ],
-            )
-          else ...[
-            active,
-            const SizedBox(height: 12),
-            saved,
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 /// One stored version: its label chip, when it was saved, and its value (a
 /// count, a name, a dhikr's text cut to three lines, or "Deleted").
 final class _VersionView extends StatelessWidget {
@@ -433,72 +290,54 @@ final class _VersionView extends StatelessWidget {
     final colors = AppColors.of(context);
     final ambient = Directionality.of(context);
     final text = value;
-    return AppCard(
-      tone: activeVersion ? AppCardTone.accent : AppCardTone.secondary,
-      radius: 18,
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppPill(
-            label: label,
-            tone: activeVersion ? AppPillTone.filled : AppPillTone.neutral,
-            fontSize: 14,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+    final Widget content;
+    if (deleted) {
+      content = AppPill(
+        key: const Key('adhkar_sync_deleted'),
+        label: deletedLabel,
+        tone: AppPillTone.error,
+        icon: Icons.delete_outline,
+        fontSize: 16,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      );
+    } else if (text != null && longText) {
+      content = Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Text(
+          text,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          textDirection: AppTypography.directionFor(text, ambient),
+          style: AppTypography.fixed(
+            22,
+            FontWeight.w400,
+            colors.textPrimary,
+            height: 1.9,
+          ).copyWith(fontFamily: kDhikrFontFamily),
+        ),
+      );
+    } else if (text != null) {
+      content = Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Text(
+          text,
+          textDirection: AppTypography.directionFor(text, ambient),
+          style: AppTypography.fixed(
+            16,
+            FontWeight.w600,
+            colors.textPrimary,
+            height: 1.7,
           ),
-          if (time != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              time!,
-              style: AppTypography.fixed(
-                14,
-                FontWeight.w400,
-                colors.textSecondary,
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-          if (deleted)
-            AppPill(
-              key: const Key('adhkar_sync_deleted'),
-              label: deletedLabel,
-              tone: AppPillTone.error,
-              icon: Icons.delete_outline,
-              fontSize: 16,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            )
-          else if (text != null && longText)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                text,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                textDirection: AppTypography.directionFor(text, ambient),
-                style: AppTypography.fixed(
-                  22,
-                  FontWeight.w400,
-                  colors.textPrimary,
-                  height: 1.9,
-                ).copyWith(fontFamily: kDhikrFontFamily),
-              ),
-            )
-          else if (text != null)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                text,
-                textDirection: AppTypography.directionFor(text, ambient),
-                style: AppTypography.fixed(
-                  16,
-                  FontWeight.w600,
-                  colors.textPrimary,
-                  height: 1.7,
-                ),
-              ),
-            ),
-        ],
-      ),
+        ),
+      );
+    } else {
+      content = const SizedBox.shrink();
+    }
+    return AppConflictVersionCard(
+      label: label,
+      time: time,
+      activeVersion: activeVersion,
+      child: content,
     );
   }
 }

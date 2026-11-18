@@ -58,6 +58,15 @@ class AppInlineNote extends StatelessWidget {
   }
 }
 
+/// The color family of an [AppBanner].
+enum AppBannerTone {
+  /// A warning or limit: soft warning fill and border.
+  warning,
+
+  /// An informative state: soft accent fill and border.
+  accent,
+}
+
 /// A tinted notice block: an icon, a message and an optional action button.
 /// [compact] is the dense form used over a reader's controls (smaller text and
 /// corners). Callers pass the translated message and action label.
@@ -67,6 +76,7 @@ class AppBanner extends StatelessWidget {
     required this.message,
     required this.icon,
     this.compact = false,
+    this.tone = AppBannerTone.warning,
     this.actionLabel,
     this.onAction,
     this.actionKey,
@@ -76,6 +86,7 @@ class AppBanner extends StatelessWidget {
   final String message;
   final IconData icon;
   final bool compact;
+  final AppBannerTone tone;
 
   /// The action button; shown only when both [actionLabel] and [onAction]
   /// are set.
@@ -88,8 +99,9 @@ class AppBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final hasAction = actionLabel != null && onAction != null;
+    final accent = tone == AppBannerTone.accent;
     return AppCard(
-      tone: AppCardTone.warning,
+      tone: accent ? AppCardTone.accent : AppCardTone.warning,
       radius: compact ? 18 : 20,
       constraints: compact ? const BoxConstraints(minHeight: 52) : null,
       padding: EdgeInsets.symmetric(
@@ -105,7 +117,11 @@ class AppBanner extends StatelessWidget {
             children: [
               Padding(
                 padding: EdgeInsets.only(top: compact ? 0 : 2),
-                child: Icon(icon, size: 24, color: colors.warning),
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: accent ? colors.accentStrong : colors.warning,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

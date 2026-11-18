@@ -74,8 +74,11 @@ widgets; they move to these components when they are redesigned.
 | --- | --- |
 | `AppCard` | Any boxed block. Tones: surface, secondary, accent, warning, error; optional glow. |
 | `AppIconBadge` | A round icon: an empty, finished or error mark, or a leading list icon. |
-| `AppPill` | A small rounded label (a count, a tag, a "deleted" mark), with an optional icon. |
+| `AppPill` | A small rounded label (a count, a tag, a "deleted" mark, a notice chip), with an optional icon. Tones: accent, neutral, filled, error, warning; `iconColor` and `radius` for a chip whose label wraps. |
 | `AppFilterChip` | One selectable choice in a multi-select group. |
+| `AppChoiceChip` | One choice of a single-select group (a 56 x 48 px pill, the selected one soft accent with an accent outline); the rak'ah choices of Qiyam. |
+| `AppSwitchTile` | A label with an on/off switch in the theme's colors, at least 48 px tall. |
+| `AppTimeField` | A 24-hour `HH:mm` field, always left to right, with a clock button that opens the platform time picker. It holds no validation; the owner passes `invalid`. |
 | `AppSegmentedControl` | The page-level tab switch (a tray of equal choices). |
 | `AppInkSurface` | The base of a tappable rounded row, tab or tile. |
 | `AppActionTile` | A bordered tappable row with an icon, a label and a chevron. |
@@ -84,7 +87,8 @@ widgets; they move to these components when they are redesigned.
 | `AppMenuButton` | The three-dot overflow menu with the shared menu design. |
 | `AppProgressRing`, `AppLinearProgress` | Circular and thin linear progress from the progress tokens. |
 | `AppInlineNote` | A line of warning or error text with an icon (limits, field errors). |
-| `AppBanner` | A tinted notice with an icon, a message and an optional action button. |
+| `AppBanner` | A tinted notice with an icon, a message and an optional action button. Tones: warning, accent (an informative state). |
+| `AppConflictsPage`, `AppConflictEntryCard`, `AppConflictVersionCard`, `appConflictStamp` | The read-only "Sync differences" page: back link, title, one card per entry with the active and the saved version (stacked on a phone, side by side when wide), the footer; Adhkar and Qiyam compose it with their own version content. |
 | `AppEmptyState` | A centered empty state: badge, title, body, action. |
 | `AppToast` | A short confirmation toast. Capture with `AppToast.of(context)` before an `await`. |
 | `showAppAdaptiveSheet` | Opens a form as a bottom sheet on phones and a dialog from 720 px. Build its content with `AppFormSheet`. |
