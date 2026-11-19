@@ -1837,3 +1837,7 @@ Run 44535896680 (at 8187c99) failed iOS prayer (`prayer_offline_sync_test.dart` 
 
 - Staging, Windows, `--dart-define=NAMAA_SUPABASE_ENV=non-production` with the staging values: `adhkar_qiyam_offline_sync_test.dart` passed in 55 s (it took about 4 minutes before the change), `prayer_offline_sync_test.dart` passed in 26 s.
 - Local stack, Windows: both files passed (23 s and 9 s).
+
+## Today sync read a task twice on Linux (2026-11-19, run 44557887399 at 673b8e3)
+
+`Linux integration` failed `integration_test/today_sync_test.dart` (spec 006): `Expected: an object with length of <1>, Actual: … has length of <2>` for this run's completed task. The test reads the account's whole task, award and habit history; on the shared staging accounts that spans many keyset pages, and a row updated between two pages comes back twice. The four checks now count distinct records (task id, award source, habit id, and habit id with date); the server's keys keep each record unique. Windows against staging (`NAMAA_SUPABASE_ENV=non-production`): passed in 17 s. Done in a separate worktree, so the owner's uncommitted work on `namaa/ui-worlds-foundation` was not touched.

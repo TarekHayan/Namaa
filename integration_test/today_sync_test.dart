@@ -305,22 +305,36 @@ void main() {
     expect(remoteTasks.failureOrNull, isNull);
     expect(remoteAwards.failureOrNull, isNull);
     expect(remoteHabits.failureOrNull, isNull);
+    // The staging accounts hold every run's rows, so a full read spans many
+    // keyset pages, and a row that changes between two pages can come back
+    // twice (CI run 44557887399 read this run's task twice). The checks
+    // count distinct records; the server's own keys keep each one unique.
     expect(
-      remoteTasks.valueOrNull!.where(
-        (row) => row.id == taskId && row.isCompleted,
-      ),
+      remoteTasks.valueOrNull!
+          .where((row) => row.id == taskId && row.isCompleted)
+          .map((row) => row.id)
+          .toSet(),
       hasLength(1),
     );
     expect(
-      remoteAwards.valueOrNull!.where((row) => row.sourceId == taskId),
+      remoteAwards.valueOrNull!
+          .where((row) => row.sourceId == taskId)
+          .map((row) => row.sourceId)
+          .toSet(),
       hasLength(1),
     );
     expect(
-      remoteHabits.valueOrNull!.habits.where((row) => row.id == habitId),
+      remoteHabits.valueOrNull!.habits
+          .where((row) => row.id == habitId)
+          .map((row) => row.id)
+          .toSet(),
       hasLength(1),
     );
     expect(
-      remoteHabits.valueOrNull!.days.where((row) => row.habitId == habitId),
+      remoteHabits.valueOrNull!.days
+          .where((row) => row.habitId == habitId)
+          .map((row) => (row.habitId, row.localDate))
+          .toSet(),
       hasLength(1),
     );
 
