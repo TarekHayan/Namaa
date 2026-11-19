@@ -1,0 +1,71 @@
+{
+  "namespace": "70ca78e3-a267-4a2f-883f-1e0dea2df0c3",
+  "itemRecords": [
+    {
+      "day": "2026-11-09",
+      "itemId": "m1",
+      "name": "adhkar-item/2026-11-09/m1",
+      "expected": "428d1a61-3a84-5600-8cad-f0ff6785d5f5"
+    },
+    {
+      "day": "2026-11-09",
+      "itemId": "m2",
+      "name": "adhkar-item/2026-11-09/m2",
+      "expected": "bc76136f-3ba8-54aa-8fae-a9fac3b88566"
+    },
+    {
+      "day": "2026-11-08",
+      "itemId": "m1",
+      "name": "adhkar-item/2026-11-08/m1",
+      "expected": "a99bba62-16c7-5bc9-9c54-09a0cd056827"
+    }
+  ],
+  "nightRecords": [
+    {
+      "nightDate": "2026-11-09",
+      "name": "qiyam/2026-11-09",
+      "expected": "5798f43b-7b51-58c0-9e21-d6f564082693"
+    },
+    {
+      "nightDate": "2026-11-08",
+      "name": "qiyam/2026-11-08",
+      "expected": "b5cdc3fd-1b07-509a-be65-b52ab1714370"
+    }
+  ],
+  "setAwardSourceIds": [
+    {
+      "day": "2026-11-09",
+      "list": "morning",
+      "name": "adhkar/2026-11-09/morning",
+      "expected": "6a7536b0-6c60-5ecf-99c3-69ddcf6329c5"
+    },
+    {
+      "day": "2026-11-09",
+      "list": "evening",
+      "name": "adhkar/2026-11-09/evening",
+      "expected": "719dfd49-de58-5a24-ad56-9d71598830df"
+    }
+  ],
+  "conflictIds": [
+    {
+      "recordId": "428d1a61-3a84-5600-8cad-f0ff6785d5f5",
+      "descriptorA": "1000:0|1|true|05:30|06:10|x",
+      "descriptorB": "900:0|2|true|05:00|06:00|y",
+      "low": "1000:0|1|true|05:30|06:10|x",
+      "high": "900:0|2|true|05:00|06:00|y",
+      "expected": "1868ce70-8b3f-50d7-897f-0c8ea04fa494"
+    },
+    {
+      "recordId": "5798f43b-7b51-58c0-9e21-d6f564082693",
+      "descriptorA": "900:0|2|true|05:00|06:00|y",
+      "descriptorB": "1000:0|1|true|05:30|06:10|x",
+      "low": "1000:0|1|true|05:30|06:10|x",
+      "high": "900:0|2|true|05:00|06:00|y",
+      "expected": "b8a5dd72-ccb0-5fc5-90e3-bb2c295752d4"
+    }
+  ],
+  "crossChecks": {
+    "conflictOrderStable": true,
+    "qiyamAwardIsRecordId": true
+  }
+}

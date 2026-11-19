@@ -20,7 +20,7 @@ def load(name, file):
 
 pub_get = load("pub_get_retry", "pub-get-with-retry.py")
 
-ALL_GROUPS = ["foundation", "tasks", "habits", "mind-maps", "today", "prayer"]
+ALL_GROUPS = ["foundation", "tasks", "habits", "mind-maps", "today", "prayer", "adhkar-qiyam"]
 
 
 class IosGroupRegistrationTest(unittest.TestCase):
@@ -54,6 +54,48 @@ class IosGroupRegistrationTest(unittest.TestCase):
         self.assertNotIn("\npush:", workflow)
 
 
+    def test_adhkar_qiyam_files_are_in_every_desktop_gate(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        desktop_jobs = {
+            name: workflow.split(f"\n  {name}:\n", 1)[1].split(f"\n  {next_name}:\n", 1)[0]
+            for name, next_name in (("linux", "windows"), ("windows", "macos"),
+                                    ("macos", "ios"))
+        }
+        for suite in ("flow", "offline_sync", "localized_route"):
+            for name, job in desktop_jobs.items():
+                self.assertEqual(
+                    job.count(f"integration_test/adhkar_qiyam_{suite}_test.dart"),
+                    # The hosted sync file is named once in the list and once in
+                    # the per-file staging condition on Windows and macOS.
+                    2 if suite == "offline_sync" and name != "linux" else 1,
+                    f"{name} {suite}",
+                )
+        self.assertIn("'specs/009-adhkar-qiyam/**'", workflow)
+        self.assertNotIn("\npush:", workflow)
+
+    def test_hosted_adhkar_qiyam_sync_runs_on_non_production_staging(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        windows = workflow.split("\n  windows:\n", 1)[1].split("\n  macos:\n", 1)[0]
+        macos = workflow.split("\n  macos:\n", 1)[1].split("\n  ios:\n", 1)[0]
+        self.assertIn(
+            "$test -eq 'integration_test/adhkar_qiyam_offline_sync_test.dart'", windows)
+        self.assertIn(
+            '"$test_file" == integration_test/adhkar_qiyam_offline_sync_test.dart', macos)
+        for job in (windows, macos):
+            self.assertIn("NAMAA_SUPABASE_ENV=non-production", job)
+
+    def test_the_five_target_gate_still_depends_on_every_job(self):
+        workflow = (ROOT / ".github/workflows/foundation-ci.yml").read_text()
+        gate = workflow.split("  foundation-gate:", 1)[1]
+        needs = gate.split("needs:", 1)[1].split("runs-on:", 1)[0]
+        for job in ("quality", "database-security", "android", "linux", "windows",
+                    "macos", "ios"):
+            self.assertIn(f"- {job}\n", needs)
+        for result in ("QUALITY_RESULT", "DATABASE_RESULT", "ANDROID_RESULT",
+                       "LINUX_RESULT", "WINDOWS_RESULT", "MACOS_RESULT", "IOS_RESULT"):
+            self.assertIn(f'"${result}"', gate)
+
+
 class PubGetRetryTest(unittest.TestCase):
     def run_main(self, side_effect):
         with (
@@ -80,7 +122,8 @@ class PubGetRetryTest(unittest.TestCase):
 class IosGroupRunnerTest(unittest.TestCase):
     """Drives run-ios-integration-group.sh with stub flutter/python3/xcrun."""
 
-    def run_group(self, group, fail_test=(), fail_build=(), suites=""):
+    def run_group(self, group, fail_test=(), fail_build=(), suites="",
+                  timeout_test=(), hang_shutdown=False):
         bash = (
             r"C:\Program Files\Git\bin\bash.exe" if os.name == "nt" else shutil.which("bash")
         )
@@ -95,7 +138,9 @@ class IosGroupRunnerTest(unittest.TestCase):
             probe = Path(directory)
             stubs = {
                 "flutter": 'echo "flutter $*" >> "$PROBE_CALLS"\n',
-                "xcrun": 'echo "xcrun $*" >> "$PROBE_CALLS"\n',
+                "xcrun": 'echo "xcrun $*" >> "$PROBE_CALLS"\n'
+                         '[[ "$2" == shutdown && -n "$PROBE_HANG_SHUTDOWN" ]] && exec sleep 60\n'
+                         'exit 0\n',
                 # The entry point names the file under test; stubs read it to
                 # decide which file is being built or run.
                 "python3": r'''if [[ "$1" == - ]]; then cat >/dev/null; exit 0; fi
@@ -107,6 +152,7 @@ if [[ "$2" == --build-only ]]; then
 fi
 echo "test $current" >> "$PROBE_CALLS"
 [[ " $PROBE_FAIL_TEST " == *" $current "* ]] && exit 65
+[[ " $PROBE_TIMEOUT_TEST " == *" $current "* ]] && exit 124
 exit 0
 ''',
             }
@@ -119,6 +165,9 @@ exit 0
                 IOS_GROUP=group, IOS_DEVICE_ID="SIM-1", IOS_SUITES=suites,
                 PROBE_BIN=bash_path(probe), PROBE_CALLS=bash_path(probe / "calls"),
                 PROBE_FAIL_TEST=" ".join(fail_test), PROBE_FAIL_BUILD=" ".join(fail_build),
+                PROBE_TIMEOUT_TEST=" ".join(timeout_test),
+                PROBE_HANG_SHUTDOWN="1" if hang_shutdown else "",
+                NAMAA_IOS_SIMCTL_LIMIT_SECONDS="2",
                 PROBE_SCRIPT=bash_path(ROOT / ".github/scripts/run-ios-integration-group.sh"),
             )
             for name in (
@@ -164,7 +213,7 @@ exit 0
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual([c for c in calls if c.startswith("test ")], ["test today_dashboard"])
 
-    def test_prayer_group_runs_all_four_entries(self):
+    def test_prayer_group_runs_all_its_entries_in_order(self):
         result, calls = self.run_group("prayer")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(
@@ -172,6 +221,37 @@ exit 0
             ["test prayer_schedule", "test prayer_reports", "test prayer_offline_sync",
              "test prayer_localized_route"],
         )
+        self.assertIn("all 4 files passed", result.stdout)
+
+    def test_adhkar_qiyam_group_runs_its_own_three_files_in_order(self):
+        # Its own group, so a stalled Prayer file can no longer spend the
+        # shared step budget and cut these files off (run 44391040429).
+        result, calls = self.run_group("adhkar-qiyam")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(
+            [c for c in calls if c.startswith("test ")],
+            ["test adhkar_qiyam_flow", "test adhkar_qiyam_offline_sync",
+             "test adhkar_qiyam_localized_route"],
+        )
+        self.assertIn("all 3 files passed", result.stdout)
+
+    def test_adhkar_qiyam_focused_selection_and_failure_reporting(self):
+        result, calls = self.run_group("adhkar-qiyam", suites="adhkar-qiyam-flow")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual([c for c in calls if c.startswith("test ")],
+                         ["test adhkar_qiyam_flow"])
+        # A failing file is reported by name and never retried or hidden.
+        result, calls = self.run_group(
+            "adhkar-qiyam", suites="adhkar-qiyam-flow,adhkar-qiyam-localized-route",
+            fail_test=("adhkar_qiyam_flow",))
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(
+            [c for c in calls if c.startswith("test ")],
+            ["test adhkar_qiyam_flow", "test adhkar_qiyam_localized_route"])
+        self.assertIn("1 of 2 files failed: adhkar-qiyam-flow", result.stderr)
+        result, calls = self.run_group("adhkar-qiyam", suites="adhkar-qiyam-typo")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(calls, [])
 
     def test_prayer_focused_selection_and_unknown_suite(self):
         result, calls = self.run_group("prayer", suites="prayer-reports")
@@ -183,6 +263,19 @@ exit 0
         result, calls = self.run_group("prayer", suites="prayer-reports,")
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertEqual(calls, [])
+
+    def test_hung_simulator_shutdown_is_abandoned_and_the_group_goes_on(self):
+        # A wedged `simctl shutdown` after a timed-out file once held the
+        # foundation group until the 125-minute step limit (run 44562890666).
+        result, calls = self.run_group(
+            "today", timeout_test=("today_dashboard",), hang_shutdown=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        # The timed-out file is retried once, then reported; the next one runs.
+        self.assertEqual(
+            [c for c in calls if c.startswith("test ")],
+            ["test today_dashboard", "test today_dashboard", "test today_sync"])
+        self.assertIn("did not finish within 2s; abandoned it", result.stdout)
+        self.assertIn("1 of 2 files failed: today-dashboard", result.stderr)
 
     def test_unknown_group_fails_before_running(self):
         result, calls = self.run_group("ipad")

@@ -96,11 +96,27 @@ class TemporaryDatabasePath {
 
   /// Deletes the temporary directory and everything in it. Safe to call
   /// twice.
+  ///
+  /// The encrypted database runs in a background isolate; on Windows the
+  /// file lock can outlive [FoundationDatabase.close] by a few milliseconds,
+  /// so the delete retries briefly before giving up (a real leak still
+  /// throws).
   void dispose() {
     final dir = _directory;
     _directory = null;
-    if (dir != null && dir.existsSync()) {
-      dir.deleteSync(recursive: true);
+    if (dir == null || !dir.existsSync()) return;
+    for (var attempt = 0; ; attempt++) {
+      try {
+        dir.deleteSync(recursive: true);
+        return;
+      } on FileSystemException {
+        // The encrypted database runs in a background isolate whose file
+        // handle can briefly outlive close() on Windows, so the delete
+        // retries for up to a second. A handle held longer than that is a
+        // real leak and still fails the test (Phase 2 review finding 7).
+        if (attempt >= 9) rethrow;
+        sleep(const Duration(milliseconds: 100));
+      }
     }
   }
 }

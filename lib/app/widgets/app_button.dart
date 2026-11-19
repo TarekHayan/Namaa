@@ -9,6 +9,49 @@ enum AppButtonVariant { primary, secondary, outline, text, danger }
 
 enum AppButtonSize { small, medium, large }
 
+/// The visual family of an [AppButton].
+enum AppButtonLook {
+  /// The original look: the tokens' primary color, bold labels and the
+  /// animated hover glow. Existing screens use it.
+  classic,
+
+  /// The approved 2026-11 design: a stronger accent fill with a soft glow,
+  /// quiet buttons on the secondary surface, rounded 14-20 px corners and
+  /// 48-58 px heights. Sizes map to small 48, medium 52 and large 58 px.
+  /// Labels always wrap. Adhkar uses it; other screens adopt it when they are
+  /// redesigned.
+  refined,
+}
+
+/// One-off adjustments of a refined [AppButton] for a design detail that its
+/// size does not cover. Prefer the size's defaults; every use is an exception
+/// to the design system.
+@immutable
+class AppButtonTuning {
+  const AppButtonTuning({
+    this.radius,
+    this.minHeight,
+    this.padding,
+    this.fontWeight,
+    this.labelHeight,
+  });
+
+  /// The corner radius, instead of the size's.
+  final double? radius;
+
+  /// The minimum height, instead of the size's.
+  final double? minHeight;
+
+  /// The padding, instead of the size's horizontal 20-24 and vertical 6.
+  final EdgeInsetsGeometry? padding;
+
+  /// The label weight, instead of the variant's.
+  final FontWeight? fontWeight;
+
+  /// The label line height, instead of the font's own.
+  final double? labelHeight;
+}
+
 /// The standard action button. Feature screens choose only intent and size.
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -25,6 +68,10 @@ class AppButton extends StatelessWidget {
     this.showDisabledColor = false,
     this.semanticLabel,
     this.selected,
+    this.look = AppButtonLook.classic,
+    this.trailingIcon,
+    this.fill,
+    this.tuning,
   });
 
   final String label;
@@ -40,8 +87,22 @@ class AppButton extends StatelessWidget {
   final String? semanticLabel;
   final bool? selected;
 
+  /// The visual family; [AppButtonLook.classic] keeps the original look.
+  final AppButtonLook look;
+
+  /// Refined look: an icon after the label (a "continue" arrow).
+  final IconData? trailingIcon;
+
+  /// Refined look: the fill of a secondary or outline button, instead of the
+  /// default secondary or page surface.
+  final Color? fill;
+
+  /// Refined look: one-off adjustments of the size's metrics.
+  final AppButtonTuning? tuning;
+
   @override
   Widget build(BuildContext context) {
+    if (look == AppButtonLook.refined) return _buildRefined(context);
     final colors = Theme.of(context).brightness == Brightness.dark
         ? AppColors.dark
         : AppColors.light;
@@ -190,6 +251,135 @@ class AppButton extends StatelessWidget {
       child: expanded
           ? SizedBox(width: double.infinity, child: button)
           : button,
+    );
+  }
+
+  /// The refined look: every variant is a filled button whose colors,
+  /// outline and glow come from the theme tokens.
+  Widget _buildRefined(BuildContext context) {
+    assert(!loading, 'the refined look has no loading state');
+    final colors = AppColors.of(context);
+    final (height, corner, pad, iconSize, iconGap) = switch (size) {
+      AppButtonSize.small => (48.0, 14.0, 20.0, 20.0, 8.0),
+      AppButtonSize.medium => (52.0, 16.0, 20.0, 20.0, 8.0),
+      AppButtonSize.large => (58.0, 20.0, 24.0, 22.0, 10.0),
+    };
+    final cornerRadius = tuning?.radius ?? corner;
+    final enabled = onPressed != null;
+    final Color background;
+    final Color foreground;
+    final Color? outline;
+    switch (variant) {
+      case AppButtonVariant.primary:
+      case AppButtonVariant.danger:
+        final danger = variant == AppButtonVariant.danger;
+        background = enabled
+            ? (color ?? (danger ? colors.error : colors.accentStrong))
+            : colors.surfaceSecondary;
+        foreground = enabled
+            ? (danger ? colors.onError : colors.onAccentStrong)
+            : colors.textSecondary;
+        outline = enabled || danger ? null : colors.border;
+      case AppButtonVariant.secondary:
+        background = fill ?? colors.surfaceSecondary;
+        foreground = colors.textPrimary;
+        outline = colors.border;
+      case AppButtonVariant.outline:
+        background = fill ?? colors.surface;
+        foreground = colors.textPrimary;
+        outline = color ?? colors.border;
+      case AppButtonVariant.text:
+        background = Colors.transparent;
+        foreground = colors.accentStrong;
+        outline = null;
+    }
+    final font = DefaultTextStyle.of(context).style;
+    final weight =
+        tuning?.fontWeight ??
+        (variant == AppButtonVariant.secondary
+            ? FontWeight.w600
+            : FontWeight.w700);
+    final style = ButtonStyle(
+      minimumSize: WidgetStatePropertyAll(Size(0, tuning?.minHeight ?? height)),
+      padding: WidgetStatePropertyAll(
+        tuning?.padding ?? EdgeInsets.symmetric(horizontal: pad, vertical: 6),
+      ),
+      elevation: const WidgetStatePropertyAll(0),
+      shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+      surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+      backgroundColor: WidgetStatePropertyAll(background),
+      foregroundColor: WidgetStatePropertyAll(foreground),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius),
+          side: outline == null ? BorderSide.none : BorderSide(color: outline),
+        ),
+      ),
+      textStyle: WidgetStatePropertyAll(
+        TextStyle(
+          // A button label does not inherit the theme font by itself, so
+          // carry it through from the surrounding text style.
+          fontFamily: font.fontFamily,
+          fontFamilyFallback: font.fontFamilyFallback,
+          fontSize: 16,
+          fontWeight: weight,
+          height: tuning?.labelHeight,
+        ),
+      ),
+    );
+    final Widget button;
+    if (trailingIcon != null) {
+      button = FilledButton(
+        onPressed: onPressed,
+        style: style,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(child: Text(label, textAlign: TextAlign.center)),
+            SizedBox(width: iconGap),
+            Icon(trailingIcon, size: iconSize),
+          ],
+        ),
+      );
+    } else if (icon != null) {
+      button = FilledButton.icon(
+        onPressed: onPressed,
+        style: style,
+        icon: Icon(icon, size: iconSize),
+        label: Text(label),
+      );
+    } else {
+      button = FilledButton(
+        onPressed: onPressed,
+        style: style,
+        child: Text(label, textAlign: TextAlign.center),
+      );
+    }
+    final glowing = variant == AppButtonVariant.primary && enabled;
+    final Widget decorated = glowing
+        ? DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(cornerRadius),
+              boxShadow: colors.buttonShadow,
+            ),
+            child: button,
+          )
+        : button;
+    final Widget sized = expanded
+        ? SizedBox(width: double.infinity, child: decorated)
+        : decorated;
+    // The button already exposes its own label; wrap it only to replace the
+    // label or mark it selected, so assistive technology reads one node.
+    if (semanticLabel == null && selected == null) return sized;
+    return Semantics(
+      label: semanticLabel ?? label,
+      button: true,
+      enabled: enabled,
+      selected: selected,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: sized,
     );
   }
 

@@ -1,4 +1,6 @@
 const String kPrayerDoneAwardSource = 'prayer_done';
+const String kAdhkarSetDoneAwardSource = 'adhkar_set_done';
+const String kQiyamDoneAwardSource = 'qiyam_done';
 
 /// Canonical shared XP evidence for one first completion.
 final class XpAward {
@@ -14,7 +16,9 @@ final class XpAward {
         !awardedAt.isUtc ||
         !((source == 'task_done' && amount == 20) ||
             (source == kPrayerDoneAwardSource &&
-                (amount == 5 || amount == 10)))) {
+                (amount == 5 || amount == 10)) ||
+            (source == kAdhkarSetDoneAwardSource && amount == 15) ||
+            (source == kQiyamDoneAwardSource && amount == 30))) {
       throw ArgumentError('Invalid XP award');
     }
   }
@@ -33,7 +37,9 @@ final class XpAward {
         amount < 0 ||
         (source != 'task_done' &&
             source != 'task_completion' &&
-            source != kPrayerDoneAwardSource)) {
+            source != kPrayerDoneAwardSource &&
+            source != kAdhkarSetDoneAwardSource &&
+            source != kQiyamDoneAwardSource)) {
       throw ArgumentError('Invalid stored XP award');
     }
   }

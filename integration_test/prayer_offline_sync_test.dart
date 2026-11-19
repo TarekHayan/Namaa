@@ -171,9 +171,14 @@ void main() {
           repository: stores[i],
         ),
     ];
-    // A one-row page exercises all three keyset cursors and their restart.
+    // Locally, a one-row page exercises all three keyset cursors and their
+    // restart. The staging accounts keep every run's rows from every
+    // platform, so one-row pages there read the whole history row by row,
+    // which grows with each run until iOS runs time out; hosted runs use
+    // ordinary pages.
     final readers = [
-      for (final client in clients) SupabasePrayerReader(client, pageSize: 1),
+      for (final client in clients)
+        SupabasePrayerReader(client, pageSize: local ? 1 : 500),
     ];
     // Staging users persist across runs. Use a fresh civil day so the exact
     // report identity and one-time XP assertions cannot inherit prior data.

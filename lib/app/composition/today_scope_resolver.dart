@@ -4,8 +4,10 @@ library;
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 
+import 'adhkar_preview_adapters.dart' show kAdhkarPreviewAccountId;
 import 'habits_preview_adapters.dart' show kHabitsPreviewAccountId;
 import 'prayer_preview_adapters.dart' show kPrayerPreviewAccountId;
+import 'qiyam_preview_adapters.dart' show kQiyamPreviewAccountId;
 import 'tasks_preview_adapters.dart' show kTasksPreviewAccountId;
 
 final class TodayScopeResolver {
@@ -56,6 +58,8 @@ final class TodayScopeResolver {
       taskOwnerId: kTasksPreviewAccountId,
       habitOwnerId: kHabitsPreviewAccountId,
       prayerOwnerId: kPrayerPreviewAccountId,
+      adhkarOwnerId: kAdhkarPreviewAccountId,
+      qiyamOwnerId: kQiyamPreviewAccountId,
       generation: generation,
     );
   }
@@ -88,5 +92,7 @@ final class TodayScopeResolver {
       accountId.trim().isNotEmpty &&
       accountId != kTasksPreviewAccountId &&
       accountId != kHabitsPreviewAccountId &&
-      accountId != kPrayerPreviewAccountId;
+      accountId != kPrayerPreviewAccountId &&
+      accountId != kAdhkarPreviewAccountId &&
+      accountId != kQiyamPreviewAccountId;
 }

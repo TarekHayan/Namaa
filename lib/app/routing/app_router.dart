@@ -23,6 +23,12 @@ const String kHabitsRoute = '/habits';
 const String kMindMapsRoute = '/mind-maps';
 const String kPrayerRoute = '/prayer';
 
+/// Adhkar (Morning, Evening and My Adhkar), a top-level sibling like /prayer.
+const String kAdhkarRoute = '/adhkar';
+
+/// Qiyam (night prayer), a top-level sibling like /adhkar.
+const String kQiyamRoute = '/qiyam';
+
 /// Key used by tests and diagnostics to identify handled route failures.
 const Key kFoundationUnknownRouteKey = Key('foundation_unknown_route');
 
@@ -36,6 +42,10 @@ const Key kMindMapsRouteLoadingKey = Key('mind_maps_route_loading');
 const Key kMindMapsRouteSignedOutKey = Key('mind_maps_route_signed_out');
 const Key kPrayerRouteLoadingKey = Key('prayer_route_loading');
 const Key kPrayerRouteSignedOutKey = Key('prayer_route_signed_out');
+const Key kAdhkarRouteLoadingKey = Key('adhkar_route_loading');
+const Key kAdhkarRouteSignedOutKey = Key('adhkar_route_signed_out');
+const Key kQiyamRouteLoadingKey = Key('qiyam_route_loading');
+const Key kQiyamRouteSignedOutKey = Key('qiyam_route_signed_out');
 
 typedef AuthenticatedTasksBuilder =
     Widget Function(BuildContext context, String accountId);
@@ -44,6 +54,10 @@ typedef AuthenticatedHabitsBuilder =
 typedef AuthenticatedMindMapsBuilder =
     Widget Function(BuildContext context, String accountId);
 typedef AuthenticatedPrayerBuilder =
+    Widget Function(BuildContext context, String accountId);
+typedef AuthenticatedAdhkarBuilder =
+    Widget Function(BuildContext context, String accountId);
+typedef AuthenticatedQiyamBuilder =
     Widget Function(BuildContext context, String accountId);
 
 /// Owns Foundation routing only. Future features register their own entries;
@@ -59,6 +73,10 @@ class FoundationAppRouter {
     AuthenticatedMindMapsBuilder? mindMapsBuilder,
     CloudSessionPort? prayerSession,
     AuthenticatedPrayerBuilder? prayerBuilder,
+    CloudSessionPort? adhkarSession,
+    AuthenticatedAdhkarBuilder? adhkarBuilder,
+    CloudSessionPort? qiyamSession,
+    AuthenticatedQiyamBuilder? qiyamBuilder,
   }) : router = GoRouter(
          initialLocation: kFoundationRootRoute,
          routes: _routes(
@@ -71,6 +89,10 @@ class FoundationAppRouter {
            mindMapsBuilder,
            prayerSession,
            prayerBuilder,
+           adhkarSession,
+           adhkarBuilder,
+           qiyamSession,
+           qiyamBuilder,
          ),
          errorBuilder: (context, state) => const _UnknownRouteBoundary(),
        );
@@ -91,6 +113,10 @@ class FoundationAppRouter {
     AuthenticatedMindMapsBuilder? mindMapsBuilder,
     CloudSessionPort? prayerSession,
     AuthenticatedPrayerBuilder? prayerBuilder,
+    CloudSessionPort? adhkarSession,
+    AuthenticatedAdhkarBuilder? adhkarBuilder,
+    CloudSessionPort? qiyamSession,
+    AuthenticatedQiyamBuilder? qiyamBuilder,
   ) => <RouteBase>[
     GoRoute(
       path: kFoundationRootRoute,
@@ -145,6 +171,26 @@ class FoundationAppRouter {
           prayer: true,
         ),
       ),
+    if (adhkarSession != null && adhkarBuilder != null)
+      GoRoute(
+        path: kAdhkarRoute,
+        name: 'adhkar',
+        builder: (context, _) => _TasksRouteGate(
+          cloudSession: adhkarSession,
+          tasksBuilder: adhkarBuilder,
+          adhkar: true,
+        ),
+      ),
+    if (qiyamSession != null && qiyamBuilder != null)
+      GoRoute(
+        path: kQiyamRoute,
+        name: 'qiyam',
+        builder: (context, _) => _TasksRouteGate(
+          cloudSession: qiyamSession,
+          tasksBuilder: qiyamBuilder,
+          qiyam: true,
+        ),
+      ),
   ];
 }
 
@@ -158,6 +204,8 @@ class _TasksRouteGate extends StatefulWidget {
     this.habits = false,
     this.mindMaps = false,
     this.prayer = false,
+    this.adhkar = false,
+    this.qiyam = false,
     this.intent,
   });
 
@@ -166,6 +214,8 @@ class _TasksRouteGate extends StatefulWidget {
   final bool habits;
   final bool mindMaps;
   final bool prayer;
+  final bool adhkar;
+  final bool qiyam;
   final OwnerEntryIntent? intent;
 
   @override
@@ -294,7 +344,11 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
     }
     if (_status == CloudSessionStatus.signedOut) {
       return Scaffold(
-        key: widget.prayer
+        key: widget.qiyam
+            ? kQiyamRouteSignedOutKey
+            : widget.adhkar
+            ? kAdhkarRouteSignedOutKey
+            : widget.prayer
             ? kPrayerRouteSignedOutKey
             : widget.mindMaps
             ? kMindMapsRouteSignedOutKey
@@ -303,7 +357,11 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
             : kTasksRouteSignedOutKey,
         body: Center(
           child: Text(
-            widget.prayer
+            widget.qiyam
+                ? FoundationLocalizations.of(context).qiyamSignInRequired
+                : widget.adhkar
+                ? FoundationLocalizations.of(context).adhkarSignInRequired
+                : widget.prayer
                 ? FoundationLocalizations.of(context).prayerSignInRequired
                 : widget.mindMaps
                 ? FoundationLocalizations.of(context).mindMapsSignInRequired
@@ -316,7 +374,11 @@ class _TasksRouteGateState extends State<_TasksRouteGate> {
       );
     }
     return Scaffold(
-      key: widget.prayer
+      key: widget.qiyam
+          ? kQiyamRouteLoadingKey
+          : widget.adhkar
+          ? kAdhkarRouteLoadingKey
+          : widget.prayer
           ? kPrayerRouteLoadingKey
           : widget.mindMaps
           ? kMindMapsRouteLoadingKey

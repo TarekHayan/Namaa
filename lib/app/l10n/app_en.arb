@@ -375,6 +375,11 @@
   "dashboardAdhkarMorning": "Morning Adhkar",
   "dashboardAdhkarEvening": "Evening Adhkar",
   "dashboardAdhkarQiyam": "Qiyam & Witr",
+  "dashboardTrackAdhkarSubtitle": "Morning {morning} · Evening {evening}",
+  "@dashboardTrackAdhkarSubtitle": {
+    "placeholders": {"morning": {"type": "String"}, "evening": {"type": "String"}}
+  },
+  "dashboardTrackQiyamRecorded": "Recorded",
   "dashboardReflectionTitle": "Daily Reflection",
   "dashboardReflectionQuote": "«The most beloved deeds to Allah are those done regularly, even if small.»",
   "dashboardReflectionAction": "Write reflection",
@@ -489,6 +494,8 @@
   "prayerSourceApi": "Times: AlAdhan API annual timetable (saved on this device)",
   "prayerSourceLocal": "Times: local calculation fallback; confirm with your local mosque",
   "prayerSignInRequired": "Open Prayer after signing in.",
+  "adhkarSignInRequired": "Open Adhkar after signing in.",
+  "qiyamSignInRequired": "Open Night prayer after signing in.",
   "prayerStatusOnTime": "On time",
   "prayerStatusLate": "Completed late",
   "prayerStatusMissed": "Missed",
@@ -507,5 +514,248 @@
   "prayerConflictReadOnly": "Past prayer records are read-only",
   "prayerLocationRetry": "Try again",
   "prayerOpenSettings": "Open settings",
-  "prayerSettingsSave": "Save"
+  "prayerSettingsSave": "Save",
+  "adhkarTitle": "Adhkar",
+  "adhkarSubtitle": "Morning and evening adhkar from authentic hadith",
+  "adhkarTabMorning": "Morning",
+  "adhkarTabEvening": "Evening",
+  "adhkarProgress": "{list} ({count} / {total})",
+  "@adhkarProgress": {
+    "placeholders": {"list": {"type": "String"}, "count": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "adhkarPercent": "{percent}%",
+  "@adhkarPercent": {
+    "placeholders": {"percent": {"type": "int"}}
+  },
+  "adhkarStartsAt": "Starts at {time}",
+  "@adhkarStartsAt": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "adhkarSetupPrompt": "Turn on prayer location so adhkar times apply",
+  "adhkarCountSemantic": "Count, {count} of {target}",
+  "@adhkarCountSemantic": {
+    "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
+  },
+  "adhkarStreak": "Day streak: {days}",
+  "@adhkarStreak": {
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "quranAttribution": "Quran text and font: King Fahd Glorious Quran Printing Complex (KFGQPC), Madinah Mushaf, Hafs — provided through the Quran Foundation.",
+  "myAdhkarTab": "My adhkar",
+  "myAdhkarHeading": "Your own adhkar and duas",
+  "myAdhkarNote": "Your personal collection. The app does not review it, and it has no points or streak.",
+  "myAdhkarLoadFailed": "Your collection could not be loaded.",
+  "myAdhkarCreateGroup": "Create group",
+  "myAdhkarCreateGroupDisabled": "You have reached the limit: 100 groups.",
+  "myAdhkarGroupEntries": "{count, plural, =0{No adhkar} =1{1 dhikr} other{{count} adhkar}}",
+  "@myAdhkarGroupEntries": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "myAdhkarRename": "Rename",
+  "myAdhkarDelete": "Delete",
+  "myAdhkarGroupSheetTitleCreate": "Create group",
+  "myAdhkarGroupSheetTitleRename": "Rename group",
+  "myAdhkarGroupNameLabel": "Group name",
+  "myAdhkarCounter": "{used} / {limit}",
+  "@myAdhkarCounter": {
+    "placeholders": {"used": {"type": "int"}, "limit": {"type": "int"}}
+  },
+  "myAdhkarGroupNameInvalid": "Enter a name of 1 to 60 characters.",
+  "myAdhkarGroupDeleteTitle": "Delete this group?",
+  "myAdhkarGroupDeleteBody": "{count, plural, =0{No adhkar will be deleted.} =1{One dhikr will be deleted.} other{{count} adhkar will be deleted.}} Adhkar that are also in other groups stay there.",
+  "@myAdhkarGroupDeleteBody": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "myAdhkarCancel": "Cancel",
+  "myAdhkarSave": "Save",
+  "myAdhkarEmptyTitle": "Start your own group",
+  "myAdhkarEmptyBody": "Create groups like “Fajr”, “Ramadan” and “Duas for distress”, then save your duas and adhkar in them.",
+  "myAdhkarAdd": "Add",
+  "myAdhkarAddDisabled": "You have reached the limit: 1000 adhkar.",
+  "myAdhkarGroupEmpty": "No adhkar in this group yet. Use “Add” to save your first one.",
+  "myAdhkarBackToGroups": "Back to groups",
+  "myAdhkarOtherGroups": "Also in: {names}",
+  "@myAdhkarOtherGroups": {
+    "placeholders": {"names": {"type": "String"}}
+  },
+  "myAdhkarEdit": "Edit",
+  "myAdhkarCopy": "Copy",
+  "myAdhkarCopied": "Copied",
+  "myAdhkarEntrySheetTitleAdd": "Add a dhikr or dua",
+  "myAdhkarEntrySheetTitleEdit": "Edit dhikr or dua",
+  "myAdhkarTextLabel": "Text",
+  "myAdhkarTextHint": "The supplication or dhikr text",
+  "myAdhkarSourceLabel": "Source (optional)",
+  "myAdhkarSourceHint": "A book, a scholar or a link",
+  "myAdhkarGroupsLabel": "Groups",
+  "myAdhkarTextInvalid": "Enter text of 1 to 2000 characters.",
+  "myAdhkarSourceInvalid": "The source can have at most 500 characters.",
+  "myAdhkarGroupSetInvalid": "Choose at least one group.",
+  "myAdhkarGroupDeleted": "That group was deleted.",
+  "myAdhkarItemDeleted": "That dhikr was deleted.",
+  "myAdhkarGroupUnknown": "That group no longer exists.",
+  "myAdhkarItemUnknown": "That dhikr no longer exists.",
+  "myAdhkarSaveFailed": "Could not save. Try again.",
+  "myAdhkarEntryDeleteTitle": "Delete this dhikr?",
+  "myAdhkarEntryDeleteBody": "It will be deleted from all its groups on all your devices, and cannot be restored.",
+  "adhkarContentUnavailable": "Could not load the adhkar content.",
+  "adhkarCountingLocked": "Prayer times are not available right now; counting is paused until they return.",
+  "adhkarOpenPrayerSetup": "Set up prayer location",
+  "adhkarListMorning": "Morning adhkar",
+  "adhkarListEvening": "Evening adhkar",
+  "adhkarDoneCount": "{count} complete",
+  "@adhkarDoneCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarStart": "Start",
+  "adhkarContinueFrom": "Continue from dhikr {position}",
+  "@adhkarContinueFrom": {
+    "placeholders": {"position": {"type": "int"}}
+  },
+  "adhkarReadAgain": "Read the list again",
+  "adhkarCompleteTitle": "Adhkar complete!",
+  "adhkarPoints": "+15 points",
+  "adhkarListButton": "Adhkar list",
+  "adhkarClose": "Close",
+  "adhkarResetCount": "Reset count",
+  "adhkarVirtue": "Virtue of this dhikr",
+  "adhkarDone": "Done",
+  "adhkarNext": "Next",
+  "adhkarRepeat": "{count, plural, =1{Once} =2{Twice} other{{count} times}}",
+  "@adhkarRepeat": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarPosition": "{position} | {total}",
+  "@adhkarPosition": {
+    "placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "adhkarBackToAdhkar": "Back to Adhkar",
+  "adhkarRetry": "Try again",
+  "adhkarResetTitle": "Reset this count?",
+  "adhkarResetBody": "The count for this dhikr will go back to zero.",
+  "adhkarResetConfirm": "Reset",
+  "adhkarKeyCount": "Count",
+  "adhkarKeyMove": "Move",
+  "adhkarPreviousItem": "Previous dhikr",
+  "adhkarNextItem": "Next dhikr",
+  "myAdhkarMenuLabel": "Options",
+  "adhkarSyncToday": "Today {time}",
+  "@adhkarSyncToday": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "adhkarSyncYesterday": "Yesterday {time}",
+  "@adhkarSyncYesterday": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "qiyamTitle": "Night prayer",
+  "qiyamSubtitle": "Prayer of the night and quiet supplication",
+  "qiyamLastThird": "Last third of the night {time}",
+  "@qiyamLastThird": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "qiyamLastThirdUnavailable": "Cannot work out the last third of the night right now",
+  "qiyamOpenPrayerSetup": "Set up prayer location",
+  "qiyamDidYouPray": "Did you pray Qiyam tonight?",
+  "qiyamBestTime": "The best time for Qiyam is the last third of the night, before Fajr.",
+  "qiyamYesXp": "Yes, praise be to God (+30 points)",
+  "qiyamNo": "Not yet",
+  "qiyamRakahsLabel": "Number of rak’ahs",
+  "qiyamRakahsCount": "{count, plural, one{1 rak'ah} two{2 rak'ahs} few{{count} rak'ahs} many{{count} rak'ahs} other{{count} rak'ahs}}",
+  "@qiyamRakahsCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamStartTime": "Start time",
+  "qiyamEndTime": "End time",
+  "qiyamWitr": "I prayed Witr",
+  "qiyamNotesLabel": "Thoughts and supplication",
+  "qiyamNotesPlaceholder": "Private thoughts or supplications (optional)",
+  "qiyamNoteCounter": "{count} / 500",
+  "@qiyamNoteCounter": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamSupplicationsTitle": "Transmitted supplications for prostration and Qunut",
+  "qiyamSaving": "Saving…",
+  "qiyamSaved": "Saved",
+  "qiyamSaveFailed": "Could not save. Try again.",
+  "qiyamNightInvalidRakahs": "Choose a whole number of rak’ahs (2, 4, 8 or 11).",
+  "qiyamNightNoteTooLong": "The note is longer than 500 characters.",
+  "qiyamNightNotPerformedDetails": "Details are not kept with the answer “Not yet”.",
+  "qiyamNightChanged": "The night has changed; record the current night.",
+  "qiyamRecordingLocked": "Times are not available right now; recording is paused until they return.",
+  "qiyamReadOnly": "This night’s record is view only.",
+  "qiyamXpEarned": "Qiyam complete! +30 points",
+  "qiyamStreak": "Qiyam streak: {nights}",
+  "@qiyamStreak": {
+    "placeholders": {"nights": {"type": "int"}}
+  },
+  "qiyamStreakFailed": "Could not load the Qiyam streak.",
+  "qiyamHistoryTitle": "Previous nights",
+  "qiyamHistoryPrayedWithWitr": "Prayed · {count} rak’ahs · with Witr",
+  "@qiyamHistoryPrayedWithWitr": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamHistoryPrayed": "Prayed · {count} rak’ahs",
+  "@qiyamHistoryPrayed": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamHistoryNotPerformed": "Did not pray",
+  "qiyamHistoryNotRecorded": "Not recorded",
+  "qiyamHistoryLoadMore": "Load more",
+  "qiyamHistoryFailed": "Could not load previous nights.",
+  "qiyamSegYes": "Yes",
+  "qiyamNoCalm": "There is still time; you can change your answer to “Yes” at any point tonight.",
+  "qiyamDetailsTitle": "Details (optional)",
+  "qiyamSupplicationWitr": "Witr supplication",
+  "qiyamSupplicationQunut": "Qunut",
+  "qiyamShowAll": "Show all",
+  "qiyamShowLess": "Show less",
+  "qiyamPickTime": "Pick a time",
+  "qiyamTimeOutsideWindow": "Pick a time between Isha ({isha}) and Fajr ({fajr}).",
+  "@qiyamTimeOutsideWindow": {
+    "placeholders": {"isha": {"type": "String"}, "fajr": {"type": "String"}}
+  },
+  "qiyamEndAfterStart": "The end time comes after the start time.",
+  "qiyamStartBeforeEnd": "The start time comes before the end time.",
+  "qiyamNightDetailsTitle": "Night details",
+  "qiyamDetailStatus": "Status",
+  "qiyamDetailWitr": "Witr",
+  "qiyamDetailPrayed": "Prayed",
+  "qiyamDetailNo": "No",
+  "qiyamClose": "Close",
+  "qiyamNoNote": "No note",
+  "qiyamConflictBack": "Back to Qiyam",
+  "qiyamConflictTonight": "Qiyam · Tonight",
+  "qiyamConflictNight": "Qiyam · {date}",
+  "@qiyamConflictNight": {
+    "placeholders": {"date": {"type": "String"}}
+  },
+  "qiyamConflictAnswerYes": "Yes · {count} rak’ahs",
+  "@qiyamConflictAnswerYes": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamConflictAnswerYesWitr": "Yes · {count} rak’ahs · with Witr",
+  "@qiyamConflictAnswerYesWitr": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarConflicts": "Sync differences",
+  "adhkarConflictActive": "Active version",
+  "adhkarConflictRetained": "Saved version",
+  "adhkarConflictReadOnly": "View only; there is no action to take.",
+  "adhkarConflictCount": "Count: {count}",
+  "@adhkarConflictCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamConflicts": "Sync differences",
+  "qiyamConflictActive": "Active version",
+  "qiyamConflictRetained": "Saved version",
+  "qiyamConflictReadOnly": "View only; there is no action to take.",
+  "adhkarConflictListMorning": "Morning adhkar",
+  "adhkarConflictListEvening": "Evening adhkar",
+  "myAdhkarConflictGroup": "My adhkar · Group",
+  "myAdhkarConflictEntry": "My adhkar · Dhikr",
+  "myAdhkarConflictDeleted": "Deleted",
+  "adhkarConflictItem": "Dhikr {position}",
+  "@adhkarConflictItem": {
+    "placeholders": {"position": {"type": "int"}}
+  }
 }

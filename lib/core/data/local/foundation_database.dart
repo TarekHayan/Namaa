@@ -27,7 +27,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 part 'foundation_database.g.dart';
 
 /// Current schema version of the Foundation database.
-const int kFoundationSchemaVersion = 9;
+const int kFoundationSchemaVersion = 11;
 
 /// Vault key under which the database key material is protected.
 const String kDatabaseKeyVaultName = 'foundation.db.key';
@@ -401,6 +401,152 @@ class PrayerReports extends Table {
   Set<Column> get primaryKey => {accountId, localDate, prayerName};
 }
 
+/// Added in schema version 10: one count row per (owner, Adhkar day, item).
+/// A missing row means count 0; a reset to 0 is a persisted row. The count
+/// bounds (0 <= count <= the catalog target) are enforced by the increment
+/// command against the catalog version recorded on the row.
+@TableIndex(
+  name: 'adhkar_item_counts_owner_day_list',
+  columns: {#accountId, #adhkarDay, #list},
+)
+@TableIndex(
+  name: 'adhkar_item_counts_owner_version',
+  columns: {#accountId, #updatedAt, #recordId},
+)
+@TableIndex(
+  name: 'adhkar_item_counts_owner_record',
+  columns: {#accountId, #recordId},
+  unique: true,
+)
+class AdhkarItemCounts extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get adhkarDay => text()();
+  TextColumn get itemId => text()();
+  TextColumn get recordId => text()();
+  IntColumn get catalogVersion => integer()();
+  TextColumn get list => text()();
+  IntColumn get count => integer()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, adhkarDay, itemId};
+}
+
+/// Added in schema version 10: one record per (owner, night). "No row" means
+/// not recorded; `performed = false` is the explicit "No". The detail rules
+/// (rakahs in {2, 4, 8, 11} exactly when performed, HH:mm times, note <= 500
+/// characters, details cleared for "No") are enforced by the save command
+/// and mirrored by migration 0016's check constraints.
+@TableIndex(name: 'qiyam_nights_owner_night', columns: {#accountId, #nightDate})
+@TableIndex(
+  name: 'qiyam_nights_owner_version',
+  columns: {#accountId, #updatedAt, #recordId},
+)
+@TableIndex(
+  name: 'qiyam_nights_owner_record',
+  columns: {#accountId, #recordId},
+  unique: true,
+)
+class QiyamNights extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get nightDate => text()();
+  TextColumn get recordId => text()();
+  BoolColumn get performed => boolean()();
+  IntColumn get rakahs => integer().nullable()();
+  BoolColumn get witr => boolean()();
+  TextColumn get startTime => text().nullable()();
+  TextColumn get endTime => text().nullable()();
+  TextColumn get note => text().nullable()();
+  TextColumn get recordedZoneId => text()();
+  IntColumn get recordedOffsetMinutes => integer()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, nightDate};
+}
+
+/// Added in schema version 11 (reshaped in place on 2026-11-16 — v11 was
+/// never released): the user's own Adhkar entries (My Adhkar, FR-023). Each
+/// entry is the text (1–2000 code points after trimming) and an optional
+/// source (<= 500 code points, plain text, never opened). The field rules
+/// are enforced by the commands and mirrored by migration 0017's check
+/// constraints. The tombstone [deletedAt] is set once on delete and never
+/// cleared: deletion is final (FR-025, FR-027).
+@TableIndex(
+  name: 'my_adhkar_items_owner_tab',
+  columns: {#accountId, #deletedAt, #createdAt},
+)
+@TableIndex(
+  name: 'my_adhkar_items_owner_version',
+  columns: {#accountId, #updatedAt, #itemId},
+)
+class MyAdhkarItems extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get itemId => text()();
+
+  /// Named `text` in SQL (data-model.md); the Dart getter avoids drift's
+  /// `Table.text` builder name.
+  TextColumn get content => text().named('text')();
+  TextColumn get source => text().nullable()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+  TextColumn get deletedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, itemId};
+}
+
+/// Added in schema version 11 (reshaped 2026-11-16): the named groups of
+/// the personal collection (FR-028). The name is 1–60 code points after
+/// trimming and need not be unique. The tombstone is final. The generated
+/// row class is named `MyAdhkarGroupRow` so it never collides with the
+/// domain's `MyAdhkarGroup`.
+@DataClassName('MyAdhkarGroupRow')
+@TableIndex(
+  name: 'my_adhkar_groups_owner_tab',
+  columns: {#accountId, #deletedAt, #createdAt},
+)
+@TableIndex(
+  name: 'my_adhkar_groups_owner_version',
+  columns: {#accountId, #updatedAt, #groupId},
+)
+class MyAdhkarGroups extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get groupId => text()();
+  TextColumn get name => text()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+  TextColumn get lastAcknowledgedUpdatedAt => text().nullable()();
+  TextColumn get deletedAt => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, groupId};
+}
+
+/// Added in schema version 11 (reshaped 2026-11-16): the membership join.
+/// An entry belongs to at least one live group and may belong to several;
+/// [addedAt] is the entry's order inside that group and is kept when the
+/// entry is saved again with the same group. The membership set is part of
+/// the entry's version and is written in the same transaction as the entry.
+@TableIndex(
+  name: 'my_adhkar_item_groups_owner_group',
+  columns: {#accountId, #groupId, #addedAt},
+)
+class MyAdhkarItemGroups extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get itemId => text()();
+  TextColumn get groupId => text()();
+  TextColumn get addedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, itemId, groupId};
+}
+
 @DriftDatabase(
   tables: [
     FoundationPreferences,
@@ -419,6 +565,11 @@ class PrayerReports extends Table {
     MindMapSideLinks,
     PrayerDevicePreferences,
     PrayerReports,
+    AdhkarItemCounts,
+    QiyamNights,
+    MyAdhkarItems,
+    MyAdhkarGroups,
+    MyAdhkarItemGroups,
   ],
 )
 class FoundationDatabase extends _$FoundationDatabase {
@@ -432,8 +583,10 @@ class FoundationDatabase extends _$FoundationDatabase {
   final String resolvedPath;
   final int _targetSchemaVersion;
 
-  /// Test-only injection point for a failing migration step.
-  final Future<void> Function(Migrator migrator, int from, int to)?
+  /// Test-only injection point, fired exactly once per executed upgrade
+  /// step; [step] identifies the schema version whose step is running
+  /// (Phase 2 review finding 8).
+  final Future<void> Function(Migrator migrator, int from, int to, int step)?
   testMigrationHook;
 
   int? _migrationAttemptedFor;
@@ -449,14 +602,20 @@ class FoundationDatabase extends _$FoundationDatabase {
     required String path,
     required List<int> key,
     int schemaVersion = kFoundationSchemaVersion,
-    Future<void> Function(Migrator migrator, int from, int to)?
+    Future<void> Function(Migrator migrator, int from, int to, int step)?
     testMigrationHook,
+    QueryInterceptor? interceptor,
   }) async {
     final keyPragma = _keyPragma(key);
-    final executor = NativeDatabase.createInBackground(
+    var executor = NativeDatabase.createInBackground(
       File(path),
       setup: (raw) => raw.execute(keyPragma),
     );
+    // Test-only injection point (Phase 5 review finding 3): counts or
+    // traces executed statements without touching the encryption setup.
+    if (interceptor != null) {
+      executor = executor.interceptWith(interceptor);
+    }
     final db = FoundationDatabase._(
       executor,
       resolvedPath: path,
@@ -531,16 +690,12 @@ class FoundationDatabase extends _$FoundationDatabase {
     onUpgrade: (migrator, from, to) async {
       _migrationAttemptedFor = to;
       await _recordJournalStart(to);
-      if ((to >= 2 && from < 2) ||
-          (to >= 3 && from < 3) ||
-          (to >= 4 && from < 4) ||
-          (to >= 5 && from < 5)) {
-        await testMigrationHook?.call(migrator, from, to);
-      }
       if (to >= 2 && from < 2) {
+        await testMigrationHook?.call(migrator, from, to, 2);
         await migrator.createTable(foundationAuditLog);
       }
       if (to >= 3 && from < 3) {
+        await testMigrationHook?.call(migrator, from, to, 3);
         await migrator.createTable(taskRecords);
         await migrator.createTable(xpAwards);
         for (final index in <Index>[
@@ -555,6 +710,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 4 && from < 4) {
+        await testMigrationHook?.call(migrator, from, to, 4);
         await migrator.createTable(habitRecords);
         await migrator.createTable(habitDayRecords);
         for (final index in <Index>[
@@ -567,6 +723,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 5 && from < 5) {
+        await testMigrationHook?.call(migrator, from, to, 5);
         // A v1/v2 upgrade creates TaskRecords from the latest table shape.
         if (from >= 3) {
           await migrator.addColumn(
@@ -599,6 +756,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 6 && from < 6) {
+        await testMigrationHook?.call(migrator, from, to, 6);
         if (from >= 4) {
           await migrator.addColumn(habitDayRecords, habitDayRecords.dailyCount);
           await customUpdate(
@@ -608,6 +766,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 7 && from < 7) {
+        await testMigrationHook?.call(migrator, from, to, 7);
         // Installed v1-v6 databases all have pending_changes. Test fixtures
         // created with the latest declaration may already have this column.
         final columns = await customSelect(
@@ -623,7 +782,7 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 8 && from < 8) {
-        await testMigrationHook?.call(migrator, from, to);
+        await testMigrationHook?.call(migrator, from, to, 8);
         await migrator.createTable(prayerDevicePreferences);
         await migrator.createTable(prayerReports);
         for (final index in <Index>[
@@ -643,7 +802,41 @@ class FoundationDatabase extends _$FoundationDatabase {
         }
       }
       if (to >= 9 && from < 9) {
+        await testMigrationHook?.call(migrator, from, to, 9);
         await _createPrayerAnnualTimetables();
+      }
+      if (to >= 10 && from < 10) {
+        await testMigrationHook?.call(migrator, from, to, 10);
+        await migrator.createTable(adhkarItemCounts);
+        await migrator.createTable(qiyamNights);
+        for (final index in <Index>[
+          adhkarItemCountsOwnerDayList,
+          adhkarItemCountsOwnerVersion,
+          adhkarItemCountsOwnerRecord,
+          qiyamNightsOwnerNight,
+          qiyamNightsOwnerVersion,
+          qiyamNightsOwnerRecord,
+        ]) {
+          await _createIndexIfMissing(migrator, index);
+        }
+      }
+      if (to >= 11 && from < 11) {
+        await testMigrationHook?.call(migrator, from, to, 11);
+        // v11 was reshaped in place before release (no shipped v11 carried
+        // the first draft), so this step creates the final tables only; a
+        // stray first-draft my_adhkar_counts table cannot exist.
+        await migrator.createTable(myAdhkarItems);
+        await migrator.createTable(myAdhkarGroups);
+        await migrator.createTable(myAdhkarItemGroups);
+        for (final index in <Index>[
+          myAdhkarItemsOwnerTab,
+          myAdhkarItemsOwnerVersion,
+          myAdhkarGroupsOwnerTab,
+          myAdhkarGroupsOwnerVersion,
+          myAdhkarItemGroupsOwnerGroup,
+        ]) {
+          await _createIndexIfMissing(migrator, index);
+        }
       }
       await _recordJournalComplete(to);
     },

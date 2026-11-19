@@ -47,7 +47,7 @@ VALUES ('locale', 'ar', '2026-09-06T00:00:00.000Z')''',
       FoundationDatabase.openEncrypted(
         path: path,
         key: key,
-        testMigrationHook: (migrator, from, to) async =>
+        testMigrationHook: (migrator, from, to, step) async =>
             throw Exception('injected'),
       ),
       throwsA(

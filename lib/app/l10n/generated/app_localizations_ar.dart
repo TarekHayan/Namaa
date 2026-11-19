@@ -1510,4 +1510,254 @@ class FoundationLocalizationsAr extends FoundationLocalizations {
 
   @override
   String get prayerSettingsSave => 'حفظ';
+
+  @override
+  String get adhkarTitle => 'الأذكار اليومية';
+
+  @override
+  String get adhkarSubtitle =>
+      'أذكار الصباح والمساء من الأحاديث النبوية الصحيحة';
+
+  @override
+  String get adhkarTabMorning => 'أذكار الصباح';
+
+  @override
+  String get adhkarTabEvening => 'أذكار المساء';
+
+  @override
+  String adhkarProgress(String list, int count, int total) {
+    return '$list ($count / $total)';
+  }
+
+  @override
+  String adhkarPercent(int percent) {
+    return '$percent٪';
+  }
+
+  @override
+  String adhkarCompletedSummary(int completed) {
+    String _temp0 = intl.Intl.pluralLogic(
+      completed,
+      locale: localeName,
+      other: '$completed عنصرًا مكتملًا',
+      many: '$completed عنصرًا مكتملًا',
+      few: '$completed عناصر مكتملة',
+      two: 'عنصران مكتملان',
+      one: 'عنصر واحد مكتمل',
+      zero: 'لا عناصر مكتملة بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adhkarStartsAt(String time) {
+    return 'وقتها يبدأ من $time';
+  }
+
+  @override
+  String get adhkarSetupPrompt => 'فعّل موقع الصلاة لتُطبَّق أوقات الأذكار';
+
+  @override
+  String get adhkarVirtueAndSource => 'فضل الذكر ومصدر الحديث';
+
+  @override
+  String get adhkarVirtueLabel => 'الفضل:';
+
+  @override
+  String get adhkarSourceLabel => 'المصدر:';
+
+  @override
+  String get adhkarResetTooltip => 'إعادة ضبط العداد';
+
+  @override
+  String adhkarTarget(int count, int target) {
+    return 'الهدف $count / $target';
+  }
+
+  @override
+  String get adhkarTapToCount => 'انقر للعدّ';
+
+  @override
+  String adhkarTapToCountN(int count) {
+    return 'انقر للعدّ ($count)';
+  }
+
+  @override
+  String get adhkarCompleted => 'مكتمل';
+
+  @override
+  String adhkarCountSemantic(int count, int target) {
+    return 'عدّ، $count من $target';
+  }
+
+  @override
+  String adhkarStreak(int days) {
+    return 'أيام متتالية: $days';
+  }
+
+  @override
+  String get adhkarSetComplete => 'اكتملت الأذكار! +15 نقطة';
+
+  @override
+  String get adhkarContentUnavailable => 'تعذّر تحميل محتوى الأذكار.';
+
+  @override
+  String get adhkarCountingLocked =>
+      'الأوقات غير متاحة الآن؛ العدّ متوقف حتى تعود الأوقات.';
+
+  @override
+  String get adhkarOpenPrayerSetup => 'إعداد موقع الصلاة';
+
+  @override
+  String get qiyamTitle => 'قيام الليل';
+
+  @override
+  String get qiyamSubtitle => 'صلاة الليل والمناجاة';
+
+  @override
+  String qiyamLastThird(String time) {
+    return 'الثلث الأخير من الليل $time';
+  }
+
+  @override
+  String get qiyamLastThirdUnavailable =>
+      'تعذّر حساب الثلث الأخير من الليل الآن';
+
+  @override
+  String get qiyamOpenPrayerSetup => 'إعداد موقع الصلاة';
+
+  @override
+  String get qiyamDidYouPray => 'هل صليت قيام الليل الليلة؟';
+
+  @override
+  String get qiyamBestTime =>
+      'أفضل أوقات القيام هو الثلث الأخير من الليل قبل الفجر.';
+
+  @override
+  String get qiyamYesXp => 'نعم، الحمد لله (+30 نقطة)';
+
+  @override
+  String get qiyamNo => 'لم أقم بعد';
+
+  @override
+  String get qiyamRakahsLabel => 'عدد الركعات';
+
+  @override
+  String qiyamRakahsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ركعة',
+      many: '$count ركعة',
+      few: '$count ركعات',
+      two: 'ركعتان',
+      one: 'ركعة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get qiyamStartTime => 'وقت البداية';
+
+  @override
+  String get qiyamEndTime => 'وقت النهاية';
+
+  @override
+  String get qiyamWitr => 'أوترت (صلاة الوتر)';
+
+  @override
+  String get qiyamNotesLabel => 'خواطر ودعاء';
+
+  @override
+  String get qiyamNotesPlaceholder => 'خواطر أو أدعية خاصة (اختياري)';
+
+  @override
+  String qiyamNoteCounter(int count) {
+    return '$count / 500';
+  }
+
+  @override
+  String get qiyamSupplicationsTitle => 'أدعية مأثورة في السجود والقنوت';
+
+  @override
+  String get qiyamSaving => 'جارٍ الحفظ…';
+
+  @override
+  String get qiyamSaved => 'تم الحفظ';
+
+  @override
+  String get qiyamSaveFailed => 'تعذّر الحفظ؛ حاول مرة أخرى.';
+
+  @override
+  String get qiyamNightInvalidRakahs =>
+      'اختر عددًا صحيحًا من الركعات (2 أو 4 أو 8 أو 11).';
+
+  @override
+  String get qiyamNightInvalidTime =>
+      'أدخل وقتًا صحيحًا بتنسيق 24 ساعة مثل 02:41.';
+
+  @override
+  String get qiyamNightNoteTooLong => 'الملاحظة أطول من 500 حرف.';
+
+  @override
+  String get qiyamNightNotPerformedDetails =>
+      'لا تُحفظ التفاصيل مع إجابة «لم أقم بعد».';
+
+  @override
+  String get qiyamNightChanged => 'لقد تبدّلت الليلة؛ سجّل الليلة الحالية.';
+
+  @override
+  String get qiyamRecordingLocked =>
+      'الأوقات غير متاحة الآن؛ التسجيل متوقف حتى تعود الأوقات.';
+
+  @override
+  String get qiyamReadOnly => 'سجل هذه الليلة للعرض فقط.';
+
+  @override
+  String get qiyamXpEarned => 'اكتمل قيام الليل! +30 نقطة';
+
+  @override
+  String qiyamStreak(int nights) {
+    return 'سلسلة القيام: $nights';
+  }
+
+  @override
+  String get qiyamStreakFailed => 'تعذّر تحميل سلسلة القيام.';
+
+  @override
+  String get qiyamHistoryTitle => 'الليالي السابقة';
+
+  @override
+  String qiyamHistoryPrayedWithWitr(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ركعات',
+      two: 'ركعتان',
+    );
+    return 'صلى · $_temp0 · بالوتر';
+  }
+
+  @override
+  String qiyamHistoryPrayed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ركعات',
+      two: 'ركعتان',
+    );
+    return 'صلى · $_temp0';
+  }
+
+  @override
+  String get qiyamHistoryNotPerformed => 'لم يصلِّ';
+
+  @override
+  String get qiyamHistoryNotRecorded => 'غير مسجَّل';
+
+  @override
+  String get qiyamHistoryLoadMore => 'تحميل المزيد';
+
+  @override
+  String get qiyamHistoryFailed => 'تعذّر تحميل الليالي السابقة.';
 }

@@ -2998,6 +2998,372 @@ abstract class FoundationLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get prayerSettingsSave;
+
+  /// No description provided for @adhkarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhkar & Remembrance'**
+  String get adhkarTitle;
+
+  /// No description provided for @adhkarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentic Morning and Evening supplications'**
+  String get adhkarSubtitle;
+
+  /// No description provided for @adhkarTabMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning Adhkar'**
+  String get adhkarTabMorning;
+
+  /// No description provided for @adhkarTabEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening Adhkar'**
+  String get adhkarTabEvening;
+
+  /// No description provided for @adhkarProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{list} ({count} / {total})'**
+  String adhkarProgress(String list, int count, int total);
+
+  /// No description provided for @adhkarPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String adhkarPercent(int percent);
+
+  /// No description provided for @adhkarCompletedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed, plural, =0{No completed items yet} =1{One item completed} other{{completed} items completed}}'**
+  String adhkarCompletedSummary(int completed);
+
+  /// No description provided for @adhkarStartsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Its time starts at {time}'**
+  String adhkarStartsAt(String time);
+
+  /// No description provided for @adhkarSetupPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up the Prayer location so the Adhkar times apply'**
+  String get adhkarSetupPrompt;
+
+  /// No description provided for @adhkarVirtueAndSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtue & Hadith Reference'**
+  String get adhkarVirtueAndSource;
+
+  /// No description provided for @adhkarVirtueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtue:'**
+  String get adhkarVirtueLabel;
+
+  /// No description provided for @adhkarSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source:'**
+  String get adhkarSourceLabel;
+
+  /// No description provided for @adhkarResetTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Counter'**
+  String get adhkarResetTooltip;
+
+  /// No description provided for @adhkarTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target {count} / {target}'**
+  String adhkarTarget(int count, int target);
+
+  /// No description provided for @adhkarTapToCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to Count'**
+  String get adhkarTapToCount;
+
+  /// No description provided for @adhkarTapToCountN.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to Count ({count})'**
+  String adhkarTapToCountN(int count);
+
+  /// No description provided for @adhkarCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get adhkarCompleted;
+
+  /// No description provided for @adhkarCountSemantic.
+  ///
+  /// In en, this message translates to:
+  /// **'Count, {count} of {target}'**
+  String adhkarCountSemantic(int count, int target);
+
+  /// No description provided for @adhkarStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak: {days} days'**
+  String adhkarStreak(int days);
+
+  /// No description provided for @adhkarSetComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Set complete! +15 XP'**
+  String get adhkarSetComplete;
+
+  /// No description provided for @adhkarContentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The Adhkar content could not be loaded.'**
+  String get adhkarContentUnavailable;
+
+  /// No description provided for @adhkarCountingLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The times are unavailable; counting is paused until they return.'**
+  String get adhkarCountingLocked;
+
+  /// No description provided for @adhkarOpenPrayerSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Prayer location'**
+  String get adhkarOpenPrayerSetup;
+
+  /// No description provided for @qiyamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Qiyam Al-Layl'**
+  String get qiyamTitle;
+
+  /// No description provided for @qiyamSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Night prayer & intimate supplication'**
+  String get qiyamSubtitle;
+
+  /// No description provided for @qiyamLastThird.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 1/3 of Night {time}'**
+  String qiyamLastThird(String time);
+
+  /// No description provided for @qiyamLastThirdUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The last third of the night cannot be computed now'**
+  String get qiyamLastThirdUnavailable;
+
+  /// No description provided for @qiyamOpenPrayerSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Prayer location'**
+  String get qiyamOpenPrayerSetup;
+
+  /// No description provided for @qiyamDidYouPray.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you pray Qiyam tonight?'**
+  String get qiyamDidYouPray;
+
+  /// No description provided for @qiyamBestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'The best time for Qiyam is the last third of the night before Fajr.'**
+  String get qiyamBestTime;
+
+  /// No description provided for @qiyamYesXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, Alhamdulillah (+30 XP)'**
+  String get qiyamYesXp;
+
+  /// No description provided for @qiyamNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get qiyamNo;
+
+  /// No description provided for @qiyamRakahsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of Rak\'ahs'**
+  String get qiyamRakahsLabel;
+
+  /// No description provided for @qiyamRakahsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 rak\'ah} two{2 rak\'ahs} few{{count} rak\'ahs} many{{count} rak\'ahs} other{{count} rak\'ahs}}'**
+  String qiyamRakahsCount(int count);
+
+  /// No description provided for @qiyamStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get qiyamStartTime;
+
+  /// No description provided for @qiyamEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End Time'**
+  String get qiyamEndTime;
+
+  /// No description provided for @qiyamWitr.
+  ///
+  /// In en, this message translates to:
+  /// **'Include Witr Prayer'**
+  String get qiyamWitr;
+
+  /// No description provided for @qiyamNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflection / Duas made'**
+  String get qiyamNotesLabel;
+
+  /// No description provided for @qiyamNotesPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Special supplications or reflections (optional)'**
+  String get qiyamNotesPlaceholder;
+
+  /// No description provided for @qiyamNoteCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / 500'**
+  String qiyamNoteCounter(int count);
+
+  /// No description provided for @qiyamSupplicationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended Supplication in Sujood & Qunoot'**
+  String get qiyamSupplicationsTitle;
+
+  /// No description provided for @qiyamSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get qiyamSaving;
+
+  /// No description provided for @qiyamSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get qiyamSaved;
+
+  /// No description provided for @qiyamSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Try again.'**
+  String get qiyamSaveFailed;
+
+  /// No description provided for @qiyamNightInvalidRakahs.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a valid rak\'ah count: 2, 4, 8 or 11.'**
+  String get qiyamNightInvalidRakahs;
+
+  /// No description provided for @qiyamNightInvalidTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid 24-hour time, like 02:41.'**
+  String get qiyamNightInvalidTime;
+
+  /// No description provided for @qiyamNightNoteTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The note is longer than 500 characters.'**
+  String get qiyamNightNoteTooLong;
+
+  /// No description provided for @qiyamNightNotPerformedDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details cannot be saved with a \"Not yet\" answer.'**
+  String get qiyamNightNotPerformedDetails;
+
+  /// No description provided for @qiyamNightChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The night has changed; record the current night.'**
+  String get qiyamNightChanged;
+
+  /// No description provided for @qiyamRecordingLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The times are unavailable; recording is paused until they return.'**
+  String get qiyamRecordingLocked;
+
+  /// No description provided for @qiyamReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This night\'s record is read-only.'**
+  String get qiyamReadOnly;
+
+  /// No description provided for @qiyamXpEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Qiyam complete! +30 XP'**
+  String get qiyamXpEarned;
+
+  /// No description provided for @qiyamStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Qiyam streak: {nights}'**
+  String qiyamStreak(int nights);
+
+  /// No description provided for @qiyamStreakFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the streak.'**
+  String get qiyamStreakFailed;
+
+  /// No description provided for @qiyamHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous nights'**
+  String get qiyamHistoryTitle;
+
+  /// No description provided for @qiyamHistoryPrayedWithWitr.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayed · {count} rak\'ahs · Witr'**
+  String qiyamHistoryPrayedWithWitr(int count);
+
+  /// No description provided for @qiyamHistoryPrayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayed · {count} rak\'ahs'**
+  String qiyamHistoryPrayed(int count);
+
+  /// No description provided for @qiyamHistoryNotPerformed.
+  ///
+  /// In en, this message translates to:
+  /// **'Did not pray'**
+  String get qiyamHistoryNotPerformed;
+
+  /// No description provided for @qiyamHistoryNotRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get qiyamHistoryNotRecorded;
+
+  /// No description provided for @qiyamHistoryLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get qiyamHistoryLoadMore;
+
+  /// No description provided for @qiyamHistoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the previous nights.'**
+  String get qiyamHistoryFailed;
 }
 
 class _FoundationLocalizationsDelegate

@@ -121,7 +121,7 @@ void main() {
         FoundationDatabase.openEncrypted(
           path: path,
           key: _testKey,
-          testMigrationHook: (migrator, from, to) async {
+          testMigrationHook: (migrator, from, to, step) async {
             throw Exception('injected migration failure');
           },
         ),

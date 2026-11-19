@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
 
+import '../domain/today_adhkar_qiyam_reference.dart';
 import '../domain/today_agenda.dart';
 import '../domain/today_section.dart';
 import 'dashboard_presentation.dart';
@@ -57,11 +58,15 @@ class TodayDashboardView extends StatelessWidget {
     required this.onHabits,
     required this.onMindMaps,
     this.onPrayer,
+    this.onAdhkar,
+    this.onQiyam,
     required this.onPreferences,
     required this.onRetryTasks,
     required this.onRetryHabits,
     required this.onRetryXp,
     this.onRetryPrayer,
+    this.onRetryAdhkarQiyam,
+    this.watchAdhkarQiyam,
     required this.onSetTaskCompleted,
     required this.onSetHabitCompleted,
     this.onNewTask,
@@ -77,11 +82,18 @@ class TodayDashboardView extends StatelessWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback? onPrayer;
+  final VoidCallback? onAdhkar;
+  final VoidCallback? onQiyam;
   final VoidCallback onPreferences;
   final VoidCallback onRetryTasks;
   final VoidCallback onRetryHabits;
   final VoidCallback onRetryXp;
   final VoidCallback? onRetryPrayer;
+  final VoidCallback? onRetryAdhkarQiyam;
+
+  /// Starts the live Adhkar/Qiyam values for the Track hub (its own
+  /// subscription, independent of [state]).
+  final Stream<TodayAdhkarQiyamReference> Function()? watchAdhkarQiyam;
   final void Function(String, bool) onSetTaskCompleted;
   final void Function(String, bool) onSetHabitCompleted;
   final VoidCallback? onNewTask;
@@ -165,8 +177,11 @@ class TodayDashboardView extends StatelessWidget {
             onHabits: onHabits,
             onMindMaps: onMindMaps,
             onPrayer: onPrayer,
+            onAdhkar: onAdhkar,
+            onQiyam: onQiyam,
             onPreferences: onPreferences,
             xpAmount: state.xp.value?.amount,
+            watchAdhkarQiyam: watchAdhkarQiyam,
             child: Scaffold(
               key: kTodayScreenKey,
               extendBodyBehindAppBar: true,
@@ -228,6 +243,8 @@ class TodayDashboardView extends StatelessWidget {
                                         onOpenHabits: onHabits,
                                         onOpenTasks: onTasks,
                                         onOpenPrayer: onPrayer,
+                                        onOpenAdhkar: onAdhkar,
+                                        onOpenQiyam: onQiyam,
                                         onRetryTasks: onRetryTasks,
                                         onRetryHabits: onRetryHabits,
                                         onRetryXp: onRetryXp,
@@ -251,6 +268,8 @@ class TodayDashboardView extends StatelessWidget {
                                       TodayQuickHubs(
                                         colors: colors,
                                         onPrayer: onPrayer,
+                                        onAdhkar: onAdhkar,
+                                        onQiyam: onQiyam,
                                       ),
                                       const SizedBox(height: 20),
 

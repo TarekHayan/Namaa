@@ -48,6 +48,9 @@ case "${ANDROID_SUITE:-}" in
       integration_test/prayer_reports_test.dart
       integration_test/prayer_offline_sync_test.dart
       integration_test/prayer_localized_route_test.dart
+      integration_test/adhkar_qiyam_flow_test.dart
+      integration_test/adhkar_qiyam_offline_sync_test.dart
+      integration_test/adhkar_qiyam_localized_route_test.dart
     )
     ;;
   *)

@@ -3,12 +3,33 @@ library;
 import 'package:flutter/material.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
+import 'package:namma_project/app/widgets/app_pill.dart';
 
-/// Illustrative focus session and daily spiritual routine card presenting sample data.
+import '../../domain/today_adhkar_qiyam_reference.dart';
+import '../../domain/today_section.dart';
+import '../today_adhkar_qiyam_display.dart';
+
+/// The focus session and daily spiritual routine card. The Pomodoro block and
+/// the reflection quote are samples and keep their own provenance label; the
+/// Adhkar and Qiyam rows are live values from the independent Adhkar/Qiyam
+/// source (the same numbers the screens show) and open the real screens.
 class TodayFocusReflectionCard extends StatelessWidget {
-  const TodayFocusReflectionCard({super.key, required this.colors});
+  const TodayFocusReflectionCard({
+    super.key,
+    required this.colors,
+    this.adhkarQiyam,
+    this.onAdhkar,
+    this.onQiyam,
+  });
 
   final AppColors colors;
+
+  /// The Adhkar/Qiyam source; null when none is wired.
+  final TodaySection<TodayAdhkarQiyamReference>? adhkarQiyam;
+
+  /// Opens the real Adhkar and Qiyam screens.
+  final VoidCallback? onAdhkar;
+  final VoidCallback? onQiyam;
 
   void _showNotice(BuildContext context, FoundationLocalizations copy) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -21,6 +42,80 @@ class TodayFocusReflectionCard extends StatelessWidget {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  Widget _sampleBadge(BuildContext context, FoundationLocalizations copy) =>
+      AppPill(
+        label: copy.dashboardSampleBadge,
+        fontSize: 10,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      );
+
+  /// The three live rows. While the source loads or when it is not wired, a
+  /// row shows its label alone; a failed read shows "!" instead of progress.
+  List<({String label, IconData icon, bool done, VoidCallback? onTap})> _chips(
+    FoundationLocalizations copy,
+  ) {
+    final live = adhkarQiyam?.value;
+    String withValue(String label, String? value) =>
+        value == null ? label : '$label $value';
+    final morning = live == null
+        ? null
+        : live.adhkarLoadFailed
+        ? '!'
+        : todayAdhkarReadable(live)
+        ? todayRatio(live.morningCompleted, live.morningTotal)
+        : null;
+    final evening = live == null
+        ? null
+        : live.adhkarLoadFailed
+        ? '!'
+        : todayAdhkarReadable(live)
+        ? todayRatio(live.eveningCompleted, live.eveningTotal)
+        : null;
+    final morningDone =
+        live != null &&
+        todayAdhkarReadable(live) &&
+        live.morningTotal > 0 &&
+        live.morningCompleted >= live.morningTotal;
+    final eveningDone =
+        live != null &&
+        todayAdhkarReadable(live) &&
+        live.eveningTotal > 0 &&
+        live.eveningCompleted >= live.eveningTotal;
+    final qiyamValue = live == null
+        ? null
+        : live.qiyamLoadFailed
+        ? '!'
+        : switch (live.tonight) {
+            TodayQiyamTonight.yes => '✓',
+            TodayQiyamTonight.no => '✗',
+            _ => null,
+          };
+    return [
+      (
+        label: withValue(copy.dashboardAdhkarMorning, morning),
+        icon: morningDone
+            ? Icons.check_circle_rounded
+            : Icons.radio_button_unchecked_rounded,
+        done: morningDone,
+        onTap: onAdhkar,
+      ),
+      (
+        label: withValue(copy.dashboardAdhkarEvening, evening),
+        icon: eveningDone
+            ? Icons.check_circle_rounded
+            : Icons.radio_button_unchecked_rounded,
+        done: eveningDone,
+        onTap: onAdhkar,
+      ),
+      (
+        label: withValue(copy.dashboardAdhkarQiyam, qiyamValue),
+        icon: Icons.bedtime_outlined,
+        done: live?.tonight == TodayQiyamTonight.yes,
+        onTap: onQiyam,
+      ),
+    ];
   }
 
   @override
@@ -68,28 +163,6 @@ class TodayFocusReflectionCard extends StatelessWidget {
                   copy.dashboardFocusSectionTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: colors.accentSoft,
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Text(
-                  copy.dashboardSampleBadge,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colors.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 10,
                   ),
                 ),
               ),
@@ -168,30 +241,40 @@ class TodayFocusReflectionCard extends StatelessWidget {
                   color: colors.surfaceSecondary,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: isCompact
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: _sampleBadge(context, copy),
+                    ),
+                    const SizedBox(height: 6),
+                    isCompact
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                children: [
+                                  timerCircle,
+                                  const SizedBox(width: 10),
+                                  Expanded(child: textInfo),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              startButton,
+                            ],
+                          )
+                        : Row(
                             children: [
                               timerCircle,
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                               Expanded(child: textInfo),
+                              const SizedBox(width: 8),
+                              startButton,
                             ],
                           ),
-                          const SizedBox(height: 10),
-                          startButton,
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          timerCircle,
-                          const SizedBox(width: 12),
-                          Expanded(child: textInfo),
-                          const SizedBox(width: 8),
-                          startButton,
-                        ],
-                      ),
+                  ],
+                ),
               );
             },
           ),
@@ -209,27 +292,14 @@ class TodayFocusReflectionCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _AdhkarChip(
-                label: copy.dashboardAdhkarMorning,
-                icon: Icons.check_circle_rounded,
-                isDone: true,
-                colors: colors,
-                onTap: () => _showNotice(context, copy),
-              ),
-              _AdhkarChip(
-                label: copy.dashboardAdhkarEvening,
-                icon: Icons.radio_button_unchecked_rounded,
-                isDone: false,
-                colors: colors,
-                onTap: () => _showNotice(context, copy),
-              ),
-              _AdhkarChip(
-                label: copy.dashboardAdhkarQiyam,
-                icon: Icons.bedtime_outlined,
-                isDone: false,
-                colors: colors,
-                onTap: () => _showNotice(context, copy),
-              ),
+              for (final chip in _chips(copy))
+                _AdhkarChip(
+                  label: chip.label,
+                  icon: chip.icon,
+                  isDone: chip.done,
+                  colors: colors,
+                  onTap: chip.onTap,
+                ),
             ],
           ),
           const SizedBox(height: 14),
@@ -307,6 +377,11 @@ class TodayFocusReflectionCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: _sampleBadge(context, copy),
+                ),
+                const SizedBox(height: 6),
                 Text(
                   copy.dashboardReflectionQuote,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -337,7 +412,7 @@ class _AdhkarChip extends StatelessWidget {
   final IconData icon;
   final bool isDone;
   final AppColors colors;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -361,12 +436,14 @@ class _AdhkarChip extends StatelessWidget {
             color: isDone ? colors.primary : colors.textMuted,
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isDone ? FontWeight.w600 : FontWeight.w500,
-              color: isDone ? colors.primary : colors.textSecondary,
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isDone ? FontWeight.w600 : FontWeight.w500,
+                color: isDone ? colors.primary : colors.textSecondary,
+              ),
             ),
           ),
         ],

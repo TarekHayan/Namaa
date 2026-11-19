@@ -2,19 +2,28 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:namma_project/app/composition/adhkar_preview_adapters.dart';
 import 'package:namma_project/app/composition/configure_dependencies.dart';
 import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
+import 'package:namma_project/app/composition/qiyam_preview_adapters.dart';
 import 'package:namma_project/app/composition/tasks_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/composition/unconfigured_adapters.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/core/data/cloud/supabase/supabase_session_adapter.dart';
 import 'package:namma_project/core/data/local/drift_local_store.dart';
+import 'package:namma_project/core/data/local/foundation_database.dart';
 import 'package:namma_project/core/data/local/task_completion_unit_of_work.dart';
 import 'package:namma_project/core/data/sync/entity_dispatch_router.dart';
 import 'package:namma_project/core/domain/failures/app_failure.dart';
 import 'package:namma_project/core/platform/platform_capability_reporter.dart';
 import 'package:namma_project/core/platform/secure_credential_vault.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_conflict_reader.dart';
+import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_catalog.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_state.dart';
+import 'package:namma_project/features/adhkar/presentation/my_adhkar_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
@@ -24,6 +33,8 @@ import 'package:namma_project/features/mind_maps/application/map_repository.dart
 import 'package:namma_project/features/mind_maps/data/drift_map_repository.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_cubit.dart';
 import 'package:namma_project/features/mind_maps/presentation/map_library_state.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_conflict_reader.dart';
+import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
 import 'package:namma_project/features/tasks/application/task_commands.dart';
 import 'package:namma_project/features/tasks/application/task_completion_service.dart';
 import 'package:namma_project/features/tasks/application/task_completion_unit_of_work.dart';
@@ -254,6 +265,127 @@ void main() {
         );
       },
     );
+
+    test('Adhkar preview counts locally with the real catalog and uploads '
+        'nothing', () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'namaa_adhkar_preview_',
+      );
+      final dbPath = <String>[
+        tempDir.path,
+        'foundation_encrypted.db',
+      ].join(Platform.pathSeparator);
+      addTearDown(() async {
+        await getIt.reset();
+        await tempDir.delete(recursive: true);
+      });
+      await configureDependencies(
+        environment: FoundationEnvironment.tasksPreview,
+        secureStoreOverride: InMemorySecureKeyValueStore(),
+        databasePathOverride: dbPath,
+      );
+      expect(getIt<AdhkarPreviewSession>(), isNotNull);
+      expect(getIt<AdhkarConflictReader>(), isNotNull);
+      expect(getIt<DriftMyAdhkarRepository>(), isNotNull);
+      expect(
+        (await getIt<AdhkarPreviewSession>().obtainSyncContext())
+            .valueOrNull
+            ?.accountId,
+        kAdhkarPreviewAccountId,
+      );
+
+      final cubit = getIt<AdhkarCubit>(param1: kAdhkarPreviewAccountId);
+      addTearDown(cubit.close);
+      await cubit.load();
+      final catalog = cubit.state.catalog!;
+      expect(catalog.itemsOf(AdhkarList.morning), hasLength(25));
+      expect(catalog.itemsOf(AdhkarList.evening), hasLength(23));
+      // No Prayer location is saved for the preview, so counting is
+      // unrestricted on the device day.
+      expect(cubit.state.clock?.morningCountable, isTrue);
+
+      final first = catalog.itemsOf(AdhkarList.morning).first;
+      await cubit.increment(first.itemId, cubit.state.clock!.day!);
+      expect(cubit.state.countOf(first.itemId), 1);
+      expect(cubit.state.itemStatus[first.itemId], AdhkarActionStatus.saved);
+
+      final database = getIt<FoundationDatabase>();
+      expect(
+        await database.rawScalar('SELECT count(*) FROM adhkar_item_counts'),
+        1,
+        reason: 'the count is stored locally',
+      );
+      expect(
+        await database.rawScalar('SELECT count(*) FROM pending_changes'),
+        0,
+        reason: 'a preview count queues nothing for upload',
+      );
+
+      final mine = getIt<MyAdhkarCubit>(param1: kAdhkarPreviewAccountId);
+      addTearDown(mine.close);
+      await mine.load();
+      expect(mine.state.loadFailed, isFalse);
+    });
+
+    test('Qiyam preview records locally with the real supplications and '
+        'uploads nothing', () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'namaa_qiyam_preview_',
+      );
+      final dbPath = <String>[
+        tempDir.path,
+        'foundation_encrypted.db',
+      ].join(Platform.pathSeparator);
+      addTearDown(() async {
+        await getIt.reset();
+        await tempDir.delete(recursive: true);
+      });
+      await configureDependencies(
+        environment: FoundationEnvironment.tasksPreview,
+        secureStoreOverride: InMemorySecureKeyValueStore(),
+        databasePathOverride: dbPath,
+      );
+      expect(getIt<QiyamPreviewSession>(), isNotNull);
+      expect(getIt<QiyamConflictReader>(), isNotNull);
+      expect(
+        (await getIt<QiyamPreviewSession>().obtainSyncContext())
+            .valueOrNull
+            ?.accountId,
+        kQiyamPreviewAccountId,
+      );
+
+      final cubit = getIt<QiyamCubit>(param1: kQiyamPreviewAccountId);
+      addTearDown(cubit.close);
+      await cubit.load();
+      // The reviewed catalog ships the Witr supplication and the Qunut.
+      expect(cubit.state.supplications.map((s) => s.id), ['s1', 's2']);
+      // No Prayer location is saved for the preview, so the night follows
+      // the device rule and recording works.
+      expect(cubit.state.night?.editable, isTrue);
+
+      await cubit.answerYes();
+      expect(cubit.state.form?.performed, isTrue);
+      expect(cubit.state.actionStatus, isNotNull);
+
+      final database = getIt<FoundationDatabase>();
+      expect(
+        await database.rawScalar('SELECT count(*) FROM qiyam_nights'),
+        1,
+        reason: 'the record is stored locally',
+      );
+      expect(
+        await database.rawScalar(
+          "SELECT count(*) FROM xp_awards WHERE source = 'qiyam_done'",
+        ),
+        1,
+        reason: 'the one award is stored locally',
+      );
+      expect(
+        await database.rawScalar('SELECT count(*) FROM pending_changes'),
+        0,
+        reason: 'a preview record queues nothing for upload',
+      );
+    });
 
     test('default launch resolves real Foundation adapters', () async {
       final tempDir = await Directory.systemTemp.createTemp(

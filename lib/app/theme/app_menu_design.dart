@@ -7,6 +7,13 @@ abstract final class AppMenuDesign {
   static const BorderRadius radius = BorderRadius.all(Radius.circular(18));
   static const double maxHeight = 320;
 
+  /// The overflow ("more") menu opened by `AppMenuButton`.
+  static const double overflowElevation = 8;
+  static const BoxConstraints overflowConstraints = BoxConstraints(
+    minWidth: 200,
+    maxWidth: 210,
+  );
+
   static PopupMenuThemeData popupTheme(AppColors colors) => PopupMenuThemeData(
     color: colors.surface,
     surfaceTintColor: Colors.transparent,

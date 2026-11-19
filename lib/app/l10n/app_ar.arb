@@ -375,6 +375,8 @@
   "dashboardAdhkarMorning": "أذكار الصباح",
   "dashboardAdhkarEvening": "أذكار المساء",
   "dashboardAdhkarQiyam": "الوتر والقيام",
+  "dashboardTrackAdhkarSubtitle": "الصباح {morning} · المساء {evening}",
+  "dashboardTrackQiyamRecorded": "تم التسجيل",
   "dashboardReflectionTitle": "إشراقة اليوم",
   "dashboardReflectionQuote": "«أحب الأعمال إلى الله أدومها وإن قل»",
   "dashboardReflectionAction": "تدوين خاطرة",
@@ -486,6 +488,8 @@
   "prayerSourceApi": "المواقيت: جدول AlAdhan السنوي المحفوظ على هذا الجهاز",
   "prayerSourceLocal": "المواقيت: حساب محلي احتياطي؛ تأكد من مسجد منطقتك",
   "prayerSignInRequired": "افتح مواقيت الصلاة بعد تسجيل الدخول.",
+  "adhkarSignInRequired": "افتح الأذكار بعد تسجيل الدخول.",
+  "qiyamSignInRequired": "افتح قيام الليل بعد تسجيل الدخول.",
   "prayerStatusOnTime": "في وقتها",
   "prayerStatusLate": "أُديت متأخرًا",
   "prayerStatusMissed": "فاتتني",
@@ -504,5 +508,248 @@
   "prayerConflictReadOnly": "سجلات الأيام السابقة للعرض فقط",
   "prayerLocationRetry": "حاول مرة أخرى",
   "prayerOpenSettings": "فتح الإعدادات",
-  "prayerSettingsSave": "حفظ"
+  "prayerSettingsSave": "حفظ",
+  "adhkarTitle": "الأذكار",
+  "adhkarSubtitle": "أذكار الصباح والمساء من الأحاديث النبوية الصحيحة",
+  "adhkarTabMorning": "أذكار الصباح",
+  "adhkarTabEvening": "أذكار المساء",
+  "adhkarProgress": "{list} ({count} / {total})",
+  "@adhkarProgress": {
+    "placeholders": {"list": {"type": "String"}, "count": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "adhkarPercent": "{percent}٪",
+  "@adhkarPercent": {
+    "placeholders": {"percent": {"type": "int"}}
+  },
+  "adhkarStartsAt": "وقتها يبدأ من {time}",
+  "@adhkarStartsAt": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "adhkarSetupPrompt": "فعّل موقع الصلاة لتُطبَّق أوقات الأذكار",
+  "adhkarCountSemantic": "عدّ، {count} من {target}",
+  "@adhkarCountSemantic": {
+    "placeholders": {"count": {"type": "int"}, "target": {"type": "int"}}
+  },
+  "adhkarStreak": "أيام متتالية: {days}",
+  "@adhkarStreak": {
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "quranAttribution": "نص القرآن والخط: مجمع الملك فهد لطباعة المصحف الشريف، مصحف المدينة، برواية حفص — من خلال مؤسسة القرآن.",
+  "myAdhkarTab": "أذكاري",
+  "myAdhkarHeading": "أذكارك وأدعيتك الخاصة",
+  "myAdhkarNote": "مجموعتك الشخصية. التطبيق لا يراجعها، وليس لها نقاط ولا أيام متتالية.",
+  "myAdhkarLoadFailed": "تعذّر تحميل مجموعتك.",
+  "myAdhkarCreateGroup": "إنشاء مجموعة",
+  "myAdhkarCreateGroupDisabled": "وصلت إلى الحد الأقصى: 100 مجموعة.",
+  "myAdhkarGroupEntries": "{count, plural, =0{لا أذكار} =1{ذكر واحد} =2{ذكران} few{{count} أذكار} many{{count} ذكرًا} other{{count} ذكر}}",
+  "@myAdhkarGroupEntries": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "myAdhkarRename": "إعادة تسمية",
+  "myAdhkarDelete": "حذف",
+  "myAdhkarGroupSheetTitleCreate": "إنشاء مجموعة",
+  "myAdhkarGroupSheetTitleRename": "إعادة تسمية المجموعة",
+  "myAdhkarGroupNameLabel": "اسم المجموعة",
+  "myAdhkarCounter": "{used} / {limit}",
+  "@myAdhkarCounter": {
+    "placeholders": {"used": {"type": "int"}, "limit": {"type": "int"}}
+  },
+  "myAdhkarGroupNameInvalid": "اكتب اسمًا من 1 إلى 60 حرفًا.",
+  "myAdhkarGroupDeleteTitle": "حذف هذه المجموعة؟",
+  "myAdhkarGroupDeleteBody": "{count, plural, =0{لن يُحذف أي ذكر.} =1{سيُحذف ذكر واحد.} =2{سيُحذف ذكران.} few{سيُحذف {count} أذكار.} many{سيُحذف {count} ذكرًا.} other{سيُحذف {count} ذكر.}} الأذكار الموجودة أيضًا في مجموعات أخرى تبقى فيها.",
+  "@myAdhkarGroupDeleteBody": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "myAdhkarCancel": "إلغاء",
+  "myAdhkarSave": "حفظ",
+  "myAdhkarEmptyTitle": "ابدأ مجموعتك الخاصة",
+  "myAdhkarEmptyBody": "أنشئ مجموعات مثل «الفجر» و«رمضان» و«أدعية الكرب»، ثم احفظ فيها أدعيتك وأذكارك.",
+  "myAdhkarAdd": "إضافة",
+  "myAdhkarAddDisabled": "وصلت إلى الحد الأقصى: 1000 ذكر.",
+  "myAdhkarGroupEmpty": "لا توجد أذكار في هذه المجموعة بعد. استخدم «إضافة» لحفظ أول ذكر.",
+  "myAdhkarBackToGroups": "العودة إلى المجموعات",
+  "myAdhkarOtherGroups": "موجود أيضًا في: {names}",
+  "@myAdhkarOtherGroups": {
+    "placeholders": {"names": {"type": "String"}}
+  },
+  "myAdhkarEdit": "تعديل",
+  "myAdhkarCopy": "نسخ",
+  "myAdhkarCopied": "تم النسخ",
+  "myAdhkarEntrySheetTitleAdd": "إضافة ذكر أو دعاء",
+  "myAdhkarEntrySheetTitleEdit": "تعديل الذكر أو الدعاء",
+  "myAdhkarTextLabel": "النص",
+  "myAdhkarTextHint": "اكتب نص الذكر أو الدعاء",
+  "myAdhkarSourceLabel": "المصدر (اختياري)",
+  "myAdhkarSourceHint": "كتاب أو عالم أو رابط",
+  "myAdhkarGroupsLabel": "المجموعات",
+  "myAdhkarTextInvalid": "اكتب نصًا من 1 إلى 2000 حرف.",
+  "myAdhkarSourceInvalid": "المصدر لا يزيد عن 500 حرف.",
+  "myAdhkarGroupSetInvalid": "اختر مجموعة واحدة على الأقل.",
+  "myAdhkarGroupDeleted": "حُذفت هذه المجموعة.",
+  "myAdhkarItemDeleted": "حُذف هذا الذكر.",
+  "myAdhkarGroupUnknown": "هذه المجموعة لم تعد موجودة.",
+  "myAdhkarItemUnknown": "هذا الذكر لم يعد موجودًا.",
+  "myAdhkarSaveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+  "myAdhkarEntryDeleteTitle": "حذف هذا الذكر؟",
+  "myAdhkarEntryDeleteBody": "سيُحذف من كل مجموعاته على كل أجهزتك، ولن يعود.",
+  "adhkarContentUnavailable": "تعذّر تحميل محتوى الأذكار.",
+  "adhkarCountingLocked": "الأوقات غير متاحة الآن؛ العدّ متوقف حتى تعود الأوقات.",
+  "adhkarOpenPrayerSetup": "إعداد موقع الصلاة",
+  "adhkarListMorning": "أذكار الصباح",
+  "adhkarListEvening": "أذكار المساء",
+  "adhkarDoneCount": "{count} مكتملة",
+  "@adhkarDoneCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarStart": "ابدأ",
+  "adhkarContinueFrom": "متابعة من الذكر {position}",
+  "@adhkarContinueFrom": {
+    "placeholders": {"position": {"type": "int"}}
+  },
+  "adhkarReadAgain": "قراءة القائمة مرة أخرى",
+  "adhkarCompleteTitle": "اكتملت الأذكار!",
+  "adhkarPoints": "+15 نقطة",
+  "adhkarListButton": "قائمة الأذكار",
+  "adhkarClose": "إغلاق",
+  "adhkarResetCount": "إعادة العدّ",
+  "adhkarVirtue": "فضل الذكر",
+  "adhkarDone": "تمّ الذكر",
+  "adhkarNext": "التالي",
+  "adhkarRepeat": "{count, plural, =1{مرة واحدة} =2{مرتان} few{{count} مرات} many{{count} مرة} other{{count} مرة}}",
+  "@adhkarRepeat": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarPosition": "{position} | {total}",
+  "@adhkarPosition": {
+    "placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "adhkarBackToAdhkar": "العودة إلى الأذكار",
+  "adhkarRetry": "إعادة المحاولة",
+  "adhkarResetTitle": "إعادة العدّ؟",
+  "adhkarResetBody": "سيعود عدّ هذا الذكر إلى الصفر.",
+  "adhkarResetConfirm": "إعادة",
+  "adhkarKeyCount": "عدّ",
+  "adhkarKeyMove": "تنقّل",
+  "adhkarPreviousItem": "الذكر السابق",
+  "adhkarNextItem": "الذكر التالي",
+  "myAdhkarMenuLabel": "خيارات",
+  "adhkarSyncToday": "اليوم {time}",
+  "@adhkarSyncToday": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "adhkarSyncYesterday": "أمس {time}",
+  "@adhkarSyncYesterday": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "qiyamTitle": "قيام الليل",
+  "qiyamSubtitle": "صلاة الليل والمناجاة",
+  "qiyamLastThird": "الثلث الأخير من الليل {time}",
+  "@qiyamLastThird": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "qiyamLastThirdUnavailable": "تعذّر حساب الثلث الأخير من الليل الآن",
+  "qiyamOpenPrayerSetup": "إعداد موقع الصلاة",
+  "qiyamDidYouPray": "هل صليت قيام الليل الليلة؟",
+  "qiyamBestTime": "أفضل أوقات القيام هو الثلث الأخير من الليل قبل الفجر.",
+  "qiyamYesXp": "نعم، الحمد لله (+30 نقطة)",
+  "qiyamNo": "لم أقم بعد",
+  "qiyamRakahsLabel": "عدد الركعات",
+  "qiyamRakahsCount": "{count, plural, one{ركعة واحدة} two{ركعتان} few{{count} ركعات} many{{count} ركعة} other{{count} ركعة}}",
+  "@qiyamRakahsCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamStartTime": "وقت البداية",
+  "qiyamEndTime": "وقت النهاية",
+  "qiyamWitr": "أوترت (صلاة الوتر)",
+  "qiyamNotesLabel": "خواطر ودعاء",
+  "qiyamNotesPlaceholder": "خواطر أو أدعية خاصة (اختياري)",
+  "qiyamNoteCounter": "{count} / 500",
+  "@qiyamNoteCounter": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamSupplicationsTitle": "أدعية مأثورة في السجود والقنوت",
+  "qiyamSaving": "جارٍ الحفظ…",
+  "qiyamSaved": "تم الحفظ",
+  "qiyamSaveFailed": "تعذّر الحفظ؛ حاول مرة أخرى.",
+  "qiyamNightInvalidRakahs": "اختر عددًا صحيحًا من الركعات (2 أو 4 أو 8 أو 11).",
+  "qiyamNightNoteTooLong": "الملاحظة أطول من 500 حرف.",
+  "qiyamNightNotPerformedDetails": "لا تُحفظ التفاصيل مع إجابة «لم أقم بعد».",
+  "qiyamNightChanged": "لقد تبدّلت الليلة؛ سجّل الليلة الحالية.",
+  "qiyamRecordingLocked": "الأوقات غير متاحة الآن؛ التسجيل متوقف حتى تعود الأوقات.",
+  "qiyamReadOnly": "سجل هذه الليلة للعرض فقط.",
+  "qiyamXpEarned": "اكتمل قيام الليل! +30 نقطة",
+  "qiyamStreak": "سلسلة القيام: {nights}",
+  "@qiyamStreak": {
+    "placeholders": {"nights": {"type": "int"}}
+  },
+  "qiyamStreakFailed": "تعذّر تحميل سلسلة القيام.",
+  "qiyamHistoryTitle": "الليالي السابقة",
+  "qiyamHistoryPrayedWithWitr": "صلى · {count, plural, two{ركعتان} other{{count} ركعات}} · بالوتر",
+  "@qiyamHistoryPrayedWithWitr": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamHistoryPrayed": "صلى · {count, plural, two{ركعتان} other{{count} ركعات}}",
+  "@qiyamHistoryPrayed": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamHistoryNotPerformed": "لم يصلِّ",
+  "qiyamHistoryNotRecorded": "غير مسجَّل",
+  "qiyamHistoryLoadMore": "تحميل المزيد",
+  "qiyamHistoryFailed": "تعذّر تحميل الليالي السابقة.",
+  "qiyamSegYes": "نعم",
+  "qiyamNoCalm": "ما زال الوقت متاحًا؛ يمكنك تغيير إجابتك إلى «نعم» في أي وقت الليلة.",
+  "qiyamDetailsTitle": "التفاصيل (اختيارية)",
+  "qiyamSupplicationWitr": "دعاء الوتر",
+  "qiyamSupplicationQunut": "القنوت",
+  "qiyamShowAll": "عرض الكل",
+  "qiyamShowLess": "عرض أقل",
+  "qiyamPickTime": "اختيار الوقت",
+  "qiyamTimeOutsideWindow": "اختر وقتًا بين العشاء ({isha}) والفجر ({fajr}).",
+  "@qiyamTimeOutsideWindow": {
+    "placeholders": {"isha": {"type": "String"}, "fajr": {"type": "String"}}
+  },
+  "qiyamEndAfterStart": "وقت النهاية بعد وقت البداية.",
+  "qiyamStartBeforeEnd": "وقت البداية قبل وقت النهاية.",
+  "qiyamNightDetailsTitle": "تفاصيل الليلة",
+  "qiyamDetailStatus": "الحالة",
+  "qiyamDetailWitr": "الوتر",
+  "qiyamDetailPrayed": "صلى",
+  "qiyamDetailNo": "لا",
+  "qiyamClose": "إغلاق",
+  "qiyamNoNote": "بلا ملاحظة",
+  "qiyamConflictBack": "العودة إلى القيام",
+  "qiyamConflictTonight": "قيام الليل · الليلة",
+  "qiyamConflictNight": "قيام الليل · {date}",
+  "@qiyamConflictNight": {
+    "placeholders": {"date": {"type": "String"}}
+  },
+  "qiyamConflictAnswerYes": "نعم · {count, plural, two{ركعتان} other{{count} ركعات}}",
+  "@qiyamConflictAnswerYes": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamConflictAnswerYesWitr": "نعم · {count, plural, two{ركعتان} other{{count} ركعات}} · بالوتر",
+  "@qiyamConflictAnswerYesWitr": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "adhkarConflicts": "اختلافات المزامنة",
+  "adhkarConflictActive": "النسخة النشطة",
+  "adhkarConflictRetained": "النسخة المحفوظة",
+  "adhkarConflictReadOnly": "للعرض فقط؛ لا يوجد إجراء.",
+  "adhkarConflictCount": "العد: {count}",
+  "@adhkarConflictCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "qiyamConflicts": "اختلافات المزامنة",
+  "qiyamConflictActive": "النسخة النشطة",
+  "qiyamConflictRetained": "النسخة المحفوظة",
+  "qiyamConflictReadOnly": "للعرض فقط؛ لا يوجد إجراء.",
+  "adhkarConflictListMorning": "أذكار الصباح",
+  "adhkarConflictListEvening": "أذكار المساء",
+  "myAdhkarConflictGroup": "أذكاري · مجموعة",
+  "myAdhkarConflictEntry": "أذكاري · ذكر",
+  "myAdhkarConflictDeleted": "محذوف",
+  "adhkarConflictItem": "الذكر {position}",
+  "@adhkarConflictItem": {
+    "placeholders": {"position": {"type": "int"}}
+  }
 }

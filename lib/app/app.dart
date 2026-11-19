@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:namma_project/app/composition/adhkar_preview_adapters.dart';
 import 'package:namma_project/app/composition/habits_preview_adapters.dart';
 import 'package:namma_project/app/composition/prayer_preview_adapters.dart';
+import 'package:namma_project/app/composition/qiyam_preview_adapters.dart';
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/app/l10n/generated/app_localizations.dart';
 import 'package:namma_project/app/l10n/habits_strings_adapter.dart';
@@ -25,6 +27,16 @@ import 'package:namma_project/app/theme/app_colors.dart';
 import 'package:namma_project/app/theme/app_theme.dart';
 import 'package:namma_project/app/widgets/app_status_view.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_catalog_port.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_conflict_reader.dart';
+import 'package:namma_project/features/adhkar/application/adhkar_sync_service.dart';
+import 'package:namma_project/features/adhkar/data/drift_my_adhkar_repository.dart';
+import 'package:namma_project/features/adhkar/domain/adhkar_conflict_evidence.dart';
+import 'package:namma_project/features/adhkar/domain/my_dhikr.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_conflicts_view.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_cubit.dart';
+import 'package:namma_project/features/adhkar/presentation/adhkar_screen.dart';
+import 'package:namma_project/features/adhkar/presentation/my_adhkar_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_cubit.dart';
 import 'package:namma_project/features/foundation/presentation/state/foundation_state.dart';
 import 'package:namma_project/features/foundation/presentation/state/locale_cubit.dart';
@@ -41,8 +53,15 @@ import 'package:namma_project/features/prayer/application/prayer_sync_service.da
 import 'package:namma_project/features/prayer/domain/prayer_conflict_evidence.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_cubit.dart';
 import 'package:namma_project/features/prayer/presentation/prayer_screen.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_conflict_reader.dart';
+import 'package:namma_project/features/qiyam/application/qiyam_sync_service.dart';
+import 'package:namma_project/features/qiyam/domain/qiyam_conflict_evidence.dart';
+import 'package:namma_project/features/qiyam/presentation/qiyam_cubit.dart';
+import 'package:namma_project/features/qiyam/presentation/qiyam_screen.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_cubit.dart';
 import 'package:namma_project/features/tasks/presentation/tasks_screen.dart';
+import 'package:namma_project/features/today/application/today_adhkar_qiyam_port.dart';
+import 'package:namma_project/features/today/domain/today_adhkar_qiyam_reference.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
 import 'package:namma_project/features/today/presentation/today_cubit.dart';
 import 'package:namma_project/features/today/presentation/today_screen.dart';
@@ -329,6 +348,13 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
     final prayerAvailable =
         getIt.isRegistered<PrayerCubit>() &&
         getIt.isRegistered<CloudSessionPort>();
+    final adhkarAvailable =
+        getIt.isRegistered<AdhkarCubit>() &&
+        getIt.isRegistered<MyAdhkarCubit>() &&
+        getIt.isRegistered<CloudSessionPort>();
+    final qiyamAvailable =
+        getIt.isRegistered<QiyamCubit>() &&
+        getIt.isRegistered<CloudSessionPort>();
     _router = FoundationAppRouter(
       rootBuilder: (_) => widget.home,
       cloudSession: tasksAvailable ? getIt<CloudSessionPort>() : null,
@@ -363,6 +389,26 @@ class _LocalizedFoundationAppState extends State<_LocalizedFoundationApp> {
               key: ValueKey(accountId),
               accountId: accountId,
             )
+          : null,
+      adhkarSession: adhkarAvailable
+          ? (getIt.isRegistered<AdhkarPreviewSession>()
+                ? getIt<AdhkarPreviewSession>()
+                : getIt<CloudSessionPort>())
+          : null,
+      adhkarBuilder: adhkarAvailable
+          ? (_, accountId) => _AdhkarRouteScope(
+              key: ValueKey(accountId),
+              accountId: accountId,
+            )
+          : null,
+      qiyamSession: qiyamAvailable
+          ? (getIt.isRegistered<QiyamPreviewSession>()
+                ? getIt<QiyamPreviewSession>()
+                : getIt<CloudSessionPort>())
+          : null,
+      qiyamBuilder: qiyamAvailable
+          ? (_, accountId) =>
+                _QiyamRouteScope(key: ValueKey(accountId), accountId: accountId)
           : null,
     );
   }
@@ -655,14 +701,53 @@ class _TodayBoundViewState extends State<_TodayBoundView> {
       onHabits: () => GoRouter.of(context).go(kHabitsRoute),
       onMindMaps: () => GoRouter.of(context).go(kMindMapsRoute),
       onPrayer: () => GoRouter.of(context).go(kPrayerRoute),
+      onAdhkar: GetIt.instance.isRegistered<AdhkarCubit>()
+          ? () => GoRouter.of(context).go(kAdhkarRoute)
+          : null,
+      onQiyam: GetIt.instance.isRegistered<QiyamCubit>()
+          ? () => GoRouter.of(context).go(kQiyamRoute)
+          : null,
       onPreferences: () => showAppPreferencesSheet(context),
       onNewTask: () =>
           GoRouter.of(context).go(kTasksRoute, extra: OwnerEntryIntent.newTask),
       onNewHabit: () => GoRouter.of(
         context,
       ).go(kHabitsRoute, extra: OwnerEntryIntent.newHabit),
+      watchAdhkarQiyam: _trackAdhkarQiyam(),
     ),
   );
+}
+
+/// The live Adhkar/Qiyam values behind the Track hub's tile subtitles. Each
+/// call resolves the two owners the Adhkar and Qiyam screens use (the real
+/// account, or each domain's own closed preview owner) and watches the
+/// Today port, so the hub shows exactly what those screens show. Null when
+/// the port is not registered.
+Stream<TodayAdhkarQiyamReference> Function()? _trackAdhkarQiyam() {
+  final getIt = GetIt.instance;
+  if (!getIt.isRegistered<TodayAdhkarQiyamPort>() ||
+      !getIt.isRegistered<CloudSessionPort>()) {
+    return null;
+  }
+  return () async* {
+    final CloudSessionPort adhkarSession =
+        getIt.isRegistered<AdhkarPreviewSession>()
+        ? getIt<AdhkarPreviewSession>()
+        : getIt<CloudSessionPort>();
+    final CloudSessionPort qiyamSession =
+        getIt.isRegistered<QiyamPreviewSession>()
+        ? getIt<QiyamPreviewSession>()
+        : getIt<CloudSessionPort>();
+    final adhkarOwner =
+        (await adhkarSession.obtainSyncContext()).valueOrNull?.accountId;
+    final qiyamOwner =
+        (await qiyamSession.obtainSyncContext()).valueOrNull?.accountId;
+    if (adhkarOwner == null || qiyamOwner == null) return;
+    yield* getIt<TodayAdhkarQiyamPort>().watch(
+      adhkarOwner,
+      qiyamOwnerId: qiyamOwner,
+    );
+  };
 }
 
 /// Owns the feature Cubit for one authenticated Tasks route visit. The Cubit
@@ -788,7 +873,22 @@ class _FeatureNavigationShell extends StatelessWidget {
       onPrayer: () {
         if (section != TodayNavigationSection.prayer) router.go(kPrayerRoute);
       },
+      onAdhkar: GetIt.instance.isRegistered<AdhkarCubit>()
+          ? () {
+              if (section != TodayNavigationSection.adhkar) {
+                router.go(kAdhkarRoute);
+              }
+            }
+          : null,
+      onQiyam: GetIt.instance.isRegistered<QiyamCubit>()
+          ? () {
+              if (section != TodayNavigationSection.qiyam) {
+                router.go(kQiyamRoute);
+              }
+            }
+          : null,
       onPreferences: () => showAppPreferencesSheet(context),
+      watchAdhkarQiyam: _trackAdhkarQiyam(),
       child: child,
     );
   }
@@ -816,6 +916,14 @@ class _PrayerRouteScopeState extends State<_PrayerRouteScope> {
     if (GetIt.instance.isRegistered<PrayerSyncService>()) {
       unawaited(GetIt.instance<PrayerSyncService>().synchronize());
     }
+    // Domain-scoped Adhkar/Qiyam sync starts separately: a failure there
+    // never blocks Prayer or the global status.
+    if (GetIt.instance.isRegistered<AdhkarSyncService>()) {
+      unawaited(GetIt.instance<AdhkarSyncService>().synchronize());
+    }
+    if (GetIt.instance.isRegistered<QiyamSyncService>()) {
+      unawaited(GetIt.instance<QiyamSyncService>().synchronize());
+    }
   }
 
   @override
@@ -833,6 +941,134 @@ class _PrayerRouteScopeState extends State<_PrayerRouteScope> {
       commands: GetIt.instance<PrayerPreferencesCommands>(),
       location: GetIt.instance<PrayerDeviceLocationPort>(),
       conflicts: _conflicts,
+    ),
+  );
+}
+
+class _AdhkarRouteScope extends StatefulWidget {
+  const _AdhkarRouteScope({super.key, required this.accountId});
+  final String accountId;
+
+  @override
+  State<_AdhkarRouteScope> createState() => _AdhkarRouteScopeState();
+}
+
+/// One route visit owns the Adhkar and My Adhkar Cubits for one owner and
+/// closes them on leave. The Adhkar domain's own sync starts here too; a
+/// failure there never blocks the screen, which counts locally first.
+class _AdhkarRouteScopeState extends State<_AdhkarRouteScope> {
+  late final AdhkarCubit _cubit = GetIt.instance<AdhkarCubit>(
+    param1: widget.accountId,
+  );
+  late final MyAdhkarCubit _myAdhkarCubit = GetIt.instance<MyAdhkarCubit>(
+    param1: widget.accountId,
+  );
+  // One Drift watch per route scope; rebuilding must not resubscribe.
+  late final Stream<List<AdhkarConflictEvidence>> _countConflicts =
+      GetIt.instance<AdhkarConflictReader>().watchConflicts(widget.accountId);
+  late final Stream<List<MyAdhkarConflictEvidence>> _myAdhkarConflicts =
+      GetIt.instance<DriftMyAdhkarRepository>().watchConflicts(
+        widget.accountId,
+      );
+
+  // The conflicts source caches its catalog lookup per instance, so one
+  // instance is kept per language instead of one per build.
+  AdhkarConflictsSource? _conflicts;
+  String? _conflictsLocale;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_cubit.load());
+    if (GetIt.instance.isRegistered<AdhkarSyncService>()) {
+      unawaited(GetIt.instance<AdhkarSyncService>().synchronize());
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    unawaited(_myAdhkarCubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = FoundationLocalizations.of(context).localeName;
+    if (_conflictsLocale != locale) {
+      _conflictsLocale = locale;
+      _conflicts = AdhkarConflictsSource(
+        conflicts: _countConflicts,
+        myAdhkarConflicts: _myAdhkarConflicts,
+        catalog: GetIt.instance<AdhkarCatalogPort>(),
+        ownerId: widget.accountId,
+        locale: locale,
+      );
+    }
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AdhkarCubit>.value(value: _cubit),
+        BlocProvider<MyAdhkarCubit>.value(value: _myAdhkarCubit),
+      ],
+      // The shell wraps the Adhkar page only; the reader opens full screen
+      // above it (contracts/adhkar-qiyam-ui.md).
+      child: AdhkarScreen(
+        conflicts: _conflicts,
+        shellBuilder: (context, page) => _FeatureNavigationShell(
+          section: TodayNavigationSection.adhkar,
+          child: page,
+        ),
+        onOpenPrayerSetup: () => GoRouter.of(context).go(kPrayerRoute),
+      ),
+    );
+  }
+}
+
+class _QiyamRouteScope extends StatefulWidget {
+  const _QiyamRouteScope({super.key, required this.accountId});
+  final String accountId;
+
+  @override
+  State<_QiyamRouteScope> createState() => _QiyamRouteScopeState();
+}
+
+/// One route visit owns the Qiyam Cubit for one owner and closes it on leave
+/// (a note still waiting for its autosave is saved first). The Qiyam
+/// domain's own sync starts here too; a failure there never blocks the
+/// screen, which records locally first.
+class _QiyamRouteScopeState extends State<_QiyamRouteScope> {
+  late final QiyamCubit _cubit = GetIt.instance<QiyamCubit>(
+    param1: widget.accountId,
+  );
+  // One Drift watch per route scope; rebuilding must not resubscribe.
+  late final Stream<List<QiyamConflictEvidence>> _conflicts =
+      GetIt.instance<QiyamConflictReader>().watchConflicts(widget.accountId);
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_cubit.load());
+    if (GetIt.instance.isRegistered<QiyamSyncService>()) {
+      unawaited(GetIt.instance<QiyamSyncService>().synchronize());
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => BlocProvider<QiyamCubit>.value(
+    value: _cubit,
+    child: QiyamScreen(
+      conflicts: _conflicts,
+      shellBuilder: (context, page) => _FeatureNavigationShell(
+        section: TodayNavigationSection.qiyam,
+        child: page,
+      ),
+      onOpenPrayerSetup: () => GoRouter.of(context).go(kPrayerRoute),
     ),
   );
 }

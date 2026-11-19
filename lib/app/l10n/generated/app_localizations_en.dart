@@ -1525,4 +1525,242 @@ class FoundationLocalizationsEn extends FoundationLocalizations {
 
   @override
   String get prayerSettingsSave => 'Save';
+
+  @override
+  String get adhkarTitle => 'Adhkar & Remembrance';
+
+  @override
+  String get adhkarSubtitle => 'Authentic Morning and Evening supplications';
+
+  @override
+  String get adhkarTabMorning => 'Morning Adhkar';
+
+  @override
+  String get adhkarTabEvening => 'Evening Adhkar';
+
+  @override
+  String adhkarProgress(String list, int count, int total) {
+    return '$list ($count / $total)';
+  }
+
+  @override
+  String adhkarPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String adhkarCompletedSummary(int completed) {
+    String _temp0 = intl.Intl.pluralLogic(
+      completed,
+      locale: localeName,
+      other: '$completed items completed',
+      one: 'One item completed',
+      zero: 'No completed items yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adhkarStartsAt(String time) {
+    return 'Its time starts at $time';
+  }
+
+  @override
+  String get adhkarSetupPrompt =>
+      'Set up the Prayer location so the Adhkar times apply';
+
+  @override
+  String get adhkarVirtueAndSource => 'Virtue & Hadith Reference';
+
+  @override
+  String get adhkarVirtueLabel => 'Virtue:';
+
+  @override
+  String get adhkarSourceLabel => 'Source:';
+
+  @override
+  String get adhkarResetTooltip => 'Reset Counter';
+
+  @override
+  String adhkarTarget(int count, int target) {
+    return 'Target $count / $target';
+  }
+
+  @override
+  String get adhkarTapToCount => 'Tap to Count';
+
+  @override
+  String adhkarTapToCountN(int count) {
+    return 'Tap to Count ($count)';
+  }
+
+  @override
+  String get adhkarCompleted => 'Completed';
+
+  @override
+  String adhkarCountSemantic(int count, int target) {
+    return 'Count, $count of $target';
+  }
+
+  @override
+  String adhkarStreak(int days) {
+    return 'Streak: $days days';
+  }
+
+  @override
+  String get adhkarSetComplete => 'Set complete! +15 XP';
+
+  @override
+  String get adhkarContentUnavailable =>
+      'The Adhkar content could not be loaded.';
+
+  @override
+  String get adhkarCountingLocked =>
+      'The times are unavailable; counting is paused until they return.';
+
+  @override
+  String get adhkarOpenPrayerSetup => 'Set up Prayer location';
+
+  @override
+  String get qiyamTitle => 'Qiyam Al-Layl';
+
+  @override
+  String get qiyamSubtitle => 'Night prayer & intimate supplication';
+
+  @override
+  String qiyamLastThird(String time) {
+    return 'Last 1/3 of Night $time';
+  }
+
+  @override
+  String get qiyamLastThirdUnavailable =>
+      'The last third of the night cannot be computed now';
+
+  @override
+  String get qiyamOpenPrayerSetup => 'Set up Prayer location';
+
+  @override
+  String get qiyamDidYouPray => 'Did you pray Qiyam tonight?';
+
+  @override
+  String get qiyamBestTime =>
+      'The best time for Qiyam is the last third of the night before Fajr.';
+
+  @override
+  String get qiyamYesXp => 'Yes, Alhamdulillah (+30 XP)';
+
+  @override
+  String get qiyamNo => 'Not yet';
+
+  @override
+  String get qiyamRakahsLabel => 'Number of Rak\'ahs';
+
+  @override
+  String qiyamRakahsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rak\'ahs',
+      many: '$count rak\'ahs',
+      few: '$count rak\'ahs',
+      two: '2 rak\'ahs',
+      one: '1 rak\'ah',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get qiyamStartTime => 'Start Time';
+
+  @override
+  String get qiyamEndTime => 'End Time';
+
+  @override
+  String get qiyamWitr => 'Include Witr Prayer';
+
+  @override
+  String get qiyamNotesLabel => 'Reflection / Duas made';
+
+  @override
+  String get qiyamNotesPlaceholder =>
+      'Special supplications or reflections (optional)';
+
+  @override
+  String qiyamNoteCounter(int count) {
+    return '$count / 500';
+  }
+
+  @override
+  String get qiyamSupplicationsTitle =>
+      'Recommended Supplication in Sujood & Qunoot';
+
+  @override
+  String get qiyamSaving => 'Saving…';
+
+  @override
+  String get qiyamSaved => 'Saved';
+
+  @override
+  String get qiyamSaveFailed => 'Could not save. Try again.';
+
+  @override
+  String get qiyamNightInvalidRakahs =>
+      'Choose a valid rak\'ah count: 2, 4, 8 or 11.';
+
+  @override
+  String get qiyamNightInvalidTime => 'Enter a valid 24-hour time, like 02:41.';
+
+  @override
+  String get qiyamNightNoteTooLong => 'The note is longer than 500 characters.';
+
+  @override
+  String get qiyamNightNotPerformedDetails =>
+      'Details cannot be saved with a \"Not yet\" answer.';
+
+  @override
+  String get qiyamNightChanged =>
+      'The night has changed; record the current night.';
+
+  @override
+  String get qiyamRecordingLocked =>
+      'The times are unavailable; recording is paused until they return.';
+
+  @override
+  String get qiyamReadOnly => 'This night\'s record is read-only.';
+
+  @override
+  String get qiyamXpEarned => 'Qiyam complete! +30 XP';
+
+  @override
+  String qiyamStreak(int nights) {
+    return 'Qiyam streak: $nights';
+  }
+
+  @override
+  String get qiyamStreakFailed => 'Could not load the streak.';
+
+  @override
+  String get qiyamHistoryTitle => 'Previous nights';
+
+  @override
+  String qiyamHistoryPrayedWithWitr(int count) {
+    return 'Prayed · $count rak\'ahs · Witr';
+  }
+
+  @override
+  String qiyamHistoryPrayed(int count) {
+    return 'Prayed · $count rak\'ahs';
+  }
+
+  @override
+  String get qiyamHistoryNotPerformed => 'Did not pray';
+
+  @override
+  String get qiyamHistoryNotRecorded => 'Not recorded';
+
+  @override
+  String get qiyamHistoryLoadMore => 'Load more';
+
+  @override
+  String get qiyamHistoryFailed => 'Could not load the previous nights.';
 }

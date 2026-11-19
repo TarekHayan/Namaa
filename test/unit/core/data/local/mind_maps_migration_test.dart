@@ -253,7 +253,7 @@ void main() {
         path: path,
         key: _key,
         schemaVersion: 5,
-        testMigrationHook: (migrator, from, to) async {
+        testMigrationHook: (migrator, from, to, step) async {
           expect((from, to), (4, 5));
           throw StateError('injected v5 failure');
         },

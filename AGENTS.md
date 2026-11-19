@@ -7,7 +7,7 @@ Claude Code, Codex, Cursor, Copilot and the others. `CLAUDE.md` imports it.
 
 Namaa is one Flutter app for Android, iOS, Windows, macOS and Linux. It brings
 together personal productivity (Tasks, Habits, Mind Maps), religious practice
-(Prayer now; Quran, Dhikr and Qiyam later) and personal finance tracking, all
+(Prayer, Adhkar and Qiyam now; Quran and Dhikr later) and personal finance tracking, all
 around a "Today" dashboard. The app is local-first: it works offline and syncs
 each account across devices through Supabase. Arabic is the primary language
 (RTL), and English is the second.
@@ -38,9 +38,10 @@ ask the product owner. Do not decide it in code.
 | 006 | Today dashboard | merged (T074/T075 closure items left open) |
 | 007 | Dashboard prototype UI | merged (T049 final audit open) |
 | 008 | Prayer experience (location-only, statuses, sync, XP) | merged 2026-11-09, PR #11 |
-| 009 | Authentication / per-account data | proposed next, not started |
+| 009 | Adhkar (Morning/Evening, reader, «أذكاري») and Qiyam (Phase 4) | merged 2026-11-18, PR #12 (T074/T075 device checks deferred: no phone available) |
+| — | Authentication / per-account data | proposed, not started (number assigned when specified) |
 
-Not built yet: Quran, Dhikr, Qiyam, Pomodoro, Finance, Notifications,
+Not built yet: Quran, Dhikr, Pomodoro, Finance, Notifications,
 Analytics, Settings. The Finance tab currently opens a "coming soon" page.
 
 When you close a feature, update this table in the same PR.
@@ -85,20 +86,26 @@ Other rules:
   failures/results, local DB, cloud and sync code. A feature never reaches
   into another feature's storage or UI. Cross-feature effects such as XP and
   Today go through explicit application services.
+- **Shared UI.** Generic widgets (cards, pills, sheets, menus, buttons, toasts,
+  progress) live in `lib/app/widgets/` with an `App` prefix and take their look
+  from the `AppColors` tokens, so a redesign changes them in one place. A
+  feature keeps only what is specific to it. See `docs/design/app_components.md`
+  before writing a new one.
 - **Dependency injection.** It is manual GetIt registration in
   `lib/app/composition/configure_dependencies.dart`, with no injectable
   codegen. Debug "preview" adapters live next to it.
 - **State.** Use BLoC/Cubit only.
 - **Navigation.**
   - GoRouter lives in `lib/app/routing/app_router.dart`, with top-level
-    sibling routes `/`, `/tasks`, `/habits`, `/mind-maps` and `/prayer`.
+    sibling routes `/`, `/tasks`, `/habits`, `/mind-maps`, `/prayer`,
+    `/adhkar` and `/qiyam`.
   - The shell is `TodayNavigationShell`, which behaves as tabs. Sections are
     switched with `go`, and pages never stack.
   - Overlay sections (track, finance, preview) replace one another.
   - There is no app-bar back arrow. Device back returns to Home.
 - **Local DB.** It is an encrypted Drift/SQLite database,
   `lib/core/data/local/foundation_database.dart`, now at
-  `kFoundationSchemaVersion = 9`.
+  `kFoundationSchemaVersion = 11`.
   - Every schema change needs an automatic migration that keeps existing data,
     and a migration test.
   - Generated `*.g.dart` files are committed. Regenerate them with
@@ -127,7 +134,7 @@ Other rules:
 | Production `Namaa Project` (ref `rngnesbyoomuywfvncoe`) | **Never** touch it (migrations, data, settings) without the owner's explicit approval in that conversation |
 
 - **Migrations.** They are numbered files in `supabase/migrations/`; the
-  latest is `0015_prayer_reports_and_rewards.sql`.
+  latest is `0017_my_adhkar.sql`.
   - Each one needs pgTAP coverage in `supabase/tests/`: account isolation,
     operation integrity, conflict and XP.
   - Pushing a migration to staging needs the owner's approval too.
@@ -167,16 +174,23 @@ Run format, analyze and the relevant tests locally before every push.
 ## 8. CI (`.github/workflows/foundation-ci.yml`)
 
 - **Triggers.**
-  - It runs on PRs to `develop` that touch `lib/`, `integration_test/`,
-    platform folders, `pubspec.*`, the workflow or `.github/scripts/**`. It can
-    also be started by hand. Changes only to `test/`, `specs/` or docs do not
-    start it.
+  - It runs on PRs to `develop` that touch any of these:
+    - `lib/`, `test/` or `integration_test/`;
+    - `supabase/` or the platform folders;
+    - `pubspec.*`;
+    - the workflow or `.github/scripts/**`;
+    - each feature's `specs/NNN-*/**` folder that is listed in the workflow's
+      `paths`.
+  - Add the new feature's specs path when you register its CI files. Changes
+    only to `AGENTS.md`, `CLAUDE.md` or `docs/` do not start it.
+  - It can also be started by hand.
   - The `paths` filter looks at the whole PR diff, so even a docs-only commit
     on such a PR starts the full run again. Put closing docs in before the
     final gate run.
 - **Full run.** It covers quality, Supabase/RLS, the Android groups
   (foundation, tasks, habits-today, mind-maps, prayer), the iOS simulator
-  groups (foundation, tasks, habits, mind-maps, today, prayer), Windows, macOS
+  groups (foundation, tasks, habits, mind-maps, today, prayer, adhkar-qiyam),
+  Windows, macOS
   and Linux. "Foundation and feature five-target gate" passes only when all of
   them pass.
 - **Runners.** Mobile runs go through `.github/scripts/run-android-integration.sh`,

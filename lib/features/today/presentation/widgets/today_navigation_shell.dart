@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:namma_project/app/theme/app_colors.dart';
 
+import '../../domain/today_adhkar_qiyam_reference.dart';
 import '../dashboard_preview_data.dart';
 import 'prayer_track_hub.dart';
 import 'today_bottom_navigation.dart';
@@ -18,10 +19,13 @@ class TodayNavigationShell extends StatelessWidget {
     required this.onHabits,
     required this.onMindMaps,
     this.onPrayer,
+    this.onAdhkar,
+    this.onQiyam,
     required this.onPreferences,
     required this.child,
     this.onHome,
     this.xpAmount,
+    this.watchAdhkarQiyam,
   });
 
   final AppColors colors;
@@ -30,9 +34,15 @@ class TodayNavigationShell extends StatelessWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback? onPrayer;
+  final VoidCallback? onAdhkar;
+  final VoidCallback? onQiyam;
   final VoidCallback onPreferences;
   final VoidCallback? onHome;
   final int? xpAmount;
+
+  /// Starts the live Adhkar/Qiyam values for the Track hub's tile subtitles;
+  /// null leaves the tiles without subtitles.
+  final Stream<TodayAdhkarQiyamReference> Function()? watchAdhkarQiyam;
   final Widget child;
 
   /// Opens a preview inside the surrounding navigation frame when available.
@@ -87,6 +97,8 @@ class TodayNavigationShell extends StatelessWidget {
       final habits = leave(onHabits);
       final mindMaps = leave(onMindMaps);
       final prayer = onPrayer == null ? null : leave(onPrayer!);
+      final adhkar = onAdhkar == null ? null : leave(onAdhkar!);
+      final qiyam = onQiyam == null ? null : leave(onQiyam!);
 
       void open(BuildContext source, Route<void> route) {
         final navigator = Navigator.of(source);
@@ -110,8 +122,11 @@ class TodayNavigationShell extends StatelessWidget {
         onHabits: onHabits,
         onMindMaps: onMindMaps,
         onPrayer: onPrayer,
+        onAdhkar: onAdhkar,
+        onQiyam: onQiyam,
         onPreferences: onPreferences,
         xpAmount: xpAmount,
+        watchAdhkarQiyam: watchAdhkarQiyam,
         child: child,
       );
 
@@ -151,10 +166,23 @@ class TodayNavigationShell extends StatelessWidget {
             builder: (trackContext) => overlayShell(
               TodayNavigationSection.track,
               PrayerTrackHub(
+                watchAdhkarQiyam: watchAdhkarQiyam,
                 onPrayer: () {
                   Navigator.of(trackContext).pop();
                   onPrayer!();
                 },
+                onAdhkar: onAdhkar == null
+                    ? null
+                    : () {
+                        Navigator.of(trackContext).pop();
+                        onAdhkar!();
+                      },
+                onQiyam: onQiyam == null
+                    ? null
+                    : () {
+                        Navigator.of(trackContext).pop();
+                        onQiyam!();
+                      },
               ),
             ),
           ),
@@ -175,6 +203,8 @@ class TodayNavigationShell extends StatelessWidget {
                 onHabits: habits,
                 onMindMaps: mindMaps,
                 onPrayer: prayer,
+                onAdhkar: adhkar,
+                onQiyam: qiyam,
                 onTrack: onPrayer == null ? null : openTrack,
                 onPreferences: onPreferences,
                 onPreview: openPreview,
@@ -194,6 +224,8 @@ class TodayNavigationShell extends StatelessWidget {
               TodayNavigationSection.home => 0,
               TodayNavigationSection.tasks => 1,
               TodayNavigationSection.prayer ||
+              TodayNavigationSection.adhkar ||
+              TodayNavigationSection.qiyam ||
               TodayNavigationSection.track => 2,
               TodayNavigationSection.finance => 3,
               TodayNavigationSection.habits ||

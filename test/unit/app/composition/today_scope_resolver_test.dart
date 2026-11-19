@@ -1,4 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:namma_project/app/composition/adhkar_preview_adapters.dart'
+    show kAdhkarPreviewAccountId;
+import 'package:namma_project/app/composition/qiyam_preview_adapters.dart'
+    show kQiyamPreviewAccountId;
 import 'package:namma_project/app/composition/today_scope_resolver.dart';
 import 'package:namma_project/core/application/ports/foundation_ports.dart';
 import 'package:namma_project/features/today/domain/today_scope.dart';
@@ -15,6 +19,9 @@ void main() {
     expect(scope.xpOwnerId, TodayFixtureAccounts.tasksMapsXpPreview);
     expect(scope.habitOwnerId, TodayFixtureAccounts.habitsPreview);
     expect(scope.taskOwnerId, isNot(scope.habitOwnerId));
+    // Adhkar and Qiyam keep the closed owners their own screens count under.
+    expect(scope.adhkarOwnerId, kAdhkarPreviewAccountId);
+    expect(scope.qiyamOwnerId, kQiyamPreviewAccountId);
   });
 
   test('resolved real account uses one owner for all sources', () async {
@@ -33,6 +40,8 @@ void main() {
     expect(scope?.taskOwnerId, TodayFixtureAccounts.accountA);
     expect(scope?.habitOwnerId, TodayFixtureAccounts.accountA);
     expect(scope?.xpOwnerId, TodayFixtureAccounts.accountA);
+    expect(scope?.adhkarOwnerId, TodayFixtureAccounts.accountA);
+    expect(scope?.qiyamOwnerId, TodayFixtureAccounts.accountA);
   });
 
   test('unknown and signed-out states clear any previous account', () async {

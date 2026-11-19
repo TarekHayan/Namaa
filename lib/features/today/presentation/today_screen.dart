@@ -3,6 +3,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../domain/today_adhkar_qiyam_reference.dart';
 import 'today_cubit.dart';
 import 'today_dashboard_view.dart';
 import 'today_state.dart';
@@ -25,11 +26,14 @@ class TodayScreen extends StatefulWidget {
     required this.onHabits,
     required this.onMindMaps,
     this.onPrayer,
+    this.onAdhkar,
+    this.onQiyam,
     required this.onPreferences,
     this.onNewTask,
     this.onNewHabit,
     this.onTaskMatrix,
     this.onTaskOverdue,
+    this.watchAdhkarQiyam,
   });
 
   final TodayCubit cubit;
@@ -38,11 +42,14 @@ class TodayScreen extends StatefulWidget {
   final VoidCallback onHabits;
   final VoidCallback onMindMaps;
   final VoidCallback? onPrayer;
+  final VoidCallback? onAdhkar;
+  final VoidCallback? onQiyam;
   final VoidCallback onPreferences;
   final VoidCallback? onNewTask;
   final VoidCallback? onNewHabit;
   final VoidCallback? onTaskMatrix;
   final VoidCallback? onTaskOverdue;
+  final Stream<TodayAdhkarQiyamReference> Function()? watchAdhkarQiyam;
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
@@ -93,6 +100,8 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
         onHabits: widget.onHabits,
         onMindMaps: widget.onMindMaps,
         onPrayer: widget.onPrayer,
+        onAdhkar: widget.onAdhkar,
+        onQiyam: widget.onQiyam,
         onPreferences: widget.onPreferences,
         onNewTask: widget.onNewTask,
         onNewHabit: widget.onNewHabit,
@@ -102,6 +111,8 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
         onRetryHabits: widget.cubit.retryHabits,
         onRetryXp: widget.cubit.retryXp,
         onRetryPrayer: widget.cubit.retryPrayer,
+        onRetryAdhkarQiyam: widget.cubit.retryAdhkarQiyam,
+        watchAdhkarQiyam: widget.watchAdhkarQiyam,
         onSetTaskCompleted: widget.cubit.setTaskCompleted,
         onSetHabitCompleted: widget.cubit.setHabitCompleted,
       ),
