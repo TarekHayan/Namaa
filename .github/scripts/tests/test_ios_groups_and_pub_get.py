@@ -20,7 +20,7 @@ def load(name, file):
 
 pub_get = load("pub_get_retry", "pub-get-with-retry.py")
 
-ALL_GROUPS = ["foundation", "tasks", "habits", "mind-maps", "today", "prayer"]
+ALL_GROUPS = ["foundation", "tasks", "habits", "mind-maps", "today", "prayer", "adhkar-qiyam"]
 
 
 class IosGroupRegistrationTest(unittest.TestCase):
@@ -212,30 +212,37 @@ exit 0
         self.assertEqual(
             [c for c in calls if c.startswith("test ")],
             ["test prayer_schedule", "test prayer_reports", "test prayer_offline_sync",
-             "test prayer_localized_route", "test adhkar_qiyam_flow",
-             "test adhkar_qiyam_offline_sync", "test adhkar_qiyam_localized_route"],
+             "test prayer_localized_route"],
         )
+        self.assertIn("all 4 files passed", result.stdout)
 
-    def test_prayer_group_counts_seven_files(self):
-        result, calls = self.run_group("prayer")
+    def test_adhkar_qiyam_group_runs_its_own_three_files_in_order(self):
+        # Its own group, so a stalled Prayer file can no longer spend the
+        # shared step budget and cut these files off (run 44403651913).
+        result, calls = self.run_group("adhkar-qiyam")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("all 7 files passed", result.stdout)
+        self.assertEqual(
+            [c for c in calls if c.startswith("test ")],
+            ["test adhkar_qiyam_flow", "test adhkar_qiyam_offline_sync",
+             "test adhkar_qiyam_localized_route"],
+        )
+        self.assertIn("all 3 files passed", result.stdout)
 
     def test_adhkar_qiyam_focused_selection_and_failure_reporting(self):
-        result, calls = self.run_group("prayer", suites="adhkar-qiyam-flow")
+        result, calls = self.run_group("adhkar-qiyam", suites="adhkar-qiyam-flow")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual([c for c in calls if c.startswith("test ")],
                          ["test adhkar_qiyam_flow"])
         # A failing file is reported by name and never retried or hidden.
         result, calls = self.run_group(
-            "prayer", suites="adhkar-qiyam-flow,adhkar-qiyam-localized-route",
+            "adhkar-qiyam", suites="adhkar-qiyam-flow,adhkar-qiyam-localized-route",
             fail_test=("adhkar_qiyam_flow",))
         self.assertEqual(result.returncode, 1)
         self.assertEqual(
             [c for c in calls if c.startswith("test ")],
             ["test adhkar_qiyam_flow", "test adhkar_qiyam_localized_route"])
         self.assertIn("1 of 2 files failed: adhkar-qiyam-flow", result.stderr)
-        result, calls = self.run_group("prayer", suites="adhkar-qiyam-typo")
+        result, calls = self.run_group("adhkar-qiyam", suites="adhkar-qiyam-typo")
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertEqual(calls, [])
 

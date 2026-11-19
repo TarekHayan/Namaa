@@ -295,7 +295,10 @@ class PrayerSuiteRegistrationTest(unittest.TestCase):
         android = (ROOT / ".github/scripts/run-android-integration.sh").read_text()
         ios = (ROOT / ".github/scripts/run-ios-integration-group.sh").read_text()
         android_group = android.split("  prayer)", 1)[1].split("    ;;", 1)[0]
-        ios_group = ios.split("  prayer)", 1)[1].split("    ;;", 1)[0]
+        # iOS runs them in their own group, apart from Prayer's files.
+        ios_group = ios.split("  adhkar-qiyam)", 1)[1].split("    ;;", 1)[0]
+        ios_prayer = ios.split("  prayer)", 1)[1].split("    ;;", 1)[0]
+        self.assertNotIn("adhkar-qiyam", ios_prayer)
         for suite in ("flow", "offline-sync", "localized-route"):
             file = f"integration_test/adhkar_qiyam_{suite.replace('-', '_')}_test.dart"
             self.assertTrue((ROOT / file).is_file(), file)

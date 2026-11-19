@@ -189,7 +189,8 @@ Run format, analyze and the relevant tests locally before every push.
     final gate run.
 - **Full run.** It covers quality, Supabase/RLS, the Android groups
   (foundation, tasks, habits-today, mind-maps, prayer), the iOS simulator
-  groups (foundation, tasks, habits, mind-maps, today, prayer), Windows, macOS
+  groups (foundation, tasks, habits, mind-maps, today, prayer, adhkar-qiyam),
+  Windows, macOS
   and Linux. "Foundation and feature five-target gate" passes only when all of
   them pass.
 - **Runners.** Mobile runs go through `.github/scripts/run-android-integration.sh`,

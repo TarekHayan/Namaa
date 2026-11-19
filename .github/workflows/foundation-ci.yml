@@ -12,7 +12,7 @@ on:
         type: string
         default: ''
       ios_groups:
-        description: 'Optional JSON array of iOS groups (foundation, tasks, habits, mind-maps, today) for a mobile-only run'
+        description: 'Optional JSON array of iOS groups (foundation, tasks, habits, mind-maps, today, prayer, adhkar-qiyam) for a mobile-only run'
         type: string
         default: ''
       ios_suites:
@@ -588,7 +588,7 @@ jobs:
       fail-fast: false
       max-parallel: 5
       matrix:
-        group: ${{ fromJSON(inputs.mobile_only && inputs.ios_groups || '["foundation","tasks","habits","mind-maps","today","prayer"]') }}
+        group: ${{ fromJSON(inputs.mobile_only && inputs.ios_groups || '["foundation","tasks","habits","mind-maps","today","prayer","adhkar-qiyam"]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6

@@ -30,8 +30,10 @@ case "${IOS_GROUP:-}" in
     suites=(today-dashboard today-sync)
     ;;
   prayer)
-    suites=(prayer-schedule prayer-reports prayer-offline-sync prayer-localized-route
-      adhkar-qiyam-flow adhkar-qiyam-offline-sync adhkar-qiyam-localized-route)
+    suites=(prayer-schedule prayer-reports prayer-offline-sync prayer-localized-route)
+    ;;
+  adhkar-qiyam)
+    suites=(adhkar-qiyam-flow adhkar-qiyam-offline-sync adhkar-qiyam-localized-route)
     ;;
   *)
     echo "Unknown iOS integration group: ${IOS_GROUP:-<unset>}" >&2
