@@ -1830,3 +1830,10 @@ The owner asked to merge on 2026-11-18. Task states:
 ## iOS prayer group over its step budget (2026-11-19, run 44391040429 at c41cdec)
 
 `iOS simulator (prayer)` hit the 125-minute step timeout. `prayer_offline_sync_test.dart` (spec 008, hosted on staging) produced no result twice (the runner restarted the simulator and retried once), losing about 33 minutes; with the three Adhkar and Qiyam files added to the same group (adhkar-qiyam-flow passed, adhkar-qiyam-offline-sync passed after 26 minutes), the last file, adhkar-qiyam-localized-route, was cut off by the step timeout. The Adhkar and Qiyam files now run in their own iOS group, `adhkar-qiyam` (`.github/scripts/run-ios-integration-group.sh`, the workflow's default matrix, and `AGENTS.md` section 8), so the prayer group is back to its four 008 files and a stall there can no longer spend the budget of 009's files. `python -m unittest discover -s .github/scripts/tests -p "test_*.py"`: 67 tests OK. Android keeps them in its prayer suite, which finished in about 16 minutes.
+
+## Hosted sync tests read staging one row at a time (2026-11-19)
+
+Run 44535896680 (at 8187c99) failed iOS prayer (`prayer_offline_sync_test.dart` timed out twice) and iOS tasks (the simulator's shell crashed). The Prayer and Adhkar/Qiyam sync tests read the server with one-row pages (two for My Adhkar) to exercise the keyset cursors. On the local stack that touches a handful of rows; on staging the two shared accounts keep every run's rows from every platform, so each inbound pass read the whole history row by row, growing with every run (the Adhkar/Qiyam file took 26 minutes on iOS) and loading the free-tier project for the other platforms. The owner asked to stop the run and fix the cause: the run was cancelled, and hosted runs now read pages of 500; local runs keep the small pages.
+
+- Staging, Windows, `--dart-define=NAMAA_SUPABASE_ENV=non-production` with the staging values: `adhkar_qiyam_offline_sync_test.dart` passed in 55 s (it took about 4 minutes before the change), `prayer_offline_sync_test.dart` passed in 26 s.
+- Local stack, Windows: both files passed (23 s and 9 s).

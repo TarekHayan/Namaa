@@ -207,7 +207,10 @@ void main() {
     // Device 0's inbound synchronizer (a one-row page exercises every keyset
     // cursor and its restart).
     final adhkarInbound0 = AdhkarInboundSynchronizer(
-      reader: SupabaseAdhkarReader(clients[0], pageSize: 1),
+      // One-row pages exercise the keyset cursors locally; the staging
+      // accounts hold every run's history, so hosted runs read ordinary
+      // pages (see the Prayer sync test).
+      reader: SupabaseAdhkarReader(clients[0], pageSize: local ? 1 : 500),
       reconciler: AdhkarReconciler(
         repository: adhkarStores[0],
         localStore: DriftLocalStore(dbs[0]),
@@ -685,7 +688,7 @@ void main() {
     // server's active version, and a duplicate inbound pass imports nothing
     // new.
     final qiyamPull = QiyamInboundSynchronizer(
-      reader: SupabaseQiyamReader(clients[1], pageSize: 1),
+      reader: SupabaseQiyamReader(clients[1], pageSize: local ? 1 : 500),
       reconciler: QiyamReconciler(
         repository: qiyamStores[1],
         localStore: DriftLocalStore(dbs[1]),
@@ -972,7 +975,7 @@ void main() {
         MyAdhkarInboundSynchronizer(
           reader: SupabaseMyAdhkarReader(
             SupabaseMyAdhkarPageSource(clients[i]),
-            pageSize: 2,
+            pageSize: local ? 2 : 500,
           ),
           reconciler: MyAdhkarReconciler(
             repository: repos[i],
