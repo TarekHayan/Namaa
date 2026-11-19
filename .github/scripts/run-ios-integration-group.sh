@@ -112,12 +112,43 @@ PY
 bundle_id="com.example.nammaProject"
 work="$PWD/build/ios_integration"
 mkdir -p "$work"
+# Every simctl call is bounded. A wedged CoreSimulator service once left
+# `simctl shutdown` waiting forever after a file had already timed out, which
+# held the foundation group until the 125-minute step limit (run 44562890666).
+SIMCTL_LIMIT_SECONDS="${NAMAA_IOS_SIMCTL_LIMIT_SECONDS:-120}"
+
+# bounded OUTPUT COMMAND...: runs COMMAND with its output in OUTPUT and kills
+# it after SIMCTL_LIMIT_SECONDS. Returns 124 when it had to be killed.
+bounded() {
+  local output="$1"
+  shift
+  "$@" >"$output" 2>&1 &
+  local pid=$!
+  ( sleep "$SIMCTL_LIMIT_SECONDS"; kill -9 "$pid" ) >/dev/null 2>&1 &
+  local watchdog=$!
+  local status=0
+  wait "$pid" || status=$?
+  if kill -0 "$watchdog" 2>/dev/null; then
+    kill "$watchdog" >/dev/null 2>&1 || true
+  elif [[ "$status" -ne 0 ]]; then
+    echo "::warning::'$*' did not finish within ${SIMCTL_LIMIT_SECONDS}s; abandoned it."
+    status=124
+  fi
+  wait "$watchdog" 2>/dev/null || true
+  return "$status"
+}
+
 # After a hang, xcodebuild and the simulator can stay wedged and stall every
-# later file. Kill leftovers and restart the simulator before going on.
+# later file. Kill leftovers and restart the simulator before going on. When
+# the shutdown itself hangs, the CoreSimulator service is restarted too.
 recover_simulator() {
   pkill -9 -x xcodebuild >/dev/null 2>&1 || true
-  xcrun simctl shutdown "$IOS_DEVICE_ID" >/dev/null 2>&1 || true
-  xcrun simctl boot "$IOS_DEVICE_ID" >/dev/null 2>&1 || true
+  local status=0
+  bounded /dev/null xcrun simctl shutdown "$IOS_DEVICE_ID" || status=$?
+  if [[ "$status" -eq 124 ]]; then
+    pkill -9 -f CoreSimulatorService >/dev/null 2>&1 || true
+  fi
+  bounded /dev/null xcrun simctl boot "$IOS_DEVICE_ID" || true
 }
 
 # XCTest reports only the first line of a Flutter failure. Print the
@@ -126,9 +157,10 @@ recover_simulator() {
 # bundles are not uploaded: this repository is public.
 print_flutter_log() {
   echo "::group::Flutter log from the simulator for $1"
-  xcrun simctl spawn "$IOS_DEVICE_ID" log show --style compact --last 15m \
-    --predicate 'process == "Runner" AND eventMessage CONTAINS "flutter:"' \
-    2>/dev/null | tail -n 400 || true
+  local log_file="$work/flutter-log.txt"
+  bounded "$log_file" xcrun simctl spawn "$IOS_DEVICE_ID" log show --style compact --last 15m \
+    --predicate 'process == "Runner" AND eventMessage CONTAINS "flutter:"' || true
+  tail -n 400 "$log_file" 2>/dev/null || true
   echo "::endgroup::"
 }
 
@@ -183,8 +215,8 @@ DART
     [[ "$status" -eq 0 ]] || break
     # Start each file from a clean app container and Keychain, as a fresh
     # simulator did when every file had a job of its own.
-    xcrun simctl uninstall "$IOS_DEVICE_ID" "$bundle_id" >/dev/null 2>&1 || true
-    xcrun simctl keychain "$IOS_DEVICE_ID" reset >/dev/null 2>&1 || true
+    bounded /dev/null xcrun simctl uninstall "$IOS_DEVICE_ID" "$bundle_id" || true
+    bounded /dev/null xcrun simctl keychain "$IOS_DEVICE_ID" reset || true
     result_bundle="$work/results-$suite.xcresult"
     rm -rf "$result_bundle"
     # Native XCTest receives Dart results through the integration_test plugin;

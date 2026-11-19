@@ -1841,3 +1841,12 @@ Run 44535896680 (at 8187c99) failed iOS prayer (`prayer_offline_sync_test.dart` 
 ## Today sync read a task twice on Linux (2026-11-19, run 44557887399 at 673b8e3)
 
 `Linux integration` failed `integration_test/today_sync_test.dart` (spec 006): `Expected: an object with length of <1>, Actual: … has length of <2>` for this run's completed task. The test reads the account's whole task, award and habit history; on the shared staging accounts that spans many keyset pages, and a row updated between two pages comes back twice. The four checks now count distinct records (task id, award source, habit id, and habit id with date); the server's keys keep each record unique. Windows against staging (`NAMAA_SUPABASE_ENV=non-production`): passed in 17 s. Done in a separate worktree, so the owner's uncommitted work on `namaa/ui-worlds-foundation` was not touched.
+
+## iOS foundation held by a hung simulator shutdown (2026-11-19, run 44562890666 at cc97c8b)
+
+Everything outside iOS passed at `cc97c8b`, Linux Today sync included. Two iOS jobs failed:
+
+- `iOS simulator (today)`: `today_sync_test.dart` failed signing in with `AuthRetryableFetchException … Failed host lookup`, a DNS fault on the hosted simulator (infrastructure, AGENTS.md section 8); `today_dashboard` passed in the same job.
+- `iOS simulator (foundation)`: migration and offline passed. `foundation_platform_test.dart` produced no output, and the runner stopped it at its 12-minute limit (`iOS native integration run timed out.` at 17:21). The group script then restarted the simulator, and `xcrun simctl shutdown` never returned, so the job sat until the 125-minute step limit (18:46); the cleanup killed an orphaned `simctl`. The test hang is infrastructure, but the unbounded recovery turned it into a lost job with no retry.
+
+Fix: every `simctl` call in `.github/scripts/run-ios-integration-group.sh` (uninstall, Keychain reset, shutdown, boot, log show) now has a 120 s limit; a shutdown that hits it also restarts the CoreSimulator service before the boot, and the file's one retry still runs. A new script test drives a timed-out file with a `simctl shutdown` that never returns and checks that the group abandons it, retries the file once, reports it and runs the next file. `python -m unittest discover -s .github/scripts/tests -p "test_*.py"`: 68 tests OK.
