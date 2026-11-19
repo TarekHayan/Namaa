@@ -659,7 +659,7 @@ Added on 2026-11-15 after the owner's content review (spec.md, Session 2026-11-1
 - [x] T077 Update the status table in AGENTS.md for 009 and finalize verification.md, quickstart.md and the task states.
   - **Depends**: T075, T076.
   - **Done**: Every SC links to its evidence. Any unrun item stays unchecked. This is done before the final gate run, so the closing docs do not restart CI.
-- [ ] T078 Run the full PR-to-develop gate on the final head, and record the run URL and SHA in verification.md.
+- [x] T078 Run the full PR-to-develop gate on the final head, and record the run URL and SHA in verification.md.
   - **Depends**: T077.
   - **Done**: Every job is green. Same-head reruns are made only for infrastructure failures, after reading the logs.
 - [x] T079 Audit tasks.md against FR-001…FR-021 and SC-001…SC-008, and report the closure recommendation.
